@@ -3,17 +3,15 @@ import { Hoja } from "@/components/hoja";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import { RubricaEditor } from "@/components/rubrica-editor";
 import { Encabezado, Tarjeta } from "@/components/ui";
-import { actividades, obtenerActividad, obtenerGrupo } from "@/lib/datos-ejemplo";
-
-export function generateStaticParams() {
-  return actividades.map((a) => ({ id: a.id }));
-}
+import { SubirSolucion } from "@/components/subir-solucion";
+import { actividadDe, grupoDe, leer } from "@/lib/almacen";
 
 export default async function Rubrica({ params }: PageProps<"/profesor/actividades/[id]/rubrica">) {
   const { id } = await params;
-  const actividad = obtenerActividad(id);
+  const db = await leer();
+  const actividad = actividadDe(db, id);
   if (!actividad) notFound();
-  const grupo = obtenerGrupo(actividad.grupoId)!;
+  const grupo = grupoDe(db, actividad.grupoId)!;
 
   return (
     <>
@@ -27,30 +25,41 @@ export default async function Rubrica({ params }: PageProps<"/profesor/actividad
       <PestanasActividad id={id} activa="rubrica" />
 
       {actividad.reactivos.length === 0 ? (
-        <Tarjeta className="mx-auto max-w-xl text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-tinta-50 text-2xl text-tinta-600">
-            ⇪
-          </div>
-          <h2 className="mt-4 text-lg font-semibold">Sube tu solución</h2>
+        <Tarjeta className="mx-auto max-w-xl">
+          <h2 className="text-lg font-semibold">Sube tu solución</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Resuelve la actividad a mano en la hoja impresa y escanéala con la app, o sube aquí un PDF o fotos. La IA
-            leerá tus respuestas y propondrá la rúbrica: tipo de reactivo, respuesta, puntos y pasos esperados.
+            Resuelve la actividad a mano y sube fotos o un PDF. La IA leerá tus respuestas y propondrá la rúbrica: tipo
+            de reactivo, respuesta, puntos y pasos esperados. Después la revisas y la confirmas.
           </p>
-          <label className="mt-5 block cursor-pointer rounded-xl border-2 border-dashed border-slate-300 p-8 text-sm text-slate-500 hover:border-tinta-500 hover:bg-tinta-50">
-            Arrastra aquí el PDF o las fotos de tu solución
-            <input type="file" accept="application/pdf,image/*" multiple className="sr-only" />
-          </label>
+          <div className="mt-5">
+            <SubirSolucion actividadId={id} />
+          </div>
           <p className="mt-3 text-xs text-slate-400">Generar la rúbrica no consume créditos.</p>
         </Tarjeta>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div className="space-y-4">
-            <p className="text-sm text-slate-500">Tu solución escaneada</p>
-            {Array.from({ length: actividad.paginas }, (_, i) => (
-              <Hoja key={i} actividad={actividad} pagina={i + 1} modo="solucion" grupoTexto={`${grupo.materia} · ${grupo.nombre}`} />
-            ))}
+            <p className="text-sm text-slate-500">Tu solución</p>
+            {actividad.solucion?.length
+              ? actividad.solucion.map((ruta, i) =>
+                  ruta.endsWith(".pdf") ? (
+                    <a key={ruta} href={`/api/archivos/${ruta}`} target="_blank" className="block rounded-lg border border-slate-200 bg-white p-4 text-sm text-tinta-700 underline">
+                      Ver PDF de la solución ({i + 1})
+                    </a>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={ruta} src={`/api/archivos/${ruta}`} alt={`Solución, página ${i + 1}`} className="w-full rounded-md shadow-md ring-1 ring-slate-200" />
+                  ),
+                )
+              : Array.from({ length: actividad.paginas }, (_, i) => (
+                  <Hoja key={i} actividad={actividad} pagina={i + 1} modo="solucion" grupoTexto={`${grupo.materia} · ${grupo.nombre}`} />
+                ))}
+            <Tarjeta>
+              <p className="mb-3 text-sm font-medium">¿La IA leyó mal tu solución?</p>
+              <SubirSolucion actividadId={id} reemplazar />
+            </Tarjeta>
           </div>
-          <RubricaEditor reactivosIniciales={actividad.reactivos} />
+          <RubricaEditor actividadId={id} reactivosIniciales={actividad.reactivos} confirmadaInicial={!!actividad.rubricaConfirmada} />
         </div>
       )}
     </>

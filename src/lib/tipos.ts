@@ -31,6 +31,8 @@ export interface Reactivo {
   pasos?: PasoRubrica[];
   /** Líneas de la solución del profesor, una por paso (solo desarrollos). */
   solucionPasos?: string[];
+  /** Posición vertical aproximada del reactivo en su página (0 = arriba, 1 = abajo). */
+  y?: number;
 }
 
 export interface Alumno {
@@ -56,6 +58,13 @@ export type EstadoActividad =
 
 export interface Actividad {
   id: string;
+  /** true en las actividades de ejemplo (sin fotos reales; se dibujan en SVG). */
+  demo?: boolean;
+  /** Indicaciones del profesor para la IA. */
+  instrucciones?: string;
+  /** Imágenes de la solución del profesor (rutas relativas a la carpeta de datos). */
+  solucion?: string[];
+  rubricaConfirmada?: boolean;
   grupoId: string;
   titulo: string;
   descripcion: string;
@@ -72,6 +81,8 @@ export interface ResultadoReactivo {
   respuestaLeida: string;
   confianza: Confianza;
   comentario: string;
+  /** Dónde está el reactivo en la hoja del alumno, para dibujar la marca. */
+  ubicacion?: { pagina: number; y: number };
   /** Para desarrollos: fracción lograda de cada paso (0 a 1), en el orden de la rúbrica. */
   pasos?: number[];
 }
@@ -86,4 +97,24 @@ export interface Entrega {
   resultados: ResultadoReactivo[];
   positivos: string[];
   mejoras: string[];
+  /** Fotos de las hojas del alumno, en orden (rutas relativas a la carpeta de datos). */
+  imagenes?: string[];
+  entregadaEn?: string;
+  evaluadaEn?: string;
+  /** Último error de evaluación, si lo hubo. */
+  error?: string;
+}
+
+export interface Movimiento {
+  fecha: string;
+  concepto: string;
+  cantidad: number;
+}
+
+export interface BaseDeDatos {
+  version: 1;
+  grupos: Grupo[];
+  actividades: Actividad[];
+  entregas: Entrega[];
+  movimientos: Movimiento[];
 }

@@ -2,6 +2,7 @@
 // determinista para que cada recarga muestre lo mismo.
 import type {
   Actividad,
+  BaseDeDatos,
   Alumno,
   Confianza,
   Entrega,
@@ -340,28 +341,18 @@ function generarEntregas(actividad: Actividad, semilla: number): Entrega[] {
 
 export const entregas: Entrega[] = actividades.flatMap((a, i) => generarEntregas(a, 2026 + i * 17));
 
-// Consultas. Al conectar la API, estas funciones harán fetch al backend.
-export function obtenerGrupo(id: string) {
-  return grupos.find((g) => g.id === id);
+/** Datos iniciales de la demo: un grupo con actividades de ejemplo ya evaluadas. */
+export function semilla(): BaseDeDatos {
+  return structuredClone({
+    version: 1,
+    grupos,
+    actividades: actividades.map((a) => ({ ...a, demo: true, rubricaConfirmada: a.reactivos.length > 0 })),
+    entregas,
+    movimientos: [
+      { fecha: "2026-10-23", concepto: "Evaluación · Vectores y suma de fuerzas", cantidad: -22 },
+      { fecha: "2026-10-20", concepto: "Compra paquete Básico", cantidad: 300 },
+      { fecha: "2026-10-15", concepto: "Evaluación · Diagnóstico de álgebra", cantidad: -33 },
+      { fecha: "2026-10-01", concepto: "Créditos de bienvenida", cantidad: 200 },
+    ],
+  } satisfies BaseDeDatos);
 }
-export function obtenerActividad(id: string) {
-  return actividades.find((a) => a.id === id);
-}
-export function actividadesDeGrupo(grupoId: string) {
-  return actividades.filter((a) => a.grupoId === grupoId);
-}
-export function entregasDeActividad(actividadId: string) {
-  return entregas.filter((e) => e.actividadId === actividadId);
-}
-export function obtenerEntrega(actividadId: string, matricula: string) {
-  return entregas.find((e) => e.actividadId === actividadId && e.matricula === matricula);
-}
-export function obtenerAlumno(matricula: string) {
-  for (const g of grupos) {
-    const a = g.alumnos.find((x) => x.matricula === matricula);
-    if (a) return a;
-  }
-  return undefined;
-}
-
-export const saldoCreditos = 412;

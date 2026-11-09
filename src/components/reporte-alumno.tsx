@@ -3,7 +3,7 @@
 // 3) la actividad anexa con las correcciones.
 import type { Actividad, Alumno, Entrega, Grupo } from "@/lib/tipos";
 import { calificacion, puntosObtenidos, puntosTotales } from "@/lib/estadisticas";
-import { Hoja } from "./hoja";
+import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { colorCalificacion, fechaLarga } from "./ui";
 
 const nombreTipo: Record<string, string> = {
@@ -129,16 +129,14 @@ export function ReporteAlumno({
           3. Tu actividad con correcciones
         </h2>
         <div className="grid gap-6 lg:grid-cols-2">
-          {Array.from({ length: actividad.paginas }, (_, i) => (
-            <Hoja
+          {Array.from({ length: paginasDe(actividad, entrega) }, (_, i) => (
+            <HojaEntrega
               key={i}
               actividad={actividad}
               pagina={i + 1}
-              modo="alumno"
               alumno={alumno}
               entrega={entrega}
               grupoTexto={grupoTexto}
-              anotada
             />
           ))}
         </div>

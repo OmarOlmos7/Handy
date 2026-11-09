@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import type { Reactivo } from "@/lib/tipos";
+import { useState, useTransition } from "react";
+import { guardarRubrica } from "@/app/acciones";
+import type { Reactivo, TipoReactivo } from "@/lib/tipos";
 import { Boton, Insignia } from "./ui";
 
 const nombreTipo: Record<string, string> = {
@@ -14,9 +15,31 @@ const nombreTipo: Record<string, string> = {
 };
 
 /** Rúbrica propuesta por la IA a partir de la solución del profesor. El profesor la ajusta y confirma. */
-export function RubricaEditor({ reactivosIniciales }: { reactivosIniciales: Reactivo[] }) {
+export function RubricaEditor({
+  actividadId,
+  reactivosIniciales,
+  confirmadaInicial,
+}: {
+  actividadId: string;
+  reactivosIniciales: Reactivo[];
+  confirmadaInicial: boolean;
+}) {
   const [reactivos, setReactivos] = useState(reactivosIniciales);
-  const [confirmada, setConfirmada] = useState(false);
+  const [confirmada, setConfirmada] = useState(confirmadaInicial);
+  const [guardando, iniciar] = useTransition();
+  const [error, setError] = useState("");
+
+  function guardar(confirmar: boolean) {
+    setError("");
+    iniciar(async () => {
+      try {
+        await guardarRubrica(actividadId, reactivos, confirmar);
+        setConfirmada(confirmar);
+      } catch {
+        setError("No se pudo guardar la rúbrica.");
+      }
+    });
+  }
   const total = reactivos.reduce((s, r) => s + r.puntos, 0);
 
   function cambiar(numero: number, cambio: Partial<Reactivo>) {
@@ -33,10 +56,13 @@ export function RubricaEditor({ reactivosIniciales }: { reactivosIniciales: Reac
             {reactivos.length} reactivos · {total} puntos en total. Revisa respuestas, puntos y pasos esperados.
           </p>
         </div>
+        {error && <p className="w-full text-sm text-error">{error}</p>}
         {confirmada ? (
           <Insignia tono="verde">Rúbrica confirmada</Insignia>
         ) : (
-          <Boton onClick={() => setConfirmada(true)}>Confirmar rúbrica</Boton>
+          <Boton onClick={() => guardar(true)} disabled={guardando}>
+            {guardando ? "Guardando…" : "Confirmar rúbrica"}
+          </Boton>
         )}
       </div>
       <ul className="divide-y divide-slate-100">
@@ -46,10 +72,27 @@ export function RubricaEditor({ reactivosIniciales }: { reactivosIniciales: Reac
             <div className="min-w-0">
               <p className="text-sm text-slate-800">{r.enunciado}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                <Insignia tono="azul">{nombreTipo[r.tipo]}</Insignia>
-                <Insignia>Tema: {r.tema}</Insignia>
-                <Insignia>Habilidad: {r.habilidad}</Insignia>
+                <select
+                  value={r.tipo}
+                  onChange={(e) => cambiar(r.numero, { tipo: e.target.value as TipoReactivo })}
+                  className="rounded-full bg-tinta-50 px-2 py-0.5 text-xs font-medium text-tinta-700"
+                  aria-label={`Tipo del reactivo ${r.numero}`}
+                >
+                  {Object.entries(nombreTipo).map(([v, t]) => (
+                    <option key={v} value={v}>{t}</option>
+                  ))}
+                </select>
                 <Insignia>Página {r.pagina}</Insignia>
+              </div>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                <label className="text-xs font-medium text-slate-500">
+                  Tema
+                  <input value={r.tema} onChange={(e) => cambiar(r.numero, { tema: e.target.value })} className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-800" />
+                </label>
+                <label className="text-xs font-medium text-slate-500">
+                  Habilidad
+                  <input value={r.habilidad} onChange={(e) => cambiar(r.numero, { habilidad: e.target.value })} className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-800" />
+                </label>
               </div>
               <label className="mt-3 block text-xs font-medium text-slate-500">
                 {r.tipo === "abierto" ? "Criterios esperados" : r.tipo === "desarrollo" ? "Resultado final" : "Respuesta correcta"}
