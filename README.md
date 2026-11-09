@@ -14,6 +14,7 @@ Requiere Node.js 20 o superior y una llave de la API de Claude
 ```bash
 npm install
 echo "ANTHROPIC_API_KEY=sk-ant-..." > .env.local   # tu llave; nunca la subas a GitHub
+# (También acepta RETROALIMENTA_CLAUDE_KEY, útil donde ANTHROPIC_* está reservado.)
 npm run build && npm start                         # http://localhost:3000
 ```
 

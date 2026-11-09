@@ -12,8 +12,12 @@ const MODELO = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
 
 export class ErrorIA extends Error {}
 
+// Nombre alterno para la llave: algunos entornos (por ejemplo, la nube de Claude Code)
+// reservan las variables ANTHROPIC_* y no las pasan a los procesos.
+const LLAVE_ALTERNA = process.env.RETROALIMENTA_CLAUDE_KEY;
+
 export function iaDisponible() {
-  return Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
+  return Boolean(LLAVE_ALTERNA || process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 }
 
 function cliente() {
@@ -22,7 +26,8 @@ function cliente() {
       "Falta la llave de la API de Claude. Agrega ANTHROPIC_API_KEY en el archivo .env.local y reinicia el servidor.",
     );
   }
-  return new Anthropic();
+  // Con la llave alterna se fija la URL oficial para no heredar un ANTHROPIC_BASE_URL ajeno.
+  return LLAVE_ALTERNA ? new Anthropic({ apiKey: LLAVE_ALTERNA, baseURL: "https://api.anthropic.com" }) : new Anthropic();
 }
 
 export interface ImagenParaIA {
