@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Retroalimenta · plataforma web (iteración 1)
 
-## Getting Started
+Web del profesor y del alumno para evaluar actividades impresas con apoyo de IA.
+Esta iteración es el **frontend completo con datos de ejemplo**: todavía no hay base de
+datos, inicio de sesión real, pagos ni llamadas a la API de Claude.
 
-First, run the development server:
+## Cómo correrlo
+
+Requiere Node.js 20 o superior.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm test           # pruebas de cálculos y exportación (Vitest)
+npm run lint
+npm run build && npm start   # versión de producción
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Qué incluye
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Ruta | Qué es |
+| --- | --- |
+| `/` | Página pública: propuesta de valor, cómo funciona, precios, privacidad |
+| `/ingresar` | Acceso de demostración (profesor o alumno) |
+| `/profesor` | Panel: grupos, actividades, saldo de créditos |
+| `/profesor/actividades/nueva` | Alta de actividad en 3 pasos |
+| `/profesor/actividades/[id]` | Entregas del grupo, calificación sugerida, baja confianza, aprobar todo |
+| `/profesor/actividades/[id]/rubrica` | Solución del profesor y rúbrica propuesta por la IA (editable) |
+| `/profesor/actividades/[id]/revision/[matricula]` | Hoja corregida (palomas, taches, comentarios en rojo) + edición de puntos y retroalimentación |
+| `/profesor/actividades/[id]/reporte` | Estadísticas del grupo, temas, habilidades, niveles, **Excel** y **CSV para Canvas** |
+| `/profesor/actividades/[id]/hoja` | Hoja imprimible con QR y marcas de esquina |
+| `/profesor/creditos` | Tienda de créditos (demo) y movimientos |
+| `/alumno`, `/alumno/reporte/[id]` | Actividades del alumno y su reporte de retroalimentación |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Estructura
 
-## Learn More
+```
+src/
+  app/                 páginas (Next.js App Router)
+  components/          UI; hoja.tsx dibuja la hoja anotada en SVG
+  lib/
+    tipos.ts           modelo de datos (debe coincidir con la futura API)
+    datos-ejemplo.ts   datos de demostración y funciones de consulta
+    estadisticas.ts    calificación, reporte del grupo, niveles
+    exportar.ts        Excel (exceljs) y CSV del libro de calificaciones de Canvas
+```
 
-To learn more about Next.js, take a look at the following resources:
+Para conectar el backend, sustituye las funciones de consulta de `datos-ejemplo.ts`
+por llamadas a la API (FastAPI) sin cambiar las páginas.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Siguientes pasos
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Backend FastAPI + PostgreSQL: usuarios, grupos, actividades, entregas, créditos.
+2. Autenticación real (correo y Google) con roles profesor y alumno.
+3. Carga de archivos y worker de evaluación con la API de Claude.
+4. PDF anotado real (PyMuPDF) a partir de la foto escaneada.
+5. Pagos con Mercado Pago y webhook que acredita créditos.
+6. Despliegue en VPS de Hostinger con Docker Compose y Caddy.
