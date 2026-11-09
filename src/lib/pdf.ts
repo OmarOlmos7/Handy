@@ -137,32 +137,51 @@ export async function pdfRetroalimentacion(datos: {
   // ---- 2. Hojas del alumno con marcas ----
   for (const [i, ruta] of (entrega.imagenes ?? []).entries()) {
     const img = await doc.embedJpg(leerArchivo(ruta));
-    const escala = Math.min(CARTA.ancho / img.width, CARTA.alto / img.height);
+    // La foto ocupa la parte izquierda de una hoja carta y las marcas van en un margen
+    // a la derecha, para no tapar lo que escribió el alumno ni el texto impreso.
+    const MARGEN = 160;
+    const escala = Math.min((CARTA.ancho - MARGEN - 12) / img.width, (CARTA.alto - 24) / img.height);
     const ancho = img.width * escala;
     const alto = img.height * escala;
-    const hoja = doc.addPage([ancho, alto]);
-    hoja.drawImage(img, { x: 0, y: 0, width: ancho, height: alto });
-    const marcas = entrega.resultados.filter((r) => (r.ubicacion?.pagina ?? 1) === i + 1);
+    const x0 = 12;
+    const y0 = (CARTA.alto - alto) / 2;
+    const xMargen = x0 + ancho + 10;
+    const anchoTexto = CARTA.ancho - xMargen - 12;
+    const hoja = doc.addPage([CARTA.ancho, CARTA.alto]);
+    hoja.drawImage(img, { x: x0, y: y0, width: ancho, height: alto });
+    hoja.drawLine({ start: { x: xMargen - 4, y: 12 }, end: { x: xMargen - 4, y: CARTA.alto - 12 }, thickness: 0.6, color: ROJO, opacity: 0.4 });
+
+    let limite = CARTA.alto - 12;
+    if (i === 0) {
+      const xc = xMargen + anchoTexto / 2;
+      hoja.drawCircle({ x: xc, y: CARTA.alto - 46, size: 28, borderColor: ROJO, borderWidth: 2 });
+      hoja.drawText(cal.toFixed(1), { x: xc - negrita.widthOfTextAtSize(cal.toFixed(1), 18) / 2, y: CARTA.alto - 52, size: 18, font: negrita, color: ROJO });
+      limite = CARTA.alto - 84;
+    }
+
+    const marcas = entrega.resultados
+      .filter((r) => (r.ubicacion?.pagina ?? 1) === i + 1)
+      .sort((a, b) => (a.ubicacion?.y ?? 0.5) - (b.ubicacion?.y ?? 0.5));
     for (const res of marcas) {
       const r = actividad.reactivos.find((x) => x.numero === res.numero);
       if (!r) continue;
-      const yMarca = alto * (1 - (res.ubicacion?.y ?? 0.5)) - 14;
-      const xMarca = ancho - 46;
       const completo = res.puntosObtenidos >= r.puntos;
-      if (completo) paloma(hoja, xMarca - 8, yMarca - 6);
-      else tache(hoja, xMarca, yMarca);
-      hoja.drawText(`${res.puntosObtenidos}/${r.puntos}`, { x: xMarca - 14, y: yMarca - 26, size: 10, font: negrita, color: completo ? VERDE : ROJO });
+      const color = completo ? VERDE : ROJO;
+      const yHoja = y0 + alto * (1 - (res.ubicacion?.y ?? 0.5));
+      // Si dos reactivos quedan muy juntos, el segundo baja para no encimarse.
+      const yMarca = Math.min(yHoja, limite - 14);
+      hoja.drawLine({ start: { x: xMargen - 14, y: yHoja }, end: { x: xMargen - 4, y: yHoja }, thickness: 1.5, color });
+      if (completo) paloma(hoja, xMargen + 4, yMarca - 6);
+      else tache(hoja, xMargen + 12, yMarca);
+      hoja.drawText(`${res.numero}.  ${res.puntosObtenidos}/${r.puntos}`, { x: xMargen + 30, y: yMarca - 4, size: 10, font: negrita, color });
+      let yTexto = yMarca - 18;
       if (!completo && res.comentario) {
-        const lineas = envolver(normal, res.comentario, 9, 170);
-        const altoCaja = lineas.length * 11 + 8;
-        const xCaja = xMarca - 30 - 178;
-        hoja.drawRectangle({ x: xCaja, y: yMarca - altoCaja + 10, width: 178, height: altoCaja, color: rgb(1, 1, 1), opacity: 0.85, borderColor: ROJO, borderWidth: 0.8 });
-        lineas.forEach((l, k) => hoja.drawText(l, { x: xCaja + 5, y: yMarca + 1 - k * 11, size: 9, font: normal, color: ROJO }));
+        for (const l of envolver(normal, res.comentario, 8.5, anchoTexto)) {
+          hoja.drawText(l, { x: xMargen, y: yTexto, size: 8.5, font: normal, color: ROJO });
+          yTexto -= 10.5;
+        }
       }
-    }
-    if (i === 0) {
-      hoja.drawCircle({ x: ancho - 60, y: alto - 50, size: 28, color: rgb(1, 1, 1), opacity: 0.85, borderColor: ROJO, borderWidth: 2 });
-      hoja.drawText(cal.toFixed(1), { x: ancho - 60 - negrita.widthOfTextAtSize(cal.toFixed(1), 18) / 2, y: alto - 56, size: 18, font: negrita, color: ROJO });
+      limite = yTexto + 2;
     }
   }
   return doc.save();
