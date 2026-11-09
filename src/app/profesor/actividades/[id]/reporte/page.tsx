@@ -3,12 +3,8 @@ import Link from "next/link";
 import { DescargasReporte } from "@/components/descargas-reporte";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import { Barra, Encabezado, InsigniaNivel, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
-import { actividades, entregasDeActividad, obtenerActividad, obtenerGrupo } from "@/lib/datos-ejemplo";
+import { actividadDe, entregasDe, grupoDe, leer } from "@/lib/almacen";
 import { UMBRALES, reporteGrupo, resumenNarrativo } from "@/lib/estadisticas";
-
-export function generateStaticParams() {
-  return actividades.map((a) => ({ id: a.id }));
-}
 
 const nombreTipo: Record<string, string> = {
   verdadero_falso: "V/F",
@@ -21,10 +17,11 @@ const nombreTipo: Record<string, string> = {
 
 export default async function ReporteGrupo({ params }: PageProps<"/profesor/actividades/[id]/reporte">) {
   const { id } = await params;
-  const actividad = obtenerActividad(id);
+  const db = await leer();
+  const actividad = actividadDe(db, id);
   if (!actividad) notFound();
-  const grupo = obtenerGrupo(actividad.grupoId)!;
-  const rep = reporteGrupo(actividad, entregasDeActividad(id), grupo.alumnos);
+  const grupo = grupoDe(db, actividad.grupoId)!;
+  const rep = reporteGrupo(actividad, entregasDe(db, id), grupo.alumnos);
   const maxDist = Math.max(1, ...rep.distribucion.map((d) => d.cantidad));
   const menores = [...rep.porReactivo].sort((a, b) => a.acierto - b.acierto).slice(0, 3);
 

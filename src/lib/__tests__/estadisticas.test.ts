@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { actividades, entregasDeActividad, grupos } from "../datos-ejemplo";
+import { actividades, entregas, grupos } from "../datos-ejemplo";
+
+const entregasDeActividad = (id: string) => entregas.filter((e) => e.actividadId === id);
 import { calificacion, nivelDe, puntosTotales, reporteGrupo } from "../estadisticas";
 import { csvCanvas, filasExcel } from "../exportar";
 import type { Actividad, Entrega } from "../tipos";

@@ -58,7 +58,7 @@ export function Insignia({ tono = "gris", children }: { tono?: Tono; children: R
 const textoEstadoActividad: Record<EstadoActividad, [string, Tono]> = {
   esperando_entregas: ["Esperando entregas", "gris"],
   rubrica_pendiente: ["Rúbrica pendiente", "ambar"],
-  evaluando: ["Evaluando", "azul"],
+  evaluando: ["Por evaluar", "azul"],
   en_revision: ["Lista para revisar", "ambar"],
   publicada: ["Publicada", "verde"],
 };

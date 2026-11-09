@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
 import { TiendaCreditos } from "@/components/tienda-creditos";
 import { Encabezado, Tarjeta } from "@/components/ui";
-import { saldoCreditos } from "@/lib/datos-ejemplo";
+import { ReiniciarDemo } from "@/components/reiniciar-demo";
+import { leer, saldo } from "@/lib/almacen";
 
 export const metadata: Metadata = { title: "Créditos" };
 
-// Libro de movimientos: cada compra suma, cada evaluación resta. El saldo es la suma.
-const movimientos = [
-  { fecha: "2026-11-06", concepto: "Evaluación · Cinemática: MRU y MRUA (reservado)", cantidad: -33 },
-  { fecha: "2026-10-23", concepto: "Evaluación · Vectores y suma de fuerzas", cantidad: -22 },
-  { fecha: "2026-10-20", concepto: "Compra paquete Básico", cantidad: 300 },
-  { fecha: "2026-10-15", concepto: "Evaluación · Diagnóstico de álgebra", cantidad: -33 },
-  { fecha: "2026-10-01", concepto: "Créditos de bienvenida", cantidad: 200 },
-];
-
-export default function Creditos() {
+export default async function Creditos() {
+  const db = await leer();
+  const saldoCreditos = saldo(db);
+  const movimientos = db.movimientos;
   return (
     <>
       <Encabezado
@@ -41,8 +36,8 @@ export default function Creditos() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {movimientos.map((m) => (
-              <tr key={m.fecha + m.concepto}>
+            {movimientos.map((m, i) => (
+              <tr key={i}>
                 <td className="px-4 py-2 text-slate-600">{m.fecha}</td>
                 <td className="px-4 py-2">{m.concepto}</td>
                 <td className={`px-4 py-2 text-right font-medium ${m.cantidad > 0 ? "text-acierto" : "text-slate-700"}`}>
@@ -52,6 +47,13 @@ export default function Creditos() {
             ))}
           </tbody>
         </table>
+      </div>
+      <div className="mt-10 rounded-xl border border-dashed border-slate-300 p-5">
+        <h2 className="font-semibold">Demo</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          Regresa la plataforma a los datos de ejemplo. Se borran grupos, actividades y fotos que hayas subido.
+        </p>
+        <ReiniciarDemo />
       </div>
     </>
   );

@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { BarraApp } from "@/components/barra-app";
-import { saldoCreditos } from "@/lib/datos-ejemplo";
+import { leer, saldo } from "@/lib/almacen";
 
-export default function LayoutProfesor({ children }: LayoutProps<"/profesor">) {
+export default async function LayoutProfesor({ children }: LayoutProps<"/profesor">) {
+  const saldoCreditos = saldo(await leer());
   return (
     <>
       <BarraApp
         enlaces={[
           { href: "/profesor", texto: "Panel", exacto: true },
           { href: "/profesor/actividades/nueva", texto: "Nueva actividad" },
+          { href: "/profesor/grupos/nuevo", texto: "Nuevo grupo" },
           { href: "/profesor/creditos", texto: "Créditos" },
         ]}
         usuario={{ nombre: "Prof. Omar", rol: "Profesor" }}

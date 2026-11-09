@@ -255,6 +255,7 @@ export function Hoja({
   grupoTexto,
   anotada = false,
   modoProfesor = false,
+  qrSrc,
 }: {
   actividad: Actividad;
   pagina: number;
@@ -264,6 +265,8 @@ export function Hoja({
   grupoTexto: string;
   anotada?: boolean;
   modoProfesor?: boolean;
+  /** Imagen (data URL) de un QR real; si falta se dibuja un patrón decorativo. */
+  qrSrc?: string;
 }) {
   const reactivos = actividad.reactivos.filter((r) => r.pagina === pagina);
   // Posición vertical de cada reactivo: se acumulan las alturas de los anteriores.
@@ -306,7 +309,11 @@ export function Hoja({
       ].map(([x, yy]) => (
         <rect key={`${x}-${yy}`} x={x} y={yy} width={30} height={30} fill="#111" />
       ))}
-      <QR x={ANCHO - 170} y={70} texto={`${actividad.id}:${pagina}`} />
+      {qrSrc ? (
+        <image href={qrSrc} x={ANCHO - 170} y={70} width={96} height={96} />
+      ) : (
+        <QR x={ANCHO - 170} y={70} texto={`${actividad.id}:${pagina}`} />
+      )}
       <text x={60} y={90} fontSize={14} fill="#64748b" letterSpacing={1}>
         {grupoTexto.toUpperCase()}
       </text>

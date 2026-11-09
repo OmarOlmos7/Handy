@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AprobarTodo } from "@/components/aprobar-todo";
+import { EvaluarTodo } from "@/components/evaluar-todo";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import {
   BotonLink,
@@ -12,25 +13,24 @@ import {
   colorCalificacion,
   fechaLarga,
 } from "@/components/ui";
-import { actividades, entregasDeActividad, obtenerActividad, obtenerGrupo } from "@/lib/datos-ejemplo";
+import { actividadDe, entregasDe, estadoActividad, grupoDe, leer } from "@/lib/almacen";
 import { calificacion } from "@/lib/estadisticas";
-
-export function generateStaticParams() {
-  return actividades.map((a) => ({ id: a.id }));
-}
+import { qrDataUrl, urlBase } from "@/lib/qr";
 
 export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
-  const actividad = obtenerActividad(id);
+  const db = await leer();
+  const actividad = actividadDe(db, id);
   if (!actividad) notFound();
-  const grupo = obtenerGrupo(actividad.grupoId)!;
-  const entregas = entregasDeActividad(id);
+  const grupo = grupoDe(db, actividad.grupoId)!;
+  const entregas = entregasDe(db, id);
   const recibidas = entregas.filter((e) => e.estado !== "sin_entregar");
   const porAprobar = entregas.filter((e) => e.estado === "evaluada");
-  const bajaConfianza = entregas.reduce(
-    (s, e) => s + e.resultados.filter((r) => r.confianza === "baja").length,
-    0,
-  );
+  const porEvaluar = entregas.filter((e) => e.estado === "entregada" && e.imagenes?.length);
+  const bajaConfianza = entregas.reduce((s, e) => s + e.resultados.filter((r) => r.confianza === "baja").length, 0);
+  const enlace = `${await urlBase()}/entregar/${id}`;
+  const qr = await qrDataUrl(enlace);
+  const nombre = (m: string) => grupo.alumnos.find((a) => a.matricula === m)?.nombre ?? m;
 
   return (
     <>
@@ -42,8 +42,8 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         titulo={actividad.titulo}
         subtitulo={
           <span className="flex flex-wrap items-center gap-2">
-            Aplicada {fechaLarga(actividad.fechaAplicacion)} · {actividad.paginas} páginas por alumno
-            <InsigniaActividad estado={actividad.estado} />
+            Aplicada {fechaLarga(actividad.fechaAplicacion)}
+            <InsigniaActividad estado={estadoActividad(db, actividad)} />
           </span>
         }
         acciones={
@@ -51,15 +51,33 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
             <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
               Hoja imprimible con QR
             </BotonLink>
-            {porAprobar.length > 0 && (
-              <AprobarTodo pendientes={porAprobar.length} paginas={actividad.paginas} />
+            {porAprobar.length > 0 && <AprobarTodo actividadId={id} pendientes={porAprobar.length} />}
+            {actividad.rubricaConfirmada && (
+              <EvaluarTodo
+                actividadId={id}
+                pendientes={porEvaluar.map((e) => ({ matricula: e.matricula, nombre: nombre(e.matricula) }))}
+              />
             )}
           </>
         }
       />
       <PestanasActividad id={id} activa="entregas" />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      {!actividad.rubricaConfirmada && (
+        <Tarjeta className="mb-6 border-l-4 border-aviso">
+          <p className="font-medium">{actividad.reactivos.length ? "Confirma la rúbrica" : "Falta tu solución"}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            {actividad.reactivos.length
+              ? "La IA ya propuso la rúbrica. Revísala y confírmala para poder evaluar las entregas."
+              : "Sube la actividad resuelta por ti para que la IA prepare la rúbrica. Mientras tanto, los alumnos ya pueden entregar."}
+          </p>
+          <BotonLink href={`/profesor/actividades/${id}/rubrica`} className="mt-3">
+            {actividad.reactivos.length ? "Revisar rúbrica" : "Subir solución"}
+          </BotonLink>
+        </Tarjeta>
+      )}
+
+      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)]">
         <Tarjeta>
           <p className="text-sm text-slate-500">Entregas recibidas</p>
           <p className="mt-1 text-2xl font-semibold">
@@ -71,24 +89,22 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           <p className="mt-1 text-2xl font-semibold">{porAprobar.length}</p>
         </Tarjeta>
         <Tarjeta>
-          <p className="text-sm text-slate-500">Reactivos con baja confianza</p>
+          <p className="text-sm text-slate-500">Baja confianza</p>
           <p className={`mt-1 text-2xl font-semibold ${bajaConfianza ? "text-aviso" : ""}`}>{bajaConfianza}</p>
-          {bajaConfianza > 0 && <p className="text-xs text-slate-500">Revísalos primero: la IA no pudo leerlos bien.</p>}
+          {bajaConfianza > 0 && <p className="text-xs text-slate-500">Reactivos que la IA no leyó bien.</p>}
+        </Tarjeta>
+        <Tarjeta className="flex items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={qr} alt="Código QR para entregar" className="h-24 w-24 shrink-0" />
+          <div className="min-w-0 text-sm">
+            <p className="font-medium">Entregas desde el celular</p>
+            <p className="text-slate-500">Los alumnos escanean este código o abren el enlace:</p>
+            <a href={enlace} target="_blank" className="block truncate text-tinta-700 hover:underline">
+              {enlace}
+            </a>
+          </div>
         </Tarjeta>
       </div>
-
-      {actividad.reactivos.length === 0 && (
-        <Tarjeta className="mb-6 border-l-4 border-aviso">
-          <p className="font-medium">Falta tu solución</p>
-          <p className="mt-1 text-sm text-slate-600">
-            Escanea la actividad resuelta por ti para que la IA prepare la rúbrica. Mientras tanto, los alumnos ya
-            pueden subir sus hojas.
-          </p>
-          <BotonLink href={`/profesor/actividades/${id}/rubrica`} className="mt-3">
-            Subir solución
-          </BotonLink>
-        </Tarjeta>
-      )}
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <table className="w-full text-left text-sm">
@@ -98,43 +114,40 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
               <th className="px-4 py-3 font-medium">Matrícula</th>
               <th className="px-4 py-3 font-medium">Estado</th>
               <th className="px-4 py-3 font-medium">Páginas</th>
-              <th className="px-4 py-3 font-medium">Calificación sugerida</th>
+              <th className="px-4 py-3 font-medium">Calificación</th>
               <th className="px-4 py-3 font-medium">Revisar</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {entregas.map((e) => {
-              const alumno = grupo.alumnos.find((a) => a.matricula === e.matricula)!;
               const cal = calificacion(actividad, e);
               const baja = e.resultados.filter((r) => r.confianza === "baja").length;
               const evaluada = e.resultados.length > 0;
               return (
                 <tr key={e.matricula} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium">{alumno.nombre}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-slate-600">{alumno.matricula}</td>
+                  <td className="px-4 py-3 font-medium">{nombre(e.matricula)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-slate-600">{e.matricula}</td>
                   <td className="px-4 py-3">
                     <InsigniaEntrega estado={e.estado} />
+                    {e.error && <p className="mt-1 max-w-48 text-xs text-error">{e.error}</p>}
                   </td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {e.paginasRecibidas}/{actividad.paginas}
-                  </td>
+                  <td className="px-4 py-3 text-slate-600">{e.paginasRecibidas || "—"}</td>
                   <td className={`px-4 py-3 font-semibold ${evaluada ? colorCalificacion(cal) : "text-slate-400"}`}>
                     {evaluada ? cal.toFixed(1) : "—"}
                   </td>
                   <td className="px-4 py-3">
                     {baja > 0 ? <Insignia tono="ambar">{baja} con baja confianza</Insignia> : evaluada ? <span className="text-slate-400">—</span> : null}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="whitespace-nowrap px-4 py-3 text-right">
                     {evaluada ? (
-                      <Link
-                        href={`/profesor/actividades/${id}/revision/${e.matricula}`}
-                        className="font-medium text-tinta-700 hover:underline"
-                      >
+                      <Link href={`/profesor/actividades/${id}/revision/${e.matricula}`} className="font-medium text-tinta-700 hover:underline">
                         {e.estado === "aprobada" ? "Ver" : "Revisar"}
                       </Link>
                     ) : (
-                      <span className="text-xs text-slate-400">Recordar</span>
+                      <Link href={`/entregar/${id}?m=${e.matricula}`} className="text-xs text-tinta-700 hover:underline">
+                        {e.estado === "sin_entregar" ? "Subir sus hojas" : "Reemplazar hojas"}
+                      </Link>
                     )}
                   </td>
                 </tr>

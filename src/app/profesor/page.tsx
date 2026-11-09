@@ -8,15 +8,17 @@ import {
   colorCalificacion,
   fechaLarga,
 } from "@/components/ui";
-import { actividadesDeGrupo, entregasDeActividad, grupos, saldoCreditos } from "@/lib/datos-ejemplo";
+import { entregasDe, estadoActividad, leer, saldo } from "@/lib/almacen";
 import { reporteGrupo } from "@/lib/estadisticas";
 
 export const metadata: Metadata = { title: "Panel del profesor" };
 
-export default function PanelProfesor() {
-  const porRevisar = grupos
-    .flatMap((g) => actividadesDeGrupo(g.id))
-    .filter((a) => a.estado === "en_revision");
+export default async function PanelProfesor() {
+  const db = await leer();
+  const { grupos } = db;
+  const saldoCreditos = saldo(db);
+  const actividadesDeGrupo = (id: string) => db.actividades.filter((a) => a.grupoId === id);
+  const porRevisar = db.actividades.filter((a) => estadoActividad(db, a) === "en_revision");
 
   return (
     <>
@@ -24,10 +26,15 @@ export default function PanelProfesor() {
         titulo="Hola, Omar"
         subtitulo={
           porRevisar.length
-            ? `Tienes ${porRevisar.length} actividad lista para revisar.`
+            ? `Tienes ${porRevisar.length} ${porRevisar.length === 1 ? "actividad lista" : "actividades listas"} para revisar.`
             : "No tienes actividades pendientes de revisión."
         }
-        acciones={<BotonLink href="/profesor/actividades/nueva">+ Nueva actividad</BotonLink>}
+        acciones={
+          <>
+            <BotonLink href="/profesor/grupos/nuevo" variante="secundario">+ Nuevo grupo</BotonLink>
+            <BotonLink href="/profesor/actividades/nueva">+ Nueva actividad</BotonLink>
+          </>
+        }
       />
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
@@ -73,7 +80,7 @@ export default function PanelProfesor() {
                 <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
                   <ul className="divide-y divide-slate-100">
                     {acts.map((a) => {
-                      const rep = reporteGrupo(a, entregasDeActividad(a.id), g.alumnos);
+                      const rep = reporteGrupo(a, entregasDe(db, a.id), g.alumnos);
                       return (
                         <li key={a.id}>
                           <Link
@@ -95,7 +102,7 @@ export default function PanelProfesor() {
                                   Prom. {rep.promedio}
                                 </span>
                               )}
-                              <InsigniaActividad estado={a.estado} />
+                              <InsigniaActividad estado={estadoActividad(db, a)} />
                             </div>
                           </Link>
                         </li>

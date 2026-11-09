@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
+import { guardarRevision } from "@/app/acciones";
 import type { Actividad, Alumno, Entrega, ResultadoReactivo } from "@/lib/tipos";
 import { calificacion, puntosTotales } from "@/lib/estadisticas";
-import { Hoja } from "./hoja";
+import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { Boton, Insignia, colorCalificacion } from "./ui";
 
 const tonoConfianza = { alta: "verde", media: "gris", baja: "ambar" } as const;
@@ -32,6 +33,9 @@ export function RevisionAlumno({
   const [mejoras, setMejoras] = useState(entregaInicial.mejoras.join("\n"));
   const [aprobada, setAprobada] = useState(entregaInicial.estado === "aprobada");
   const [pagina, setPagina] = useState(1);
+  const [guardando, iniciar] = useTransition();
+  const [aviso, setAviso] = useState("");
+  const conFotos = Boolean(entregaInicial.imagenes?.length);
 
   const entrega: Entrega = useMemo(
     () => ({
@@ -46,14 +50,27 @@ export function RevisionAlumno({
   const cambiados = resultados.filter((r, i) => r.puntosObtenidos !== entregaInicial.resultados[i].puntosObtenidos || r.comentario !== entregaInicial.resultados[i].comentario).length;
 
   function actualizar(numero: number, cambio: Partial<ResultadoReactivo>) {
+    setAviso("");
     setResultados((rs) => rs.map((r) => (r.numero === numero ? { ...r, ...cambio } : r)));
+  }
+
+  function guardar(aprobar: boolean) {
+    iniciar(async () => {
+      try {
+        await guardarRevision(actividad.id, alumno.matricula, { resultados, positivos: entrega.positivos, mejoras: entrega.mejoras }, aprobar);
+        if (aprobar) setAprobada(true);
+        setAviso(aprobar ? "" : "Cambios guardados.");
+      } catch {
+        setAviso("No se pudo guardar. Intenta de nuevo.");
+      }
+    });
   }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
       <div className="lg:sticky lg:top-4 lg:self-start">
         <div className="mb-3 flex items-center gap-2">
-          {Array.from({ length: actividad.paginas }, (_, i) => (
+          {Array.from({ length: paginasDe(actividad, entregaInicial) }, (_, i) => (
             <button
               key={i}
               onClick={() => setPagina(i + 1)}
@@ -64,14 +81,12 @@ export function RevisionAlumno({
           ))}
           <span className="ml-auto text-xs text-slate-500">Vista previa del PDF corregido</span>
         </div>
-        <Hoja
+        <HojaEntrega
           actividad={actividad}
           pagina={pagina}
-          modo="alumno"
           alumno={alumno}
           entrega={entrega}
           grupoTexto={grupoTexto}
-          anotada
           modoProfesor
         />
       </div>
@@ -89,13 +104,39 @@ export function RevisionAlumno({
             </div>
             {aprobada ? <Insignia tono="verde">Aprobada</Insignia> : <Insignia tono="azul">Sugerida por IA</Insignia>}
           </div>
+          {aviso && <p className="mt-2 text-sm text-slate-600" role="status">{aviso}</p>}
           <div className="mt-4 flex flex-wrap gap-2">
             {aprobada ? (
               <p className="text-sm text-acierto" role="status">
-                Reporte enviado a {alumno.correo}.
+                Aprobada. El alumno ya puede ver su reporte.
               </p>
             ) : (
-              <Boton onClick={() => setAprobada(true)}>Aprobar y enviar</Boton>
+              <>
+                <Boton onClick={() => guardar(true)} disabled={guardando}>
+                  {guardando ? "Guardando…" : "Aprobar"}
+                </Boton>
+                <Boton variante="secundario" onClick={() => guardar(false)} disabled={guardando}>
+                  Guardar cambios
+                </Boton>
+              </>
+            )}
+            {conFotos && (
+              <a
+                href={`/api/pdf/${actividad.id}/${alumno.matricula}`}
+                target="_blank"
+                className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50"
+              >
+                PDF corregido
+              </a>
+            )}
+            {aprobada && (
+              <a
+                href={`/alumno/reporte/${actividad.id}?m=${encodeURIComponent(alumno.matricula)}`}
+                target="_blank"
+                className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50"
+              >
+                Ver como alumno
+              </a>
             )}
             {siguienteHref && (
               <Link href={siguienteHref} className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50">

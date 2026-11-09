@@ -1,22 +1,15 @@
 import { notFound } from "next/navigation";
 import { RevisionAlumno } from "@/components/revision-alumno";
 import { Encabezado } from "@/components/ui";
-import { actividades, entregasDeActividad, obtenerActividad, obtenerGrupo } from "@/lib/datos-ejemplo";
-
-export function generateStaticParams() {
-  return actividades.flatMap((a) =>
-    entregasDeActividad(a.id)
-      .filter((e) => e.resultados.length > 0)
-      .map((e) => ({ id: a.id, matricula: e.matricula })),
-  );
-}
+import { actividadDe, entregasDe, grupoDe, leer } from "@/lib/almacen";
 
 export default async function Revision({ params }: PageProps<"/profesor/actividades/[id]/revision/[matricula]">) {
   const { id, matricula } = await params;
-  const actividad = obtenerActividad(id);
+  const db = await leer();
+  const actividad = actividadDe(db, id);
   if (!actividad) notFound();
-  const grupo = obtenerGrupo(actividad.grupoId)!;
-  const evaluadas = entregasDeActividad(id).filter((e) => e.resultados.length > 0);
+  const grupo = grupoDe(db, actividad.grupoId)!;
+  const evaluadas = entregasDe(db, id).filter((e) => e.resultados.length > 0);
   const i = evaluadas.findIndex((e) => e.matricula === matricula);
   if (i < 0) notFound();
   const entrega = evaluadas[i];

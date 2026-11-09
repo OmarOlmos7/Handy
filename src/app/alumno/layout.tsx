@@ -5,7 +5,7 @@ export default function LayoutAlumno({ children }: LayoutProps<"/alumno">) {
     <>
       <BarraApp
         enlaces={[{ href: "/alumno", texto: "Mis actividades", exacto: true }]}
-        usuario={{ nombre: "Sofía Hernández", rol: "Alumna · 3° B" }}
+        usuario={{ nombre: "Vista de alumno", rol: "Demo" }}
       />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
     </>
