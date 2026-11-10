@@ -4,8 +4,8 @@ import type { MetadataRoute } from "next";
 // y en computadoras con Chrome o Edge. La misma app sirve a profesores y alumnos.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Retroalimenta",
-    short_name: "Retroalimenta",
+    name: "Ieureka-Grader",
+    short_name: "Ieureka-Grader",
     description: "Evaluación de actividades impresas con apoyo de IA.",
     lang: "es-MX",
     start_url: "/ingresar",

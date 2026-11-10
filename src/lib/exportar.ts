@@ -38,7 +38,7 @@ export async function excelCalificaciones(
 ): Promise<Blob> {
   const ExcelJS = (await import("exceljs")).default;
   const libro = new ExcelJS.Workbook();
-  libro.creator = "Retroalimenta";
+  libro.creator = "Ieureka-Grader";
   const hoja = libro.addWorksheet("Calificaciones");
   hoja.addRow([`${info.materia} · ${info.grupo}`]);
   hoja.addRow([`Actividad: ${info.actividad}`, "", `Fecha: ${info.fecha}`]);
