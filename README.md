@@ -1,4 +1,4 @@
-# Ieureka-Grader · demo funcional
+# iEureka-Grader · demo funcional
 
 Web del profesor y del alumno para evaluar actividades impresas con apoyo de IA.
 Esta versión ya funciona de punta a punta: guarda grupos, actividades y entregas,

@@ -36,7 +36,7 @@ export function InstalarApp() {
         }}
         className="mt-4 w-full rounded-lg bg-tinta-50 px-4 py-2 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200 hover:bg-tinta-100"
       >
-        Instalar Ieureka-Grader como app
+        Instalar iEureka-Grader como app
       </button>
     );
   }

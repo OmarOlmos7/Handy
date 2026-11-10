@@ -1,4 +1,4 @@
-# Publicar Ieureka-Grader en Hostinger (VPS)
+# Publicar iEureka-Grader en Hostinger (VPS)
 
 Guía paso a paso para dejar la plataforma funcionando en internet con tu propio
 dominio y HTTPS. Los profesores crean su cuenta con correo y contraseña; los
@@ -201,10 +201,10 @@ La misma dirección sirve para todos los dispositivos; no hay que publicar nada
 aparte.
 
 - **Computadora:** se usa en el navegador (Chrome, Edge, Safari o Firefox). En
-  Chrome y Edge aparece además el botón **Instalar Ieureka-Grader como app** en
+  Chrome y Edge aparece además el botón **Instalar iEureka-Grader como app** en
   la pantalla de ingreso, para abrirla en su propia ventana.
 - **Android (teléfono o tableta):** en Chrome, el botón **Instalar
-  Ieureka-Grader como app** o el menú ⋮ → **Instalar app**. Queda con ícono
+  iEureka-Grader como app** o el menú ⋮ → **Instalar app**. Queda con ícono
   propio y abre sin la barra del navegador.
 - **iPhone y iPad:** en Safari, **Compartir** → **Agregar a inicio**. La
   pantalla de ingreso lo explica.

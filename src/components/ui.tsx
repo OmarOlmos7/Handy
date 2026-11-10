@@ -168,7 +168,7 @@ export function Logo({ claro = false }: { claro?: boolean }) {
         <rect x="23.7" y="17.2" width="4.6" height="1.6" rx=".6" fill="#475569" />
         <rect x="24.3" y="19.2" width="3.4" height="1.4" rx=".6" fill="#475569" />
       </svg>
-      Ieureka-Grader
+      iEureka-Grader
     </span>
   );
 }
