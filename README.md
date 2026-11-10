@@ -86,7 +86,7 @@ src/
 
 ## Siguientes pasos
 
-1. Publicar en Hostinger (VPS con Node, o Docker con Caddy y HTTPS).
+1. Publicar en Hostinger: guía paso a paso en `despliegue/PUBLICAR.md` (VPS con Docker y Caddy).
 2. Inicio de sesión real para profesores y alumnos.
 3. Cambiar el JSON por PostgreSQL y las fotos por almacenamiento de objetos.
 4. Envío del reporte por correo y pagos de créditos.

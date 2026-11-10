@@ -1,0 +1,29 @@
+# Caddy obtiene y renueva el certificado HTTPS de Let's Encrypt para {$DOMINIO}.
+# Mientras la app no tenga inicio de sesión real, todo pide usuario y contraseña,
+# salvo la portada, la página donde los alumnos suben sus fotos y lo que esa página necesita.
+{$DOMINIO} {
+	encode zstd gzip
+	request_body {
+		max_size 60MB
+	}
+
+	@publico {
+		path / /entregar/* /api/entregas/* /_next/* /favicon.ico
+	}
+	handle @publico {
+		reverse_proxy app:3000
+	}
+
+	handle {
+		basic_auth {
+			{$ACCESO_USUARIO} {$ACCESO_HASH}
+		}
+		reverse_proxy app:3000 {
+			# La evaluación con IA tarda; se da margen de sobra.
+			transport http {
+				read_timeout 5m
+				write_timeout 5m
+			}
+		}
+	}
+}
