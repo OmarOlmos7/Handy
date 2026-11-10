@@ -106,7 +106,7 @@ export default function Inicio() {
           </nav>
           <div className="flex gap-2">
             <BotonLink href="/ingresar" variante="fantasma">Ingresar</BotonLink>
-            <BotonLink href="/ingresar" className="hidden sm:inline-flex">Probar gratis</BotonLink>
+            <BotonLink href="/registro" className="hidden sm:inline-flex">Probar gratis</BotonLink>
           </div>
         </div>
       </header>
@@ -127,9 +127,9 @@ export default function Inicio() {
                 llegue al alumno.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <BotonLink href="/ingresar">Crear cuenta de profesor</BotonLink>
-                <BotonLink href="/profesor/actividades/cinematica-mru-mrua/reporte" variante="secundario">
-                  Ver un reporte de ejemplo
+                <BotonLink href="/registro">Crear cuenta de profesor</BotonLink>
+                <BotonLink href="/alumno" variante="secundario">
+                  Soy alumno: ver mis reportes
                 </BotonLink>
               </div>
               <p className="mt-4 text-sm text-slate-500">50 páginas gratis para probar. Sin tarjeta.</p>

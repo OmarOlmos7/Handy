@@ -13,13 +13,14 @@ import {
   colorCalificacion,
   fechaLarga,
 } from "@/components/ui";
-import { actividadDe, entregasDe, estadoActividad, grupoDe, leer } from "@/lib/almacen";
+import { actividadDe, entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
+import { datosProfesor } from "@/lib/sesion";
 import { calificacion } from "@/lib/estadisticas";
 import { qrDataUrl, urlBase } from "@/lib/qr";
 
 export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
-  const db = await leer();
+  const { db } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
@@ -42,7 +43,8 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         titulo={actividad.titulo}
         subtitulo={
           <span className="flex flex-wrap items-center gap-2">
-            Aplicada {fechaLarga(actividad.fechaAplicacion)}
+            Aplicada {fechaLarga(actividad.fechaAplicacion)} · ID de curso{" "}
+            <span className="font-mono font-semibold text-tinta-700">{grupo.codigo}</span>
             <InsigniaActividad estado={estadoActividad(db, actividad)} />
           </span>
         }
@@ -93,7 +95,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           <p className={`mt-1 text-2xl font-semibold ${bajaConfianza ? "text-aviso" : ""}`}>{bajaConfianza}</p>
           {bajaConfianza > 0 && <p className="text-xs text-slate-500">Reactivos que la IA no leyó bien.</p>}
         </Tarjeta>
-        <Tarjeta className="flex items-center gap-4">
+        <Tarjeta className="flex min-w-0 items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={qr} alt="Código QR para entregar" className="h-24 w-24 shrink-0" />
           <div className="min-w-0 text-sm">
@@ -145,7 +147,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                         {e.estado === "aprobada" ? "Ver" : "Revisar"}
                       </Link>
                     ) : (
-                      <Link href={`/entregar/${id}?m=${e.matricula}`} className="text-xs text-tinta-700 hover:underline">
+                      <Link href={`/entregar/${id}?m=${encodeURIComponent(e.matricula)}&n=${encodeURIComponent(nombre(e.matricula))}`} className="text-xs text-tinta-700 hover:underline">
                         {e.estado === "sin_entregar" ? "Subir sus hojas" : "Reemplazar hojas"}
                       </Link>
                     )}

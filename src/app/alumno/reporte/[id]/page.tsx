@@ -1,27 +1,25 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { ReporteAlumno } from "@/components/reporte-alumno";
 import { BotonLink, Encabezado } from "@/components/ui";
-import { actividadDe, grupoDe, leer } from "@/lib/almacen";
+import { actividadDe, leer } from "@/lib/almacen";
+import { alumnoActual } from "@/lib/sesion";
 
-const MATRICULA_DEMO = "A0231";
-
-export default async function ReporteDeAlumno({ params, searchParams }: PageProps<"/alumno/reporte/[id]">) {
+export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/reporte/[id]">) {
   const { id } = await params;
-  const { m } = await searchParams;
-  const matricula = typeof m === "string" ? m : MATRICULA_DEMO;
+  const sesion = await alumnoActual();
+  if (!sesion) redirect("/alumno");
+  const { grupo, matricula } = sesion;
   const db = await leer();
   const actividad = actividadDe(db, id);
   const entrega = db.entregas.find((e) => e.actividadId === id && e.matricula === matricula);
-  if (!actividad || !entrega || entrega.estado !== "aprobada") notFound();
-  const grupo = grupoDe(db, actividad.grupoId)!;
+  if (!actividad || actividad.grupoId !== grupo.id || !entrega || entrega.estado !== "aprobada") notFound();
   const alumno = grupo.alumnos.find((a) => a.matricula === matricula);
   if (!alumno) notFound();
-  const q = matricula === MATRICULA_DEMO ? "" : `?m=${encodeURIComponent(matricula)}`;
   return (
     <>
       <Encabezado
-        migas={[{ texto: "Mis actividades", href: `/alumno${q}` }]}
+        migas={[{ texto: "Mis actividades", href: "/alumno" }]}
         titulo="Reporte de retroalimentación"
         subtitulo={actividad.titulo}
         acciones={

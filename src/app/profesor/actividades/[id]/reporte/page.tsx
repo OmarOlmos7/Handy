@@ -3,7 +3,8 @@ import Link from "next/link";
 import { DescargasReporte } from "@/components/descargas-reporte";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import { Barra, Encabezado, InsigniaNivel, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
-import { actividadDe, entregasDe, grupoDe, leer } from "@/lib/almacen";
+import { actividadDe, entregasDe, grupoDe } from "@/lib/almacen";
+import { datosProfesor } from "@/lib/sesion";
 import { UMBRALES, reporteGrupo, resumenNarrativo } from "@/lib/estadisticas";
 
 const nombreTipo: Record<string, string> = {
@@ -17,7 +18,7 @@ const nombreTipo: Record<string, string> = {
 
 export default async function ReporteGrupo({ params }: PageProps<"/profesor/actividades/[id]/reporte">) {
   const { id } = await params;
-  const db = await leer();
+  const { db } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;

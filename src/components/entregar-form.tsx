@@ -16,15 +16,16 @@ interface Pagina {
 export function EntregarForm({
   actividadId,
   titulo,
-  alumnos,
   matriculaInicial,
+  nombreInicial,
 }: {
   actividadId: string;
   titulo: string;
-  alumnos: { matricula: string; nombre: string }[];
   matriculaInicial?: string;
+  nombreInicial?: string;
 }) {
   const [matricula, setMatricula] = useState(matriculaInicial ?? "");
+  const [nombre, setNombre] = useState(nombreInicial ?? "");
   const [paginas, setPaginas] = useState<Pagina[]>([]);
   const [estado, setEstado] = useState<"editando" | "enviando" | "enviado" | "error">("editando");
   const [mensaje, setMensaje] = useState("");
@@ -49,12 +50,13 @@ export function EntregarForm({
     setEstado("enviando");
     const datos = new FormData();
     datos.append("matricula", matricula);
+    datos.append("nombre", nombre);
     paginas.forEach((p) => datos.append("fotos", p.archivo));
     try {
       const r = await fetch(`/api/entregas/${actividadId}`, { method: "POST", body: datos });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "Error al enviar");
-      setMensaje(`Listo, ${j.alumno}. Se recibieron ${j.paginas} página${j.paginas > 1 ? "s" : ""}.`);
+      setMensaje(`Listo. Se recibieron ${j.paginas} página${j.paginas > 1 ? "s" : ""} con la matrícula ${matricula.trim().toUpperCase()}.`);
       setEstado("enviado");
     } catch (e) {
       setMensaje(e instanceof Error ? e.message : "No se pudo enviar");
@@ -68,13 +70,17 @@ export function EntregarForm({
         <p className="text-4xl text-acierto">✓</p>
         <h2 className="mt-2 text-lg font-semibold">Entrega recibida</h2>
         <p className="mt-1 text-sm text-slate-600">{mensaje}</p>
-        <p className="mt-3 text-sm text-slate-500">Tu profesor revisará tu actividad y recibirás tu retroalimentación.</p>
+        <p className="mt-3 text-sm text-slate-500">
+          Tu profesor revisará tu actividad. Cuando la apruebe, consulta tu retroalimentación en{" "}
+          <a href="/alumno" className="text-tinta-700 underline">Mis actividades</a> con el ID de curso y tu matrícula.
+        </p>
         <Boton
           variante="secundario"
           className="mt-4"
           onClick={() => {
             setPaginas([]);
-            setMatricula("");
+            setMatricula(matriculaInicial ?? "");
+            setNombre(nombreInicial ?? "");
             setEstado("editando");
           }}
         >
@@ -87,20 +93,27 @@ export function EntregarForm({
   return (
     <div className="space-y-5">
       <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <label className="block text-sm font-medium text-slate-700">
-          1. ¿Quién eres?
-          <select
+        <p className="text-sm font-medium text-slate-700">1. ¿Quién eres?</p>
+        <p className="mt-1 text-xs text-slate-500">No necesitas cuenta. Usa siempre la misma matrícula para que tu profesor reciba tus entregas.</p>
+        <label className="mt-3 block text-sm text-slate-700">
+          Nombre completo
+          <input
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            autoComplete="name"
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base"
+            placeholder="Ej. Ana López Ruiz"
+          />
+        </label>
+        <label className="mt-3 block text-sm text-slate-700">
+          Matrícula
+          <input
             value={matricula}
             onChange={(e) => setMatricula(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base"
-          >
-            <option value="">Elige tu nombre</option>
-            {alumnos.map((a) => (
-              <option key={a.matricula} value={a.matricula}>
-                {a.nombre} ({a.matricula})
-              </option>
-            ))}
-          </select>
+            autoCapitalize="characters"
+            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 font-mono text-base uppercase"
+            placeholder="Ej. A0301"
+          />
         </label>
       </div>
 
@@ -136,7 +149,7 @@ export function EntregarForm({
       </div>
 
       {estado === "error" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{mensaje}</p>}
-      <Boton className="w-full py-3 text-base" onClick={enviar} disabled={!matricula || paginas.length === 0 || estado === "enviando"}>
+      <Boton className="w-full py-3 text-base" onClick={enviar} disabled={!matricula.trim() || nombre.trim().length < 3 || paginas.length === 0 || estado === "enviando"}>
         {estado === "enviando" ? "Enviando…" : `3. Enviar ${paginas.length || ""} página${paginas.length === 1 ? "" : "s"}`}
       </Boton>
     </div>

@@ -8,6 +8,8 @@ services:
       RETROALIMENTA_CLAUDE_KEY: ${RETROALIMENTA_CLAUDE_KEY}
       APP_URL: https://${DOMINIO}
       CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5-5}
+      REGISTRO_CODIGO: ${REGISTRO_CODIGO:-}
+      CREDITOS_INICIALES: ${CREDITOS_INICIALES:-50}
     volumes:
       - datos:/datos
     expose:
@@ -24,8 +26,6 @@ services:
       - "443:443/udp"
     environment:
       DOMINIO: ${DOMINIO}
-      ACCESO_USUARIO: ${ACCESO_USUARIO}
-      ACCESO_HASH: ${ACCESO_HASH}
     volumes:
       - ./despliegue/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_datos:/data

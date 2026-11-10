@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Caveat, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -14,6 +14,16 @@ export const metadata: Metadata = {
   },
   description:
     "Tus alumnos fotografían su hoja, tú subes la solución y la IA sugiere calificación, correcciones en rojo y verde, reportes y el Excel para Canvas.",
+  applicationName: "Retroalimenta",
+  // Al agregarla a la pantalla de inicio en iPhone o iPad abre como app, sin la barra de Safari.
+  appleWebApp: { capable: true, title: "Retroalimenta", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2554e8",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

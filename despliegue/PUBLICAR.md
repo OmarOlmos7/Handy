@@ -1,8 +1,9 @@
 # Publicar Retroalimenta en Hostinger (VPS)
 
 Guía paso a paso para dejar la plataforma funcionando en internet con tu propio
-dominio, HTTPS y una contraseña de acceso. Tiempo estimado: 45 a 60 minutos la
-primera vez.
+dominio y HTTPS. Los profesores crean su cuenta con correo y contraseña; los
+alumnos entregan sin cuenta, con su nombre y matrícula. Tiempo estimado: 45 a
+60 minutos la primera vez.
 
 ## Por qué un VPS y no el hosting web normal
 
@@ -22,13 +23,13 @@ más cercano a México que ofrezca (por ejemplo, Estados Unidos o Brasil).
 ## Antes de empezar
 
 1. **Fusiona los cambios en GitHub** (https://github.com/OmarOlmos7/Handy/pulls), en
-   este orden: el PR #2 (marcas en el margen), luego el PR de despliegue
-   (Dockerfile y Caddy), y al final el PR #1 (demo funcional) hacia `main`.
-   Así `main` tiene todo lo que se va a publicar.
+   este orden: el PR #2 (marcas en el margen), luego el PR #3 (cuentas de
+   profesor, ID de curso y despliegue), y al final el PR #1 (demo funcional)
+   hacia `main`. Así `main` tiene todo lo que se va a publicar.
 2. **Ten a la mano tu llave de la API de Claude** (console.anthropic.com → API
    Keys). Pon un límite de gasto mensual en la consola de Anthropic.
-3. **Decide el dominio.** Puede ser un subdominio de uno que ya tengas, por
-   ejemplo `app.tudominio.com`, o uno nuevo comprado en Hostinger.
+3. **Decide el dominio.** Puede ser uno nuevo comprado en Hostinger (el VPS
+   incluye uno gratis el primer año) o un subdominio de uno que ya tengas.
 
 ## Paso 1. Comprar y preparar el VPS
 
@@ -64,9 +65,11 @@ docker --version && docker compose version
 ## Paso 3. Apuntar el dominio al VPS
 
 1. En hPanel → **Dominios → tu dominio → DNS / Nameservers**.
-2. Agrega un registro **A**:
-   - Nombre: `app` (o `@` si usarás el dominio completo)
-   - Apunta a: la IP del VPS
+2. Agrega dos registros **A** (borra antes los registros A o CNAME que ya
+   existan con esos nombres, por ejemplo los que apuntan al "parking" de
+   Hostinger):
+   - Nombre `@` → la IP del VPS
+   - Nombre `www` → la IP del VPS
    - TTL: el que venga por omisión
 3. Si el dominio está en otro proveedor (GoDaddy, Cloudflare…), crea ahí el
    mismo registro A. En Cloudflare deja la nube en gris (sin proxy) para que
@@ -74,7 +77,7 @@ docker --version && docker compose version
 4. Espera unos minutos y comprueba desde la terminal del VPS:
 
 ```bash
-getent hosts app.tudominio.com
+getent hosts tudominio.com
 ```
 
 Debe responder con la IP del VPS. No sigas al paso 6 hasta que así sea.
@@ -110,13 +113,7 @@ cd /opt/retroalimenta
 cp despliegue/env.ejemplo .env
 ```
 
-Genera el hash de la contraseña que pedirá el sitio (cambia `TU-CONTRASEÑA`):
-
-```bash
-docker run --rm caddy:2.10 caddy hash-password --plaintext 'TU-CONTRASEÑA'
-```
-
-Copia el resultado (empieza con `$2a$14$…`) y abre el archivo:
+Abre el archivo:
 
 ```bash
 nano .env
@@ -125,15 +122,19 @@ nano .env
 Llena así:
 
 ```
-DOMINIO=app.tudominio.com
+DOMINIO=tudominio.com
 RETROALIMENTA_CLAUDE_KEY=sk-ant-...tu llave...
 CLAUDE_MODEL=claude-opus-5-5
-ACCESO_USUARIO=profesor
-ACCESO_HASH='$2a$14$...el hash completo...'
+REGISTRO_CODIGO=una-palabra-que-solo-tú-compartas
+CREDITOS_INICIALES=50
 ```
 
-El hash va entre comillas simples. Guarda con `Ctrl+O`, `Enter` y sal con
-`Ctrl+X`. Protege el archivo:
+`REGISTRO_CODIGO` es el código de invitación que pide la página de registro
+de profesores. Mientras el piloto sea cerrado, ponle un valor y compártelo solo
+con los profesores invitados; así nadie de fuera crea cuentas y gasta tu saldo
+de la API. Si lo dejas vacío, cualquiera puede registrarse.
+
+Guarda con `Ctrl+O`, `Enter` y sal con `Ctrl+X`. Protege el archivo:
 
 ```bash
 chmod 600 .env
@@ -157,30 +158,61 @@ Caddy pide el certificado HTTPS a Let's Encrypt solo; en los registros verás
 
 ## Paso 8. Verificar
 
-1. Abre `https://app.tudominio.com`: debe aparecer la portada con candado.
-2. Entra a **Panel del profesor**: el navegador pide usuario y contraseña
-   (`profesor` y la que elegiste).
-3. Abre una actividad y comprueba que la tabla, el reporte y el PDF corregido
-   cargan.
-4. Desde tu celular, con datos móviles (no WiFi), escanea el QR de una actividad:
-   la página para subir fotos debe abrir **sin** pedir contraseña.
-5. Sube la solución de una actividad nueva y confirma que la IA propone la
-   rúbrica (si sale "Falta la llave de la API de Claude", revisa
-   `RETROALIMENTA_CLAUDE_KEY` en `.env` y ejecuta `docker compose up -d`).
+1. Abre `https://tudominio.com`: debe aparecer la portada con candado.
+2. **Crea tu cuenta primero.** Entra a **Crear cuenta de profesor**
+   (`/registro`) con tu correo, una contraseña y el código de invitación. La
+   primera cuenta que se registra se queda con los cursos de ejemplo, para que
+   puedas enseñar la plataforma; cuando ya no los necesites, quítalos en
+   **Créditos → Quitar datos de ejemplo**.
+3. Crea un curso en **Nuevo curso**. Al guardarlo aparece su **ID de curso**
+   (por ejemplo `FIS-7K2Q`) en el panel; ese ID también sale impreso en la hoja.
+4. Crea una actividad, imprime la hoja y, desde tu celular con datos móviles
+   (no WiFi), escanea el QR: la página para subir fotos abre **sin** cuenta y
+   pide nombre y matrícula. Si la matrícula no estaba en el curso, el alumno
+   queda registrado solo.
+5. Sube tu solución y confirma que la IA propone la rúbrica (si sale "Falta la
+   llave de la API de Claude", revisa `RETROALIMENTA_CLAUDE_KEY` en `.env` y
+   ejecuta `docker compose up -d`).
+6. Abre `/alumno` en otra ventana privada y entra con el ID de curso y la
+   matrícula de prueba: debe aparecer la actividad "En revisión".
 
 Si todo eso funciona, la plataforma ya está en línea.
 
-## Qué queda protegido y qué no
+## Cómo funcionan las cuentas
 
-Mientras la app no tenga inicio de sesión real, Caddy pide usuario y contraseña
-para todo, excepto:
+- **Profesores:** se registran con nombre, correo y contraseña (mínimo 8
+  caracteres). Cada uno ve solo sus cursos, actividades, evaluaciones y
+  créditos. Reciben `CREDITOS_INICIALES` de regalo al registrarse.
+- **ID de curso:** cada curso tiene uno. Une las entregas de los alumnos con la
+  cuenta del profesor y es lo que el alumno usa para consultar sus reportes.
+- **Alumnos:** no se registran. Al entregar escriben su nombre y matrícula; con
+  eso se crea su registro en el curso. Para ver sus reportes aprobados entran a
+  `/alumno` con el ID de curso y su matrícula.
+- Las contraseñas se guardan cifradas (scrypt) y la sesión dura 30 días.
 
-- la portada (`/`),
-- la página donde el alumno sube sus fotos (`/entregar/…`) y su envío.
+Límite actual: cualquiera que conozca el ID de curso y una matrícula puede ver
+los reportes aprobados de ese alumno. Para el piloto es aceptable si el ID de
+curso solo se comparte en clase; más adelante conviene agregar un PIN por
+alumno.
 
-El reporte del alumno (`/alumno`) sí pide la contraseña, porque mostraría datos
-de menores a cualquiera que adivine una matrícula. Por ahora, comparte el
-reporte con el alumno desde tu sesión (PDF o pantalla).
+## Computadoras, teléfonos y tabletas
+
+La misma dirección sirve para todos los dispositivos; no hay que publicar nada
+aparte.
+
+- **Computadora:** se usa en el navegador (Chrome, Edge, Safari o Firefox). En
+  Chrome y Edge aparece además el botón **Instalar Retroalimenta como app** en
+  la pantalla de ingreso, para abrirla en su propia ventana.
+- **Android (teléfono o tableta):** en Chrome, el botón **Instalar
+  Retroalimenta como app** o el menú ⋮ → **Instalar app**. Queda con ícono
+  propio y abre sin la barra del navegador.
+- **iPhone y iPad:** en Safari, **Compartir** → **Agregar a inicio**. La
+  pantalla de ingreso lo explica.
+- Los alumnos no necesitan instalar nada: escanean el QR y entregan desde el
+  navegador del celular.
+
+Esto requiere HTTPS, que Caddy ya pone. Una app nativa en la App Store y Google
+Play (con Expo) puede venir después y usará el mismo VPS como servidor.
 
 ## Uso diario
 
@@ -203,8 +235,8 @@ Descarga el `.tar.gz` a tu computadora (`scp root@TU_IP:/opt/retroalimenta/datos
 Además, en hPanel → VPS → **Instantáneas y respaldos**, activa los respaldos
 semanales o toma una instantánea antes de cada cambio grande.
 
-**Cambiar la contraseña de acceso:** genera un hash nuevo (paso 6), cámbialo en
-`.env` y ejecuta `docker compose up -d`.
+**Cambiar el código de invitación:** edítalo en `.env` y ejecuta
+`docker compose up -d`.
 
 **Reiniciar todo:** `docker compose restart`.
 
@@ -214,7 +246,8 @@ semanales o toma una instantánea antes de cada cambio grande.
 | --- | --- |
 | El navegador dice "no es seguro" o no abre | El registro A todavía no apunta a la IP (`getent hosts …`), o los puertos 80/443 están cerrados. Luego `docker compose restart caddy`. |
 | `docker compose logs caddy` muestra errores de certificado | Lo mismo que arriba; Let's Encrypt necesita llegar al puerto 80. Con Cloudflare, desactiva el proxy (nube gris). |
-| Pide contraseña y no la acepta | El hash en `.env` debe ir entre comillas simples y completo. |
+| Al registrarse dice "El código de invitación no es correcto" | Debe coincidir exacto con `REGISTRO_CODIGO` en `.env`. |
+| Olvidaste tu contraseña de profesor | Aún no hay recuperación por correo; pídeme que la restablezca desde el servidor. |
 | "Falta la llave de la API de Claude" | `RETROALIMENTA_CLAUDE_KEY` vacío o mal copiado en `.env`. |
 | La evaluación se queda cargando | `docker compose logs app`; revisa saldo y límite de la API en console.anthropic.com. |
 | Error al compilar por memoria | Usa KVM 2, o crea swap: `fallocate -l 4G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile`. |
@@ -222,6 +255,6 @@ semanales o toma una instantánea antes de cada cambio grande.
 ## Archivos de despliegue en el repositorio
 
 - `Dockerfile`: compila la app en modo *standalone* y la corre con Node 22.
-- `docker-compose.yml`: la app más Caddy (HTTPS automático y contraseña).
-- `despliegue/Caddyfile`: qué rutas son públicas y cuáles piden contraseña.
+- `docker-compose.yml`: la app más Caddy (HTTPS automático).
+- `despliegue/Caddyfile`: dominio, HTTPS, redirección de www y tiempos de espera.
 - `despliegue/env.ejemplo`: plantilla del `.env`.

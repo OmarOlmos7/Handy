@@ -43,6 +43,10 @@ export interface Alumno {
 
 export interface Grupo {
   id: string;
+  /** Profesor dueño del curso. */
+  profesorId?: string;
+  /** ID de curso que el profesor comparte con sus alumnos (ej. FIS-7K2Q). */
+  codigo?: string;
   nombre: string;
   materia: string;
   ciclo: string;
@@ -106,13 +110,35 @@ export interface Entrega {
 }
 
 export interface Movimiento {
+  profesorId?: string;
   fecha: string;
   concepto: string;
   cantidad: number;
 }
 
+export interface Profesor {
+  id: string;
+  nombre: string;
+  correo: string;
+  /** scrypt: "sal:hash" en hexadecimal. Nunca la contraseña en claro. */
+  contrasena: string;
+  creadoEn: string;
+}
+
+/** Sesión abierta. Se guarda solo el hash SHA-256 del token de la cookie. */
+export interface Sesion {
+  token: string;
+  expira: string;
+  /** Sesión de profesor. */
+  profesorId?: string;
+  /** Sesión de alumno: entra con ID de curso y matrícula, sin cuenta. */
+  alumno?: { grupoId: string; matricula: string };
+}
+
 export interface BaseDeDatos {
-  version: 1;
+  version: 1 | 2;
+  profesores: Profesor[];
+  sesiones: Sesion[];
   grupos: Grupo[];
   actividades: Actividad[];
   entregas: Entrega[];

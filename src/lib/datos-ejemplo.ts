@@ -39,9 +39,10 @@ const alumnos: Alumno[] = [
 }));
 
 export const grupos: Grupo[] = [
-  { id: "fis-3b", nombre: "3° B", materia: "Física", ciclo: "2026-2027", alumnos },
+  { id: "fis-3b", codigo: "FIS-3B7K", nombre: "3° B", materia: "Física", ciclo: "2026-2027", alumnos },
   {
     id: "mat-2a",
+    codigo: "MAT-2A4Q",
     nombre: "2° A",
     materia: "Matemáticas",
     ciclo: "2026-2027",
@@ -344,7 +345,9 @@ export const entregas: Entrega[] = actividades.flatMap((a, i) => generarEntregas
 /** Datos iniciales de la demo: un grupo con actividades de ejemplo ya evaluadas. */
 export function semilla(): BaseDeDatos {
   return structuredClone({
-    version: 1,
+    version: 2,
+    profesores: [],
+    sesiones: [],
     grupos,
     actividades: actividades.map((a) => ({ ...a, demo: true, rubricaConfirmada: a.reactivos.length > 0 })),
     entregas,

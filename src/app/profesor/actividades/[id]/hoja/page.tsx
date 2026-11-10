@@ -2,12 +2,13 @@ import { notFound } from "next/navigation";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { Hoja } from "@/components/hoja";
 import { Encabezado } from "@/components/ui";
-import { actividadDe, grupoDe, leer } from "@/lib/almacen";
+import { actividadDe, grupoDe } from "@/lib/almacen";
+import { datosProfesor } from "@/lib/sesion";
 import { qrDataUrl, urlBase } from "@/lib/qr";
 
 export default async function HojaImprimible({ params }: PageProps<"/profesor/actividades/[id]/hoja">) {
   const { id } = await params;
-  const db = await leer();
+  const { db } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
@@ -26,7 +27,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
       <div className="mx-auto max-w-3xl space-y-6">
         {Array.from({ length: actividad.paginas }, (_, i) => (
           <div key={i} className="break-after-page">
-            <Hoja actividad={actividad} pagina={i + 1} modo="en_blanco" qrSrc={qr} grupoTexto={`${grupo.materia} · ${grupo.nombre}`} />
+            <Hoja actividad={actividad} pagina={i + 1} modo="en_blanco" qrSrc={qr} grupoTexto={`${grupo.materia} · ${grupo.nombre} · ID de curso ${grupo.codigo}`} />
           </div>
         ))}
       </div>

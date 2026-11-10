@@ -8,13 +8,14 @@ import {
   colorCalificacion,
   fechaLarga,
 } from "@/components/ui";
-import { entregasDe, estadoActividad, leer, saldo } from "@/lib/almacen";
+import { entregasDe, estadoActividad, saldo } from "@/lib/almacen";
+import { datosProfesor } from "@/lib/sesion";
 import { reporteGrupo } from "@/lib/estadisticas";
 
 export const metadata: Metadata = { title: "Panel del profesor" };
 
 export default async function PanelProfesor() {
-  const db = await leer();
+  const { db, profesor } = await datosProfesor();
   const { grupos } = db;
   const saldoCreditos = saldo(db);
   const actividadesDeGrupo = (id: string) => db.actividades.filter((a) => a.grupoId === id);
@@ -23,7 +24,7 @@ export default async function PanelProfesor() {
   return (
     <>
       <Encabezado
-        titulo="Hola, Omar"
+        titulo={`Hola, ${profesor.nombre.split(" ")[0]}`}
         subtitulo={
           porRevisar.length
             ? `Tienes ${porRevisar.length} ${porRevisar.length === 1 ? "actividad lista" : "actividades listas"} para revisar.`
@@ -31,7 +32,7 @@ export default async function PanelProfesor() {
         }
         acciones={
           <>
-            <BotonLink href="/profesor/grupos/nuevo" variante="secundario">+ Nuevo grupo</BotonLink>
+            <BotonLink href="/profesor/grupos/nuevo" variante="secundario">+ Nuevo curso</BotonLink>
             <BotonLink href="/profesor/actividades/nueva">+ Nueva actividad</BotonLink>
           </>
         }
@@ -39,7 +40,7 @@ export default async function PanelProfesor() {
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <Tarjeta>
-          <p className="text-sm text-slate-500">Grupos</p>
+          <p className="text-sm text-slate-500">Cursos</p>
           <p className="mt-1 text-3xl font-semibold">{grupos.length}</p>
         </Tarjeta>
         <Tarjeta>
@@ -55,6 +56,17 @@ export default async function PanelProfesor() {
         </Tarjeta>
       </div>
 
+      {grupos.length === 0 && (
+        <Tarjeta className="text-sm text-slate-600">
+          Aún no tienes cursos. Crea tu primer curso: recibirás un <strong>ID de curso</strong> para compartir con tus
+          alumnos. La lista de alumnos es opcional; cada alumno queda registrado al entregar su primera actividad con su
+          nombre y matrícula.{" "}
+          <Link href="/profesor/grupos/nuevo" className="text-tinta-700 hover:underline">
+            Crear curso
+          </Link>
+        </Tarjeta>
+      )}
+
       <div className="space-y-8">
         {grupos.map((g) => {
           const acts = actividadesDeGrupo(g.id);
@@ -65,6 +77,9 @@ export default async function PanelProfesor() {
                   {g.materia} · {g.nombre}
                 </h2>
                 <span className="text-sm text-slate-500">
+                  ID de curso{" "}
+                  <span className="rounded bg-tinta-50 px-1.5 py-0.5 font-mono font-semibold text-tinta-700">{g.codigo}</span>
+                  {" · "}
                   {g.alumnos.length} alumnos · ciclo {g.ciclo}
                 </span>
               </div>

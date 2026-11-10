@@ -129,15 +129,6 @@ export function RevisionAlumno({
                 PDF corregido
               </a>
             )}
-            {aprobada && (
-              <a
-                href={`/alumno/reporte/${actividad.id}?m=${encodeURIComponent(alumno.matricula)}`}
-                target="_blank"
-                className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50"
-              >
-                Ver como alumno
-              </a>
-            )}
             {siguienteHref && (
               <Link href={siguienteHref} className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50">
                 Siguiente alumno →

@@ -1,15 +1,19 @@
 import { actividadDe, guardarArchivo, leer, modificar } from "@/lib/almacen";
 import { ErrorIA, proponerRubrica, type ImagenParaIA } from "@/lib/ia";
 import { normalizarFoto } from "@/lib/imagenes";
+import { esDelProfesor } from "@/lib/cuentas";
+import { profesorActual } from "@/lib/sesion";
 
 export const maxDuration = 300;
 
 // Recibe la solución del profesor (fotos o PDF) y pide a la IA la rúbrica.
 export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id]/solucion">) {
   const { id } = await ctx.params;
+  const profesor = await profesorActual();
+  if (!profesor) return Response.json({ error: "Inicia sesión" }, { status: 401 });
   const db = await leer();
   const actividad = actividadDe(db, id);
-  if (!actividad) return Response.json({ error: "Actividad no encontrada" }, { status: 404 });
+  if (!actividad || !esDelProfesor(db, id, profesor.id)) return Response.json({ error: "Actividad no encontrada" }, { status: 404 });
 
   const archivos = (await req.formData()).getAll("archivos").filter((f): f is File => f instanceof File && f.size > 0);
   if (archivos.length === 0) return Response.json({ error: "Sube al menos una foto o un PDF" }, { status: 400 });

@@ -4,11 +4,12 @@ import { PestanasActividad } from "@/components/pestanas-actividad";
 import { RubricaEditor } from "@/components/rubrica-editor";
 import { Encabezado, Tarjeta } from "@/components/ui";
 import { SubirSolucion } from "@/components/subir-solucion";
-import { actividadDe, grupoDe, leer } from "@/lib/almacen";
+import { actividadDe, grupoDe } from "@/lib/almacen";
+import { datosProfesor } from "@/lib/sesion";
 
 export default async function Rubrica({ params }: PageProps<"/profesor/actividades/[id]/rubrica">) {
   const { id } = await params;
-  const db = await leer();
+  const { db } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;

@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import { TiendaCreditos } from "@/components/tienda-creditos";
 import { Encabezado, Tarjeta } from "@/components/ui";
-import { ReiniciarDemo } from "@/components/reiniciar-demo";
-import { leer, saldo } from "@/lib/almacen";
+import { QuitarEjemplo } from "@/components/quitar-ejemplo";
+import { saldo } from "@/lib/almacen";
+import { datosProfesor } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Créditos" };
 
 export default async function Creditos() {
-  const db = await leer();
+  const { db } = await datosProfesor();
+  const hayEjemplo = db.actividades.some((a) => a.demo);
   const saldoCreditos = saldo(db);
   const movimientos = db.movimientos;
   return (
@@ -48,13 +50,15 @@ export default async function Creditos() {
           </tbody>
         </table>
       </div>
-      <div className="mt-10 rounded-xl border border-dashed border-slate-300 p-5">
-        <h2 className="font-semibold">Demo</h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Regresa la plataforma a los datos de ejemplo. Se borran grupos, actividades y fotos que hayas subido.
-        </p>
-        <ReiniciarDemo />
-      </div>
+      {hayEjemplo && (
+        <div className="mt-10 rounded-xl border border-dashed border-slate-300 p-5">
+          <h2 className="font-semibold">Datos de ejemplo</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            Tu cuenta incluye actividades de ejemplo para conocer la plataforma. Quítalas cuando empieces con tus grupos.
+          </p>
+          <QuitarEjemplo />
+        </div>
+      )}
     </>
   );
 }
