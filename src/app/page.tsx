@@ -95,10 +95,10 @@ function HojaDemo() {
 export default function Inicio() {
   return (
     <div className="flex flex-col">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Logo />
-          <nav className="hidden gap-6 text-sm text-slate-600 md:flex">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
+          <Logo grande />
+          <nav className="hidden gap-6 text-sm text-slate-600 lg:flex">
             <a href="#como-funciona" className="hover:text-slate-900">Cómo funciona</a>
             <a href="#entregables" className="hover:text-slate-900">Qué recibes</a>
             <a href="#precios" className="hover:text-slate-900">Precios</a>
