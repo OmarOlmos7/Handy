@@ -6,7 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { esCerrado, puntosReactivoCerrado } from "./calificar";
-import type { Actividad, Reactivo, ResultadoReactivo } from "./tipos";
+import type { Actividad, CriterioEvaluacion, Reactivo, ResultadoReactivo } from "./tipos";
 
 const MODELO = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
 
@@ -93,6 +93,8 @@ const EsquemaRubrica = z.object({
       solucionPasos: z.array(z.string()),
     }),
   ),
+  criterios: z.array(z.object({ nombre: z.string(), porcentaje: z.number(), descripcion: z.string() })),
+  recomendaciones: z.array(z.string()),
 });
 
 const SISTEMA_RUBRICA = `Eres un asistente de evaluación para profesores de secundaria y bachillerato en México.
@@ -109,12 +111,23 @@ Para cada reactivo, en el orden en que aparece:
 - pasos: solo para desarrollo. La estructura que siguió el profesor (por ejemplo Datos, Ecuación, Sustitución, Desarrollo, Resultado con unidades), con pesos que sumen 1. Respeta la estructura que use el profesor. Para los demás tipos, lista vacía.
 - solucionPasos: solo para desarrollo. Una línea por paso con lo que escribió el profesor. Para los demás tipos, lista vacía.
 
+Las indicaciones del profesor pueden traer criterios de evaluación con porcentajes (por ejemplo "Procedimiento 60 %, Resultado 30 %, Limpieza 10 %") y recomendaciones para calificar. Entre las imágenes también puede venir una hoja con su rúbrica o sus criterios; esa hoja no es un reactivo.
+- criterios: los criterios que indicó el profesor, con su porcentaje (0 si no dio porcentaje) y una descripción breve de qué se evalúa. Si no indicó criterios, lista vacía; no los inventes.
+- Si los criterios aplican a los desarrollos (procedimiento, resultado, unidades…), refléjalos en los pasos y sus pesos. Si indicó cuántos puntos vale cada reactivo, respétalo.
+- recomendaciones: las recomendaciones que dio el profesor para evaluar, una por elemento, redactadas de forma breve e imperativa (por ejemplo "Acepta procedimientos alternativos si son correctos"). Si no dio ninguna, lista vacía.
+
 Si algo es ilegible, escribe tu mejor lectura y menciónalo en el enunciado entre corchetes.`;
+
+export interface PropuestaRubrica {
+  reactivos: Reactivo[];
+  criterios: CriterioEvaluacion[];
+  recomendaciones: string[];
+}
 
 export async function proponerRubrica(
   imagenes: ImagenParaIA[],
   datos: { titulo: string; instrucciones?: string },
-): Promise<Reactivo[]> {
+): Promise<PropuestaRubrica> {
   const salida = await pedir({
     system: SISTEMA_RUBRICA,
     esquema: EsquemaRubrica,
@@ -126,7 +139,7 @@ export async function proponerRubrica(
       },
     ],
   });
-  return salida.reactivos.map((r, i) => {
+  const reactivos = salida.reactivos.map((r, i) => {
     const sumaPesos = r.pasos.reduce((s, p) => s + p.peso, 0) || 1;
     return {
       ...r,
@@ -138,6 +151,13 @@ export async function proponerRubrica(
       solucionPasos: r.tipo === "desarrollo" && r.solucionPasos.length ? r.solucionPasos : undefined,
     };
   });
+  return {
+    reactivos,
+    criterios: salida.criterios
+      .filter((c) => c.nombre.trim())
+      .map((c) => ({ ...c, porcentaje: Math.max(0, Math.min(100, Math.round(c.porcentaje))) })),
+    recomendaciones: salida.recomendaciones.filter((r) => r.trim()),
+  };
 }
 
 // ---------- Evaluación de la entrega de un alumno ----------
@@ -153,6 +173,7 @@ const EsquemaEvaluacion = z.object({
       pasos: z.array(z.number()),
       pagina: z.number().int(),
       y: z.number(),
+      x: z.number(),
     }),
   ),
   positivos: z.array(z.string()),
@@ -169,12 +190,22 @@ Para cada reactivo de la rúbrica:
 - pasos: solo para desarrollo, un valor por cada paso de la rúbrica en el mismo orden: 1 si el paso está completo y correcto, 0.5 si está parcial o con un error menor, 0 si falta o es incorrecto. Acepta procedimientos distintos al del profesor si son correctos, salvo que sus indicaciones digan lo contrario. Para los demás tipos, lista vacía.
 - puntosSugeridos: puntos que asignarías según la rúbrica (entre 0 y el valor del reactivo).
 - comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta.
-- pagina e y: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo).
+- pagina, y, x: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo; x de 0 izquierda a 1 derecha, al final de la respuesta). Ahí se dibuja la marca de corrección.
+
+Si el profesor dio criterios de evaluación con porcentajes o recomendaciones, síguelos al asignar puntos y al redactar los comentarios.
 
 Además:
 - positivos: 2 o 3 aspectos que el alumno hizo bien, concretos.
 - mejoras: 2 o 3 aspectos a mejorar, concretos y accionables.
 Escribe en español claro y amable, adecuado para adolescentes.`;
+
+function criteriosParaIA(act: Actividad) {
+  let t = "";
+  if (act.criterios?.length)
+    t += `\nCriterios de evaluación: ${act.criterios.map((c) => `${c.nombre}${c.porcentaje ? ` (${c.porcentaje} %)` : ""}: ${c.descripcion}`).join("; ")}`;
+  if (act.recomendaciones?.length) t += `\nRecomendaciones para evaluar: ${act.recomendaciones.join("; ")}`;
+  return t;
+}
 
 function rubricaParaIA(act: Actividad) {
   return act.reactivos.map((r) => ({
@@ -198,7 +229,7 @@ const cuartos = (n: number) => Math.round(n * 4) / 4;
 
 export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[]): Promise<EvaluacionAlumno> {
   const salida = await pedir({
-    system: `${SISTEMA_EVALUACION}\n\nActividad: ${act.titulo}\nIndicaciones del profesor: ${act.instrucciones?.trim() || "ninguna"}\nRúbrica:\n${JSON.stringify(rubricaParaIA(act), null, 1)}`,
+    system: `${SISTEMA_EVALUACION}\n\nActividad: ${act.titulo}\nIndicaciones del profesor: ${act.instrucciones?.trim() || "ninguna"}${criteriosParaIA(act)}\nRúbrica:\n${JSON.stringify(rubricaParaIA(act), null, 1)}`,
     esquema: EsquemaEvaluacion,
     contenido: [...bloquesImagen(imagenes, "Hoja del alumno"), { type: "text", text: "Evalúa esta entrega con la rúbrica." }],
   });
@@ -245,6 +276,7 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[]): 
       ubicacion: {
         pagina: Math.max(1, Math.min(imagenes.length, ia.pagina || r.pagina)),
         y: Math.max(0, Math.min(1, ia.y)),
+        x: Math.max(0, Math.min(1, ia.x)),
       },
     };
   });

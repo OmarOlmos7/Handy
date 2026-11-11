@@ -60,6 +60,13 @@ export type EstadoActividad =
   | "en_revision"
   | "publicada";
 
+export interface CriterioEvaluacion {
+  nombre: string;
+  /** Porcentaje de la calificación (0-100); 0 si el profesor no lo indicó. */
+  porcentaje: number;
+  descripcion: string;
+}
+
 export interface Actividad {
   id: string;
   /** true en las actividades de ejemplo (sin fotos reales; se dibujan en SVG). */
@@ -69,6 +76,10 @@ export interface Actividad {
   /** Imágenes de la solución del profesor (rutas relativas a la carpeta de datos). */
   solucion?: string[];
   rubricaConfirmada?: boolean;
+  /** Criterios de evaluación con su porcentaje, tomados de las indicaciones del profesor. */
+  criterios?: CriterioEvaluacion[];
+  /** Recomendaciones del profesor a seguir al evaluar. */
+  recomendaciones?: string[];
   grupoId: string;
   titulo: string;
   descripcion: string;
@@ -86,7 +97,8 @@ export interface ResultadoReactivo {
   confianza: Confianza;
   comentario: string;
   /** Dónde está el reactivo en la hoja del alumno, para dibujar la marca. */
-  ubicacion?: { pagina: number; y: number };
+  /** x: posición horizontal de la respuesta (0 izquierda, 1 derecha). */
+  ubicacion?: { pagina: number; y: number; x?: number };
   /** Para desarrollos: fracción lograda de cada paso (0 a 1), en el orden de la rúbrica. */
   pasos?: number[];
 }

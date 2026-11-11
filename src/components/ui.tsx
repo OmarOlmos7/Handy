@@ -151,23 +151,8 @@ export function Encabezado({
 export function Logo({ claro = false }: { claro?: boolean }) {
   return (
     <span className={`flex items-center gap-2 font-semibold ${claro ? "text-white" : "text-slate-900"}`}>
-      <svg viewBox="0 0 36 36" className="h-9 w-9" aria-hidden>
-        {/* Hoja con paloma y tache, y un foco encendido encima */}
-        <rect x="3" y="9.5" width="20" height="24.5" rx="3" fill="#fff" stroke="#2554e8" strokeWidth="2" />
-        <path d="M7.5 18.5l3 3 5.5-6.5" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M8 25.5l5.5 5.5M13.5 25.5l-5.5 5.5" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" />
-        <path d="M26 1.2v2.2M19.6 3.6l1.5 1.5M32.4 3.6l-1.5 1.5M34.6 10h-2.1" stroke="#f59e0b" strokeWidth="1.6" strokeLinecap="round" />
-        <path
-          d="M26 4.6a5.6 5.6 0 0 0-3.4 10.05c.7.55 1.1 1.2 1.1 1.95h4.6c0-.75.4-1.4 1.1-1.95A5.6 5.6 0 0 0 26 4.6z"
-          fill="#facc15"
-          stroke="#b45309"
-          strokeWidth="1.2"
-          strokeLinejoin="round"
-        />
-        <path d="M24.6 12.4l1.4-2 1.4 2" fill="none" stroke="#b45309" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" />
-        <rect x="23.7" y="17.2" width="4.6" height="1.6" rx=".6" fill="#475569" />
-        <rect x="24.3" y="19.2" width="3.4" height="1.4" rx=".6" fill="#475569" />
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.png" alt="" width={36} height={42} className="h-10 w-auto" />
       iEureka-Grader
     </span>
   );
