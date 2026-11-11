@@ -151,12 +151,12 @@ export function Encabezado({
 export function Logo({ claro = false, grande = false }: { claro?: boolean; grande?: boolean }) {
   const color = claro ? "text-white" : "text-slate-900";
   if (grande) {
-    // Versión grande: logo y nombre en dos líneas que miden juntas lo mismo que el logo.
+    // Versión grande: logo y nombre en dos líneas que miden juntas el 60 % del alto del logo.
     return (
       <span className={`flex items-center gap-3 font-bold tracking-tight md:gap-5 ${color}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="" width={330} height={382} className="h-24 w-auto md:h-40" />
-        <span className="flex flex-col text-[42px] leading-[48px] md:text-[72px] md:leading-[80px]">
+        <span className="flex flex-col text-[26px] leading-[29px] md:text-[43px] md:leading-[48px]">
           <span>iEureka</span>
           <span>Grader</span>
         </span>
