@@ -15,8 +15,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
   const actividad = actividadDe(db, id);
   if (!actividad || !esDelProfesor(db, id, profesor.id)) return Response.json({ error: "Actividad no encontrada" }, { status: 404 });
 
-  const archivos = (await req.formData()).getAll("archivos").filter((f): f is File => f instanceof File && f.size > 0);
+  const form = await req.formData();
+  const archivos = form.getAll("archivos").filter((f): f is File => f instanceof File && f.size > 0);
   if (archivos.length === 0) return Response.json({ error: "Sube al menos una foto o un PDF" }, { status: 400 });
+
+  // Criterios, porcentajes y recomendaciones que el profesor escribe junto a su solución.
+  const instrucciones = form.has("instrucciones") ? String(form.get("instrucciones") ?? "").trim() : actividad.instrucciones;
+  if (instrucciones !== actividad.instrucciones) modificar((d) => (actividadDe(d, id)!.instrucciones = instrucciones));
 
   const rutas: string[] = [];
   const paraIA: ImagenParaIA[] = [];
@@ -33,11 +38,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
   }
 
   try {
-    const reactivos = await proponerRubrica(paraIA, { titulo: actividad.titulo, instrucciones: actividad.instrucciones });
+    const { reactivos, criterios, recomendaciones } = await proponerRubrica(paraIA, { titulo: actividad.titulo, instrucciones });
     modificar((d) => {
       const a = actividadDe(d, id)!;
       a.solucion = rutas;
       a.reactivos = reactivos;
+      a.criterios = criterios;
+      a.recomendaciones = recomendaciones;
       a.rubricaConfirmada = false;
     });
     return Response.json({ reactivos: reactivos.length });

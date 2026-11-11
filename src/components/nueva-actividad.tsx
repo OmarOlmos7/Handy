@@ -1,4 +1,5 @@
 import { crearActividad } from "@/app/acciones";
+import { PLANTILLA_CRITERIOS } from "@/lib/textos";
 import type { Grupo } from "@/lib/tipos";
 import { Boton, BotonLink } from "./ui";
 
@@ -44,13 +45,13 @@ export function NuevaActividad({ grupos, hoy }: { grupos: Grupo[]; hoy: string }
         </label>
       </div>
       <label className="block text-sm font-medium text-slate-700">
-        Indicaciones para la IA (opcional)
-        <textarea
-          name="instrucciones"
-          rows={3}
-          className={campo}
-          placeholder="Ej. En los problemas exige datos, ecuación, sustitución y resultado con unidades. Acepta procedimientos alternativos si son correctos."
-        />
+        Criterios de evaluación, porcentajes y recomendaciones (opcional)
+        <textarea name="instrucciones" rows={5} className={campo} placeholder={PLANTILLA_CRITERIOS} />
+        <span className="mt-1 block text-xs font-normal text-slate-500">
+          Puedes escribir o pegar tus criterios con su % de evaluación (por ejemplo, procedimiento 60 %, resultado 30 %) y las
+          recomendaciones que la IA debe seguir para calificar. Con esto genera la rúbrica de la actividad. También puedes subir
+          una foto de tu rúbrica junto con tu solución en el siguiente paso.
+        </span>
       </label>
       <p className="text-xs text-slate-500">
         Imprime tu propia hoja tal cual. En el siguiente paso subes tu solución resuelta a mano y la IA arma la rúbrica.
