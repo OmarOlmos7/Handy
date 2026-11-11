@@ -1,22 +1,31 @@
 import Link from "next/link";
+import { EjemploReactivo, type TipoEjemplo } from "@/components/ejemplo-reactivo";
 import { BotonLink, Logo } from "@/components/ui";
 
 const pasos = [
   {
     titulo: "Aplica la actividad en papel",
     texto: "Imprime la hoja que genera la plataforma, con un código QR y marcas en las esquinas. Tu clase sigue igual, sin pantallas.",
+    imagen: "/inicio/paso-1-hoja.webp",
+    alt: "Hoja impresa de la actividad con su código QR",
   },
   {
-    titulo: "Los alumnos escanean sus hojas",
-    texto: "Con la app toman la foto de cada página, las ordenan y se arma un solo PDF. Si no usan celular, tú escaneas al grupo completo.",
+    titulo: "Los alumnos toman una foto con su teléfono",
+    texto: "Escanean el QR, escriben su nombre y matrícula y toman una foto de cada página. No necesitan instalar nada ni crear cuenta.",
+    imagen: "/inicio/paso-2-celular.webp",
+    alt: "Pantalla del celular del alumno con su nombre, matrícula y la foto de su hoja",
   },
   {
     titulo: "Tú subes la solución",
-    texto: "Resuelve la actividad a mano y escanéala. La IA propone la rúbrica: respuestas, puntos y los pasos que esperas en cada desarrollo.",
+    texto: "Resuelve la actividad a mano y súbela con tus criterios y porcentajes. La IA propone la rúbrica: respuestas, puntos y los pasos que esperas en cada desarrollo.",
+    imagen: "/inicio/paso-3-rubrica.webp",
+    alt: "Propuesta de evaluación con elementos, puntos, criterios y recomendaciones",
   },
   {
     titulo: "La IA sugiere, tú apruebas",
     texto: "Recibes la calificación sugerida de cada alumno con su hoja corregida. Revisas, ajustas lo que quieras y publicas.",
+    imagen: "/inicio/paso-4-revision.webp",
+    alt: "Hoja del alumno corregida con marcas numeradas, palomas, taches y comentarios",
   },
 ];
 
@@ -27,22 +36,23 @@ const entregables = [
   ["Excel para Canvas", "Nombre, matrícula y calificación, más un CSV listo para importar al libro de calificaciones."],
 ];
 
-const reactivos = [
-  "Verdadero o falso",
-  "Opción múltiple",
-  "Relación de columnas",
-  "Paréntesis",
-  "Desarrollos matemáticos",
-  "Algoritmos y procedimientos",
-  "Ensayos y producciones escritas",
-  "Dibujos y bocetos",
+const reactivos: { tipo: string; entrega: string; ejemplo: TipoEjemplo; proximamente?: boolean }[] = [
+  { tipo: "Verdadero o falso", entrega: "Foto de la hoja impresa con la V o la F escrita", ejemplo: "vf" },
+  { tipo: "Opción múltiple", entrega: "Foto de la hoja con la opción encerrada o marcada", ejemplo: "opcion" },
+  { tipo: "Relación de columnas", entrega: "Foto de la hoja con las letras o líneas que unen", ejemplo: "columnas" },
+  { tipo: "Paréntesis", entrega: "Foto de la hoja con las letras dentro de los paréntesis", ejemplo: "parentesis" },
+  { tipo: "Desarrollos matemáticos", entrega: "Foto del procedimiento escrito a mano, paso a paso", ejemplo: "desarrollo" },
+  { tipo: "Algoritmos y procedimientos", entrega: "Foto de los pasos escritos en orden", ejemplo: "algoritmo" },
+  { tipo: "Ensayos y producciones escritas", entrega: "Foto de cada página del texto escrito a mano", ejemplo: "ensayo" },
+  { tipo: "Dibujos y bocetos", entrega: "Foto del dibujo con sus etiquetas", ejemplo: "dibujo" },
+  { tipo: "Audios · producción oral", entrega: "Grabación de voz del alumno (lectura, exposición o idioma)", ejemplo: "audio", proximamente: true },
 ];
 
 const paquetes = [
-  { nombre: "Prueba", creditos: 50, precio: "Gratis", detalle: "Una actividad corta con tu grupo" },
-  { nombre: "Básico", creditos: 300, precio: "$249", detalle: "$0.83 por página" },
-  { nombre: "Profesor", creditos: 1500, precio: "$999", detalle: "$0.67 por página", destacado: true },
-  { nombre: "Escuela", creditos: 10000, precio: "$5,499", detalle: "$0.55 por página, saldo compartido" },
+  { nombre: "Prueba", creditos: 50, precio: "Gratis", detalle: "Prueba evaluar una actividad con todo tu grupo" },
+  { nombre: "Básico", creditos: 300, precio: "$249", detalle: "Para grupos con 2-3 actividades al mes por grupo" },
+  { nombre: "Pro", creditos: 1500, precio: "$850", detalle: "Adecuado para un curso tetrasemestral", destacado: true },
+  { nombre: "Escuela", creditos: 10000, precio: "Contáctanos", detalle: "Ideal para academias o grupos de profesores en una institución" },
 ];
 
 function HojaDemo() {
@@ -143,17 +153,26 @@ export default function Inicio() {
           <p className="mt-2 max-w-2xl text-slate-600">
             La actividad se hace en papel, como siempre. La tecnología entra después, para revisar.
           </p>
-          <ol className="mt-10 grid gap-6 md:grid-cols-4">
+          <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {pasos.map((p, i) => (
-              <li key={p.titulo} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+              <li key={p.titulo} className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                <div className="flex h-56 items-center justify-center border-b border-slate-100 bg-slate-50 p-3">
+                  <a href={p.imagen} target="_blank" className="flex h-full w-full items-center justify-center" title="Ver imagen completa">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.imagen} alt={p.alt} loading="lazy" className="max-h-full w-auto max-w-full rounded-md object-contain shadow-sm" />
+                  </a>
+                </div>
+                <div className="p-5">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-tinta-600 text-sm font-semibold text-white">
                   {i + 1}
                 </span>
                 <h3 className="mt-4 font-semibold">{p.titulo}</h3>
                 <p className="mt-2 text-sm text-slate-600">{p.texto}</p>
+                </div>
               </li>
             ))}
           </ol>
+          <p className="mt-3 text-xs text-slate-500">Imágenes de ejemplo con datos inventados. Toca una imagen para verla completa.</p>
         </section>
 
         <section className="border-y border-slate-200 bg-white">
@@ -163,11 +182,34 @@ export default function Inicio() {
               Los cerrados se califican contra tu clave. En los desarrollos, la IA compara paso a paso con tu
               solución: datos, ecuación, sustitución, desarrollo y resultado con unidades.
             </p>
-            <ul className="mt-8 flex flex-wrap gap-2">
-              {reactivos.map((r) => (
-                <li key={r} className="rounded-full bg-slate-100 px-4 py-2 text-sm text-slate-700">{r}</li>
-              ))}
-            </ul>
+            <div className="mt-8 overflow-x-auto rounded-xl ring-1 ring-slate-200">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Tipo de reactivo</th>
+                    <th className="px-4 py-3 font-medium">Qué entrega el alumno</th>
+                    <th className="px-4 py-3 font-medium">Ejemplo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {reactivos.map((r) => (
+                    <tr key={r.tipo} className="align-middle">
+                      <td className="px-4 py-4 font-medium text-slate-800">
+                        {r.tipo}
+                        {r.proximamente && (
+                          <span className="ml-2 rounded-full bg-aviso-suave px-2 py-0.5 text-xs font-medium text-aviso">Próximamente</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-slate-600">{r.entrega}</td>
+                      <td className="px-4 py-4">
+                        <EjemploReactivo tipo={r.ejemplo} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-3 text-xs text-slate-500">Ejemplos ilustrativos con datos inventados.</p>
           </div>
         </section>
 

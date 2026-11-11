@@ -5,8 +5,7 @@ import { Boton } from "./ui";
 
 const paquetes = [
   { id: "basico", nombre: "Básico", creditos: 300, precio: 249 },
-  { id: "profesor", nombre: "Profesor", creditos: 1500, precio: 999, destacado: true },
-  { id: "escuela", nombre: "Escuela", creditos: 10000, precio: 5499 },
+  { id: "pro", nombre: "Pro", creditos: 1500, precio: 850, destacado: true },
 ];
 
 const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
@@ -43,6 +42,11 @@ export function TiendaCreditos() {
             </span>
           </button>
         ))}
+        <div className="rounded-xl border border-dashed border-slate-300 p-5 text-left">
+          <span className="font-semibold">Escuela</span>
+          <span className="mt-2 block text-lg font-semibold">Contáctanos</span>
+          <span className="mt-2 block text-xs text-slate-500">Ideal para academias o grupos de profesores en una institución.</span>
+        </div>
       </div>
       <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <h2 className="font-semibold">Resumen</h2>
