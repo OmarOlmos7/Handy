@@ -8,7 +8,7 @@ export default async function LayoutAlumno({ children }: LayoutProps<"/alumno">)
     <>
       <BarraApp
         enlaces={[{ href: "/alumno", texto: "Mis actividades", exacto: true }]}
-        usuario={alumno ? { nombre: alumno.nombre, rol: `${alumno.grupo.materia} · ${alumno.grupo.codigo}` } : { nombre: "Alumno", rol: "Sin sesión" }}
+        usuario={alumno ? { nombre: alumno.nombre, rol: alumno.correo } : { nombre: "Alumno", rol: "Sin sesión" }}
         extra={
           alumno && (
             <form action={salirAlumno}>

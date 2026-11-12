@@ -5,25 +5,25 @@ import { BotonLink, Logo } from "@/components/ui";
 const pasos = [
   {
     titulo: "Aplica la actividad en papel",
-    texto: "Imprime la hoja que genera la plataforma, con un código QR y marcas en las esquinas. Tu clase sigue igual, sin pantallas.",
+    texto: "Genera la actividad con IA (tipos de reactivos, ponderaciones y temas) o carga la tuya escaneada. Imprime la hoja con espacio para nombre, matrícula y calificación, y el código QR.",
     imagen: "/inicio/paso-1-hoja.webp",
     alt: "Hoja impresa de la actividad con su código QR",
   },
   {
     titulo: "Los alumnos toman una foto con su teléfono",
-    texto: "Escanean el QR, escriben su nombre y matrícula y toman una foto de cada página. No necesitan instalar nada ni crear cuenta.",
+    texto: "Escanean el QR, toman una foto de cada página y la envían. La primera vez se registran con su correo y una clave de acceso para ver solo sus resultados.",
     imagen: "/inicio/paso-2-celular.webp",
     alt: "Pantalla del celular del alumno con su nombre, matrícula y la foto de su hoja",
   },
   {
     titulo: "Tú subes la solución",
-    texto: "Resuelve la actividad a mano y súbela con tus criterios y porcentajes. La IA propone la rúbrica: respuestas, puntos y los pasos que esperas en cada desarrollo.",
+    texto: "Escanea tu solución hecha a mano o pide a la IA que resuelva la actividad con tus condiciones. Con tus criterios y porcentajes se arma la rúbrica.",
     imagen: "/inicio/paso-3-rubrica.webp",
     alt: "Propuesta de evaluación con elementos, puntos, criterios y recomendaciones",
   },
   {
     titulo: "La IA sugiere, tú apruebas",
-    texto: "Recibes la calificación sugerida de cada alumno con su hoja corregida. Revisas, ajustas lo que quieras y publicas.",
+    texto: "Cada entrega se evalúa sola en cuanto llega. Recibes la calificación sugerida con la hoja corregida; revisas, ajustas y publicas.",
     imagen: "/inicio/paso-4-revision.webp",
     alt: "Hoja del alumno corregida con marcas numeradas, palomas, taches y comentarios",
   },

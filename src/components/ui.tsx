@@ -14,6 +14,10 @@ const estilosBoton: Record<Variante, string> = {
 const baseBoton =
   "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tinta-500 disabled:opacity-50";
 
+/** Clase de los campos de formulario. */
+export const campo =
+  "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
+
 export function BotonLink({
   variante = "primario",
   className = "",

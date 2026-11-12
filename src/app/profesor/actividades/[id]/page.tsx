@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AprobarTodo } from "@/components/aprobar-todo";
+import { AutoActualizar } from "@/components/auto-actualizar";
 import { EvaluarTodo } from "@/components/evaluar-todo";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import {
@@ -14,6 +15,7 @@ import {
   fechaLarga,
 } from "@/components/ui";
 import { actividadDe, entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
+import { evaluandoAhora } from "@/lib/evaluacion";
 import { datosProfesor } from "@/lib/sesion";
 import { calificacion } from "@/lib/estadisticas";
 import { qrDataUrl, urlBase } from "@/lib/qr";
@@ -27,7 +29,9 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
   const entregas = entregasDe(db, id);
   const recibidas = entregas.filter((e) => e.estado !== "sin_entregar");
   const porAprobar = entregas.filter((e) => e.estado === "evaluada");
-  const porEvaluar = entregas.filter((e) => e.estado === "entregada" && e.imagenes?.length);
+  const evaluando = entregas.filter((e) => e.estado === "entregada" && evaluandoAhora(e.evaluandoDesde));
+  // Las entregas se evalúan solas; el botón queda para reintentar las que fallaron.
+  const porEvaluar = entregas.filter((e) => e.estado === "entregada" && e.imagenes?.length && !evaluandoAhora(e.evaluandoDesde));
   const bajaConfianza = entregas.reduce((s, e) => s + e.resultados.filter((r) => r.confianza === "baja").length, 0);
   const enlace = `${await urlBase()}/entregar/${id}`;
   const qr = await qrDataUrl(enlace);
@@ -43,8 +47,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         titulo={actividad.titulo}
         subtitulo={
           <span className="flex flex-wrap items-center gap-2">
-            Aplicada {fechaLarga(actividad.fechaAplicacion)} · ID de curso{" "}
-            <span className="font-mono font-semibold text-tinta-700">{grupo.codigo}</span>
+            Aplicada {fechaLarga(actividad.fechaAplicacion)}
             <InsigniaActividad estado={estadoActividad(db, actividad)} />
           </span>
         }
@@ -64,17 +67,26 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         }
       />
       <PestanasActividad id={id} activa="entregas" />
+      <AutoActualizar activo={evaluando.length > 0} />
+
+      {actividad.rubricaConfirmada && (
+        <p className="mb-4 rounded-lg bg-tinta-50 px-4 py-2.5 text-sm text-tinta-900">
+          {evaluando.length > 0
+            ? `La IA está evaluando ${evaluando.length} entrega${evaluando.length > 1 ? "s" : ""}. Esta página se actualiza sola.`
+            : "Evaluación automática activada: cada entrega se califica con IA en cuanto el alumno envía sus fotos."}
+        </p>
+      )}
 
       {!actividad.rubricaConfirmada && (
         <Tarjeta className="mb-6 border-l-4 border-aviso">
-          <p className="font-medium">{actividad.reactivos.length ? "Confirma la rúbrica" : "Falta tu solución"}</p>
+          <p className="font-medium">{actividad.reactivos.some((r) => r.respuesta.trim()) ? "Confirma la rúbrica" : "Falta la solución"}</p>
           <p className="mt-1 text-sm text-slate-600">
-            {actividad.reactivos.length
-              ? "La IA ya propuso la rúbrica. Revísala y confírmala para poder evaluar las entregas."
-              : "Sube la actividad resuelta por ti para que la IA prepare la rúbrica. Mientras tanto, los alumnos ya pueden entregar."}
+            {actividad.reactivos.some((r) => r.respuesta.trim())
+              ? "La IA ya propuso la rúbrica. Revísala y confírmala: las entregas que ya llegaron se evaluarán solas."
+              : "Escanea tu solución o genérala con IA para preparar la rúbrica. Mientras tanto, los alumnos ya pueden entregar."}
           </p>
           <BotonLink href={`/profesor/actividades/${id}/rubrica`} className="mt-3">
-            {actividad.reactivos.length ? "Revisar rúbrica" : "Subir solución"}
+            {actividad.reactivos.some((r) => r.respuesta.trim()) ? "Revisar rúbrica" : "Preparar solución"}
           </BotonLink>
         </Tarjeta>
       )}
@@ -131,7 +143,11 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                   <td className="px-4 py-3 font-medium">{nombre(e.matricula)}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{e.matricula}</td>
                   <td className="px-4 py-3">
-                    <InsigniaEntrega estado={e.estado} />
+                    {e.estado === "entregada" && evaluandoAhora(e.evaluandoDesde) ? (
+                      <Insignia tono="azul">Evaluando con IA…</Insignia>
+                    ) : (
+                      <InsigniaEntrega estado={e.estado} />
+                    )}
                     {e.error && <p className="mt-1 max-w-48 text-xs text-error">{e.error}</p>}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{e.paginasRecibidas || "—"}</td>

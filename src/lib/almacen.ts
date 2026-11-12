@@ -34,6 +34,11 @@ export async function leer(): Promise<BaseDeDatos> {
   return leerDisco();
 }
 
+/** Lee la base fuera del ciclo de una página (por ejemplo, en tareas que siguen tras responder). */
+export function leerAhora(): BaseDeDatos {
+  return leerDisco();
+}
+
 /** Lee, modifica y guarda de forma síncrona, así dos peticiones no se pisan. */
 export function modificar<T>(cambio: (db: BaseDeDatos) => T): T {
   const db = leerDisco();

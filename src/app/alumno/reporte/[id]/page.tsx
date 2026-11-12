@@ -9,13 +9,15 @@ export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/rep
   const { id } = await params;
   const sesion = await alumnoActual();
   if (!sesion) redirect("/alumno");
-  const { grupo, matricula } = sesion;
   const db = await leer();
   const actividad = actividadDe(db, id);
+  // Solo sus propias actividades: la del curso donde está inscrito con su correo.
+  const curso = actividad && sesion.cursos.find((c) => c.grupo.id === actividad.grupoId);
+  if (!actividad || !curso) notFound();
+  const { grupo, alumno } = curso;
+  const matricula = alumno.matricula;
   const entrega = db.entregas.find((e) => e.actividadId === id && e.matricula === matricula);
-  if (!actividad || actividad.grupoId !== grupo.id || !entrega || entrega.estado !== "aprobada") notFound();
-  const alumno = grupo.alumnos.find((a) => a.matricula === matricula);
-  if (!alumno) notFound();
+  if (!entrega || entrega.estado !== "aprobada") notFound();
   return (
     <>
       <Encabezado

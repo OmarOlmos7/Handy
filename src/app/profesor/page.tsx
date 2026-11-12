@@ -58,9 +58,8 @@ export default async function PanelProfesor() {
 
       {grupos.length === 0 && (
         <Tarjeta className="text-sm text-slate-600">
-          Aún no tienes cursos. Crea tu primer curso: recibirás un <strong>ID de curso</strong> para compartir con tus
-          alumnos. La lista de alumnos es opcional; cada alumno queda registrado al entregar su primera actividad con su
-          nombre y matrícula.{" "}
+          Aún no tienes cursos. Crea tu primer curso. La lista de alumnos es opcional: cada alumno se registra al
+          entregar su primera actividad con su nombre, matrícula, correo y una clave de acceso para ver sus resultados.{" "}
           <Link href="/profesor/grupos/nuevo" className="text-tinta-700 hover:underline">
             Crear curso
           </Link>
@@ -77,9 +76,6 @@ export default async function PanelProfesor() {
                   {g.materia} · {g.nombre}
                 </h2>
                 <span className="text-sm text-slate-500">
-                  ID de curso{" "}
-                  <span className="rounded bg-tinta-50 px-1.5 py-0.5 font-mono font-semibold text-tinta-700">{g.codigo}</span>
-                  {" · "}
                   {g.alumnos.length} alumnos · ciclo {g.ciclo}
                 </span>
               </div>

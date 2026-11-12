@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   adoptarSinDueno,
+  alumnoEnGrupo,
+  cursosDeAlumno,
   datosDeProfesor,
   esDelProfesor,
   grupoPorCodigo,
@@ -25,7 +27,7 @@ describe("contraseñas", () => {
   });
 });
 
-describe("ID de curso", () => {
+describe("código interno de curso", () => {
   it("usa la materia como prefijo y no repite", () => {
     const c = nuevoCodigoCurso("Física", ["FIS-AAAA"]);
     expect(c).toMatch(/^FIS-[2-9A-HJ-NP-Z]{4}$/);
@@ -68,8 +70,36 @@ describe("datos por profesor", () => {
     delete vieja.sesiones;
     vieja.grupos!.forEach((g) => delete g.codigo);
     const db = migrar(vieja as BaseDeDatos);
-    expect(db.version).toBe(2);
+    expect(db.version).toBe(3);
     expect(db.profesores).toEqual([]);
+    expect(db.cuentasAlumno).toEqual([]);
     expect(new Set(db.grupos.map((g) => g.codigo)).size).toBe(db.grupos.length);
+  });
+});
+
+describe("cuentas de alumno", () => {
+  const cuenta = { id: "a-1", correo: "ana@correo.mx", nombre: "Ana", matricula: "A0301", contrasena: "", creadoEn: "" };
+
+  it("encuentra al alumno por correo o, si el profesor no lo registró, por matrícula", () => {
+    const grupo = { id: "g", materia: "F", nombre: "1", ciclo: "", alumnos: [{ matricula: "A0301", nombre: "Ana", correo: "" }] };
+    expect(alumnoEnGrupo(grupo, cuenta)?.matricula).toBe("A0301");
+    grupo.alumnos[0].correo = "otra@correo.mx";
+    expect(alumnoEnGrupo(grupo, cuenta)).toBeUndefined();
+  });
+
+  it("solo lista los cursos donde está su correo", () => {
+    const db = semilla();
+    db.grupos[0].alumnos = db.grupos[0].alumnos.map((a) => ({ ...a }));
+    db.grupos[0].alumnos[0].correo = "ANA@correo.mx";
+    const cursos = cursosDeAlumno(db, { ...cuenta, matricula: "X" });
+    expect(cursos.map((c) => c.grupo.id)).toEqual([db.grupos[0].id]);
+    expect(cursos[0].alumno.matricula).toBe(db.grupos[0].alumnos[0].matricula);
+  });
+
+  it("la migración a la versión 3 cierra las sesiones de alumno anteriores", () => {
+    const db = semilla();
+    db.version = 2;
+    db.sesiones = [{ token: "x", expira: "2099", profesorId: "p" }, { token: "y", expira: "2099", alumno: { grupoId: "g", matricula: "m" } } as never];
+    expect(migrar(db).sesiones.map((s) => s.token)).toEqual(["x"]);
   });
 });

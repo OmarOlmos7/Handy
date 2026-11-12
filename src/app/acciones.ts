@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { actividadDe, borrarCarpeta, modificar, slug } from "@/lib/almacen";
 import { esDelProfesor, normalizarMatricula, nuevoCodigoCurso } from "@/lib/cuentas";
+import { entregasPorEvaluar, evaluarVarias, marcarEnFila } from "@/lib/evaluacion";
 import { requerirProfesor } from "@/lib/sesion";
 import type { BaseDeDatos, Reactivo, ResultadoReactivo } from "@/lib/tipos";
 
@@ -44,36 +46,20 @@ export async function crearGrupo(form: FormData) {
   redirect("/profesor");
 }
 
-export async function crearActividad(form: FormData) {
-  const profesor = await requerirProfesor();
-  const titulo = String(form.get("titulo") ?? "").trim();
-  const grupoId = String(form.get("grupo") ?? "");
-  if (!titulo || !grupoId) throw new Error("Faltan datos de la actividad");
-  const id = slug(titulo);
-  modificar((db) => {
-    if (!db.grupos.some((g) => g.id === grupoId && g.profesorId === profesor.id)) throw new Error("Grupo no encontrado");
-    db.actividades.unshift({
-      id,
-      grupoId,
-      titulo,
-      descripcion: "",
-      fechaAplicacion: String(form.get("fecha") || new Date().toISOString().slice(0, 10)),
-      paginas: Number(form.get("paginas") || 1),
-      estado: "esperando_entregas",
-      instrucciones: String(form.get("instrucciones") ?? ""),
-      reactivos: [],
-      rubricaConfirmada: false,
-    });
-  });
-  redirect(`/profesor/actividades/${id}/rubrica`);
-}
-
 export async function guardarRubrica(actividadId: string, reactivos: Reactivo[], confirmar: boolean) {
   await enActividadPropia(actividadId, (db) => {
     const a = actividadDe(db, actividadId)!;
     a.reactivos = reactivos;
     a.rubricaConfirmada = confirmar;
   });
+  // Al confirmar, las entregas que ya llegaron se evalúan solas.
+  if (confirmar) {
+    const pendientes = entregasPorEvaluar(actividadId);
+    if (pendientes.length) {
+      marcarEnFila(actividadId, pendientes);
+      after(() => evaluarVarias(actividadId, pendientes));
+    }
+  }
   revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
 }
 

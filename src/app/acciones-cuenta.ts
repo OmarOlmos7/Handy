@@ -3,20 +3,14 @@
 import crypto from "node:crypto";
 import { redirect } from "next/navigation";
 import { leer, modificar } from "@/lib/almacen";
-import {
-  adoptarSinDueno,
-  grupoPorCodigo,
-  hashContrasena,
-  normalizarCorreo,
-  normalizarMatricula,
-  verificarContrasena,
-} from "@/lib/cuentas";
+import { adoptarSinDueno, hashContrasena, normalizarCorreo, verificarContrasena } from "@/lib/cuentas";
+import { crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
 import { cerrarSesionAlumno, cerrarSesionProfesor, iniciarSesionAlumno, iniciarSesionProfesor } from "@/lib/sesion";
 
 const CREDITOS_INICIALES = Number(process.env.CREDITOS_INICIALES ?? 50);
 
 function volver(ruta: string, error: string): never {
-  redirect(`${ruta}?error=${encodeURIComponent(error)}`);
+  redirect(`${ruta}${ruta.includes("?") ? "&" : "?"}error=${encodeURIComponent(error)}`);
 }
 
 export async function registrarProfesor(form: FormData) {
@@ -68,16 +62,25 @@ export async function salirProfesor() {
   redirect("/");
 }
 
-/** El alumno no tiene cuenta: entra con el ID de curso y su matrícula para ver sus reportes. */
-export async function entrarAlumno(form: FormData) {
-  const db = await leer();
-  const grupo = grupoPorCodigo(db, String(form.get("curso") ?? ""));
-  const matricula = normalizarMatricula(String(form.get("matricula") ?? ""));
-  const alumno = grupo?.alumnos.find((a) => normalizarMatricula(a.matricula) === matricula);
-  if (!grupo || !alumno) {
-    volver("/alumno", "No encontramos esa matrícula en ese curso. Revisa el ID de curso o entrega primero una actividad.");
-  }
-  await iniciarSesionAlumno(grupo.id, alumno.matricula);
+/** El alumno entra con su correo y su clave de acceso para ver solo sus resultados. */
+export async function ingresarAlumno(form: FormData) {
+  const cuenta = verificarAlumno(await leer(), String(form.get("correo") ?? ""), String(form.get("clave") ?? ""));
+  if (!cuenta) volver("/alumno", "Correo o clave de acceso incorrectos.");
+  await iniciarSesionAlumno(cuenta.id);
+  redirect("/alumno");
+}
+
+export async function registrarAlumno(form: FormData) {
+  const clave = String(form.get("clave") ?? "");
+  if (clave !== String(form.get("clave2") ?? "")) volver("/alumno?crear=1", "Las dos claves de acceso no coinciden.");
+  const r = crearCuentaAlumno({
+    nombre: String(form.get("nombre") ?? ""),
+    matricula: String(form.get("matricula") ?? ""),
+    correo: String(form.get("correo") ?? ""),
+    clave,
+  });
+  if (!r.ok) volver("/alumno?crear=1", r.error);
+  await iniciarSesionAlumno(r.cuenta.id);
   redirect("/alumno");
 }
 
