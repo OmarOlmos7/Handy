@@ -40,6 +40,8 @@ export interface Reactivo {
   columnaB?: string[];
   /** Renglones de espacio para responder (desarrollo y abiertos). */
   lineas?: number;
+  /** Dibujo esquemático en SVG que ilustra el ejercicio (se muestra a la derecha del texto). */
+  ilustracion?: string;
 }
 
 export interface Alumno {

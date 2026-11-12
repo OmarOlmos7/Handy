@@ -6,6 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { esCerrado, puntosReactivoCerrado } from "./calificar";
+import { svgSeguro } from "./svg";
 import type { Actividad, CriterioEvaluacion, Reactivo, ResultadoReactivo } from "./tipos";
 
 const MODELO = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
@@ -171,11 +172,12 @@ function normalizarRubrica(salida: z.infer<typeof EsquemaRubrica>): PropuestaRub
 export function unirConHoja(anteriores: Reactivo[], nuevos: Reactivo[]): Reactivo[] {
   return nuevos.map((r) => {
     const a = anteriores.find((x) => x.numero === r.numero);
-    return a ? { ...r, opciones: a.opciones, columnaA: a.columnaA, columnaB: a.columnaB, lineas: a.lineas } : r;
+    return a ? { ...r, opciones: a.opciones, columnaA: a.columnaA, columnaB: a.columnaB, lineas: a.lineas, ilustracion: a.ilustracion } : r;
   });
 }
 
 // ---------- Actividad nueva generada con IA ----------
+
 
 const EsquemaActividad = z.object({
   instrucciones: z.array(z.string()),
@@ -192,6 +194,7 @@ const EsquemaActividad = z.object({
       tema: z.string(),
       habilidad: z.string(),
       lineas: z.number().int(),
+      ilustracion: z.string(),
     }),
   ),
 });
@@ -201,12 +204,13 @@ El profesor describe la actividad que quiere: tipos de reactivos, ponderaciones 
 
 Reglas:
 - Respeta exactamente lo que pide el profesor: cantidad y tipo de reactivos, temas y puntos. Si indica los puntos de cada reactivo, úsalos tal cual aunque el total no sea 10. Si da porcentajes, reparte los puntos para que el total sea 10 (o el total que indique).
-- instrucciones: exactamente 3 instrucciones breves para el alumno (máximo 20 palabras cada una), en imperativo. Marca con **doble asterisco** las palabras clave (por ejemplo "Resuelve en orden: **datos** con unidades → **ecuaciones** → **desarrollo** → **respuesta** en recuadro."). Incluye cómo responder cada tipo de reactivo que uses, unidades y redondeo si aplica. No incluyas la instrucción de escanear el QR: la hoja ya la trae.
+- instrucciones: exactamente 3 instrucciones breves para el alumno (máximo 20 palabras cada una), en imperativo. Marca con **doble asterisco** las palabras clave (por ejemplo "Resuelve en orden: **datos** con unidades → **ecuaciones** → **desarrollo** → **respuesta** en recuadro."). Incluye cómo responder cada tipo de reactivo que uses, unidades y redondeo si aplica. No menciones puntos ni porcentajes (la hoja ya los muestra) ni la instrucción de escanear el QR.
 - criterios: cómo se evalúa cada problema, con porcentajes que sumen 100. Usa los que indique el profesor; si no indica y hay problemas de desarrollo, propón algo como Datos 5 %, Ecuaciones 15 %, Desarrollo 60 %, Respuesta 20 %. Si solo hay reactivos cerrados, lista vacía. descripcion: qué se evalúa, breve.
 - tipo: verdadero_falso, opcion_multiple, relacion_columnas, parentesis (relación con letras entre paréntesis), desarrollo (problemas con procedimiento) o abierto (explicación, ensayo, dibujo).
-- enunciado: el texto completo del reactivo, listo para imprimirse. No incluyas las opciones dentro del enunciado. Si un problema tiene varias preguntas, escribe primero el planteamiento con sus datos y al final los incisos en orden: "a) … b) … c) …". Sé conciso: planteamientos de máximo 45 palabras y hasta 3 incisos por problema, salvo que el profesor pida otra cosa. La actividad debe caber en las páginas tamaño carta indicadas (cada problema de desarrollo ocupa casi media página).
+- enunciado: el texto completo del reactivo, listo para imprimirse. No incluyas las opciones dentro del enunciado. Nunca escribas los puntos ni la ponderación dentro del enunciado: la hoja los muestra aparte. Si un problema tiene varias preguntas, escribe primero el planteamiento con sus datos y al final los incisos en orden: "a) … b) … c) …". Sé eficiente con las palabras: si los incisos comparten el verbo, escríbelo una sola vez antes de los incisos y no lo repitas (por ejemplo "Calcula: a) El momento de inercia del disco. b) El torque respecto al eje. c) La aceleración angular."). Sé conciso: planteamientos de máximo 45 palabras y hasta 3 incisos por problema, salvo que el profesor pida otra cosa. La actividad debe caber en las páginas tamaño carta indicadas (cada problema de desarrollo ocupa casi media página).
 - opciones: solo para opción múltiple, de 3 a 5 opciones con su letra, como "a) 9.8 m/s²". Para los demás tipos, lista vacía.
 - columnaA y columnaB: solo para relación de columnas y paréntesis. columnaA numerada ("1. Inercia"), columnaB con letras ("a) Resistencia de un cuerpo a cambiar su movimiento"); mezcla el orden de columnaB. El alumno escribe la letra de columnaB junto a cada elemento de columnaA. Para los demás, listas vacías.
+- ilustracion: para problemas de desarrollo y preguntas abiertas, un dibujo pequeño y esquemático en SVG que ayude a entender el ejercicio (por ejemplo, el disco con la cuerda y la fuerza, la llave con el ángulo, el bloque con sus fuerzas). Reglas del SVG: un solo elemento <svg> con viewBox="0 0 160 120" y xmlns="http://www.w3.org/2000/svg"; solo figuras simples (line, rect, circle, ellipse, path, polygon, text); trazo #1e293b de 1.5 a 2, acentos en #2554e8; etiquetas cortas (letras o datos como "F", "R", "60°") en font-family="Arial" de 10 a 12 px; sin imágenes, scripts, enlaces ni estilos externos. No pongas la respuesta en el dibujo. Para reactivos cerrados, cadena vacía.
 - lineas: tamaño del espacio para responder: 0 para reactivos cerrados, de 4 a 8 para abiertos y de 10 a 16 para desarrollo (más incisos, más espacio).
 - puntos, tema (de la materia) y habilidad ("Comprensión de conceptos", "Resolución de problemas", "Interpretación de gráficas", "Comunicación escrita", etc.).
 - No escribas espacios en blanco, paréntesis vacíos ni líneas para responder dentro de los textos: la hoja impresa ya los agrega (círculos, casillas V/F, paréntesis y renglones).
@@ -232,7 +236,10 @@ export async function generarActividad(datos: { titulo: string; materia: string;
   });
   if (salida.reactivos.length === 0) throw new ErrorIA("La IA no generó reactivos. Describe con más detalle la actividad.");
   // La hoja dibuja sus propios espacios para responder: se quitan los que la IA haya escrito.
-  const limpiar = (t: string) => t.replace(/\(\s*_*\s*\)|_{3,}/g, "").replace(/[ \t]{2,}/g, " ").trim();
+  const limpiar = (t: string) =>
+    t
+      .replace(/\(\s*_*\s*\)|_{3,}/g, "")
+      .replace(/[([]\s*(valor:?\s*)?\d+(\.\d+)?\s*(puntos?|pts?\.?|%)\s*[)\]]/gi, "").replace(/[ \t]{2,}/g, " ").trim();
   const lista = (xs: string[]) => (xs.length ? xs.map(limpiar) : undefined);
   return {
     instrucciones: salida.instrucciones.filter((t) => t.trim() && !/\bQR\b/i.test(t)),
@@ -254,6 +261,7 @@ export async function generarActividad(datos: { titulo: string; materia: string;
         columnaA: lista(r.columnaA),
         columnaB: lista(r.columnaB),
         lineas: cerrado ? 0 : Math.max(3, Math.min(18, r.lineas || (r.tipo === "desarrollo" ? 12 : 6))),
+        ilustracion: cerrado ? undefined : svgSeguro(r.ilustracion),
       };
     }),
   };
