@@ -90,6 +90,8 @@ export interface Actividad {
   archivos?: string[];
   /** Condiciones que dio el profesor para que la IA resolviera la actividad. */
   condicionesSolucion?: string;
+  /** Versión anterior de la hoja, para deshacer la última edición con IA. */
+  hojaAnterior?: { instruccionesAlumno?: string[]; criterios?: CriterioEvaluacion[]; reactivos: Reactivo[]; rubricaConfirmada?: boolean };
   /** true si la solución la generó la IA en lugar de escanearla. */
   solucionIA?: boolean;
   /** true en las actividades de ejemplo (sin fotos reales; se dibujan en SVG). */
