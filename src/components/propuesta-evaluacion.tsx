@@ -2,6 +2,7 @@
 // puntos, los criterios con su porcentaje y las recomendaciones del profesor.
 import type { Actividad } from "@/lib/tipos";
 import { Tarjeta } from "./ui";
+import { TextoMat } from "./texto-mat";
 
 const nombreTipo: Record<string, string> = {
   verdadero_falso: "V / F",
@@ -48,7 +49,9 @@ export function PropuestaEvaluacion({ actividad }: { actividad: Actividad }) {
                     <td className="py-2 pr-2 font-medium">{r.numero}</td>
                     <td className="py-2 pr-2">
                       <span className="font-medium">{r.tema}</span>
-                      {r.enunciado && <span className="block text-xs text-slate-500">{r.enunciado}</span>}
+                      {r.enunciado && <span className="block text-xs text-slate-500">
+                          <TextoMat texto={r.enunciado} />
+                        </span>}
                       {r.pasos?.length ? (
                         <span className="mt-1 block text-xs text-slate-600">
                           {r.pasos.map((p) => `${p.nombre} ${pct(p.peso)}`).join(" · ")}

@@ -213,6 +213,7 @@ Reglas:
 - ilustracion: para problemas de desarrollo y preguntas abiertas, un dibujo pequeño y esquemático en SVG que ayude a entender el ejercicio (por ejemplo, el disco con la cuerda y la fuerza, la llave con el ángulo, el bloque con sus fuerzas). Reglas del SVG: un solo elemento <svg> con viewBox="0 0 160 120" y xmlns="http://www.w3.org/2000/svg"; solo figuras simples (line, rect, circle, ellipse, path, polygon, text); trazo #1e293b de 1.5 a 2, acentos en #2554e8; etiquetas cortas (letras o datos como "F", "R", "60°") en font-family="Arial" de 10 a 12 px; sin imágenes, scripts, enlaces ni estilos externos. No pongas la respuesta en el dibujo. Para reactivos cerrados, cadena vacía.
 - lineas: tamaño del espacio para responder: 0 para reactivos cerrados, de 4 a 8 para abiertos y de 10 a 16 para desarrollo (más incisos, más espacio).
 - puntos, tema (de la materia) y habilidad ("Comprensión de conceptos", "Resolución de problemas", "Interpretación de gráficas", "Comunicación escrita", etc.).
+- Expresiones matemáticas, físicas y químicas: escríbelas en LaTeX entre signos de dólar para que se impriman con tipografía de libro, tanto en el enunciado como en opciones y columnas. En línea con $…$ (por ejemplo "$\\int_0^1 x e^{x^2}\\,dx$", "$F = m a$", "$v_0 = 12\\ \\text{m/s}$", "$\\frac{3}{4}$", "$\\ce{H2SO4}$"); usa $$…$$ solo para una fórmula larga que deba ir en su propio renglón. No uses símbolos Unicode sueltos como ∫, ², √ o ½ fuera de LaTeX. Usa \\dfrac para fracciones dentro de integrales y ecuaciones principales, y la notación en español: \\operatorname{sen} para seno y \\operatorname{tg} solo si el profesor lo usa (si no, \\tan). Las letras de los incisos y opciones ("a)", "b)") van fuera de los signos de dólar. El texto normal y las palabras van fuera de LaTeX.
 - No escribas espacios en blanco, paréntesis vacíos ni líneas para responder dentro de los textos: la hoja impresa ya los agrega (círculos, casillas V/F, paréntesis y renglones).
 - No incluyas las respuestas: la solución se prepara después.
 - Usa español de México, lenguaje adecuado para adolescentes y datos realistas. No pidas datos personales al alumno.`;
@@ -328,6 +329,7 @@ ${SISTEMA_RUBRICA.split("\n").slice(2).join("\n")}
 Además:
 - Resuelve cada reactivo con cuidado y verifica tus cálculos. La respuesta debe ser correcta.
 - Para desarrollo, escribe en solucionPasos el procedimiento completo, una línea por paso, con unidades.
+- En solucionPasos escribe las expresiones en LaTeX entre $…$ (por ejemplo "$u = x^2,\\ du = 2x\\,dx$"). En respuesta usa texto simple sin LaTeX (por ejemplo "1/2 (e - 1) ≈ 0.86"), porque se copia a campos de texto y al PDF corregido.
 - Para abiertos, en respuesta pon los criterios que debe cumplir una buena respuesta y un ejemplo breve.
 - Respeta el número, el tipo y los puntos de cada reactivo tal como vienen. Si la actividad viene en imágenes, léela de ahí.
 - pagina e y: si la actividad viene como texto, usa pagina 1 e y 0.
@@ -405,7 +407,7 @@ Para cada reactivo de la rúbrica:
 - confianza: alta si se lee con claridad; media si hay alguna duda; baja si la letra, la foto o el tachón no permiten leerlo con seguridad. Nunca adivines: si no se lee, usa confianza baja.
 - pasos: solo para desarrollo, un valor por cada paso de la rúbrica en el mismo orden: 1 si el paso está completo y correcto, 0.5 si está parcial o con un error menor, 0 si falta o es incorrecto. Acepta procedimientos distintos al del profesor si son correctos, salvo que sus indicaciones digan lo contrario. Para los demás tipos, lista vacía.
 - puntosSugeridos: puntos que asignarías según la rúbrica (entre 0 y el valor del reactivo).
-- comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta.
+- comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta. Sin LaTeX ni signos de dólar: se imprime en el PDF tal cual.
 - pagina, y, x: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo; x de 0 izquierda a 1 derecha, al final de la respuesta). Ahí se dibuja la marca de corrección.
 
 Si el profesor dio criterios de evaluación con porcentajes o recomendaciones, síguelos al asignar puntos y al redactar los comentarios.

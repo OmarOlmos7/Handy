@@ -4,40 +4,31 @@
 // desarrollo (cuadrícula de puntos) y un cuadro de RESPUESTA.
 import type { CSSProperties, ReactNode } from "react";
 import type { Actividad, Reactivo } from "@/lib/tipos";
+import { TextoMat, taparFormulas } from "./texto-mat";
 import { fechaLarga } from "./ui";
 
-/** Texto con **negritas** al estilo Markdown. */
-function ConNegritas({ texto }: { texto: string }) {
-  return (
-    <>
-      {texto.split(/(\*\*[^*]+\*\*)/g).map((parte, i) =>
-        parte.startsWith("**") && parte.endsWith("**") ? (
-          <strong key={i} className="font-semibold text-slate-900">
-            {parte.slice(2, -2)}
-          </strong>
-        ) : (
-          parte
-        ),
-      )}
-    </>
-  );
-}
-
-/** Separa el planteamiento de los incisos a), b), c)… y resalta cada letra. */
+/** Separa el planteamiento de los incisos a), b), c)… y resalta cada letra (sin mirar dentro de las fórmulas). */
 function Enunciado({ texto }: { texto: string }) {
-  const inicio = texto.search(/(?:^|\s)a\)\s/);
+  const tapado = taparFormulas(texto);
+  const inicio = tapado.search(/(?:^|\s)a\)\s/);
   const planteamiento = inicio > 0 ? texto.slice(0, inicio).trim() : inicio === 0 ? "" : texto;
-  const incisos = inicio >= 0 ? texto.slice(inicio).trim().split(/\s(?=[b-h]\)\s)/) : [];
+  const incisos: string[] = [];
+  if (inicio >= 0) {
+    const cortes = [...tapado.slice(inicio).matchAll(/\s(?=[b-h]\)\s)/g)].map((m) => inicio + m.index!);
+    [inicio, ...cortes].forEach((desde, i, xs) => incisos.push(texto.slice(desde, xs[i + 1] ?? texto.length).trim()));
+  }
   return (
     <>
-      {planteamiento && <p className="whitespace-pre-line text-[15px] leading-snug text-slate-800">{planteamiento}</p>}
+      {planteamiento && (
+        <p className="whitespace-pre-line text-[15px] leading-snug text-slate-800">
+          <TextoMat texto={planteamiento} />
+        </p>
+      )}
       {incisos.length > 0 && (
-        <p className="mt-1.5 text-[15px] leading-snug text-slate-700">
+        <p className="mt-1.5 text-[15px] leading-relaxed text-slate-700">
           {incisos.map((inc, i) => (
-            <span key={i} className="mr-4 inline">
-              <span className="font-bold text-tinta-600">{inc.slice(0, 2)}</span>
-              {inc.slice(2)}
-              {i < incisos.length - 1 ? " " : ""}
+            <span key={i} className="mr-5 inline-block">
+              <span className="font-bold text-tinta-600">{inc.slice(0, 2)}</span> <TextoMat texto={inc.slice(2).trim()} />
             </span>
           ))}
         </p>
@@ -73,7 +64,7 @@ function CuerpoReactivo({ r }: { r: Reactivo }) {
             <span className="mt-0.5 inline-block h-[18px] w-[18px] shrink-0 rounded-full border-[1.5px] border-slate-400" />
             <span>
               <span className="font-bold text-tinta-600">{o.slice(0, 2)}</span>
-              {o.slice(2)}
+              <TextoMat texto={o.slice(2)} />
             </span>
           </li>
         ))}
@@ -95,7 +86,9 @@ function CuerpoReactivo({ r }: { r: Reactivo }) {
           {r.columnaA?.map((a) => (
             <li key={a} className="flex gap-2.5">
               <span className="inline-block h-6 w-9 shrink-0 rounded-md border-[1.5px] border-slate-300" />
-              <span>{a}</span>
+              <span>
+                <TextoMat texto={a} />
+              </span>
             </li>
           ))}
         </ol>
@@ -103,7 +96,7 @@ function CuerpoReactivo({ r }: { r: Reactivo }) {
           {r.columnaB?.map((b) => (
             <li key={b}>
               <span className="font-bold text-tinta-600">{b.slice(0, 2)}</span>
-              {b.slice(2)}
+              <TextoMat texto={b.slice(2)} />
             </li>
           ))}
         </ul>
@@ -179,7 +172,7 @@ export function HojaActividad({
             <li key={i} className="flex gap-2">
               <span className="font-bold text-tinta-600">{i + 1}</span>
               <span>
-                <ConNegritas texto={t} />
+                <TextoMat texto={t} />
               </span>
             </li>
           ))}
