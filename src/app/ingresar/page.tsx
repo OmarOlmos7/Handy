@@ -34,9 +34,9 @@ export default async function Ingresar({ searchParams }: PageProps<"/ingresar">)
         </Link>
       </p>
       <p className="mt-2 text-sm text-slate-600">
-        ¿Eres alumno? No necesitas cuenta:{" "}
+        ¿Eres alumno?{" "}
         <Link href="/alumno" className="font-medium text-tinta-700 hover:underline">
-          consulta tus reportes con el ID de curso
+          Entra con tu correo y clave de acceso
         </Link>
         .
       </p>

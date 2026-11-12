@@ -1,7 +1,7 @@
 // Cuentas de profesor y separación de datos por profesor. Funciones puras (sin
 // cookies ni disco) para poder probarlas; la sesión vive en sesion.ts.
 import crypto from "node:crypto";
-import type { BaseDeDatos, Grupo } from "./tipos";
+import type { Alumno, BaseDeDatos, CuentaAlumno, Grupo } from "./tipos";
 
 const LARGO_HASH = 64;
 
@@ -76,6 +76,7 @@ export function datosDeProfesor(db: BaseDeDatos, profesorId: string): BaseDeDato
   return {
     version: db.version,
     profesores: [],
+    cuentasAlumno: [],
     sesiones: [],
     grupos,
     actividades,
@@ -99,6 +100,9 @@ export function esDelProfesor(db: BaseDeDatos, actividadId: string, profesorId: 
 export function migrar(db: BaseDeDatos): BaseDeDatos {
   db.profesores ??= [];
   db.sesiones ??= [];
+  db.cuentasAlumno ??= [];
+  // Versión 3: el alumno entra con correo y clave; las sesiones viejas (ID de curso + matrícula) se cierran.
+  if (db.version !== 3) db.sesiones = db.sesiones.filter((s) => !("alumno" in s));
   const codigos = db.grupos.map((g) => g.codigo).filter((c): c is string => Boolean(c));
   for (const g of db.grupos) {
     if (!g.codigo) {
@@ -106,7 +110,7 @@ export function migrar(db: BaseDeDatos): BaseDeDatos {
       codigos.push(g.codigo);
     }
   }
-  db.version = 2;
+  db.version = 3;
   return db;
 }
 
@@ -118,4 +122,34 @@ export function adoptarSinDueno(db: BaseDeDatos, profesorId: string) {
 
 export function saldoDe(db: BaseDeDatos, profesorId: string): number {
   return db.movimientos.filter((m) => m.profesorId === profesorId).reduce((s, m) => s + m.cantidad, 0);
+}
+
+
+/** Correo con forma válida (algo@algo.algo). */
+export function correoValido(correo: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+}
+
+export function cuentaAlumnoPorCorreo(db: BaseDeDatos, correo: string): CuentaAlumno | undefined {
+  const c = normalizarCorreo(correo);
+  return db.cuentasAlumno.find((x) => x.correo === c);
+}
+
+/**
+ * Lugar del alumno en un curso: primero por su correo; si el profesor lo dio de alta
+ * sin correo, por su matrícula. undefined si aún no está en el curso.
+ */
+export function alumnoEnGrupo(grupo: Grupo, cuenta: Pick<CuentaAlumno, "correo" | "matricula">): Alumno | undefined {
+  return (
+    grupo.alumnos.find((a) => a.correo && normalizarCorreo(a.correo) === cuenta.correo) ??
+    grupo.alumnos.find((a) => !a.correo && normalizarMatricula(a.matricula) === cuenta.matricula)
+  );
+}
+
+/** Cursos donde está inscrito el alumno, con la matrícula con que aparece en cada uno. */
+export function cursosDeAlumno(db: BaseDeDatos, cuenta: CuentaAlumno): { grupo: Grupo; alumno: Alumno }[] {
+  return db.grupos.flatMap((grupo) => {
+    const alumno = grupo.alumnos.find((a) => a.correo && normalizarCorreo(a.correo) === cuenta.correo);
+    return alumno ? [{ grupo, alumno }] : [];
+  });
 }

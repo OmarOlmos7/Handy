@@ -1,6 +1,6 @@
-import { actividadDe, guardarArchivo, leer, modificar } from "@/lib/almacen";
-import { ErrorIA, proponerRubrica, type ImagenParaIA } from "@/lib/ia";
-import { normalizarFoto } from "@/lib/imagenes";
+import { actividadDe, borrarCarpeta, guardarArchivo, leer, modificar } from "@/lib/almacen";
+import { ErrorIA, proponerRubrica, unirConHoja } from "@/lib/ia";
+import { guardarSubidos } from "@/lib/imagenes";
 import { esDelProfesor } from "@/lib/cuentas";
 import { profesorActual } from "@/lib/sesion";
 
@@ -23,26 +23,22 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
   const instrucciones = form.has("instrucciones") ? String(form.get("instrucciones") ?? "").trim() : actividad.instrucciones;
   if (instrucciones !== actividad.instrucciones) modificar((d) => (actividadDe(d, id)!.instrucciones = instrucciones));
 
-  const rutas: string[] = [];
-  const paraIA: ImagenParaIA[] = [];
-  for (const [i, f] of archivos.entries()) {
-    const datos = Buffer.from(await f.arrayBuffer());
-    if (f.type === "application/pdf") {
-      rutas.push(guardarArchivo(`actividades/${id}/solucion/${i + 1}.pdf`, datos));
-      paraIA.push({ base64: datos.toString("base64"), mediaType: "application/pdf" });
-    } else {
-      const jpg = await normalizarFoto(datos);
-      rutas.push(guardarArchivo(`actividades/${id}/solucion/${i + 1}.jpg`, jpg));
-      paraIA.push({ base64: jpg.toString("base64"), mediaType: "image/jpeg" });
-    }
+  borrarCarpeta(`actividades/${id}/solucion`);
+  let subidos;
+  try {
+    subidos = await guardarSubidos(archivos, `actividades/${id}/solucion`, guardarArchivo);
+  } catch {
+    return Response.json({ error: "Algún archivo no es una imagen o PDF válido" }, { status: 400 });
   }
+  const { rutas, paraIA } = subidos;
 
   try {
     const { reactivos, criterios, recomendaciones } = await proponerRubrica(paraIA, { titulo: actividad.titulo, instrucciones });
     modificar((d) => {
       const a = actividadDe(d, id)!;
       a.solucion = rutas;
-      a.reactivos = reactivos;
+      a.reactivos = unirConHoja(a.reactivos, reactivos);
+      a.solucionIA = false;
       a.criterios = criterios;
       a.recomendaciones = recomendaciones;
       a.rubricaConfirmada = false;

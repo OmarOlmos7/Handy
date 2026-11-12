@@ -345,8 +345,9 @@ export const entregas: Entrega[] = actividades.flatMap((a, i) => generarEntregas
 /** Datos iniciales de la demo: un grupo con actividades de ejemplo ya evaluadas. */
 export function semilla(): BaseDeDatos {
   return structuredClone({
-    version: 2,
+    version: 3,
     profesores: [],
+    cuentasAlumno: [],
     sesiones: [],
     grupos,
     actividades: actividades.map((a) => ({ ...a, demo: true, rubricaConfirmada: a.reactivos.length > 0 })),

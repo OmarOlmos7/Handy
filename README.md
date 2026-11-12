@@ -4,7 +4,7 @@ Web del profesor y del alumno para evaluar actividades impresas con apoyo de IA.
 Esta versión ya funciona de punta a punta: guarda grupos, actividades y entregas,
 recibe fotos desde el celular del alumno, califica con la API de Claude, genera el
 PDF corregido y exporta el Excel para Canvas. Los profesores tienen cuenta (correo y
-contraseña); los alumnos entregan sin cuenta con nombre y matrícula. Todavía no tiene pagos.
+contraseña); los alumnos crean su cuenta con correo y clave de acceso al entregar por primera vez. Todavía no tiene pagos.
 
 ## Cómo correrlo
 
@@ -37,18 +37,20 @@ la IP de tu computadora.
 ## Flujo para validar con un grupo
 
 0. **Crea tu cuenta** en `/registro`. La primera cuenta se queda con los cursos de ejemplo.
-1. **Nuevo curso**: materia y grupo. Recibes un **ID de curso** (ej. `FIS-7K2Q`). La lista de
-   alumnos es opcional: cada alumno se registra solo al entregar con su nombre y matrícula.
-2. **Nueva actividad**: título, grupo, fecha y páginas por alumno.
-3. **Solución y rúbrica**: sube fotos o PDF de tu solución hecha a mano. La IA propone
-   reactivos, respuestas, puntos y pasos. Revísala y confírmala.
-4. **Entregas**: los alumnos escanean el QR (o abren el enlace), escriben su nombre y
-   matrícula y toman una foto por hoja. También puedes subir las hojas de un alumno desde la tabla.
-5. **Evaluar**: 1 crédito por página. Los reactivos cerrados los califica el código contra
-   tu clave; los de desarrollo los compara la IA paso por paso con tu solución.
+1. **Nuevo curso**: materia y grupo. La lista de alumnos es opcional.
+2. **Crear la actividad** (dos opciones):
+   - *Nueva actividad con IA*: describe tipos de reactivos, ponderaciones y temas. La IA arma la hoja
+     imprimible con logo, nombre, matrícula, calificación, instrucciones y el QR de entrega.
+   - *Cargar actividad escaneada*: sube fotos o PDF; se genera un PDF con encabezado y QR en cada página.
+3. **Solución y rúbrica** (dos opciones): *Escanea tu solución* (fotos o PDF resuelto a mano) o
+   *Generar solución con IA* con tus condiciones. Revisa la rúbrica y confírmala.
+4. **Entregas**: los alumnos escanean el QR, la primera vez crean su cuenta (nombre, matrícula, correo
+   y clave de acceso) y toman una foto por hoja.
+5. **Evaluación automática**: con la rúbrica confirmada, cada entrega se evalúa sola al llegar
+   (1 crédito por página). Los reactivos cerrados los califica el código contra tu clave.
 6. **Revisar y aprobar**: ajusta puntos y comentarios; descarga el PDF corregido.
-7. **Reporte del grupo**: estadísticas, Excel y CSV para Canvas. El alumno ve su reporte
-   en `/alumno` con el ID de curso y su matrícula cuando lo apruebas.
+7. **Reporte del grupo**: estadísticas, Excel y CSV para Canvas. El alumno ve solo sus resultados
+   en `/alumno` con su correo y clave de acceso cuando los apruebas.
 
 En **Créditos → Quitar datos de ejemplo** borras las actividades de ejemplo de tu cuenta.
 
@@ -93,6 +95,6 @@ src/
 ## Siguientes pasos
 
 1. Publicar en Hostinger: guía paso a paso en `despliegue/PUBLICAR.md` (VPS con Docker y Caddy).
-2. Recuperar contraseña por correo y PIN por alumno para consultar reportes.
+2. Recuperar contraseña y clave de acceso por correo.
 3. Cambiar el JSON por PostgreSQL y las fotos por almacenamiento de objetos.
 4. Envío del reporte por correo y pagos de créditos.

@@ -33,6 +33,13 @@ export interface Reactivo {
   solucionPasos?: string[];
   /** Posición vertical aproximada del reactivo en su página (0 = arriba, 1 = abajo). */
   y?: number;
+  /** Opciones impresas (opción múltiple), por ejemplo "a) 9.8 m/s²". */
+  opciones?: string[];
+  /** Columnas impresas para relación de columnas o paréntesis. */
+  columnaA?: string[];
+  columnaB?: string[];
+  /** Renglones de espacio para responder (desarrollo y abiertos). */
+  lineas?: number;
 }
 
 export interface Alumno {
@@ -45,7 +52,7 @@ export interface Grupo {
   id: string;
   /** Profesor dueño del curso. */
   profesorId?: string;
-  /** ID de curso que el profesor comparte con sus alumnos (ej. FIS-7K2Q). */
+  /** Código interno del curso (ya no se muestra; los alumnos entran con correo y clave). */
   codigo?: string;
   nombre: string;
   materia: string;
@@ -67,8 +74,22 @@ export interface CriterioEvaluacion {
   descripcion: string;
 }
 
+export type OrigenActividad = "ia" | "escaneada";
+
 export interface Actividad {
   id: string;
+  /** Cómo se creó: generada con IA o cargada desde un escaneo del profesor. */
+  origen?: OrigenActividad;
+  /** Lo que pidió el profesor para generar la actividad con IA. */
+  prompt?: string;
+  /** Instrucciones para el alumno que van impresas en la hoja. */
+  instruccionesAlumno?: string[];
+  /** Escaneo de la actividad en blanco (rutas relativas a la carpeta de datos). */
+  archivos?: string[];
+  /** Condiciones que dio el profesor para que la IA resolviera la actividad. */
+  condicionesSolucion?: string;
+  /** true si la solución la generó la IA en lugar de escanearla. */
+  solucionIA?: boolean;
   /** true en las actividades de ejemplo (sin fotos reales; se dibujan en SVG). */
   demo?: boolean;
   /** Indicaciones del profesor para la IA. */
@@ -119,6 +140,8 @@ export interface Entrega {
   evaluadaEn?: string;
   /** Último error de evaluación, si lo hubo. */
   error?: string;
+  /** Hora en que empezó la evaluación automática (mientras está en curso). */
+  evaluandoDesde?: string;
 }
 
 export interface Movimiento {
@@ -137,19 +160,31 @@ export interface Profesor {
   creadoEn: string;
 }
 
+/** Cuenta del alumno: entra con su correo y su clave de acceso para ver solo sus resultados. */
+export interface CuentaAlumno {
+  id: string;
+  correo: string;
+  nombre: string;
+  matricula: string;
+  /** scrypt: "sal:hash" en hexadecimal. */
+  contrasena: string;
+  creadoEn: string;
+}
+
 /** Sesión abierta. Se guarda solo el hash SHA-256 del token de la cookie. */
 export interface Sesion {
   token: string;
   expira: string;
   /** Sesión de profesor. */
   profesorId?: string;
-  /** Sesión de alumno: entra con ID de curso y matrícula, sin cuenta. */
-  alumno?: { grupoId: string; matricula: string };
+  /** Sesión de alumno (cuenta con correo y clave de acceso). */
+  alumnoId?: string;
 }
 
 export interface BaseDeDatos {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   profesores: Profesor[];
+  cuentasAlumno: CuentaAlumno[];
   sesiones: Sesion[];
   grupos: Grupo[];
   actividades: Actividad[];

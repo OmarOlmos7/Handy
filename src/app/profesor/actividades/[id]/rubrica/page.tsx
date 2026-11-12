@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
+import type { Reactivo } from "@/lib/tipos";
 import { Hoja } from "@/components/hoja";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import { RubricaEditor } from "@/components/rubrica-editor";
 import { Encabezado, Tarjeta } from "@/components/ui";
 import { PropuestaEvaluacion } from "@/components/propuesta-evaluacion";
-import { SubirSolucion } from "@/components/subir-solucion";
+import { OpcionesSolucion } from "@/components/opciones-solucion";
 import { actividadDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 
@@ -16,6 +17,18 @@ export default async function Rubrica({
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
+  // La rúbrica existe cuando los reactivos ya tienen respuesta (los generados en el paso 1 llegan sin ella).
+  const conSolucion = actividad.reactivos.some((r) => r.respuesta.trim());
+  const puedeGenerar = actividad.reactivos.length > 0 || Boolean(actividad.archivos?.length);
+  const opciones = (reemplazar: boolean) => (
+    <OpcionesSolucion
+      actividadId={id}
+      puedeGenerar={puedeGenerar}
+      reemplazar={reemplazar}
+      instruccionesIniciales={actividad.instrucciones ?? ""}
+      condicionesIniciales={actividad.condicionesSolucion ?? ""}
+    />
+  );
 
   return (
     <>
@@ -28,31 +41,25 @@ export default async function Rubrica({
       />
       <PestanasActividad id={id} activa="rubrica" />
 
-      {actividad.reactivos.length === 0 ? (
-        <Tarjeta className="mx-auto max-w-xl">
-          <h2 className="text-lg font-semibold">Sube tu solución</h2>
+      {!conSolucion ? (
+        <Tarjeta className="mx-auto max-w-2xl">
+          <h2 className="text-lg font-semibold">Paso 3 · Prepara la solución</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Resuelve la actividad a mano y sube fotos o un PDF. La IA leerá tus
-            respuestas y propondrá la rúbrica: tipo de reactivo, respuesta,
-            puntos y pasos esperados. Después la revisas y la confirmas.
+            Elige cómo: sube fotos o un PDF de la actividad resuelta por ti, o deja que Claude la resuelva con las condiciones
+            que indiques. Con la solución se arma la rúbrica, que después revisas y confirmas.
           </p>
-          <div className="mt-5">
-            <SubirSolucion
-              actividadId={id}
-              instruccionesIniciales={actividad.instrucciones ?? ""}
-            />
-          </div>
-          <p className="mt-3 text-xs text-slate-400">
-            Generar la rúbrica no consume créditos.
-          </p>
+          <div className="mt-5">{opciones(false)}</div>
+          <p className="mt-3 text-xs text-slate-400">Preparar la solución y la rúbrica no consume créditos.</p>
         </Tarjeta>
       ) : (
         <>
           <PropuestaEvaluacion actividad={actividad} />
           <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <div className="space-y-4">
-              <p className="text-sm text-slate-500">Tu solución</p>
-              {actividad.solucion?.length
+              <p className="text-sm text-slate-500">{actividad.solucionIA ? "Solución generada con IA" : "Tu solución"}</p>
+              {actividad.solucionIA ? (
+                <SolucionTexto reactivos={actividad.reactivos} />
+              ) : actividad.solucion?.length
                 ? actividad.solucion.map((ruta, i) =>
                     ruta.endsWith(".pdf") ? (
                       <a
@@ -83,14 +90,8 @@ export default async function Rubrica({
                     />
                   ))}
               <Tarjeta>
-                <p className="mb-3 text-sm font-medium">
-                  ¿La IA leyó mal tu solución o quieres cambiar los criterios?
-                </p>
-                <SubirSolucion
-                  actividadId={id}
-                  reemplazar
-                  instruccionesIniciales={actividad.instrucciones ?? ""}
-                />
+                <p className="mb-3 text-sm font-medium">¿Quieres rehacer la solución o cambiar los criterios?</p>
+                {opciones(true)}
               </Tarjeta>
             </div>
             <RubricaEditor
@@ -102,5 +103,30 @@ export default async function Rubrica({
         </>
       )}
     </>
+  );
+}
+
+/** Solución que generó la IA, reactivo por reactivo, para que el profesor la revise. */
+function SolucionTexto({ reactivos }: { reactivos: Reactivo[] }) {
+  return (
+    <Tarjeta>
+      <ol className="space-y-3 text-sm">
+        {reactivos.map((r) => (
+          <li key={r.numero}>
+            <p className="font-medium text-slate-900">
+              {r.numero}. {r.enunciado}
+            </p>
+            {r.solucionPasos?.length ? (
+              <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-slate-600">
+                {r.solucionPasos.map((p, i) => (
+                  <li key={i}>{p}</li>
+                ))}
+              </ol>
+            ) : null}
+            <p className="mt-1 font-semibold text-acierto">{r.respuesta}</p>
+          </li>
+        ))}
+      </ol>
+    </Tarjeta>
   );
 }

@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { Hoja } from "@/components/hoja";
-import { Encabezado } from "@/components/ui";
+import { HojaActividad } from "@/components/hoja-actividad";
+import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { actividadDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 import { qrDataUrl, urlBase } from "@/lib/qr";
@@ -12,25 +13,67 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
+  const curso = `${grupo.materia} · ${grupo.nombre}`;
   const qr = await qrDataUrl(`${await urlBase()}/entregar/${id}`);
+  const siguiente = actividad.reactivos.some((r) => r.respuesta.trim()) ? null : (
+    <BotonLink href={`/profesor/actividades/${id}/rubrica`} variante="secundario">
+      Siguiente: preparar la solución
+    </BotonLink>
+  );
+  const migas = [
+    { texto: "Panel", href: "/profesor" },
+    { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
+  ];
+
+  if (actividad.origen === "escaneada") {
+    return (
+      <>
+        <Encabezado
+          migas={migas}
+          titulo="Hoja imprimible"
+          subtitulo="Tu actividad escaneada con encabezado para nombre, matrícula y calificación, y el código QR de entrega en cada página."
+          acciones={
+            <>
+              <BotonLink href={`/api/hoja/${id}`} target="_blank">
+                Descargar PDF para imprimir
+              </BotonLink>
+              {siguiente}
+            </>
+          }
+        />
+        <Tarjeta className="mx-auto max-w-3xl p-2">
+          <iframe src={`/api/hoja/${id}`} title="Hoja imprimible" className="h-[80vh] w-full rounded-lg" />
+        </Tarjeta>
+      </>
+    );
+  }
+
   return (
     <>
+      <div className="no-imprimir">
       <Encabezado
-        migas={[
-          { texto: "Panel", href: "/profesor" },
-          { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
-        ]}
+        migas={migas}
         titulo="Hoja imprimible"
-        subtitulo="Cada página lleva el código QR de entrega: el alumno lo escanea con su celular, toma las fotos de sus hojas y las envía."
-        acciones={<BotonImprimir texto={`Imprimir ${actividad.paginas} páginas`} />}
+        subtitulo="El alumno escribe su nombre y matrícula, resuelve, escanea el QR con su celular y envía la foto de cada hoja."
+        acciones={
+          <>
+            <BotonImprimir texto="Imprimir o guardar PDF" />
+            {siguiente}
+          </>
+        }
       />
-      <div className="mx-auto max-w-3xl space-y-6">
-        {Array.from({ length: actividad.paginas }, (_, i) => (
-          <div key={i} className="break-after-page">
-            <Hoja actividad={actividad} pagina={i + 1} modo="en_blanco" qrSrc={qr} grupoTexto={`${grupo.materia} · ${grupo.nombre} · ID de curso ${grupo.codigo}`} />
-          </div>
-        ))}
       </div>
+      {actividad.origen === "ia" ? (
+        <HojaActividad actividad={actividad} curso={curso} qrSrc={qr} />
+      ) : (
+        <div className="mx-auto max-w-3xl space-y-6">
+          {Array.from({ length: actividad.paginas }, (_, i) => (
+            <div key={i} className="break-after-page">
+              <Hoja actividad={actividad} pagina={i + 1} modo="en_blanco" qrSrc={qr} grupoTexto={curso} />
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

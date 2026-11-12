@@ -9,8 +9,8 @@ export default async function Nueva() {
   const { db } = await datosProfesor();
   return (
     <>
-      <Encabezado titulo="Nueva actividad" subtitulo="Registra la actividad que aplicarás en papel." migas={[{ texto: "Panel", href: "/profesor" }]} />
-      <NuevaActividad grupos={db.grupos} hoy={new Date().toISOString().slice(0, 10)} />
+      <Encabezado titulo="Nueva actividad" subtitulo="Paso 1 · Crea la actividad que aplicarás en papel: genérala con IA o carga la tuya escaneada." migas={[{ texto: "Panel", href: "/profesor" }]} />
+      <NuevaActividad grupos={db.grupos.map((g) => ({ id: g.id, materia: g.materia, nombre: g.nombre }))} hoy={new Date().toISOString().slice(0, 10)} />
     </>
   );
 }

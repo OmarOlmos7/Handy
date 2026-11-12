@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { entrarAlumno } from "@/app/acciones-cuenta";
-import { campo } from "@/components/nueva-actividad";
+import { ingresarAlumno, registrarAlumno } from "@/app/acciones-cuenta";
 import { InstalarApp } from "@/components/instalar-app";
-import { Boton, Encabezado, Insignia, colorCalificacion, fechaLarga } from "@/components/ui";
+import { Boton, Encabezado, Insignia, campo, colorCalificacion, fechaLarga } from "@/components/ui";
 import { leer } from "@/lib/almacen";
 import { calificacion } from "@/lib/estadisticas";
 import { alumnoActual } from "@/lib/sesion";
@@ -13,52 +12,109 @@ export const metadata: Metadata = { title: "Mis actividades" };
 export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">) {
   const alumno = await alumnoActual();
   if (!alumno) {
-    const { error } = await searchParams;
+    const { error, crear } = await searchParams;
+    const creando = crear === "1";
     return (
       <div className="mx-auto max-w-md">
-        <Encabezado titulo="Mis actividades" subtitulo="No necesitas cuenta. Entra con el ID de curso que te dio tu profesor y tu matrícula." />
-        <form action={entrarAlumno} className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-          <label className="block text-sm font-medium text-slate-700">
-            ID de curso
-            <input name="curso" required className={`${campo} font-mono uppercase`} placeholder="Ej. FIS-7K2Q" autoCapitalize="characters" />
-          </label>
-          <label className="block text-sm font-medium text-slate-700">
-            Matrícula
-            <input name="matricula" required className={`${campo} font-mono uppercase`} placeholder="Ej. A0301" autoCapitalize="characters" />
-          </label>
-          {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{error}</p>}
-          <Boton type="submit" className="w-full">
-            Ver mis actividades
-          </Boton>
-        </form>
+        <Encabezado
+          titulo="Mis actividades"
+          subtitulo={
+            creando
+              ? "Crea tu cuenta con tu correo y una clave de acceso. Solo tú podrás ver tus resultados."
+              : "Entra con tu correo y tu clave de acceso para ver tus resultados."
+          }
+        />
+        {creando ? (
+          <form action={registrarAlumno} className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <label className="block text-sm font-medium text-slate-700">
+              Nombre completo
+              <input name="nombre" required autoComplete="name" className={campo} placeholder="Ej. Ana López Ruiz" />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Matrícula
+              <input name="matricula" required className={`${campo} font-mono uppercase`} placeholder="Ej. A0301" autoCapitalize="characters" />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Correo
+              <input name="correo" type="email" required autoComplete="email" className={campo} placeholder="tu@correo.com" />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Clave de acceso (mínimo 6 caracteres)
+              <input name="clave" type="password" required minLength={6} autoComplete="new-password" className={campo} />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Repite tu clave de acceso
+              <input name="clave2" type="password" required minLength={6} autoComplete="new-password" className={campo} />
+            </label>
+            {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{error}</p>}
+            <Boton type="submit" className="w-full">
+              Crear mi cuenta
+            </Boton>
+            <p className="text-center text-sm text-slate-600">
+              ¿Ya tienes cuenta?{" "}
+              <Link href="/alumno" className="font-medium text-tinta-700 hover:underline">
+                Entra aquí
+              </Link>
+            </p>
+          </form>
+        ) : (
+          <form action={ingresarAlumno} className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <label className="block text-sm font-medium text-slate-700">
+              Correo
+              <input name="correo" type="email" required autoComplete="email" className={campo} placeholder="tu@correo.com" />
+            </label>
+            <label className="block text-sm font-medium text-slate-700">
+              Clave de acceso
+              <input name="clave" type="password" required autoComplete="current-password" className={campo} />
+            </label>
+            {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{error}</p>}
+            <Boton type="submit" className="w-full">
+              Ver mis resultados
+            </Boton>
+            <p className="text-center text-sm text-slate-600">
+              ¿Primera vez?{" "}
+              <Link href="/alumno?crear=1" className="font-medium text-tinta-700 hover:underline">
+                Crea tu cuenta
+              </Link>
+            </p>
+          </form>
+        )}
         <InstalarApp />
         <p className="mt-4 text-sm text-slate-500">
-          Para entregar una actividad, escanea el código QR de tu hoja con el celular y toma fotos de tus páginas.
+          Para entregar una actividad, escanea el código QR de tu hoja con el celular y toma fotos de tus páginas. Si aún no
+          tienes cuenta, la creas ahí mismo al entregar.
         </p>
       </div>
     );
   }
 
-  const { grupo, matricula } = alumno;
   const db = await leer();
-  const actividades = db.actividades.filter((a) => a.grupoId === grupo.id);
+  const actividades = alumno.cursos.flatMap(({ grupo, alumno: enCurso }) =>
+    db.actividades.filter((a) => a.grupoId === grupo.id).map((a) => ({ a, grupo, matricula: enCurso.matricula })),
+  );
   return (
     <>
       <Encabezado
         titulo="Mis actividades"
-        subtitulo={`${alumno.nombre} · ${grupo.materia} ${grupo.nombre}. Aquí aparecen tus reportes cuando tu profesor los aprueba.`}
+        subtitulo={`${alumno.nombre} · ${alumno.correo}. Aquí aparecen tus resultados cuando tu profesor los aprueba.`}
       />
       <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <ul className="divide-y divide-slate-100">
-          {actividades.length === 0 && <li className="px-5 py-4 text-sm text-slate-500">Tu profesor aún no publica actividades.</li>}
-          {actividades.map((a) => {
+          {actividades.length === 0 && (
+            <li className="px-5 py-4 text-sm text-slate-500">
+              Aún no tienes actividades. Aparecerán aquí después de tu primera entrega.
+            </li>
+          )}
+          {actividades.map(({ a, grupo, matricula }) => {
             const e = db.entregas.find((x) => x.actividadId === a.id && x.matricula === matricula);
             const publicada = e?.estado === "aprobada";
             const contenido = (
               <>
                 <div className="flex-1">
                   <p className="font-medium">{a.titulo}</p>
-                  <p className="text-sm text-slate-500">{fechaLarga(a.fechaAplicacion)}</p>
+                  <p className="text-sm text-slate-500">
+                    {grupo.materia} · {fechaLarga(a.fechaAplicacion)}
+                  </p>
                 </div>
                 {publicada ? (
                   <span className={`text-xl font-semibold ${colorCalificacion(calificacion(a, e!))}`}>

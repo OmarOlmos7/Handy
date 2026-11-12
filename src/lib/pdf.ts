@@ -56,7 +56,7 @@ function circuloNumero(p: PDFPage, f: PDFFont, n: number, x: number, y: number, 
   p.drawText(t, { x: x - f.widthOfTextAtSize(t, tam) / 2, y: y - tam * 0.35, size: tam, font: f, color: rgb(1, 1, 1) });
 }
 
-function leerLogo() {
+export function leerLogo() {
   return fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "public", "logo.png"));
 }
 
