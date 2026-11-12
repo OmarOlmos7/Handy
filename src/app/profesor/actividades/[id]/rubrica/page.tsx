@@ -8,6 +8,7 @@ import { PropuestaEvaluacion } from "@/components/propuesta-evaluacion";
 import { OpcionesSolucion } from "@/components/opciones-solucion";
 import { actividadDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
+import { TextoMat } from "@/components/texto-mat";
 
 export default async function Rubrica({
   params,
@@ -114,12 +115,14 @@ function SolucionTexto({ reactivos }: { reactivos: Reactivo[] }) {
         {reactivos.map((r) => (
           <li key={r.numero}>
             <p className="font-medium text-slate-900">
-              {r.numero}. {r.enunciado}
+              {r.numero}. <TextoMat texto={r.enunciado} />
             </p>
             {r.solucionPasos?.length ? (
               <ol className="mt-1 list-decimal space-y-0.5 pl-5 text-slate-600">
                 {r.solucionPasos.map((p, i) => (
-                  <li key={i}>{p}</li>
+                  <li key={i}>
+                    <TextoMat texto={p} />
+                  </li>
                 ))}
               </ol>
             ) : null}

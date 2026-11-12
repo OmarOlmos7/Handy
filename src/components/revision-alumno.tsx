@@ -7,6 +7,7 @@ import type { Actividad, Alumno, Entrega, ResultadoReactivo } from "@/lib/tipos"
 import { calificacion, puntosTotales } from "@/lib/estadisticas";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { Boton, Insignia, colorCalificacion } from "./ui";
+import { sinLatex } from "./texto-mat";
 
 const tonoConfianza = { alta: "verde", media: "gris", baja: "ambar" } as const;
 
@@ -146,7 +147,7 @@ export function RevisionAlumno({
                 <li key={r.numero} className={`px-5 py-3 ${res.confianza === "baja" ? "bg-aviso-suave/40" : ""}`}>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{r.numero}.</span>
-                    <span className="flex-1 truncate text-sm text-slate-600" title={r.enunciado}>
+                    <span className="flex-1 truncate text-sm text-slate-600" title={sinLatex(r.enunciado)}>
                       {r.tema}
                     </span>
                     <Insignia tono={tonoConfianza[res.confianza]}>confianza {res.confianza}</Insignia>
