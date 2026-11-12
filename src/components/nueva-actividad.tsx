@@ -110,7 +110,7 @@ export function NuevaActividad({ grupos, hoy }: { grupos: Pick<Grupo, "id" | "ma
             </label>
             <label className="block w-40 text-sm font-medium text-slate-700">
               Páginas aproximadas
-              <input name="paginas" type="number" min={1} max={10} defaultValue={2} className={campo} />
+              <input name="paginas" type="number" min={1} max={10} defaultValue={1} className={campo} />
             </label>
           </>
         ) : (

@@ -41,8 +41,14 @@ export async function POST(req: Request) {
     const prompt = String(form.get("prompt") ?? "").trim().slice(0, 4000);
     if (prompt.length < 10) return Response.json({ error: "Describe la actividad: tipo de reactivos, ponderaciones y temas" }, { status: 400 });
     try {
-      const generada = await generarActividad({ titulo, materia: grupo.materia, grupo: grupo.nombre, prompt });
-      Object.assign(base, { origen: "ia", prompt, instruccionesAlumno: generada.instrucciones, reactivos: generada.reactivos });
+      const generada = await generarActividad({ titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas });
+      Object.assign(base, {
+        origen: "ia",
+        prompt,
+        instruccionesAlumno: generada.instrucciones,
+        criterios: generada.criterios,
+        reactivos: generada.reactivos,
+      });
     } catch (e) {
       console.error(e);
       return Response.json({ error: e instanceof ErrorIA ? e.message : "No se pudo generar la actividad." }, { status: 502 });
