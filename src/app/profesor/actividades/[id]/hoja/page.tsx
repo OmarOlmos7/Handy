@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { BotonImprimir } from "@/components/boton-imprimir";
+import { EditarHoja } from "@/components/editar-hoja";
 import { Hoja } from "@/components/hoja";
 import { HojaActividad } from "@/components/hoja-actividad";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
@@ -64,7 +65,14 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
       />
       </div>
       {actividad.origen === "ia" ? (
-        <HojaActividad actividad={actividad} curso={curso} qrSrc={qr} />
+        <>
+          <EditarHoja
+            actividadId={id}
+            puedeDeshacer={!!actividad.hojaAnterior}
+            bloqueada={db.entregas.some((e) => e.actividadId === id && e.estado !== "sin_entregar")}
+          />
+          <HojaActividad actividad={actividad} curso={curso} qrSrc={qr} />
+        </>
       ) : (
         <div className="mx-auto max-w-3xl space-y-6">
           {Array.from({ length: actividad.paginas }, (_, i) => (

@@ -235,6 +235,10 @@ export async function generarActividad(datos: { titulo: string; materia: string;
     ],
   });
   if (salida.reactivos.length === 0) throw new ErrorIA("La IA no generó reactivos. Describe con más detalle la actividad.");
+  return normalizarGenerada(salida);
+}
+
+function normalizarGenerada(salida: z.infer<typeof EsquemaActividad>, anteriores: Reactivo[] = []): ActividadGenerada {
   // La hoja dibuja sus propios espacios para responder: se quitan los que la IA haya escrito.
   const limpiar = (t: string) =>
     t
@@ -261,10 +265,58 @@ export async function generarActividad(datos: { titulo: string; materia: string;
         columnaA: lista(r.columnaA),
         columnaB: lista(r.columnaB),
         lineas: cerrado ? 0 : Math.max(3, Math.min(18, r.lineas || (r.tipo === "desarrollo" ? 12 : 6))),
-        ilustracion: cerrado ? undefined : svgSeguro(r.ilustracion),
+        // Al editar, "conservar" deja el dibujo que ya tenía el reactivo con ese número.
+        ilustracion: cerrado
+          ? undefined
+          : r.ilustracion.trim().toLowerCase() === "conservar"
+            ? anteriores.find((x) => x.numero === i + 1)?.ilustracion
+            : svgSeguro(r.ilustracion),
       };
     }),
   };
+}
+
+// ---------- Editar la hoja con un prompt ----------
+
+const SISTEMA_EDITAR = `${SISTEMA_ACTIVIDAD}
+
+Ahora recibes una actividad que ya existe y una petición del profesor para mejorarla o editarla.
+- Aplica exactamente lo que pide y conserva todo lo demás igual: mismos reactivos, textos, opciones, columnas, puntos y criterios, salvo lo que pida cambiar.
+- Devuelve la actividad completa (instrucciones, criterios y todos los reactivos), no solo los cambios.
+- ilustracion: escribe "conservar" para dejar el dibujo actual del reactivo, cadena vacía para quitarlo, o un SVG nuevo si el profesor pide otro dibujo o un reactivo nuevo lo necesita.`;
+
+/** Edita la hoja (instrucciones, criterios y reactivos) siguiendo la petición del profesor. */
+export async function editarActividad(act: Actividad, peticion: string): Promise<ActividadGenerada> {
+  const actual = {
+    titulo: act.titulo,
+    instrucciones: act.instruccionesAlumno ?? [],
+    criterios: act.criterios ?? [],
+    reactivos: act.reactivos.map((r) => ({
+      numero: r.numero,
+      tipo: r.tipo,
+      enunciado: r.enunciado,
+      opciones: r.opciones ?? [],
+      columnaA: r.columnaA ?? [],
+      columnaB: r.columnaB ?? [],
+      puntos: r.puntos,
+      tema: r.tema,
+      habilidad: r.habilidad,
+      lineas: r.lineas ?? 0,
+      ilustracion: r.ilustracion ? "(tiene dibujo)" : "",
+    })),
+  };
+  const salida = await pedir({
+    system: SISTEMA_EDITAR,
+    esquema: EsquemaActividad,
+    contenido: [
+      {
+        type: "text",
+        text: `Actividad actual:\n${JSON.stringify(actual, null, 1)}\n\nPáginas tamaño carta: ${act.paginas}\n\nPetición del profesor:\n${peticion}`,
+      },
+    ],
+  });
+  if (salida.reactivos.length === 0) throw new ErrorIA("La IA dejó la actividad sin reactivos. Revisa tu petición.");
+  return normalizarGenerada(salida, act.reactivos);
 }
 
 // ---------- Solución generada con IA ----------
