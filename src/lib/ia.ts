@@ -179,6 +179,7 @@ export function unirConHoja(anteriores: Reactivo[], nuevos: Reactivo[]): Reactiv
 
 const EsquemaActividad = z.object({
   instrucciones: z.array(z.string()),
+  criterios: z.array(z.object({ nombre: z.string(), porcentaje: z.number(), descripcion: z.string() })),
   reactivos: z.array(
     z.object({
       numero: z.number().int(),
@@ -200,12 +201,13 @@ El profesor describe la actividad que quiere: tipos de reactivos, ponderaciones 
 
 Reglas:
 - Respeta exactamente lo que pide el profesor: cantidad y tipo de reactivos, temas y puntos. Si indica los puntos de cada reactivo, úsalos tal cual aunque el total no sea 10. Si da porcentajes, reparte los puntos para que el total sea 10 (o el total que indique).
-- instrucciones: de 3 a 6 instrucciones claras para el alumno, en segunda persona e imperativo (por ejemplo "Lee con atención cada reactivo antes de responder", "Escribe tu procedimiento completo en el espacio indicado", "Usa pluma azul o negra"). Incluye cómo responder cada tipo de reactivo que uses.
+- instrucciones: exactamente 3 instrucciones breves para el alumno (máximo 20 palabras cada una), en imperativo. Marca con **doble asterisco** las palabras clave (por ejemplo "Resuelve en orden: **datos** con unidades → **ecuaciones** → **desarrollo** → **respuesta** en recuadro."). Incluye cómo responder cada tipo de reactivo que uses, unidades y redondeo si aplica. No incluyas la instrucción de escanear el QR: la hoja ya la trae.
+- criterios: cómo se evalúa cada problema, con porcentajes que sumen 100. Usa los que indique el profesor; si no indica y hay problemas de desarrollo, propón algo como Datos 5 %, Ecuaciones 15 %, Desarrollo 60 %, Respuesta 20 %. Si solo hay reactivos cerrados, lista vacía. descripcion: qué se evalúa, breve.
 - tipo: verdadero_falso, opcion_multiple, relacion_columnas, parentesis (relación con letras entre paréntesis), desarrollo (problemas con procedimiento) o abierto (explicación, ensayo, dibujo).
-- enunciado: el texto completo del reactivo, listo para imprimirse. No incluyas las opciones dentro del enunciado.
+- enunciado: el texto completo del reactivo, listo para imprimirse. No incluyas las opciones dentro del enunciado. Si un problema tiene varias preguntas, escribe primero el planteamiento con sus datos y al final los incisos en orden: "a) … b) … c) …". Sé conciso: planteamientos de máximo 45 palabras y hasta 3 incisos por problema, salvo que el profesor pida otra cosa. La actividad debe caber en las páginas tamaño carta indicadas (cada problema de desarrollo ocupa casi media página).
 - opciones: solo para opción múltiple, de 3 a 5 opciones con su letra, como "a) 9.8 m/s²". Para los demás tipos, lista vacía.
 - columnaA y columnaB: solo para relación de columnas y paréntesis. columnaA numerada ("1. Inercia"), columnaB con letras ("a) Resistencia de un cuerpo a cambiar su movimiento"); mezcla el orden de columnaB. El alumno escribe la letra de columnaB junto a cada elemento de columnaA. Para los demás, listas vacías.
-- lineas: renglones de espacio para responder: 0 para reactivos cerrados, de 4 a 10 para desarrollo y abiertos.
+- lineas: tamaño del espacio para responder: 0 para reactivos cerrados, de 4 a 8 para abiertos y de 10 a 16 para desarrollo (más incisos, más espacio).
 - puntos, tema (de la materia) y habilidad ("Comprensión de conceptos", "Resolución de problemas", "Interpretación de gráficas", "Comunicación escrita", etc.).
 - No escribas espacios en blanco, paréntesis vacíos ni líneas para responder dentro de los textos: la hoja impresa ya los agrega (círculos, casillas V/F, paréntesis y renglones).
 - No incluyas las respuestas: la solución se prepara después.
@@ -213,17 +215,18 @@ Reglas:
 
 export interface ActividadGenerada {
   instrucciones: string[];
+  criterios: CriterioEvaluacion[];
   reactivos: Reactivo[];
 }
 
-export async function generarActividad(datos: { titulo: string; materia: string; grupo: string; prompt: string }): Promise<ActividadGenerada> {
+export async function generarActividad(datos: { titulo: string; materia: string; grupo: string; prompt: string; paginas?: number }): Promise<ActividadGenerada> {
   const salida = await pedir({
     system: SISTEMA_ACTIVIDAD,
     esquema: EsquemaActividad,
     contenido: [
       {
         type: "text",
-        text: `Materia: ${datos.materia}\nGrupo: ${datos.grupo}\nTítulo: ${datos.titulo}\n\nLo que pide el profesor:\n${datos.prompt}`,
+        text: `Materia: ${datos.materia}\nGrupo: ${datos.grupo}\nTítulo: ${datos.titulo}\nPáginas tamaño carta: ${datos.paginas ?? 1}\n\nLo que pide el profesor:\n${datos.prompt}`,
       },
     ],
   });
@@ -232,7 +235,10 @@ export async function generarActividad(datos: { titulo: string; materia: string;
   const limpiar = (t: string) => t.replace(/\(\s*_*\s*\)|_{3,}/g, "").replace(/[ \t]{2,}/g, " ").trim();
   const lista = (xs: string[]) => (xs.length ? xs.map(limpiar) : undefined);
   return {
-    instrucciones: salida.instrucciones.filter((t) => t.trim()),
+    instrucciones: salida.instrucciones.filter((t) => t.trim() && !/\bQR\b/i.test(t)),
+    criterios: salida.criterios
+      .filter((c) => c.nombre.trim() && c.porcentaje > 0)
+      .map((c) => ({ ...c, porcentaje: Math.max(0, Math.min(100, Math.round(c.porcentaje))) })),
     reactivos: salida.reactivos.map((r, i) => {
       const cerrado = r.tipo !== "desarrollo" && r.tipo !== "abierto";
       return {
@@ -247,7 +253,7 @@ export async function generarActividad(datos: { titulo: string; materia: string;
         opciones: r.tipo === "opcion_multiple" ? lista(r.opciones) : undefined,
         columnaA: lista(r.columnaA),
         columnaB: lista(r.columnaB),
-        lineas: cerrado ? 0 : Math.max(3, Math.min(14, r.lineas || 6)),
+        lineas: cerrado ? 0 : Math.max(3, Math.min(18, r.lineas || (r.tipo === "desarrollo" ? 12 : 6))),
       };
     }),
   };
@@ -291,12 +297,14 @@ export async function resolverActividad(
         text:
           `Actividad: ${act.titulo}\n` +
           (comoTexto.length ? `Reactivos:\n${JSON.stringify(comoTexto, null, 1)}\n` : "") +
-          `Criterios e indicaciones del profesor para evaluar: ${act.instrucciones?.trim() || "ninguno"}\n` +
+          `Criterios e indicaciones del profesor para evaluar: ${act.instrucciones?.trim() || "ninguno"}${criteriosParaIA(act)}\n` +
           `Condiciones para resolver: ${datos.condiciones.trim() || "ninguna"}\n\nResuelve la actividad y genera la rúbrica.`,
       },
     ],
   });
   const propuesta = normalizarRubrica(salida);
+  // Los criterios impresos en la hoja se conservan si la IA no propone otros.
+  if (!propuesta.criterios.length && act.criterios?.length) propuesta.criterios = act.criterios;
   if (!comoTexto.length) return propuesta;
   // Lo impreso (enunciado, tipo, puntos) manda: la IA solo agrega respuestas y pasos.
   return {
