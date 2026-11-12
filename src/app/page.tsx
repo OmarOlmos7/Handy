@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EjemploEntregable, type TipoEntregable } from "@/components/ejemplo-entregable";
 import { EjemploReactivo, type TipoEjemplo } from "@/components/ejemplo-reactivo";
 import { BotonLink, Logo } from "@/components/ui";
 
@@ -29,11 +30,11 @@ const pasos = [
   },
 ];
 
-const entregables = [
-  ["Hoja corregida", "Palomas verdes, taches rojos y comentarios breves sobre la hoja del alumno."],
-  ["Reporte del alumno", "Datos de identificación, puntos positivos, puntos de mejora y calificación por elemento."],
-  ["Reporte del grupo", "Promedios, temas fuertes y débiles, reactivos con menor acierto y alumnos por nivel."],
-  ["Excel para Canvas", "Nombre, matrícula y calificación, más un CSV listo para importar al libro de calificaciones."],
+const entregables: [string, string, TipoEntregable][] = [
+  ["Hoja corregida", "Palomas verdes, taches rojos y comentarios breves sobre la hoja del alumno.", "hoja"],
+  ["Reporte del alumno", "Datos de identificación, puntos positivos, puntos de mejora y calificación por elemento.", "alumno"],
+  ["Reporte del grupo", "Promedios, temas fuertes y débiles, reactivos con menor acierto y alumnos por nivel.", "grupo"],
+  ["Excel para Canvas", "Nombre, matrícula y calificación, más un CSV listo para importar al libro de calificaciones.", "excel"],
 ];
 
 const reactivos: { tipo: string; ejemplo: TipoEjemplo; proximamente?: boolean }[] = [
@@ -214,11 +215,13 @@ export default function Inicio() {
 
         <section id="entregables" className="mx-auto max-w-6xl px-4 py-16">
           <h2 className="text-3xl font-semibold tracking-tight">Qué recibes al terminar</h2>
+          <p className="mt-2 text-slate-600">Ejemplos ilustrativos con datos inventados.</p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
-            {entregables.map(([t, d]) => (
+            {entregables.map(([t, d, ejemplo]) => (
               <div key={t} className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
                 <h3 className="font-semibold">{t}</h3>
                 <p className="mt-2 text-sm text-slate-600">{d}</p>
+                <EjemploEntregable tipo={ejemplo} />
               </div>
             ))}
           </div>
