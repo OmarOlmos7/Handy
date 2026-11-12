@@ -36,16 +36,17 @@ const entregables = [
   ["Excel para Canvas", "Nombre, matrícula y calificación, más un CSV listo para importar al libro de calificaciones."],
 ];
 
-const reactivos: { tipo: string; entrega: string; ejemplo: TipoEjemplo; proximamente?: boolean }[] = [
-  { tipo: "Verdadero o falso", entrega: "Foto de la hoja impresa con la V o la F escrita", ejemplo: "vf" },
-  { tipo: "Opción múltiple", entrega: "Foto de la hoja con la opción encerrada o marcada", ejemplo: "opcion" },
-  { tipo: "Relación de columnas", entrega: "Foto de la hoja con las letras o líneas que unen", ejemplo: "columnas" },
-  { tipo: "Paréntesis", entrega: "Foto de la hoja con las letras dentro de los paréntesis", ejemplo: "parentesis" },
-  { tipo: "Desarrollos matemáticos", entrega: "Foto del procedimiento escrito a mano, paso a paso", ejemplo: "desarrollo" },
-  { tipo: "Algoritmos y procedimientos", entrega: "Foto de los pasos escritos en orden", ejemplo: "algoritmo" },
-  { tipo: "Ensayos y producciones escritas", entrega: "Foto de cada página del texto escrito a mano", ejemplo: "ensayo" },
-  { tipo: "Dibujos y bocetos", entrega: "Foto del dibujo con sus etiquetas", ejemplo: "dibujo" },
-  { tipo: "Audios · producción oral", entrega: "Grabación de voz del alumno (lectura, exposición o idioma)", ejemplo: "audio", proximamente: true },
+const reactivos: { tipo: string; ejemplo: TipoEjemplo; proximamente?: boolean }[] = [
+  { tipo: "Verdadero o falso", ejemplo: "vf" },
+  { tipo: "Opción múltiple", ejemplo: "opcion" },
+  { tipo: "Hoja de respuestas (alvéolos)", ejemplo: "alveolos" },
+  { tipo: "Relación de columnas", ejemplo: "columnas" },
+  { tipo: "Paréntesis", ejemplo: "parentesis" },
+  { tipo: "Desarrollos matemáticos", ejemplo: "desarrollo" },
+  { tipo: "Algoritmos y procedimientos", ejemplo: "algoritmo" },
+  { tipo: "Ensayos y producciones escritas", ejemplo: "ensayo" },
+  { tipo: "Dibujos y bocetos", ejemplo: "dibujo" },
+  { tipo: "Audios · producción oral", ejemplo: "audio", proximamente: true },
 ];
 
 const paquetes = [
@@ -183,11 +184,10 @@ export default function Inicio() {
               solución: datos, ecuación, sustitución, desarrollo y resultado con unidades.
             </p>
             <div className="mt-8 overflow-x-auto rounded-xl ring-1 ring-slate-200">
-              <table className="w-full min-w-[640px] text-left text-sm">
+              <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="px-4 py-3 font-medium">Tipo de reactivo</th>
-                    <th className="px-4 py-3 font-medium">Qué entrega el alumno</th>
+                    <th className="w-2/5 px-4 py-3 font-medium">Tipo de reactivo</th>
                     <th className="px-4 py-3 font-medium">Ejemplo</th>
                   </tr>
                 </thead>
@@ -200,7 +200,6 @@ export default function Inicio() {
                           <span className="ml-2 rounded-full bg-aviso-suave px-2 py-0.5 text-xs font-medium text-aviso">Próximamente</span>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-slate-600">{r.entrega}</td>
                       <td className="px-4 py-4">
                         <EjemploReactivo tipo={r.ejemplo} />
                       </td>

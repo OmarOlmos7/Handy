@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 export type TipoEjemplo =
   | "vf"
   | "opcion"
+  | "alveolos"
   | "columnas"
   | "parentesis"
   | "desarrollo"
@@ -15,13 +16,30 @@ export type TipoEjemplo =
 
 function Papel({ children }: { children: ReactNode }) {
   return (
-    <div className="w-full max-w-[260px] rounded-md bg-papel p-3 text-[13px] leading-snug text-slate-700 shadow-sm ring-1 ring-slate-200">
+    <div className="w-full max-w-[340px] rounded-md bg-papel p-3 text-[13px] leading-snug text-slate-700 shadow-sm ring-1 ring-slate-200">
       {children}
     </div>
   );
 }
 
 const mano = "font-mano text-lg leading-tight text-[#1d43c9]";
+
+function Fila({ n, marcada }: { n: number; marcada: number }) {
+  return (
+    <>
+      <span className="text-left text-[12px] text-slate-700">{n}.</span>
+      {[0, 1, 2, 3].map((i) => (
+        <span key={i} className="flex justify-center">
+          <span
+            className={`inline-block h-[18px] w-[18px] rounded-full border-[1.5px] ${
+              i === marcada ? "border-[#1d43c9] bg-[#1d43c9]" : "border-slate-400"
+            }`}
+          />
+        </span>
+      ))}
+    </>
+  );
+}
 
 export function EjemploReactivo({ tipo }: { tipo: TipoEjemplo }) {
   switch (tipo) {
@@ -47,19 +65,49 @@ export function EjemploReactivo({ tipo }: { tipo: TipoEjemplo }) {
           </p>
         </Papel>
       );
+    case "alveolos": {
+      // Hoja de respuestas: el alumno rellena un alvéolo por pregunta.
+      const filas: [number, number][] = [
+        [1, 2],
+        [2, 0],
+        [3, 3],
+        [4, 1],
+      ];
+      return (
+        <Papel>
+          <div className="mb-1 grid grid-cols-[1.5rem_repeat(4,1.75rem)] items-center gap-y-1 text-center text-[11px] font-semibold text-slate-500">
+            <span />
+            {["A", "B", "C", "D"].map((l) => (
+              <span key={l}>{l}</span>
+            ))}
+            {filas.map(([n, marcada]) => (
+              <Fila key={n} n={n} marcada={marcada} />
+            ))}
+          </div>
+        </Papel>
+      );
+    }
     case "columnas":
       return (
         <Papel>
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 gap-y-1">
-            <span>1. Fotosíntesis</span>
-            <span className={mano}>c</span>
-            <span>a) Mitocondria</span>
-            <span>2. Respiración</span>
-            <span className={mano}>a</span>
-            <span>b) Núcleo</span>
-            <span>3. ADN</span>
-            <span className={mano}>b</span>
-            <span>c) Cloroplasto</span>
+          <p className="mb-1 text-xs text-slate-500">Relaciona cada organelo con su función.</p>
+          <div className="grid grid-cols-[auto_1fr] gap-x-4">
+            <div className="space-y-1">
+              <p>a) Cloroplasto</p>
+              <p>b) Mitocondria</p>
+              <p>c) Núcleo</p>
+            </div>
+            <div className="space-y-1">
+              <p>
+                ( <span className={mano}>c</span> ) Guarda el ADN
+              </p>
+              <p>
+                ( <span className={mano}>a</span> ) Realiza la fotosíntesis
+              </p>
+              <p>
+                ( <span className={mano}>b</span> ) Produce energía (ATP)
+              </p>
+            </div>
           </div>
         </Papel>
       );
@@ -121,7 +169,7 @@ export function EjemploReactivo({ tipo }: { tipo: TipoEjemplo }) {
       );
     case "audio":
       return (
-        <div className="flex w-full max-w-[260px] items-center gap-3 rounded-md bg-white p-3 shadow-sm ring-1 ring-slate-200">
+        <div className="flex w-full max-w-[340px] items-center gap-3 rounded-md bg-white p-3 shadow-sm ring-1 ring-slate-200">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-tinta-600 text-white" aria-hidden>
             ▶
           </span>
