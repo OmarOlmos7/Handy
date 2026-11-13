@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FilaActividad } from "@/components/fila-actividad";
+import { IconoGrafica } from "@/components/iconos";
 import { BotonLink, Encabezado, Tarjeta, colorCalificacion } from "@/components/ui";
 import { entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
 import { agruparPorEtiqueta } from "@/lib/colores";
@@ -26,7 +27,14 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
         migas={[{ texto: "Panel", href: "/profesor" }]}
         titulo={`${grupo.materia} · ${grupo.nombre}`}
         subtitulo={`Ciclo ${grupo.ciclo} · ${actividades.length} ${actividades.length === 1 ? "actividad" : "actividades"} · ${alumnos} ${alumnos === 1 ? "alumno" : "alumnos"}`}
-        acciones={<BotonLink href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>+ Nueva actividad</BotonLink>}
+        acciones={
+          <>
+            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/analiticas`}>
+              <IconoGrafica /> Analíticas de aprendizaje
+            </BotonLink>
+            <BotonLink href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>+ Nueva actividad</BotonLink>
+          </>
+        }
       />
       {actividades.length === 0 ? (
         <Tarjeta className="text-sm text-slate-600">
