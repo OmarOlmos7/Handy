@@ -67,7 +67,6 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
             <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
               Hoja imprimible con QR
             </BotonLink>
-            {porAprobar.length > 0 && <AprobarTodo actividadId={id} pendientes={porAprobar.length} />}
             {actividad.rubricaConfirmada && (
               <EvaluarTodo
                 actividadId={id}
@@ -119,17 +118,26 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           <p className={`mt-1 text-2xl font-semibold ${bajaConfianza ? "text-aviso" : ""}`}>{bajaConfianza}</p>
           {bajaConfianza > 0 && <p className="text-xs text-slate-500">Reactivos que la IA no leyó bien.</p>}
         </Tarjeta>
-        <Tarjeta className="flex min-w-0 items-center gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qr} alt="Código QR para entregar" className="h-24 w-24 shrink-0" />
-          <div className="min-w-0 text-sm">
-            <p className="font-medium">Entregas desde el celular</p>
-            <p className="text-slate-500">Los alumnos escanean este código o abren el enlace:</p>
-            <a href={enlace} target="_blank" className="block truncate text-tinta-700 hover:underline">
-              {enlace}
-            </a>
-          </div>
-        </Tarjeta>
+        <div className="flex min-w-0 flex-col gap-3">
+          <Tarjeta className="flex min-w-0 flex-1 items-center gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={qr} alt="Código QR para entregar" className="h-24 w-24 shrink-0" />
+            <div className="min-w-0 text-sm">
+              <p className="font-medium">Entregas desde el celular</p>
+              <p className="text-slate-500">Los alumnos escanean este código o abren el enlace:</p>
+              <a href={enlace} target="_blank" className="block truncate text-tinta-700 hover:underline">
+                {enlace}
+              </a>
+            </div>
+          </Tarjeta>
+          <AprobarTodo
+            actividadId={id}
+            pendientes={porAprobar.length}
+            visiblesDesde={
+              actividad.resultadosDesde && !resultadosDisponibles(actividad) ? fechaHoraLarga(actividad.resultadosDesde) : undefined
+            }
+          />
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
