@@ -23,6 +23,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
   );
   const migas = [
     { texto: "Panel", href: "/profesor" },
+    { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
     { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
   ];
 

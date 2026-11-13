@@ -42,7 +42,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
       <Encabezado
         migas={[
           { texto: "Panel", href: "/profesor" },
-          { texto: `${grupo.materia} · ${grupo.nombre}`, href: "/profesor" },
+          { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
         ]}
         titulo={actividad.titulo}
         subtitulo={

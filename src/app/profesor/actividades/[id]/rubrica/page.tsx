@@ -36,7 +36,7 @@ export default async function Rubrica({
       <Encabezado
         migas={[
           { texto: "Panel", href: "/profesor" },
-          { texto: `${grupo.materia} · ${grupo.nombre}`, href: "/profesor" },
+          { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
         ]}
         titulo={actividad.titulo}
       />

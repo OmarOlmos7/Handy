@@ -22,6 +22,7 @@ export default async function Revision({ params }: PageProps<"/profesor/activida
       <Encabezado
         migas={[
           { texto: "Panel", href: "/profesor" },
+          { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
           { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
         ]}
         titulo={alumno.nombre}
