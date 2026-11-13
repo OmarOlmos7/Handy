@@ -1,6 +1,6 @@
 // Cálculos del reporte. Los números siempre los calcula el código; la IA solo
 // redacta el resumen narrativo a partir de estos resultados.
-import type { Actividad, Alumno, Entrega } from "./tipos";
+import type { Actividad, Alumno, Entrega, Escala } from "./tipos";
 
 export type Nivel = "alto" | "medio" | "bajo";
 
@@ -15,16 +15,29 @@ export function puntosObtenidos(entrega: Entrega) {
   return entrega.resultados.reduce((s, r) => s + r.puntosObtenidos, 0);
 }
 
-/** Calificación sobre 10 con un decimal. */
+/** Escala de la actividad. Las actividades anteriores a esta opción se califican sobre 10. */
+export function escalaDe(actividad: Pick<Actividad, "escala">): Escala {
+  return actividad.escala === 100 ? 100 : 10;
+}
+
+/** Calificación en la escala de la actividad: sobre 100 en enteros, sobre 10 con un decimal. */
 export function calificacion(actividad: Actividad, entrega: Entrega) {
   const total = puntosTotales(actividad);
   if (total === 0 || entrega.resultados.length === 0) return 0;
-  return Math.round((puntosObtenidos(entrega) / total) * 100) / 10;
+  const proporcion = puntosObtenidos(entrega) / total;
+  return escalaDe(actividad) === 100 ? Math.round(proporcion * 100) : Math.round(proporcion * 100) / 10;
 }
 
-export function nivelDe(cal: number): Nivel {
-  if (cal >= UMBRALES.alto) return "alto";
-  if (cal >= UMBRALES.medio) return "medio";
+/** Texto de una calificación en su escala: "85" o "8.5". */
+export function formatoCal(cal: number, escala: Escala) {
+  return escala === 100 ? String(Math.round(cal)) : cal.toFixed(1);
+}
+
+/** Nivel de desempeño; los umbrales están sobre 10 y se ajustan a la escala. */
+export function nivelDe(cal: number, escala: Escala = 10): Nivel {
+  const sobre10 = (cal * 10) / escala;
+  if (sobre10 >= UMBRALES.alto) return "alto";
+  if (sobre10 >= UMBRALES.medio) return "medio";
   return "bajo";
 }
 
@@ -47,6 +60,7 @@ export interface FilaAlumno {
   alumno: Alumno;
   entrega: Entrega;
   calificacion: number;
+  escala: Escala;
   nivel: Nivel;
   reactivosBajaConfianza: number;
 }
@@ -66,6 +80,7 @@ export interface AciertoPorGrupo {
 }
 
 export interface ReporteGrupo {
+  escala: Escala;
   entregadas: number;
   pendientes: number;
   promedio: number;
@@ -95,6 +110,7 @@ export function reporteGrupo(
   entregas: Entrega[],
   alumnos: Alumno[],
 ): ReporteGrupo {
+  const escala = escalaDe(actividad);
   const evaluadas = entregas.filter((e) => e.resultados.length > 0);
   const filas: FilaAlumno[] = evaluadas
     .map((entrega) => {
@@ -104,7 +120,8 @@ export function reporteGrupo(
         alumno,
         entrega,
         calificacion: cal,
-        nivel: nivelDe(cal),
+        escala,
+        nivel: nivelDe(cal, escala),
         reactivosBajaConfianza: entrega.resultados.filter((r) => r.confianza === "baja").length,
       };
     })
@@ -112,12 +129,15 @@ export function reporteGrupo(
 
   const cals = filas.map((f) => f.calificacion);
 
+  // Rangos sobre 10 convertidos a la escala de la actividad.
+  const f = escala / 10;
+  const hasta = (n: number) => (escala === 100 ? String(n * f - 1) : `${n - 1}.9`);
   const rangos = [
-    { rango: "0 a 5.9", min: 0, max: 6 },
-    { rango: "6 a 6.9", min: 6, max: 7 },
-    { rango: "7 a 7.9", min: 7, max: 8 },
-    { rango: "8 a 8.9", min: 8, max: 9 },
-    { rango: "9 a 10", min: 9, max: 10.01 },
+    { rango: `0 a ${hasta(6)}`, min: 0, max: 6 * f },
+    { rango: `${6 * f} a ${hasta(7)}`, min: 6 * f, max: 7 * f },
+    { rango: `${7 * f} a ${hasta(8)}`, min: 7 * f, max: 8 * f },
+    { rango: `${8 * f} a ${hasta(9)}`, min: 8 * f, max: 9 * f },
+    { rango: `${9 * f} a ${escala}`, min: 9 * f, max: escala + 0.01 },
   ];
 
   const porReactivo = actividad.reactivos.map((r) => {
@@ -134,6 +154,7 @@ export function reporteGrupo(
   });
 
   return {
+    escala,
     entregadas: evaluadas.length,
     pendientes: entregas.length - evaluadas.length,
     promedio: r1(promedio(cals)),

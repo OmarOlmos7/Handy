@@ -17,7 +17,7 @@ import {
 import { actividadDe, entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
 import { evaluandoAhora } from "@/lib/evaluacion";
 import { datosProfesor } from "@/lib/sesion";
-import { calificacion } from "@/lib/estadisticas";
+import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
 import { qrDataUrl, urlBase } from "@/lib/qr";
 
 export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
@@ -151,8 +151,8 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                     {e.error && <p className="mt-1 max-w-48 text-xs text-error">{e.error}</p>}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{e.paginasRecibidas || "—"}</td>
-                  <td className={`px-4 py-3 font-semibold ${evaluada ? colorCalificacion(cal) : "text-slate-400"}`}>
-                    {evaluada ? cal.toFixed(1) : "—"}
+                  <td className={`px-4 py-3 font-semibold ${evaluada ? colorCalificacion(cal, escalaDe(actividad)) : "text-slate-400"}`}>
+                    {evaluada ? `${formatoCal(cal, escalaDe(actividad))} / ${escalaDe(actividad)}` : "—"}
                   </td>
                   <td className="px-4 py-3">
                     {baja > 0 ? <Insignia tono="ambar">{baja} con baja confianza</Insignia> : evaluada ? <span className="text-slate-400">—</span> : null}

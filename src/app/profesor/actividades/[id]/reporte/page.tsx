@@ -5,7 +5,7 @@ import { PestanasActividad } from "@/components/pestanas-actividad";
 import { Barra, Encabezado, InsigniaNivel, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
 import { actividadDe, entregasDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
-import { UMBRALES, reporteGrupo, resumenNarrativo } from "@/lib/estadisticas";
+import { UMBRALES, formatoCal, reporteGrupo, resumenNarrativo } from "@/lib/estadisticas";
 
 const nombreTipo: Record<string, string> = {
   verdadero_falso: "V/F",
@@ -68,13 +68,16 @@ export default async function ReporteGrupo({ params }: PageProps<"/profesor/acti
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Tarjeta>
           <p className="text-sm text-slate-500">Promedio del grupo</p>
-          <p className={`mt-1 text-3xl font-semibold ${colorCalificacion(rep.promedio)}`}>{rep.promedio}</p>
+          <p className={`mt-1 text-3xl font-semibold ${colorCalificacion(rep.promedio, rep.escala)}`}>
+            {rep.promedio}
+            <span className="text-base font-normal text-slate-400"> / {rep.escala}</span>
+          </p>
           <p className="text-xs text-slate-500">Mediana {rep.mediana}</p>
         </Tarjeta>
         <Tarjeta>
           <p className="text-sm text-slate-500">Rango</p>
           <p className="mt-1 text-3xl font-semibold">
-            {rep.minima.toFixed(1)} – {rep.maxima.toFixed(1)}
+            {formatoCal(rep.minima, rep.escala)} – {formatoCal(rep.maxima, rep.escala)}
           </p>
           <p className="text-xs text-slate-500">Mínima y máxima</p>
         </Tarjeta>
@@ -91,7 +94,7 @@ export default async function ReporteGrupo({ params }: PageProps<"/profesor/acti
             <span className="font-semibold text-error">{rep.niveles.bajo.length} bajo</span>
           </p>
           <p className="mt-1 text-xs text-slate-500">
-            Alto ≥ {UMBRALES.alto} · medio ≥ {UMBRALES.medio}
+            Alto ≥ {(UMBRALES.alto * rep.escala) / 10} · medio ≥ {(UMBRALES.medio * rep.escala) / 10}
           </p>
         </Tarjeta>
       </div>
@@ -187,8 +190,8 @@ export default async function ReporteGrupo({ params }: PageProps<"/profesor/acti
                 <td className="px-4 py-2">
                   <InsigniaNivel nivel={f.nivel} />
                 </td>
-                <td className={`px-4 py-2 text-right font-semibold ${colorCalificacion(f.calificacion)}`}>
-                  {f.calificacion.toFixed(1)}
+                <td className={`px-4 py-2 text-right font-semibold ${colorCalificacion(f.calificacion, rep.escala)}`}>
+                  {formatoCal(f.calificacion, rep.escala)}
                 </td>
               </tr>
             ))}

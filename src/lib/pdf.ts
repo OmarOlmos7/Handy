@@ -5,7 +5,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { PDFDocument, type PDFFont, type PDFPage, StandardFonts, rgb } from "pdf-lib";
-import { calificacion, puntosObtenidos, puntosTotales } from "./estadisticas";
+import { calificacion, escalaDe, formatoCal, puntosObtenidos, puntosTotales } from "./estadisticas";
 import { leerArchivo } from "./almacen";
 import type { Actividad, Alumno, Entrega, Grupo } from "./tipos";
 
@@ -78,6 +78,8 @@ export async function pdfRetroalimentacion(datos: {
   const normal = await doc.embedFont(StandardFonts.Helvetica);
   const negrita = await doc.embedFont(StandardFonts.HelveticaBold);
   const cal = calificacion(actividad, entrega);
+  const escala = escalaDe(actividad);
+  const calTexto = formatoCal(cal, escala);
 
   // ---- 1. Portada con identificación y resumen ----
   let p = doc.addPage([CARTA.ancho, CARTA.alto]);
@@ -95,7 +97,7 @@ export async function pdfRetroalimentacion(datos: {
   nuevaLinea(22);
   texto(actividad.titulo, 48, 18, negrita);
   p.drawCircle({ x: CARTA.ancho - 130, y: y - 2, size: 34, borderColor: ROJO, borderWidth: 2 });
-  p.drawText(cal.toFixed(1), { x: CARTA.ancho - 130 - negrita.widthOfTextAtSize(cal.toFixed(1), 22) / 2, y: y - 9, size: 22, font: negrita, color: ROJO });
+  p.drawText(calTexto, { x: CARTA.ancho - 130 - negrita.widthOfTextAtSize(calTexto, 22) / 2, y: y - 9, size: 22, font: negrita, color: ROJO });
   nuevaLinea(30);
   texto("1. Datos del alumno", 48, 11, negrita);
   nuevaLinea(18);
@@ -104,7 +106,7 @@ export async function pdfRetroalimentacion(datos: {
     ["Matrícula", alumno.matricula],
     ["Grupo", `${grupo.materia} · ${grupo.nombre}`],
     ["Fecha de aplicación", actividad.fechaAplicacion],
-    ["Calificación", `${cal.toFixed(1)} / 10  (${puntosObtenidos(entrega)} de ${puntosTotales(actividad)} puntos)`],
+    ["Calificación", `${calTexto} / ${escala}  (${puntosObtenidos(entrega)} de ${puntosTotales(actividad)} puntos)`],
   ]) {
     texto(et, 48, 10, normal, GRIS);
     texto(val, 170, 10);
@@ -172,7 +174,7 @@ export async function pdfRetroalimentacion(datos: {
     if (i === 0) {
       const xc = xMargen + 30;
       hoja.drawCircle({ x: xc, y: CARTA.alto - 42, size: 26, borderColor: ROJO, borderWidth: 2 });
-      hoja.drawText(cal.toFixed(1), { x: xc - negrita.widthOfTextAtSize(cal.toFixed(1), 17) / 2, y: CARTA.alto - 48, size: 17, font: negrita, color: ROJO });
+      hoja.drawText(calTexto, { x: xc - negrita.widthOfTextAtSize(calTexto, 17) / 2, y: CARTA.alto - 48, size: 17, font: negrita, color: ROJO });
     }
 
     const marcas = entrega.resultados

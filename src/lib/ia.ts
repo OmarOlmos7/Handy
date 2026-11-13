@@ -7,7 +7,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { esCerrado, puntosReactivoCerrado } from "./calificar";
 import { svgSeguro } from "./svg";
-import type { Actividad, CriterioEvaluacion, Reactivo, ResultadoReactivo } from "./tipos";
+import type { Actividad, CriterioEvaluacion, Escala, Reactivo, ResultadoReactivo } from "./tipos";
 
 const MODELO = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
 
@@ -195,6 +195,7 @@ const EsquemaActividad = z.object({
       habilidad: z.string(),
       lineas: z.number().int(),
       ilustracion: z.string(),
+      ubicacionIlustracion: z.enum(["derecha", "abajo"]),
     }),
   ),
 });
@@ -203,14 +204,15 @@ const SISTEMA_ACTIVIDAD = `Eres un diseñador de actividades para profesores de 
 El profesor describe la actividad que quiere: tipos de reactivos, ponderaciones (puntos o porcentajes), temas, nivel y cualquier otra condición. Diseña una actividad impresa para que el alumno la resuelva a mano y la entregue con una foto.
 
 Reglas:
-- Respeta exactamente lo que pide el profesor: cantidad y tipo de reactivos, temas y puntos. Si indica los puntos de cada reactivo, úsalos tal cual aunque el total no sea 10. Si da porcentajes, reparte los puntos para que el total sea 10 (o el total que indique).
+- Respeta exactamente lo que pide el profesor: cantidad y tipo de reactivos, temas y puntos. Si indica los puntos de cada reactivo, úsalos tal cual aunque el total no coincida con la escala. Si no indica puntos o da porcentajes, reparte los puntos para que el total sea igual a la escala de calificación indicada (100 o 10), salvo que pida otro total.
 - instrucciones: exactamente 3 instrucciones breves para el alumno (máximo 20 palabras cada una), en imperativo. Marca con **doble asterisco** las palabras clave (por ejemplo "Resuelve en orden: **datos** con unidades → **ecuaciones** → **desarrollo** → **respuesta** en recuadro."). Incluye cómo responder cada tipo de reactivo que uses, unidades y redondeo si aplica. No menciones puntos ni porcentajes (la hoja ya los muestra) ni la instrucción de escanear el QR.
 - criterios: cómo se evalúa cada problema, con porcentajes que sumen 100. Usa los que indique el profesor; si no indica y hay problemas de desarrollo, propón algo como Datos 5 %, Ecuaciones 15 %, Desarrollo 60 %, Respuesta 20 %. Si solo hay reactivos cerrados, lista vacía. descripcion: qué se evalúa, breve.
 - tipo: verdadero_falso, opcion_multiple, relacion_columnas, parentesis (relación con letras entre paréntesis), desarrollo (problemas con procedimiento) o abierto (explicación, ensayo, dibujo).
 - enunciado: el texto completo del reactivo, listo para imprimirse. No incluyas las opciones dentro del enunciado. Nunca escribas los puntos ni la ponderación dentro del enunciado: la hoja los muestra aparte. Si un problema tiene varias preguntas, escribe primero el planteamiento con sus datos y al final los incisos en orden: "a) … b) … c) …". Sé eficiente con las palabras: si los incisos comparten el verbo, escríbelo una sola vez antes de los incisos y no lo repitas (por ejemplo "Calcula: a) El momento de inercia del disco. b) El torque respecto al eje. c) La aceleración angular."). Sé conciso: planteamientos de máximo 45 palabras y hasta 3 incisos por problema, salvo que el profesor pida otra cosa. La actividad debe caber en las páginas tamaño carta indicadas (cada problema de desarrollo ocupa casi media página).
 - opciones: solo para opción múltiple, de 3 a 5 opciones con su letra, como "a) 9.8 m/s²". Para los demás tipos, lista vacía.
 - columnaA y columnaB: solo para relación de columnas y paréntesis. columnaA numerada ("1. Inercia"), columnaB con letras ("a) Resistencia de un cuerpo a cambiar su movimiento"); mezcla el orden de columnaB. El alumno escribe la letra de columnaB junto a cada elemento de columnaA. Para los demás, listas vacías.
-- ilustracion: para problemas de desarrollo y preguntas abiertas, un dibujo pequeño y esquemático en SVG que ayude a entender el ejercicio (por ejemplo, el disco con la cuerda y la fuerza, la llave con el ángulo, el bloque con sus fuerzas). Reglas del SVG: un solo elemento <svg> con viewBox="0 0 160 120" y xmlns="http://www.w3.org/2000/svg"; solo figuras simples (line, rect, circle, ellipse, path, polygon, text); trazo #1e293b de 1.5 a 2, acentos en #2554e8; etiquetas cortas (letras o datos como "F", "R", "60°") en font-family="Arial" de 10 a 12 px; sin imágenes, scripts, enlaces ni estilos externos. No pongas la respuesta en el dibujo. Para reactivos cerrados, cadena vacía.
+- ilustracion: solo si el profesor pide una ilustración, figura, gráfica, diagrama o esquema para el reactivo (puede pedirla para cualquier tipo, también opción múltiple). Si no la pide para ese reactivo, cadena vacía: no agregues dibujos por tu cuenta. Cuando la pida, dibújala en SVG: un solo elemento <svg> con xmlns="http://www.w3.org/2000/svg", viewBox="0 0 160 120" si va a la derecha o viewBox="0 0 320 200" si va abajo; solo figuras simples (line, rect, circle, ellipse, path, polygon, polyline, text); trazo #1e293b de 1.5 a 2, acentos en #2554e8; etiquetas cortas en font-family="Arial" de 10 a 12 px. En gráficas, dibuja ejes con su nombre y unidades (por ejemplo "t (s)", "x (m)"), marcas con valores legibles y una cuadrícula tenue (#e2e8f0) si ayuda a leer datos; los valores deben ser exactos y coherentes con el enunciado. Sin imágenes, scripts, enlaces ni estilos externos. No pongas la respuesta en el dibujo, salvo que el reactivo sea leer la gráfica.
+- ubicacionIlustracion: dónde va el dibujo, como lo indique el profesor: "derecha" (pequeño, a la derecha del texto) o "abajo" (más grande, debajo del enunciado, recomendado para gráficas que el alumno debe leer). Si no indica, "derecha" para esquemas y "abajo" para gráficas con datos. Sin dibujo, "derecha"
 - lineas: tamaño del espacio para responder: 0 para reactivos cerrados, de 4 a 8 para abiertos y de 10 a 16 para desarrollo (más incisos, más espacio).
 - puntos, tema (de la materia) y habilidad ("Comprensión de conceptos", "Resolución de problemas", "Interpretación de gráficas", "Comunicación escrita", etc.).
 - Expresiones matemáticas, físicas y químicas: escríbelas en LaTeX entre signos de dólar para que se impriman con tipografía de libro, tanto en el enunciado como en opciones y columnas. En línea con $…$ (por ejemplo "$\\int_0^1 x e^{x^2}\\,dx$", "$F = m a$", "$v_0 = 12\\ \\text{m/s}$", "$\\frac{3}{4}$", "$\\ce{H2SO4}$"); usa $$…$$ solo para una fórmula larga que deba ir en su propio renglón. No uses símbolos Unicode sueltos como ∫, ², √ o ½ fuera de LaTeX. Usa \\dfrac para fracciones dentro de integrales y ecuaciones principales, y la notación en español: \\operatorname{sen} para seno y \\operatorname{tg} solo si el profesor lo usa (si no, \\tan). Las letras de los incisos y opciones ("a)", "b)") van fuera de los signos de dólar. El texto normal y las palabras van fuera de LaTeX.
@@ -224,14 +226,14 @@ export interface ActividadGenerada {
   reactivos: Reactivo[];
 }
 
-export async function generarActividad(datos: { titulo: string; materia: string; grupo: string; prompt: string; paginas?: number }): Promise<ActividadGenerada> {
+export async function generarActividad(datos: { titulo: string; materia: string; grupo: string; prompt: string; paginas?: number; escala?: Escala }): Promise<ActividadGenerada> {
   const salida = await pedir({
     system: SISTEMA_ACTIVIDAD,
     esquema: EsquemaActividad,
     contenido: [
       {
         type: "text",
-        text: `Materia: ${datos.materia}\nGrupo: ${datos.grupo}\nTítulo: ${datos.titulo}\nPáginas tamaño carta: ${datos.paginas ?? 1}\n\nLo que pide el profesor:\n${datos.prompt}`,
+        text: `Materia: ${datos.materia}\nGrupo: ${datos.grupo}\nTítulo: ${datos.titulo}\nPáginas tamaño carta: ${datos.paginas ?? 1}\nEscala de calificación: sobre ${datos.escala ?? 100}\n\nLo que pide el profesor:\n${datos.prompt}`,
       },
     ],
   });
@@ -267,11 +269,11 @@ function normalizarGenerada(salida: z.infer<typeof EsquemaActividad>, anteriores
         columnaB: lista(r.columnaB),
         lineas: cerrado ? 0 : Math.max(3, Math.min(18, r.lineas || (r.tipo === "desarrollo" ? 12 : 6))),
         // Al editar, "conservar" deja el dibujo que ya tenía el reactivo con ese número.
-        ilustracion: cerrado
-          ? undefined
-          : r.ilustracion.trim().toLowerCase() === "conservar"
+        ilustracion:
+          r.ilustracion.trim().toLowerCase() === "conservar"
             ? anteriores.find((x) => x.numero === i + 1)?.ilustracion
             : svgSeguro(r.ilustracion),
+        ubicacionIlustracion: r.ubicacionIlustracion === "abajo" ? "abajo" : undefined,
       };
     }),
   };
@@ -304,6 +306,7 @@ export async function editarActividad(act: Actividad, peticion: string): Promise
       habilidad: r.habilidad,
       lineas: r.lineas ?? 0,
       ilustracion: r.ilustracion ? "(tiene dibujo)" : "",
+      ubicacionIlustracion: r.ubicacionIlustracion ?? "derecha",
     })),
   };
   const salida = await pedir({
@@ -312,7 +315,7 @@ export async function editarActividad(act: Actividad, peticion: string): Promise
     contenido: [
       {
         type: "text",
-        text: `Actividad actual:\n${JSON.stringify(actual, null, 1)}\n\nPáginas tamaño carta: ${act.paginas}\n\nPetición del profesor:\n${peticion}`,
+        text: `Actividad actual:\n${JSON.stringify(actual, null, 1)}\n\nPáginas tamaño carta: ${act.paginas}\nEscala de calificación: sobre ${act.escala ?? 10}\n\nPetición del profesor:\n${peticion}`,
       },
     ],
   });

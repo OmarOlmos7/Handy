@@ -5,6 +5,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { leerArchivo } from "./almacen";
 import { leerLogo } from "./pdf";
+import { escalaDe } from "./estadisticas";
 import type { Actividad } from "./tipos";
 
 const CARTA = { ancho: 612, alto: 792 };
@@ -69,7 +70,7 @@ export async function pdfHojaEscaneada(actividad: Actividad, datos: { curso: str
     const xCal = xQr - 92;
     p.drawRectangle({ x: xCal, y: yDatos - 30, width: 80, height: 46, borderColor: rgb(0.86, 0.15, 0.15), borderWidth: 1.5 });
     p.drawText("Calificación", { x: xCal + 14, y: yDatos + 6, size: 8, font: negrita, color: rgb(0.86, 0.15, 0.15) });
-    p.drawText("/ 10", { x: xCal + 52, y: yDatos - 24, size: 9, font: normal, color: GRIS });
+    p.drawText(`/ ${escalaDe(actividad)}`, { x: xCal + (escalaDe(actividad) === 100 ? 46 : 52), y: yDatos - 24, size: 9, font: normal, color: GRIS });
     p.drawText("Escribe tu nombre y tu matrícula en cada hoja.", { x: MARGEN, y: yDatos - 22, size: 7.5, font: normal, color: GRIS });
 
     // Página original, ajustada al espacio restante.

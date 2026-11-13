@@ -4,7 +4,7 @@ import { ingresarAlumno, registrarAlumno } from "@/app/acciones-cuenta";
 import { InstalarApp } from "@/components/instalar-app";
 import { Boton, Encabezado, Insignia, campo, colorCalificacion, fechaLarga } from "@/components/ui";
 import { leer } from "@/lib/almacen";
-import { calificacion } from "@/lib/estadisticas";
+import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
 import { alumnoActual } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Mis actividades" };
@@ -117,8 +117,9 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                   </p>
                 </div>
                 {publicada ? (
-                  <span className={`text-xl font-semibold ${colorCalificacion(calificacion(a, e!))}`}>
-                    {calificacion(a, e!).toFixed(1)}
+                  <span className={`text-xl font-semibold ${colorCalificacion(calificacion(a, e!), escalaDe(a))}`}>
+                    {formatoCal(calificacion(a, e!), escalaDe(a))}
+                    <span className="text-sm font-normal text-slate-400"> / {escalaDe(a)}</span>
                   </span>
                 ) : e && e.estado !== "sin_entregar" ? (
                   <Insignia tono="azul">En revisión del profesor</Insignia>

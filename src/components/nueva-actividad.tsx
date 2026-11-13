@@ -9,7 +9,8 @@ type Modo = "ia" | "escaneada";
 
 const EJEMPLO_PROMPT = `Ejemplo:
 Tema: Leyes de Newton y fuerza neta.
-Reactivos: 4 de opción múltiple (1 punto cada uno), 3 de verdadero o falso (1 punto c/u) y 1 problema de desarrollo con procedimiento (3 puntos).
+Reactivos: 4 de opción múltiple (10 puntos cada uno), 3 de verdadero o falso (10 puntos c/u) y 1 problema de desarrollo con procedimiento (30 puntos).
+Ilustraciones: en el problema de desarrollo, un diagrama de cuerpo libre del bloque a la derecha del texto; en la opción múltiple 2, una gráfica de velocidad contra tiempo abajo del enunciado.
 Nivel: 2.º de secundaria, con datos de la vida diaria.`;
 
 /** Paso 1: crear la actividad con IA o cargarla escaneada. */
@@ -106,6 +107,11 @@ export function NuevaActividad({ grupos, hoy }: { grupos: Pick<Grupo, "id" | "ma
               <span className="mt-1 block text-xs font-normal text-slate-500">
                 Tipos disponibles: opción múltiple, verdadero o falso, relación de columnas, paréntesis, problemas de desarrollo y
                 preguntas abiertas. Puedes pedir el nivel, el número de reactivos y cuántos puntos vale cada uno.
+                <span className="mt-1 block">
+                  <strong className="font-semibold text-slate-600">Ilustraciones y gráficas:</strong> pídelas aquí indicando en qué reactivo
+                  van, qué deben mostrar y su ubicación: <em>a la derecha del texto</em> (pequeña) o <em>abajo del enunciado</em> (más
+                  grande, ideal para gráficas con datos). Si no las pides, la hoja no lleva dibujos.
+                </span>
               </span>
             </label>
             <label className="block w-40 text-sm font-medium text-slate-700">
@@ -128,6 +134,24 @@ export function NuevaActividad({ grupos, hoy }: { grupos: Pick<Grupo, "id" | "ma
             />
           </label>
         )}
+
+        <fieldset>
+          <legend className="text-sm font-medium text-slate-700">Calificar sobre</legend>
+          <div className="mt-1 inline-flex gap-1 rounded-xl bg-slate-100 p-1">
+            {[100, 10].map((n) => (
+              <label
+                key={n}
+                className="cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium text-slate-600 has-[:checked]:bg-white has-[:checked]:text-tinta-700 has-[:checked]:shadow-sm has-[:checked]:ring-1 has-[:checked]:ring-slate-200"
+              >
+                <input type="radio" name="escala" value={n} defaultChecked={n === 100} className="sr-only" />
+                {n} puntos
+              </label>
+            ))}
+          </div>
+          <span className="mt-1 block text-xs text-slate-500">
+            Las calificaciones de esta actividad (hoja, reportes, PDF y Excel) se muestran en esta escala.
+          </span>
+        </fieldset>
 
         {estado === "enviando" && (
           <p className="rounded-lg bg-tinta-50 p-3 text-sm text-tinta-700" role="status">

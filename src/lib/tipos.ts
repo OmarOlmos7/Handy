@@ -42,6 +42,8 @@ export interface Reactivo {
   lineas?: number;
   /** Dibujo esquemático en SVG que ilustra el ejercicio (se muestra a la derecha del texto). */
   ilustracion?: string;
+  /** Dónde va el dibujo: a la derecha del texto (por defecto) o abajo, más grande (gráficas). */
+  ubicacionIlustracion?: "derecha" | "abajo";
 }
 
 export interface Alumno {
@@ -78,8 +80,13 @@ export interface CriterioEvaluacion {
 
 export type OrigenActividad = "ia" | "escaneada";
 
+/** Escala de calificación: sobre 100 (por defecto en actividades nuevas) o sobre 10. */
+export type Escala = 10 | 100;
+
 export interface Actividad {
   id: string;
+  /** Escala en la que se muestran las calificaciones; sin valor, sobre 10 (actividades anteriores). */
+  escala?: Escala;
   /** Cómo se creó: generada con IA o cargada desde un escaneo del profesor. */
   origen?: OrigenActividad;
   /** Lo que pidió el profesor para generar la actividad con IA. */

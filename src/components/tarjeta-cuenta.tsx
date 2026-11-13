@@ -10,7 +10,7 @@ export function TarjetaCuenta({ titulo, error, children }: { titulo: string; err
     <main className="flex flex-1 items-center justify-center bg-gradient-to-b from-tinta-50 to-[#f6f7f9] px-4 py-16">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg ring-1 ring-slate-200">
         <Link href="/">
-          <Logo />
+          <Logo grande />
         </Link>
         <h1 className="mt-6 text-2xl font-semibold tracking-tight">{titulo}</h1>
         {error && <p className="mt-4 rounded-lg bg-error-suave p-3 text-sm text-error">{error}</p>}
