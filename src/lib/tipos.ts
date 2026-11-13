@@ -46,10 +46,15 @@ export interface Reactivo {
   ubicacionIlustracion?: "derecha" | "abajo";
 }
 
+/** Género del alumno para las analíticas del curso: femenino, masculino u otro. Nunca se envía a la IA. */
+export type Genero = "F" | "M" | "X";
+
 export interface Alumno {
   matricula: string;
   nombre: string;
   correo: string;
+  /** Lo asigna el profesor en Analíticas de aprendizaje; sin valor, "Sin dato". */
+  genero?: Genero;
 }
 
 export interface Grupo {

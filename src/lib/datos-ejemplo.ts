@@ -32,10 +32,11 @@ const alumnos: Alumno[] = [
   ["A0240", "Leonardo Jiménez Ramos"],
   ["A0241", "Renata Gutiérrez Mendoza"],
   ["A0242", "Andrés Navarro Aguilar"],
-].map(([matricula, nombre]) => ({
+].map(([matricula, nombre], i) => ({
   matricula,
   nombre,
   correo: `${matricula.toLowerCase()}@escuela.edu.mx`,
+  genero: i % 2 === 0 ? ("F" as const) : ("M" as const),
 }));
 
 export const grupos: Grupo[] = [

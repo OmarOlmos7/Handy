@@ -20,6 +20,15 @@ export function IconoLapiz() {
   );
 }
 
+export function IconoGrafica() {
+  return (
+    <svg {...base}>
+      <path d="M3 3v18h18" />
+      <path d="M8 16v-4M13 16V8M18 16v-7" />
+    </svg>
+  );
+}
+
 export function IconoBasura() {
   return (
     <svg {...base}>

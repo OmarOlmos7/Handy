@@ -191,3 +191,14 @@ export async function etiquetarActividad(actividadId: string, etiqueta: string) 
   });
   revalidatePath("/profesor", "layout");
 }
+
+/** Género de un alumno del curso, para las analíticas. Solo se guarda; nunca se envía a la IA. */
+export async function generoAlumno(grupoId: string, matricula: string, genero: string) {
+  const valor = genero === "F" || genero === "M" || genero === "X" ? genero : undefined;
+  await enGrupoPropio(grupoId, (db) => {
+    const al = db.grupos.find((g) => g.id === grupoId)!.alumnos.find((a) => a.matricula === matricula);
+    if (!al) throw new Error("Alumno no encontrado");
+    al.genero = valor;
+  });
+  revalidatePath(`/profesor/grupos/${grupoId}`, "layout");
+}
