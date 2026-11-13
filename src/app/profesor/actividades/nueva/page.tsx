@@ -5,12 +5,16 @@ import { datosProfesor } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Nueva actividad" };
 
-export default async function Nueva() {
+export default async function Nueva({ searchParams }: PageProps<"/profesor/actividades/nueva">) {
   const { db } = await datosProfesor();
+  const { grupo } = await searchParams;
   return (
     <>
       <Encabezado titulo="Nueva actividad" subtitulo="Paso 1 · Crea la actividad que aplicarás en papel: genérala con IA o carga la tuya escaneada." migas={[{ texto: "Panel", href: "/profesor" }]} />
-      <NuevaActividad grupos={db.grupos.map((g) => ({ id: g.id, materia: g.materia, nombre: g.nombre }))} hoy={new Date().toISOString().slice(0, 10)} />
+      <NuevaActividad
+        grupos={db.grupos.map((g) => ({ id: g.id, materia: g.materia, nombre: g.nombre }))} hoy={new Date().toISOString().slice(0, 10)}
+        grupoInicial={typeof grupo === "string" ? grupo : undefined}
+      />
     </>
   );
 }

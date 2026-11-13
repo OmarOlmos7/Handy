@@ -31,7 +31,7 @@ export default async function ReporteGrupo({ params }: PageProps<"/profesor/acti
       <Encabezado
         migas={[
           { texto: "Panel", href: "/profesor" },
-          { texto: `${grupo.materia} · ${grupo.nombre}`, href: "/profesor" },
+          { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
         ]}
         titulo={actividad.titulo}
         subtitulo={`Reporte de desempeño del grupo · aplicada ${fechaLarga(actividad.fechaAplicacion)}`}

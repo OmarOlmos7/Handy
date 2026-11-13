@@ -14,7 +14,15 @@ Ilustraciones: en el problema de desarrollo, un diagrama de cuerpo libre del blo
 Nivel: 2.º de secundaria, con datos de la vida diaria.`;
 
 /** Paso 1: crear la actividad con IA o cargarla escaneada. */
-export function NuevaActividad({ grupos, hoy }: { grupos: Pick<Grupo, "id" | "materia" | "nombre">[]; hoy: string }) {
+export function NuevaActividad({
+  grupos,
+  hoy,
+  grupoInicial,
+}: {
+  grupos: Pick<Grupo, "id" | "materia" | "nombre">[];
+  hoy: string;
+  grupoInicial?: string;
+}) {
   const router = useRouter();
   const [modo, setModo] = useState<Modo>("ia");
   const [archivos, setArchivos] = useState<File[]>([]);
@@ -81,7 +89,7 @@ export function NuevaActividad({ grupos, hoy }: { grupos: Pick<Grupo, "id" | "ma
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-slate-700">
             Curso
-            <select name="grupo" className={campo} required>
+            <select name="grupo" className={campo} required defaultValue={grupos.some((g) => g.id === grupoInicial) ? grupoInicial : undefined}>
               {grupos.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.materia} · {g.nombre}

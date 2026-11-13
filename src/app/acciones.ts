@@ -104,3 +104,61 @@ export async function quitarDatosEjemplo() {
   revalidatePath("/", "layout");
   redirect("/profesor");
 }
+
+// ---------- Cursos y actividades: editar y borrar desde el panel ----------
+
+/** Corre el cambio solo si el curso es del profesor con sesión. */
+async function enGrupoPropio<T>(grupoId: string, cambio: (db: BaseDeDatos) => T) {
+  const profesor = await requerirProfesor();
+  return modificar((db) => {
+    if (!db.grupos.some((g) => g.id === grupoId && g.profesorId === profesor.id)) throw new Error("Curso no encontrado");
+    return cambio(db);
+  });
+}
+
+export async function renombrarGrupo(grupoId: string, materia: string, nombre: string) {
+  const m = materia.trim().slice(0, 80);
+  const n = nombre.trim().slice(0, 80);
+  if (!m || !n) throw new Error("Escribe la materia y el grupo");
+  await enGrupoPropio(grupoId, (db) => {
+    const g = db.grupos.find((x) => x.id === grupoId)!;
+    g.materia = m;
+    g.nombre = n;
+  });
+  revalidatePath("/profesor", "layout");
+}
+
+/** Borra el curso con todas sus actividades, entregas y archivos. No se puede deshacer. */
+export async function borrarGrupo(grupoId: string) {
+  const ids = await enGrupoPropio(grupoId, (db) => {
+    const acts = db.actividades.filter((a) => a.grupoId === grupoId).map((a) => a.id);
+    db.actividades = db.actividades.filter((a) => a.grupoId !== grupoId);
+    db.entregas = db.entregas.filter((e) => !acts.includes(e.actividadId));
+    db.grupos = db.grupos.filter((g) => g.id !== grupoId);
+    return acts;
+  });
+  ids.forEach((id) => borrarCarpeta(`actividades/${id}`));
+  revalidatePath("/profesor", "layout");
+}
+
+export async function editarDatosActividad(actividadId: string, titulo: string, fecha: string) {
+  const t = titulo.trim().slice(0, 120);
+  if (!t) throw new Error("Escribe el título");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) throw new Error("Fecha no válida");
+  await enActividadPropia(actividadId, (db) => {
+    const a = actividadDe(db, actividadId)!;
+    a.titulo = t;
+    a.fechaAplicacion = fecha;
+  });
+  revalidatePath("/profesor", "layout");
+}
+
+/** Borra la actividad con sus entregas y archivos. No se puede deshacer. */
+export async function borrarActividad(actividadId: string) {
+  await enActividadPropia(actividadId, (db) => {
+    db.actividades = db.actividades.filter((a) => a.id !== actividadId);
+    db.entregas = db.entregas.filter((e) => e.actividadId !== actividadId);
+  });
+  borrarCarpeta(`actividades/${actividadId}`);
+  revalidatePath("/profesor", "layout");
+}
