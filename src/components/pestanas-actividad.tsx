@@ -5,12 +5,12 @@ export function PestanasActividad({
   activa,
 }: {
   id: string;
-  activa: "entregas" | "rubrica" | "reporte";
+  /** "analiticas" no es una pestaña: se llega con el botón Analíticas Actividad. */
+  activa: "entregas" | "rubrica" | "analiticas";
 }) {
   const pestanas = [
     { clave: "entregas", texto: "Entregas", href: `/profesor/actividades/${id}` },
     { clave: "rubrica", texto: "Solución y rúbrica", href: `/profesor/actividades/${id}/rubrica` },
-    { clave: "reporte", texto: "Reporte del grupo", href: `/profesor/actividades/${id}/reporte` },
   ] as const;
   return (
     <nav className="no-imprimir mb-6 flex gap-1 overflow-x-auto border-b border-slate-200 text-sm" aria-label="Secciones de la actividad">

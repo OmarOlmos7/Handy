@@ -30,7 +30,7 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
         acciones={
           <>
             <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/analiticas`}>
-              <IconoGrafica /> Analíticas de aprendizaje
+              <IconoGrafica /> Analíticas de aprendizaje grupo
             </BotonLink>
             <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/cuaderno`}>
               <IconoCuaderno /> Cuaderno de calificaciones

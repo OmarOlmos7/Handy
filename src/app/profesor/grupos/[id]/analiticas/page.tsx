@@ -1,74 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 import { BarrasH, COLORES_SERIE, Columnas, LeyendaDesempeno, Pastel, Radar, RadarSeries } from "@/components/graficas";
+import { Cifra, Seccion, TablaAlumnos, num, tonoPuntaje } from "@/components/tablero";
 import { Tarjeta, fechaLarga } from "@/components/ui";
 import { grupoDe } from "@/lib/almacen";
-import { APROBATORIA, analiticasCurso, type ResumenAlumno } from "@/lib/analiticas";
+import { APROBATORIA, analiticasCurso } from "@/lib/analiticas";
 import { colorDesempeno } from "@/lib/escala-color";
 import { datosProfesor } from "@/lib/sesion";
 
-export const metadata: Metadata = { title: "Analíticas de aprendizaje" };
-
-const num = (n: number) => n.toLocaleString("es-MX", { maximumFractionDigits: 1 });
-
-/** Color del texto de un puntaje sobre 100, con los mismos umbrales del resto de la app. */
-function tonoPuntaje(p: number) {
-  if (p >= 85) return "text-acierto";
-  if (p >= 70) return "text-aviso";
-  return "text-error";
-}
-
-function Cifra({ titulo, valor, detalle }: { titulo: string; valor: string; detalle?: string }) {
-  return (
-    <div className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{titulo}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{valor}</p>
-      {detalle && <p className="mt-0.5 text-xs text-slate-500">{detalle}</p>}
-    </div>
-  );
-}
-
-function Seccion({ titulo, nota, children, className = "" }: { titulo: string; nota?: string; children: ReactNode; className?: string }) {
-  return (
-    <Tarjeta className={className}>
-      <h2 className="text-base font-semibold text-slate-900">{titulo}</h2>
-      {nota && <p className="mt-0.5 text-xs text-slate-500">{nota}</p>}
-      <div className="mt-4">{children}</div>
-    </Tarjeta>
-  );
-}
-
-function TablaAlumnos({ filas, vacio, motivos }: { filas: ResumenAlumno[]; vacio: string; motivos?: boolean }) {
-  if (filas.length === 0) return <p className="text-sm text-slate-500">{vacio}</p>;
-  return (
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-          <th className="pb-2 font-medium">Alumno</th>
-          <th className="pb-2 text-right font-medium">Promedio</th>
-          {motivos ? <th className="pb-2 pl-4 font-medium">Motivo</th> : <th className="pb-2 text-right font-medium">Entregas</th>}
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-slate-100">
-        {filas.map((r) => (
-          <tr key={r.alumno.matricula}>
-            <td className="py-2 text-slate-800">{r.alumno.nombre}</td>
-            <td className={`py-2 text-right font-semibold tabular-nums ${tonoPuntaje(r.promedio)}`}>{num(r.promedio)}</td>
-            {motivos ? (
-              <td className="py-2 pl-4 text-xs text-slate-600">{r.motivos.join(" · ")}</td>
-            ) : (
-              <td className="py-2 text-right tabular-nums text-slate-600">
-                {r.puntajes.length - r.noEntregadas}/{r.puntajes.length}
-              </td>
-            )}
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
+export const metadata: Metadata = { title: "Analíticas de aprendizaje del grupo" };
 
 /** Tablero con los resultados de todas las actividades del curso. */
 export default async function AnaliticasCurso({ params }: PageProps<"/profesor/grupos/[id]/analiticas">) {
@@ -92,7 +33,7 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
             {grupo.materia} · {grupo.nombre}
           </Link>
         </nav>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Analíticas de aprendizaje</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Analíticas de aprendizaje del grupo</h1>
         <p className="mt-1 text-sm text-slate-600">
           {a.actividades.length} {a.actividades.length === 1 ? "actividad evaluada" : "actividades evaluadas"} · {g.alumnos}{" "}
           {g.alumnos === 1 ? "alumno" : "alumnos"} · Puntajes sobre 100; un trabajo no entregado cuenta como 0.
@@ -258,7 +199,7 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
                   {a.actividades.map((s) => (
                     <tr key={s.id}>
                       <td className="py-2 pr-3">
-                        <Link href={`/profesor/actividades/${s.id}/reporte`} className="font-medium text-slate-800 hover:text-tinta-700">
+                        <Link href={`/profesor/actividades/${s.id}/analiticas`} className="font-medium text-slate-800 hover:text-tinta-700">
                           {s.titulo}
                         </Link>
                         <span className="block text-xs text-slate-500">

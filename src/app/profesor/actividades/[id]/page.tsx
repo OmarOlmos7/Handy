@@ -1,3 +1,4 @@
+import { IconoGrafica } from "@/components/iconos";
 import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -54,6 +55,9 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         }
         acciones={
           <>
+            <BotonLink href={`/profesor/actividades/${id}/analiticas`} variante="secundario">
+              <IconoGrafica /> Analíticas Actividad
+            </BotonLink>
             <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
               Hoja imprimible con QR
             </BotonLink>
