@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BarrasH, COLORES_SERIE, Columnas, LeyendaDesempeno, Pastel, Radar, RadarSeries } from "@/components/graficas";
+import { DescargarReportePdf } from "@/components/descargar-reporte-pdf";
 import { Cifra, Seccion, TablaAlumnos, num, tonoPuntaje } from "@/components/tablero";
 import { Tarjeta, fechaLarga } from "@/components/ui";
 import { grupoDe } from "@/lib/almacen";
 import { APROBATORIA, analiticasCurso } from "@/lib/analiticas";
 import { colorDesempeno } from "@/lib/escala-color";
+import { nombreArchivoReporte, reporteGrupoPdf } from "@/lib/reporte-analiticas";
 import { datosProfesor } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Analíticas de aprendizaje del grupo" };
@@ -25,19 +27,26 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
 
   return (
     <>
-      <div className="mb-6">
-        <nav className="mb-1 flex flex-wrap gap-1 text-sm text-slate-500" aria-label="Ruta">
-          <Link href="/profesor" className="hover:text-tinta-700">Panel</Link>
-          <span>/</span>
-          <Link href={`/profesor/grupos/${grupo.id}`} className="hover:text-tinta-700">
-            {grupo.materia} · {grupo.nombre}
-          </Link>
-        </nav>
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Analíticas de aprendizaje del grupo</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          {a.actividades.length} {a.actividades.length === 1 ? "actividad evaluada" : "actividades evaluadas"} · {g.alumnos}{" "}
-          {g.alumnos === 1 ? "alumno" : "alumnos"} · Puntajes sobre 100; un trabajo no entregado cuenta como 0.
-        </p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <nav className="mb-1 flex flex-wrap gap-1 text-sm text-slate-500" aria-label="Ruta">
+            <Link href="/profesor" className="hover:text-tinta-700">Panel</Link>
+            <span>/</span>
+            <Link href={`/profesor/grupos/${grupo.id}`} className="hover:text-tinta-700">
+              {grupo.materia} · {grupo.nombre}
+            </Link>
+          </nav>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Analíticas de aprendizaje del grupo</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            {a.actividades.length} {a.actividades.length === 1 ? "actividad evaluada" : "actividades evaluadas"} · {g.alumnos}{" "}
+            {g.alumnos === 1 ? "alumno" : "alumnos"} · Puntajes sobre 100; un trabajo no entregado cuenta como 0.
+          </p>
+        </div>
+        {hay && (
+          <div className="flex flex-wrap gap-2">
+            <DescargarReportePdf reporte={reporteGrupoPdf(grupo, a)} archivo={nombreArchivoReporte(["analiticas", grupo.materia, grupo.nombre])} />
+          </div>
+        )}
       </div>
 
       {!hay ? (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DescargarReportePdf } from "@/components/descargar-reporte-pdf";
 import { DescargasReporte } from "@/components/descargas-reporte";
 import { ConFlujo } from "@/components/flujo-actividad";
 import { BarrasH, Columnas, LeyendaDesempeno, Pastel, Radar } from "@/components/graficas";
@@ -11,18 +12,10 @@ import { actividadDe, entregasDe, grupoDe } from "@/lib/almacen";
 import { APROBATORIA, analiticasCurso } from "@/lib/analiticas";
 import { colorDesempeno } from "@/lib/escala-color";
 import { formatoCal, reporteGrupo } from "@/lib/estadisticas";
+import { hallazgosActividad, nombreArchivoReporte, nombreTipoReactivo, reporteActividadPdf } from "@/lib/reporte-analiticas";
 import { datosProfesor } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Analíticas de la actividad" };
-
-const nombreTipo: Record<string, string> = {
-  verdadero_falso: "V/F",
-  opcion_multiple: "Opción múltiple",
-  relacion_columnas: "Relación",
-  parentesis: "Paréntesis",
-  desarrollo: "Desarrollo",
-  abierto: "Abierto",
-};
 
 /** Métricas de aprendizaje de una sola actividad, con el mismo tablero que el del grupo. */
 export default async function AnaliticasActividad({ params }: PageProps<"/profesor/actividades/[id]/analiticas">) {
@@ -38,16 +31,8 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
   const s = a.actividades[0];
   const hay = Boolean(s);
 
-  const hallazgos = [...a.hallazgos];
-  if (rep.porReactivo.length >= 2) {
-    const debiles = [...rep.porReactivo].sort((x, y) => x.acierto - y.acierto).slice(0, 2);
-    hallazgos.splice(1, 0, `Conviene repasar los reactivos ${debiles.map((d) => `${d.numero} (${d.acierto}%)`).join(" y ")}, que tuvieron el menor acierto.`);
-  }
-  const fuerte = rep.porHabilidad[0];
-  const debil = rep.porHabilidad[rep.porHabilidad.length - 1];
-  if (fuerte && debil && fuerte.nombre !== debil.nombre) {
-    hallazgos.push(`La habilidad mejor lograda es ${fuerte.nombre} (${fuerte.acierto}%) y la más débil, ${debil.nombre} (${debil.acierto}%).`);
-  }
+  const hallazgos = hallazgosActividad(a, rep);
+  const reportePdf = reporteActividadPdf(grupo, actividad, a, rep);
 
   const sinEntregar = grupo.alumnos.filter((al) => !rep.filas.some((f) => f.alumno.matricula === al.matricula));
 
@@ -63,6 +48,12 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
         subtitulo={`${actividad.titulo} · aplicada ${fechaLarga(actividad.fechaAplicacion)} · puntajes sobre 100 (la actividad se califica sobre ${rep.escala}); un trabajo no entregado cuenta como 0.`}
         acciones={
           <>
+            {hay && (
+              <DescargarReportePdf
+                reporte={reportePdf}
+                archivo={nombreArchivoReporte(["analiticas", grupo.materia, grupo.nombre, actividad.titulo])}
+              />
+            )}
             {rep.entregadas > 0 && (
               <DescargasReporte
                 filas={rep.filas}
@@ -144,7 +135,7 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
                 <Seccion titulo="Acierto por reactivo" nota="Porcentaje de puntos logrados en cada reactivo. El anillo punteado marca 60.">
                   <Radar
                     aprobatoria={APROBATORIA}
-                    ejes={rep.porReactivo.map((r) => ({ nombre: `${r.numero}. ${nombreTipo[r.tipo] ?? r.tipo}`, valor: r.acierto }))}
+                    ejes={rep.porReactivo.map((r) => ({ nombre: `${r.numero}. ${nombreTipoReactivo(r.tipo)}`, valor: r.acierto }))}
                   />
                 </Seccion>
               ) : (
@@ -152,7 +143,7 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
                   <BarrasH
                     aprobatoria={APROBATORIA}
                     sufijo="%"
-                    filas={rep.porReactivo.map((r) => ({ nombre: `${r.numero}. ${nombreTipo[r.tipo] ?? r.tipo}`, valor: r.acierto }))}
+                    filas={rep.porReactivo.map((r) => ({ nombre: `${r.numero}. ${nombreTipoReactivo(r.tipo)}`, valor: r.acierto }))}
                   />
                 </Seccion>
               )}
