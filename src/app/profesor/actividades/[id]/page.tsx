@@ -1,3 +1,4 @@
+import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AprobarTodo } from "@/components/aprobar-todo";
@@ -66,6 +67,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           </>
         }
       />
+      <ConFlujo vista={4} db={db} actividad={actividad}>
       <PestanasActividad id={id} activa="entregas" />
       <AutoActualizar activo={evaluando.length > 0} />
 
@@ -174,6 +176,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           </tbody>
         </table>
       </div>
+      </ConFlujo>
     </>
   );
 }

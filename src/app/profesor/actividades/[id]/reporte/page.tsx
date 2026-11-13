@@ -1,3 +1,4 @@
+import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DescargasReporte } from "@/components/descargas-reporte";
@@ -48,7 +49,6 @@ export default async function ReporteGrupo({ params }: PageProps<"/profesor/acti
           ) : undefined
         }
       />
-      <PestanasActividad id={id} activa="reporte" />
     </>
   );
 
@@ -56,7 +56,10 @@ export default async function ReporteGrupo({ params }: PageProps<"/profesor/acti
     return (
       <>
         {encabezado}
-        <Tarjeta className="text-sm text-slate-600">El reporte aparecerá cuando haya entregas evaluadas.</Tarjeta>
+        <ConFlujo vista={4} db={db} actividad={actividad}>
+          <PestanasActividad id={id} activa="reporte" />
+          <Tarjeta className="text-sm text-slate-600">El reporte aparecerá cuando haya entregas evaluadas.</Tarjeta>
+        </ConFlujo>
       </>
     );
   }
@@ -65,6 +68,8 @@ export default async function ReporteGrupo({ params }: PageProps<"/profesor/acti
     <>
       {encabezado}
 
+      <ConFlujo vista={4} db={db} actividad={actividad}>
+      <PestanasActividad id={id} activa="reporte" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Tarjeta>
           <p className="text-sm text-slate-500">Promedio del grupo</p>
@@ -198,6 +203,7 @@ export default async function ReporteGrupo({ params }: PageProps<"/profesor/acti
           </tbody>
         </table>
       </div>
+      </ConFlujo>
     </>
   );
 }

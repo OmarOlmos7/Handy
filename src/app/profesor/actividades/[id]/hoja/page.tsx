@@ -1,3 +1,4 @@
+import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { EditarHoja } from "@/components/editar-hoja";
@@ -43,9 +44,11 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
             </>
           }
         />
-        <Tarjeta className="mx-auto max-w-3xl p-2">
-          <iframe src={`/api/hoja/${id}`} title="Hoja imprimible" className="h-[80vh] w-full rounded-lg" />
-        </Tarjeta>
+        <ConFlujo vista={1} db={db} actividad={actividad}>
+          <Tarjeta className="mx-auto max-w-3xl p-2">
+            <iframe src={`/api/hoja/${id}`} title="Hoja imprimible" className="h-[80vh] w-full rounded-lg" />
+          </Tarjeta>
+        </ConFlujo>
       </>
     );
   }
@@ -65,6 +68,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
         }
       />
       </div>
+      <ConFlujo vista={1} db={db} actividad={actividad}>
       {actividad.origen === "ia" ? (
         <>
           <EditarHoja
@@ -83,6 +87,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
           ))}
         </div>
       )}
+      </ConFlujo>
     </>
   );
 }

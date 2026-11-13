@@ -1,3 +1,4 @@
+import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import type { Reactivo } from "@/lib/tipos";
 import { Hoja } from "@/components/hoja";
@@ -40,11 +41,12 @@ export default async function Rubrica({
         ]}
         titulo={actividad.titulo}
       />
+      <ConFlujo vista={actividad.reactivos.some((r) => r.respuesta.trim()) ? 3 : 2} db={db} actividad={actividad}>
       <PestanasActividad id={id} activa="rubrica" />
 
       {!conSolucion ? (
         <Tarjeta className="mx-auto max-w-2xl">
-          <h2 className="text-lg font-semibold">Paso 3 · Prepara la solución</h2>
+          <h2 className="text-lg font-semibold">Paso 2 · Prepara la solución</h2>
           <p className="mt-2 text-sm text-slate-600">
             Elige cómo: sube fotos o un PDF de la actividad resuelta por ti, o deja que Claude la resuelva con las condiciones
             que indiques. Con la solución se arma la rúbrica, que después revisas y confirmas.
@@ -103,6 +105,7 @@ export default async function Rubrica({
           </div>
         </>
       )}
+      </ConFlujo>
     </>
   );
 }
