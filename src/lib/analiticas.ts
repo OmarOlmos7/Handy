@@ -66,7 +66,12 @@ export interface Analiticas {
     aprobacion: number;
     tasaEntrega: number;
     noEntregadas: number;
+    /** Trabajos entregados y calificados (para el pastel de entregas). */
+    entregadas: number;
     alumnos: number;
+    /** Alumnos con promedio aprobatorio y reprobatorio. */
+    aprobados: number;
+    reprobados: number;
   };
   actividades: EstadisticasActividad[];
   sinResultados: { id: string; titulo: string }[];
@@ -76,6 +81,10 @@ export interface Analiticas {
   atencion: ResumenAlumno[];
   distribucion: { rango: string; cantidad: number }[];
   temasDebiles: { nombre: string; acierto: number }[];
+  /** Todos los temas, de mayor a menor acierto. */
+  temas: { nombre: string; acierto: number }[];
+  /** Alumnos por nivel de desempeño según su promedio (alto ≥ 85, medio ≥ 70, bajo < 70). */
+  niveles: { alto: number; medio: number; bajo: number };
   hallazgos: string[];
 }
 
@@ -208,10 +217,10 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
       temas.set(r.tema, [...(temas.get(r.tema) ?? []), ...fr]);
     }
   }
-  const temasDebiles = [...temas.entries()]
+  const todosTemas = [...temas.entries()]
     .map(([nombre, xs]) => ({ nombre, acierto: Math.round(promedio(xs) * 100) }))
-    .sort((a, b) => a.acierto - b.acierto)
-    .slice(0, 5);
+    .sort((a, b) => a.acierto - b.acierto);
+  const temasDebiles = todosTemas.slice(0, 5);
 
   const rangos = [
     { rango: "0 a 59", min: 0, max: 60 },
@@ -229,7 +238,10 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
     aprobacion: porcentaje(promAlumnos.filter((x) => x >= APROBATORIA).length, promAlumnos.length),
     tasaEntrega: porcentaje(entregadosTodos.length, valoresTodos.length),
     noEntregadas: valoresTodos.length - entregadosTodos.length,
+    entregadas: entregadosTodos.length,
     alumnos: alumnos.length,
+    aprobados: promAlumnos.filter((x) => x >= APROBATORIA).length,
+    reprobados: promAlumnos.filter((x) => x < APROBATORIA).length,
   };
 
   const porPromedio = [...resumenes].sort((a, b) => b.promedio - a.promedio);
@@ -249,6 +261,12 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
       cantidad: promAlumnos.filter((x) => x >= min && x < max).length,
     })),
     temasDebiles,
+    temas: [...todosTemas].reverse(),
+    niveles: {
+      alto: promAlumnos.filter((x) => x >= 85).length,
+      medio: promAlumnos.filter((x) => x >= 70 && x < 85).length,
+      bajo: promAlumnos.filter((x) => x < 70).length,
+    },
     hallazgos: [],
   };
   analiticas.hallazgos = hallazgos(analiticas);
