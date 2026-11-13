@@ -73,6 +73,11 @@ export async function guardarRevision(
   await enActividadPropia(actividadId, (db) => {
     const e = db.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
     if (!e) throw new Error("Entrega no encontrada");
+    // Si cambian los puntos, la calificación vuelve a salir de ellos y se descarta el ajuste del cuaderno.
+    const puntosCambiaron = cambios.resultados.some(
+      (r) => r.puntosObtenidos !== e.resultados.find((x) => x.numero === r.numero)?.puntosObtenidos,
+    );
+    if (puntosCambiaron) delete e.calificacionManual;
     Object.assign(e, cambios);
     if (aprobar) e.estado = "aprobada";
   });
@@ -188,6 +193,31 @@ export async function etiquetarActividad(actividadId: string, etiqueta: string) 
   const e = etiqueta.trim().replace(/\s+/g, " ").slice(0, 30);
   await enActividadPropia(actividadId, (db) => {
     actividadDe(db, actividadId)!.etiqueta = e || undefined;
+  });
+  revalidatePath("/profesor", "layout");
+}
+
+/**
+ * Cambia a mano la calificación de un alumno desde el cuaderno (en la escala de la actividad).
+ * `null` quita el ajuste y vuelve a la calificada con la rúbrica.
+ */
+export async function cambiarCalificacion(actividadId: string, matricula: string, valor: number | null) {
+  await enActividadPropia(actividadId, (db) => {
+    const a = actividadDe(db, actividadId)!;
+    const escala = a.escala === 100 ? 100 : 10;
+    let e = db.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
+    if (valor === null) {
+      if (e) delete e.calificacionManual;
+      return;
+    }
+    if (!Number.isFinite(valor) || valor < 0 || valor > escala) throw new Error(`La calificación va de 0 a ${escala}`);
+    if (!e) {
+      const grupo = db.grupos.find((g) => g.id === a.grupoId);
+      if (!grupo?.alumnos.some((al) => al.matricula === matricula)) throw new Error("Alumno no encontrado");
+      e = { actividadId, matricula, estado: "sin_entregar", paginasRecibidas: 0, resultados: [], positivos: [], mejoras: [] };
+      db.entregas.push(e);
+    }
+    e.calificacionManual = Math.round(valor * 10) / 10;
   });
   revalidatePath("/profesor", "layout");
 }

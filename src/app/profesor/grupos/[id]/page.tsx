@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { FilaActividad } from "@/components/fila-actividad";
-import { IconoGrafica } from "@/components/iconos";
+import { IconoCuaderno, IconoGrafica } from "@/components/iconos";
 import { BotonLink, Encabezado, Tarjeta, colorCalificacion } from "@/components/ui";
 import { entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
 import { agruparPorEtiqueta } from "@/lib/colores";
@@ -31,6 +31,9 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           <>
             <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/analiticas`}>
               <IconoGrafica /> Analíticas de aprendizaje
+            </BotonLink>
+            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/cuaderno`}>
+              <IconoCuaderno /> Cuaderno de calificaciones
             </BotonLink>
             <BotonLink href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>+ Nueva actividad</BotonLink>
           </>

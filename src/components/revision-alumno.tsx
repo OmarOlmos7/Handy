@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { guardarRevision } from "@/app/acciones";
 import type { Actividad, Alumno, Entrega, ResultadoReactivo } from "@/lib/tipos";
-import { calificacion, escalaDe, formatoCal, puntosTotales } from "@/lib/estadisticas";
+import { calificacionCalculada, escalaDe, formatoCal, puntosTotales } from "@/lib/estadisticas";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { Boton, Insignia, colorCalificacion } from "./ui";
 import { sinLatex } from "./texto-mat";
@@ -47,7 +47,8 @@ export function RevisionAlumno({
     }),
     [entregaInicial, resultados, positivos, mejoras],
   );
-  const cal = calificacion(actividad, entrega);
+  // La sugerida sale de los puntos; un ajuste del cuaderno se muestra aparte.
+  const cal = calificacionCalculada(actividad, entrega);
   const cambiados = resultados.filter((r, i) => r.puntosObtenidos !== entregaInicial.resultados[i].puntosObtenidos || r.comentario !== entregaInicial.resultados[i].comentario).length;
 
   function actualizar(numero: number, cambio: Partial<ResultadoReactivo>) {
@@ -101,6 +102,11 @@ export function RevisionAlumno({
                 {formatoCal(cal, escalaDe(actividad))}
                 <span className="text-base font-normal text-slate-400"> / {escalaDe(actividad)}</span>
               </p>
+              {entregaInicial.calificacionManual !== undefined && (
+                <p className="mt-1 text-xs font-medium text-aviso">
+                  En el cuaderno quedó {formatoCal(entregaInicial.calificacionManual, escalaDe(actividad))}. Si cambias puntos y guardas, se usa la sugerida.
+                </p>
+              )}
               <p className="text-xs text-slate-500">
                 {resultados.reduce((s, r) => s + r.puntosObtenidos, 0)} de {puntosTotales(actividad)} puntos
                 {cambiados > 0 && ` · ${cambiados} reactivo${cambiados > 1 ? "s" : ""} ajustado${cambiados > 1 ? "s" : ""} por ti`}

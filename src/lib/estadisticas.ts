@@ -20,12 +20,23 @@ export function escalaDe(actividad: Pick<Actividad, "escala">): Escala {
   return actividad.escala === 100 ? 100 : 10;
 }
 
-/** Calificación en la escala de la actividad: sobre 100 en enteros, sobre 10 con un decimal. */
-export function calificacion(actividad: Actividad, entrega: Entrega) {
+/** true si la entrega ya tiene calificación: evaluada con la rúbrica o ajustada a mano en el cuaderno. */
+export function calificada(entrega: Entrega) {
+  return entrega.resultados.length > 0 || entrega.calificacionManual !== undefined;
+}
+
+/** Calificación calculada con los puntos de los reactivos, sin tomar en cuenta el ajuste manual. */
+export function calificacionCalculada(actividad: Actividad, entrega: Entrega) {
   const total = puntosTotales(actividad);
   if (total === 0 || entrega.resultados.length === 0) return 0;
   const proporcion = puntosObtenidos(entrega) / total;
   return escalaDe(actividad) === 100 ? Math.round(proporcion * 100) : Math.round(proporcion * 100) / 10;
+}
+
+/** Calificación en la escala de la actividad: sobre 100 en enteros, sobre 10 con un decimal. */
+export function calificacion(actividad: Actividad, entrega: Entrega) {
+  if (entrega.calificacionManual !== undefined) return entrega.calificacionManual;
+  return calificacionCalculada(actividad, entrega);
 }
 
 /** Texto de una calificación en su escala: "85" o "8.5". */
@@ -112,7 +123,8 @@ export function reporteGrupo(
 ): ReporteGrupo {
   const escala = escalaDe(actividad);
   const evaluadas = entregas.filter((e) => e.resultados.length > 0);
-  const filas: FilaAlumno[] = evaluadas
+  const filas: FilaAlumno[] = entregas
+    .filter(calificada)
     .map((entrega) => {
       const alumno = alumnos.find((a) => a.matricula === entrega.matricula)!;
       const cal = calificacion(actividad, entrega);
@@ -155,8 +167,8 @@ export function reporteGrupo(
 
   return {
     escala,
-    entregadas: evaluadas.length,
-    pendientes: entregas.length - evaluadas.length,
+    entregadas: filas.length,
+    pendientes: entregas.length - filas.length,
     promedio: r1(promedio(cals)),
     mediana: r1(mediana(cals)),
     maxima: cals.length ? Math.max(...cals) : 0,

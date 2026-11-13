@@ -157,6 +157,11 @@ export interface Entrega {
   evaluadaEn?: string;
   /** Último error de evaluación, si lo hubo. */
   error?: string;
+  /**
+   * Calificación que el profesor escribió en el cuaderno, en la escala de la actividad.
+   * Si existe, reemplaza a la calculada con los puntos de los reactivos.
+   */
+  calificacionManual?: number;
   /** Hora en que empezó la evaluación automática (mientras está en curso). */
   evaluandoDesde?: string;
 }
