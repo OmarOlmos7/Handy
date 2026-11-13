@@ -6,7 +6,9 @@ import { useState, useTransition } from "react";
 import { cambiarCalificacion } from "@/app/acciones";
 import { ORDENES, ordenarFilas, type Celda, type Columna, type Cuaderno, type Orden } from "@/lib/cuaderno";
 import { formatoCal, nivelDe, type Nivel } from "@/lib/estadisticas";
+import type { InfoCuaderno } from "@/lib/exportar-cuaderno";
 import type { Escala } from "@/lib/tipos";
+import { DescargarCuaderno } from "./descargar-cuaderno";
 
 const SEMAFORO: Record<Nivel, string> = {
   alto: "bg-acierto-suave text-acierto",
@@ -135,7 +137,7 @@ function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; co
   );
 }
 
-export function TablaCuaderno({ cuaderno }: { cuaderno: Cuaderno }) {
+export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: InfoCuaderno }) {
   const [orden, setOrden] = useState<Orden>("apellido");
   const filas = ordenarFilas(cuaderno.filas, orden);
   const columnas = cuaderno.grupos.flatMap((g) => g.columnas);
@@ -143,7 +145,7 @@ export function TablaCuaderno({ cuaderno }: { cuaderno: Cuaderno }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-3 rounded bg-acierto-suave ring-1 ring-acierto/40" /> Alto
@@ -161,20 +163,23 @@ export function TablaCuaderno({ cuaderno }: { cuaderno: Cuaderno }) {
             <span className="h-1.5 w-1.5 rounded-full bg-tinta-600" /> cambiada a mano
           </span>
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
-          Ordenar por
-          <select
-            value={orden}
-            onChange={(e) => setOrden(e.target.value as Orden)}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 focus:border-tinta-500 focus:outline-none"
-          >
-            {ORDENES.map((o) => (
-              <option key={o.clave} value={o.clave}>
-                {o.texto}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="flex flex-col items-end gap-2">
+          <DescargarCuaderno cuaderno={cuaderno} orden={orden} info={info} />
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            Ordenar por
+            <select
+              value={orden}
+              onChange={(e) => setOrden(e.target.value as Orden)}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 focus:border-tinta-500 focus:outline-none"
+            >
+              {ORDENES.map((o) => (
+                <option key={o.clave} value={o.clave}>
+                  {o.texto}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
