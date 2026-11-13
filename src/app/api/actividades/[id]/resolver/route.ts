@@ -23,7 +23,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
 
   try {
     const imagenes = actividad.origen === "escaneada" && actividad.archivos?.length ? imagenesParaIA(actividad.archivos) : undefined;
-    const propuesta = await resolverActividad({ ...actividad, instrucciones: criterios }, { condiciones: String(condiciones).slice(0, 4000), imagenes });
+    const propuesta = await resolverActividad({ ...actividad, instrucciones: criterios }, { condiciones: String(condiciones).slice(0, 4000), imagenes }, { profesorId: profesor.id, actividadId: actividad.id });
     modificar((d) => {
       const a = actividadDe(d, id)!;
       a.instrucciones = criterios;

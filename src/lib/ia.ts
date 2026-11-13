@@ -5,9 +5,11 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
+import { modificar } from "./almacen";
+import { consumoDeRespuesta } from "./admin";
 import { esCerrado, puntosReactivoCerrado } from "./calificar";
 import { svgSeguro } from "./svg";
-import type { Actividad, CriterioEvaluacion, Escala, Reactivo, ResultadoReactivo } from "./tipos";
+import type { Actividad, CriterioEvaluacion, Escala, Reactivo, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
 const MODELO = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
 
@@ -45,7 +47,27 @@ function bloquesImagen(imagenes: ImagenParaIA[], etiqueta: string): Anthropic.Be
   ]);
 }
 
+/** A quién se carga el consumo de tokens de una llamada (solo IDs, nunca datos del alumno). */
+export interface UsoIA {
+  profesorId?: string;
+  actividadId?: string;
+}
+
+/** Anota los tokens de la llamada para el panel de administración; si falla, no detiene la llamada. */
+function anotarConsumo(tipo: TipoConsumoIA, uso: UsoIA, respuesta: { model: string; usage: Anthropic.Beta.BetaUsage }, ok: boolean) {
+  try {
+    const consumo = consumoDeRespuesta(tipo, uso, respuesta, ok);
+    modificar((db) => {
+      (db.consumoIA ??= []).push(consumo);
+    });
+  } catch (e) {
+    console.error("No se pudo anotar el consumo de la IA", e);
+  }
+}
+
 async function pedir<T>(params: {
+  tipo: TipoConsumoIA;
+  uso: UsoIA;
   system: string;
   contenido: Anthropic.Beta.BetaContentBlockParam[];
   esquema: z.ZodType<T>;
@@ -68,6 +90,7 @@ async function pedir<T>(params: {
     if (e instanceof Anthropic.APIError) throw new ErrorIA(`Error de la API de Claude (${e.status ?? "red"}): ${e.message}`);
     throw e;
   }
+  anotarConsumo(params.tipo, params.uso, respuesta, Boolean(respuesta.parsed_output) && respuesta.stop_reason !== "refusal" && respuesta.stop_reason !== "max_tokens");
   if (respuesta.stop_reason === "refusal") throw new ErrorIA("La IA no pudo procesar estas imágenes.");
   if (respuesta.stop_reason === "max_tokens") throw new ErrorIA("La respuesta de la IA quedó incompleta.");
   if (!respuesta.parsed_output) throw new ErrorIA("La IA devolvió un formato inesperado.");
@@ -128,8 +151,11 @@ export interface PropuestaRubrica {
 export async function proponerRubrica(
   imagenes: ImagenParaIA[],
   datos: { titulo: string; instrucciones?: string },
+  uso: UsoIA,
 ): Promise<PropuestaRubrica> {
   const salida = await pedir({
+    tipo: "rubrica",
+    uso,
     system: SISTEMA_RUBRICA,
     esquema: EsquemaRubrica,
     contenido: [
@@ -226,8 +252,10 @@ export interface ActividadGenerada {
   reactivos: Reactivo[];
 }
 
-export async function generarActividad(datos: { titulo: string; materia: string; grupo: string; prompt: string; paginas?: number; escala?: Escala }): Promise<ActividadGenerada> {
+export async function generarActividad(datos: { titulo: string; materia: string; grupo: string; prompt: string; paginas?: number; escala?: Escala }, uso: UsoIA): Promise<ActividadGenerada> {
   const salida = await pedir({
+    tipo: "generar",
+    uso,
     system: SISTEMA_ACTIVIDAD,
     esquema: EsquemaActividad,
     contenido: [
@@ -289,7 +317,7 @@ Ahora recibes una actividad que ya existe y una petición del profesor para mejo
 - ilustracion: escribe "conservar" para dejar el dibujo actual del reactivo, cadena vacía para quitarlo, o un SVG nuevo si el profesor pide otro dibujo o un reactivo nuevo lo necesita.`;
 
 /** Edita la hoja (instrucciones, criterios y reactivos) siguiendo la petición del profesor. */
-export async function editarActividad(act: Actividad, peticion: string): Promise<ActividadGenerada> {
+export async function editarActividad(act: Actividad, peticion: string, uso: UsoIA): Promise<ActividadGenerada> {
   const actual = {
     titulo: act.titulo,
     instrucciones: act.instruccionesAlumno ?? [],
@@ -310,6 +338,8 @@ export async function editarActividad(act: Actividad, peticion: string): Promise
     })),
   };
   const salida = await pedir({
+    tipo: "editar",
+    uso,
     system: SISTEMA_EDITAR,
     esquema: EsquemaActividad,
     contenido: [
@@ -341,6 +371,7 @@ Además:
 export async function resolverActividad(
   act: Actividad,
   datos: { condiciones: string; imagenes?: ImagenParaIA[] },
+  uso: UsoIA,
 ): Promise<PropuestaRubrica> {
   const comoTexto = act.reactivos.map((r) => ({
     numero: r.numero,
@@ -353,6 +384,8 @@ export async function resolverActividad(
     tema: r.tema,
   }));
   const salida = await pedir({
+    tipo: "resolver",
+    uso,
     system: SISTEMA_RESOLVER,
     esquema: EsquemaRubrica,
     contenido: [
@@ -448,8 +481,10 @@ export interface EvaluacionAlumno {
 
 const cuartos = (n: number) => Math.round(n * 4) / 4;
 
-export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[]): Promise<EvaluacionAlumno> {
+export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], uso: UsoIA): Promise<EvaluacionAlumno> {
   const salida = await pedir({
+    tipo: "evaluacion",
+    uso,
     system: `${SISTEMA_EVALUACION}\n\nActividad: ${act.titulo}\nIndicaciones del profesor: ${act.instrucciones?.trim() || "ninguna"}${criteriosParaIA(act)}\nRúbrica:\n${JSON.stringify(rubricaParaIA(act), null, 1)}`,
     esquema: EsquemaEvaluacion,
     contenido: [...bloquesImagen(imagenes, "Hoja del alumno"), { type: "text", text: "Evalúa esta entrega con la rúbrica." }],
