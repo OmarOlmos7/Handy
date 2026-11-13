@@ -148,7 +148,7 @@ export function Encabezado({
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{titulo}</h1>
         {subtitulo && <p className="mt-1 text-sm text-slate-600">{subtitulo}</p>}
       </div>
-      {acciones && <div className="no-imprimir flex flex-wrap gap-2">{acciones}</div>}
+      {acciones && <div className="no-imprimir flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">{acciones}</div>}
     </div>
   );
 }
