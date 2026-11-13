@@ -1,15 +1,16 @@
 // Hoja imprimible de una actividad generada con IA. Estilo de referencia del profesor:
 // letra Inter, encabezado limpio con logo, calificación y QR; instrucciones en dos columnas;
-// criterios de evaluación en etiquetas; cada problema con su puntaje, un cuadro de
-// desarrollo (cuadrícula de puntos) y un cuadro de RESPUESTA.
+// criterios de evaluación en etiquetas; cada problema con número y puntaje en un renglón,
+// el texto debajo, el dibujo a la derecha, un cuadro de desarrollo (cuadrícula de puntos) y
+// un recuadro de RESPUESTA por inciso.
 import type { CSSProperties, ReactNode } from "react";
 import type { Actividad, Reactivo } from "@/lib/tipos";
 import { TextoMat, taparFormulas } from "./texto-mat";
 import { escalaDe } from "@/lib/estadisticas";
 import { fechaLarga } from "./ui";
 
-/** Separa el planteamiento de los incisos a), b), c)… y resalta cada letra (sin mirar dentro de las fórmulas). */
-function Enunciado({ texto }: { texto: string }) {
+/** Separa el planteamiento de los incisos a), b), c)… sin mirar dentro de las fórmulas. */
+export function separarIncisos(texto: string) {
   const tapado = taparFormulas(texto);
   const inicio = tapado.search(/(?:^|\s)a\)\s/);
   const planteamiento = inicio > 0 ? texto.slice(0, inicio).trim() : inicio === 0 ? "" : texto;
@@ -18,6 +19,12 @@ function Enunciado({ texto }: { texto: string }) {
     const cortes = [...tapado.slice(inicio).matchAll(/\s(?=[b-h]\)\s)/g)].map((m) => inicio + m.index!);
     [inicio, ...cortes].forEach((desde, i, xs) => incisos.push(texto.slice(desde, xs[i + 1] ?? texto.length).trim()));
   }
+  return { planteamiento, incisos };
+}
+
+/** Planteamiento e incisos con la letra resaltada. */
+function Enunciado({ texto }: { texto: string }) {
+  const { planteamiento, incisos } = separarIncisos(texto);
   return (
     <>
       {planteamiento && (
@@ -109,11 +116,23 @@ function CuerpoReactivo({ r }: { r: Reactivo }) {
   if (r.tipo === "abierto") {
     return <Cuadro alto={Math.min(10, Math.max(4, r.lineas || 5)) * 32 + 16} estilo={renglones} />;
   }
-  // Problema de desarrollo: cuadrícula de puntos para el procedimiento y cuadro de respuesta.
+  // Problema de desarrollo: cuadrícula de puntos para el procedimiento y, al pie, un recuadro de
+  // respuesta por inciso (o uno solo si el problema no tiene incisos).
+  const letras = separarIncisos(r.enunciado).incisos.map((inc) => inc.slice(0, 2));
+  const filas = Math.ceil(Math.max(1, letras.length) / 4);
   return (
-    <Cuadro alto={Math.min(290, Math.max(210, (r.lineas || 12) * 17 + 36))} estilo={cuadricula}>
-      <div className="absolute bottom-3 right-3 h-[68px] w-[29%] rounded-lg border-[1.5px] border-slate-800 bg-white px-3 py-1.5">
-        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Respuesta</span>
+    <Cuadro alto={Math.min(290, Math.max(210, (r.lineas || 12) * 17 + 36)) + (filas - 1) * 72} estilo={cuadricula}>
+      <div
+        className={`absolute bottom-3 grid gap-2.5 ${letras.length > 1 ? "left-3 right-3" : "right-3 w-[29%]"}`}
+        style={letras.length > 1 ? { gridTemplateColumns: `repeat(${Math.min(4, letras.length)}, minmax(0, 1fr))` } : undefined}
+      >
+        {(letras.length ? letras : [""]).map((letra) => (
+          <div key={letra || "unica"} className="relative h-[64px] rounded-lg border-[1.5px] border-slate-800 bg-white">
+            <span className="absolute bottom-1.5 left-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+              Respuesta{letra && <span className="ml-1 normal-case tracking-normal text-tinta-600 text-[12px]">{letra}</span>}
+            </span>
+          </div>
+        ))}
       </div>
     </Cuadro>
   );
@@ -195,30 +214,36 @@ export function HojaActividad({
       <ol className="mt-5 space-y-6">
         {actividad.reactivos.map((r) => (
           <li key={r.numero} className={r.tipo === "desarrollo" || r.tipo === "abierto" ? "" : "sin-cortar"}>
-            <div className="flex items-start gap-3 [break-after:avoid] [break-inside:avoid]">
-              <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-tinta-600 text-[15px] font-bold text-white">
-                {r.numero}
-              </span>
+            {/* Número y puntos en un renglón; el texto debajo, alineado con el número; el dibujo
+                a la derecha ocupa la altura de todo el bloque. */}
+            <div className="flex items-stretch gap-4 [break-after:avoid] [break-inside:avoid]">
               <div className="min-w-0 flex-1">
-                <Enunciado texto={r.enunciado} />
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-tinta-600 text-[15px] font-bold text-white">
+                    {r.numero}
+                  </span>
+                  <span className="rounded-full border border-slate-300 px-3 py-0.5 text-[13px] font-bold text-slate-800">
+                    {r.puntos} {r.puntos === 1 ? "pt" : "pts"}
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <Enunciado texto={r.enunciado} />
+                </div>
               </div>
-              <div className="flex shrink-0 flex-col items-end gap-2">
-                <span className="rounded-full border border-slate-300 px-3 py-0.5 text-[13px] font-bold text-slate-800">
-                  {r.puntos} {r.puntos === 1 ? "pt" : "pts"}
-                </span>
-                {r.ilustracion && r.ubicacionIlustracion !== "abajo" && (
-                  // Dibujo de la IA ya revisado por svgSeguro; como <img> no puede ejecutar nada.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={svgUrl(r.ilustracion)} alt="" className="h-[105px] w-[140px] rounded-lg border border-slate-200 bg-white p-1" />
-                )}
-              </div>
+              {r.ilustracion && r.ubicacionIlustracion !== "abajo" && (
+                <div className="relative min-h-[120px] w-[190px] shrink-0 rounded-lg border border-slate-200 bg-white">
+                  {/* Dibujo de la IA ya revisado por svgSeguro; como <img> no puede ejecutar nada. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={svgUrl(r.ilustracion)} alt="" className="absolute inset-0 h-full w-full object-contain p-1.5" />
+                </div>
+              )}
             </div>
             {r.ilustracion && r.ubicacionIlustracion === "abajo" && (
               // Gráfica más grande debajo del enunciado, para que el alumno lea los datos.
               // eslint-disable-next-line @next/next/no-img-element
               <img src={svgUrl(r.ilustracion)} alt="" className="sin-cortar mx-auto mt-3 block h-[200px] w-[320px] rounded-lg border border-slate-200 bg-white p-1.5" />
             )}
-            <div className={r.tipo === "desarrollo" || r.tipo === "abierto" ? "" : "pl-10"}>
+            <div>
               <CuerpoReactivo r={r} />
             </div>
           </li>
