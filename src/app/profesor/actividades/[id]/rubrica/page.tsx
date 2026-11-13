@@ -1,10 +1,11 @@
+import { IconoGrafica } from "@/components/iconos";
 import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import type { Reactivo } from "@/lib/tipos";
 import { Hoja } from "@/components/hoja";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import { RubricaEditor } from "@/components/rubrica-editor";
-import { Encabezado, Tarjeta } from "@/components/ui";
+import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { PropuestaEvaluacion } from "@/components/propuesta-evaluacion";
 import { OpcionesSolucion } from "@/components/opciones-solucion";
 import { actividadDe, grupoDe } from "@/lib/almacen";
@@ -40,6 +41,16 @@ export default async function Rubrica({
           { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
         ]}
         titulo={actividad.titulo}
+        acciones={
+          <>
+            <BotonLink href={`/profesor/actividades/${id}/analiticas`} variante="secundario">
+              <IconoGrafica /> Analíticas Actividad
+            </BotonLink>
+            <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
+              Hoja imprimible con QR
+            </BotonLink>
+          </>
+        }
       />
       <ConFlujo vista={actividad.reactivos.some((r) => r.respuesta.trim()) ? 3 : 2} db={db} actividad={actividad}>
       <PestanasActividad id={id} activa="rubrica" />
