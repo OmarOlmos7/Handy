@@ -46,7 +46,7 @@ const grupo: Grupo = {
   alumnos: [
     { matricula: "A1", nombre: "Ana", correo: "", genero: "F" },
     { matricula: "A2", nombre: "Beto", correo: "", genero: "M" },
-    { matricula: "A3", nombre: "Caro", correo: "" },
+    { matricula: "A3", nombre: "Caro", correo: "", genero: null },
   ],
 };
 
@@ -109,5 +109,23 @@ describe("analiticasCurso", () => {
   it("redacta hallazgos con los números calculados", () => {
     expect(a.hallazgos[0]).toContain("2 trabajos no entregados");
     expect(a.hallazgos.some((h) => h.includes("1 alumno no tiene género"))).toBe(true);
+  });
+});
+
+describe("inferirGenero", () => {
+  it("estima por el nombre de pila", async () => {
+    const { inferirGenero, generoDe } = await import("../genero");
+    expect(inferirGenero("Sofía Hernández Ruiz")).toBe("F");
+    expect(inferirGenero("Diego Martínez López")).toBe("M");
+    expect(inferirGenero("María José Pérez")).toBe("F");
+    expect(inferirGenero("José María Pérez")).toBe("M");
+    expect(inferirGenero("Hernández Ruiz, Sofía")).toBe("F");
+    expect(inferirGenero("García López Andrés")).toBe("M");
+    expect(inferirGenero("Dana Ruiz")).toBe("F");
+    expect(inferirGenero("Luca Torres")).toBe("M");
+    expect(inferirGenero("Kai Ruiz")).toBeUndefined();
+    expect(generoDe({ matricula: "1", nombre: "Ana", correo: "" })).toEqual({ genero: "F", estimado: true });
+    expect(generoDe({ matricula: "1", nombre: "Ana", correo: "", genero: "M" })).toEqual({ genero: "M", estimado: false });
+    expect(generoDe({ matricula: "1", nombre: "Ana", correo: "", genero: null })).toEqual({ estimado: false });
   });
 });

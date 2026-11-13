@@ -6,6 +6,7 @@ import { SelectorGenero } from "@/components/selector-genero";
 import { Tarjeta, fechaLarga } from "@/components/ui";
 import { grupoDe } from "@/lib/almacen";
 import { APROBATORIA, analiticasCurso, type ResumenAlumno } from "@/lib/analiticas";
+import { generoDe } from "@/lib/genero";
 import { datosProfesor } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Analíticas de aprendizaje" };
@@ -271,14 +272,24 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
             <Seccion titulo="Temas con menor acierto" nota="Porcentaje de puntos logrados en los reactivos de cada tema.">
               <BarrasH filas={a.temasDebiles.map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
             </Seccion>
-            <Seccion titulo="Género de los alumnos" nota="Asígnalo para comparar por género. Solo se usa aquí; no se envía a la IA.">
+            <Seccion titulo="Género de los alumnos" nota="Se estima por el nombre de pila; cámbialo si hace falta. Solo se usa aquí y no se envía a la IA.">
               <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto pr-1">
-                {grupo.alumnos.map((al) => (
-                  <li key={al.matricula} className="flex items-center justify-between gap-3 py-1.5 text-sm">
-                    <span className="text-slate-800">{al.nombre}</span>
-                    <SelectorGenero grupoId={grupo.id} matricula={al.matricula} valor={al.genero} />
-                  </li>
-                ))}
+                {grupo.alumnos.map((al) => {
+                  const { genero, estimado } = generoDe(al);
+                  return (
+                    <li key={al.matricula} className="flex items-center justify-between gap-3 py-1.5 text-sm">
+                      <span className="text-slate-800">
+                        {al.nombre}
+                        {estimado && (
+                          <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500" title="Estimado por el nombre; elige otro valor para corregirlo">
+                            Estimado
+                          </span>
+                        )}
+                      </span>
+                      <SelectorGenero key={`${genero ?? ""}-${estimado}`} grupoId={grupo.id} matricula={al.matricula} valor={genero} />
+                    </li>
+                  );
+                })}
               </ul>
             </Seccion>
           </div>

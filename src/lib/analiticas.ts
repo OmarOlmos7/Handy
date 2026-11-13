@@ -2,6 +2,7 @@
 // la IA no participa. Para comparar actividades con escalas distintas, todo se
 // expresa en puntaje sobre 100. Un trabajo no entregado cuenta como 0.
 import { puntosObtenidos, puntosTotales } from "./estadisticas";
+import { generoDe } from "./genero";
 import type { Actividad, Alumno, Entrega, Genero, Grupo } from "./tipos";
 
 /** Calificación mínima aprobatoria sobre 100 (6 sobre 10). */
@@ -84,6 +85,8 @@ export interface Analiticas {
   atencion: ResumenAlumno[];
   distribucion: { rango: string; cantidad: number }[];
   temasDebiles: { nombre: string; acierto: number }[];
+  /** Alumnos cuyo género se estimó por el nombre (el profesor no lo ha confirmado). */
+  generosEstimados: number;
   hallazgos: string[];
 }
 
@@ -207,7 +210,7 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
   const claves: (Genero | "sin")[] = ["F", "M", "X", "sin"];
   const porGenero = claves
     .map((clave) => {
-      const grupoG = resumenes.filter((r) => (r.alumno.genero ?? "sin") === clave);
+      const grupoG = resumenes.filter((r) => (generoDe(r.alumno).genero ?? "sin") === clave);
       return { clave, nombre: NOMBRE_GENERO[clave], promedio: r1(promedio(grupoG.map((r) => r.promedio))), cantidad: grupoG.length };
     })
     .filter((g) => g.cantidad > 0);
@@ -264,6 +267,7 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
       cantidad: promAlumnos.filter((x) => x >= min && x < max).length,
     })),
     temasDebiles,
+    generosEstimados: resumenes.filter((r) => generoDe(r.alumno).estimado).length,
     hallazgos: [],
   };
   analiticas.hallazgos = hallazgos(analiticas);
@@ -326,6 +330,9 @@ export function hallazgos(a: Analiticas): string[] {
   const sinDato = a.porGenero.find((x) => x.clave === "sin");
   if (sinDato && sinDato.cantidad > 0) {
     h.push(`${sinDato.cantidad} ${sinDato.cantidad === 1 ? "alumno no tiene" : "alumnos no tienen"} género asignado; asígnalo abajo para comparar por género.`);
+  }
+  if (a.generosEstimados > 0) {
+    h.push(`El género de ${a.generosEstimados} ${a.generosEstimados === 1 ? "alumno" : "alumnos"} se estimó por su nombre; revísalo abajo y corrígelo si hace falta.`);
   }
 
   if (a.atencion.length > 0) {

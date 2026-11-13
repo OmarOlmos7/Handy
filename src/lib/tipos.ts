@@ -53,8 +53,11 @@ export interface Alumno {
   matricula: string;
   nombre: string;
   correo: string;
-  /** Lo asigna el profesor en Analíticas de aprendizaje; sin valor, "Sin dato". */
-  genero?: Genero;
+  /**
+   * Lo asigna el profesor en Analíticas de aprendizaje. Sin valor se estima por el nombre
+   * (lib/genero); null significa que el profesor eligió "Sin dato".
+   */
+  genero?: Genero | null;
 }
 
 export interface Grupo {
