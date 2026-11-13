@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TarjetaCurso } from "@/components/tarjeta-curso";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { estadoActividad, saldo } from "@/lib/almacen";
+import { agruparPorColor } from "@/lib/colores";
 import { datosProfesor } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Panel del profesor" };
@@ -62,18 +63,32 @@ export default async function PanelProfesor() {
       {grupos.length > 0 && (
         <>
           <h2 className="mb-3 text-lg font-semibold">Mis cursos</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {grupos.map((g) => (
-              <TarjetaCurso
-                key={g.id}
-                id={g.id}
-                materia={g.materia}
-                nombre={g.nombre}
-                ciclo={g.ciclo}
-                actividades={actividadesDeGrupo(g.id).length}
-                alumnos={new Set(g.alumnos.map((a) => a.matricula)).size}
-                porRevisar={porRevisar.filter((a) => a.grupoId === g.id).length}
-              />
+          <div className="space-y-6">
+            {agruparPorColor(grupos).map(({ color, items }, _i, todos) => (
+              <section key={color?.clave ?? "sin-color"}>
+                {/* Con un solo grupo sin color no hace falta encabezado. */}
+                {(todos.length > 1 || color) && (
+                  <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-600">
+                    <span className={`h-3 w-3 rounded-full ${color ? color.punto : "border-2 border-dashed border-slate-400"}`} />
+                    {color?.nombre ?? "Sin color"}
+                  </h3>
+                )}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {items.map((g) => (
+                    <TarjetaCurso
+                      key={g.id}
+                      id={g.id}
+                      materia={g.materia}
+                      nombre={g.nombre}
+                      ciclo={g.ciclo}
+                      color={g.color}
+                      actividades={actividadesDeGrupo(g.id).length}
+                      alumnos={new Set(g.alumnos.map((a) => a.matricula)).size}
+                      porRevisar={porRevisar.filter((a) => a.grupoId === g.id).length}
+                    />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         </>

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
-import { borrarGrupo, renombrarGrupo } from "@/app/acciones";
+import { borrarGrupo, colorGrupo, renombrarGrupo } from "@/app/acciones";
+import { colorDe } from "@/lib/colores";
 import { BotonIcono, IconoBasura, IconoLapiz } from "./iconos";
+import { SelectorColor } from "./selector-color";
 import { Boton } from "./ui";
 
 const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
@@ -18,6 +20,7 @@ export function TarjetaCurso({
   actividades,
   alumnos,
   porRevisar,
+  color,
 }: {
   id: string;
   materia: string;
@@ -26,6 +29,7 @@ export function TarjetaCurso({
   actividades: number;
   alumnos: number;
   porRevisar: number;
+  color?: string;
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
@@ -43,6 +47,17 @@ export function TarjetaCurso({
         router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : "No se pudo guardar");
+      }
+    });
+  }
+
+  function pintar(clave: string) {
+    iniciar(async () => {
+      try {
+        await colorGrupo(id, clave);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No se pudo cambiar el color");
       }
     });
   }
@@ -65,10 +80,11 @@ export function TarjetaCurso({
 
   return (
     <div
-      className={`relative flex min-h-[180px] flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 transition ${
+      className={`relative flex min-h-[180px] flex-col overflow-visible rounded-2xl bg-white p-5 pt-6 shadow-sm ring-1 ring-slate-200 transition ${
         editando ? "" : "hover:-translate-y-0.5 hover:shadow-md hover:ring-tinta-300"
       } ${pendiente ? "opacity-60" : ""}`}
     >
+      {colorDe(color) && <span className={`absolute inset-x-0 top-0 h-2 rounded-t-2xl ${colorDe(color)!.franja}`} aria-hidden />}
       {editando ? (
         <form onSubmit={guardar} className="space-y-2">
           <label className="block text-xs font-medium text-slate-500">
@@ -100,18 +116,18 @@ export function TarjetaCurso({
       )}
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
       <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-        <dl className="flex gap-5 text-sm">
+        <dl className="flex gap-4 text-sm">
           <div>
-            <dt className="text-xs text-slate-500">Actividades</dt>
+            <dt className="whitespace-nowrap text-xs text-slate-500">Actividades</dt>
             <dd className="text-2xl font-semibold text-slate-900">{actividades}</dd>
           </div>
           <div>
-            <dt className="text-xs text-slate-500">Alumnos</dt>
+            <dt className="whitespace-nowrap text-xs text-slate-500">Alumnos</dt>
             <dd className="text-2xl font-semibold text-slate-900">{alumnos}</dd>
           </div>
           {porRevisar > 0 && (
             <div>
-              <dt className="text-xs text-slate-500">Por revisar</dt>
+              <dt className="whitespace-nowrap text-xs text-slate-500">Por revisar</dt>
               <dd className="text-2xl font-semibold text-aviso">{porRevisar}</dd>
             </div>
           )}
@@ -121,6 +137,7 @@ export function TarjetaCurso({
             <BotonIcono etiqueta="Editar nombre del curso" onClick={() => setEditando(true)} disabled={pendiente}>
               <IconoLapiz />
             </BotonIcono>
+            <SelectorColor valor={color} etiqueta="Cambiar color del curso" onElegir={pintar} disabled={pendiente} />
             <BotonIcono etiqueta="Borrar curso" peligro onClick={borrar} disabled={pendiente}>
               <IconoBasura />
             </BotonIcono>

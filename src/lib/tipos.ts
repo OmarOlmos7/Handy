@@ -61,6 +61,8 @@ export interface Grupo {
   nombre: string;
   materia: string;
   ciclo: string;
+  /** Color de la tarjeta en el panel (clave de la paleta en lib/colores). */
+  color?: string;
   alumnos: Alumno[];
 }
 
@@ -87,6 +89,10 @@ export interface Actividad {
   id: string;
   /** Escala en la que se muestran las calificaciones; sin valor, sobre 10 (actividades anteriores). */
   escala?: Escala;
+  /** Color del renglón en la vista del curso (clave de la paleta en lib/colores). */
+  color?: string;
+  /** Etiqueta para agrupar: Tarea, Actividad, Quiz, Examen, Ensayo u otra que escriba el profesor. */
+  etiqueta?: string;
   /** Cómo se creó: generada con IA o cargada desde un escaneo del profesor. */
   origen?: OrigenActividad;
   /** Lo que pidió el profesor para generar la actividad con IA. */
