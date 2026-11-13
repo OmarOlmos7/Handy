@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { borrarActividad, colorActividad, editarDatosActividad, etiquetarActividad } from "@/app/acciones";
 import { colorDe } from "@/lib/colores";
+import { aCampoFechaHora, fechaHoraLarga } from "@/lib/resultados";
 import type { EstadoActividad } from "@/lib/tipos";
 import { BotonIcono, IconoBasura, IconoLapiz } from "./iconos";
 import { SelectorColor } from "./selector-color";
@@ -18,6 +19,7 @@ export function FilaActividad({
   id,
   titulo,
   fecha,
+  resultadosDesde,
   paginas,
   entregas,
   promedio,
@@ -31,6 +33,8 @@ export function FilaActividad({
   id: string;
   titulo: string;
   fecha: string;
+  /** Desde cuándo ven los alumnos sus resultados (ISO). */
+  resultadosDesde?: string;
   paginas: number;
   entregas: string;
   promedio?: string;
@@ -52,7 +56,7 @@ export function FilaActividad({
     setError("");
     iniciar(async () => {
       try {
-        await editarDatosActividad(id, String(datos.get("titulo")), String(datos.get("fecha")));
+        await editarDatosActividad(id, String(datos.get("titulo")), String(datos.get("fecha")), String(datos.get("resultadosDesde") ?? ""));
         setEditando(false);
         router.refresh();
       } catch (err) {
@@ -90,7 +94,7 @@ export function FilaActividad({
   if (editando) {
     return (
       <li className="px-5 py-4">
-        <form onSubmit={guardar} className="grid gap-3 sm:grid-cols-[1fr_11rem_auto] sm:items-end">
+        <form onSubmit={guardar} className="grid gap-3 sm:grid-cols-[1fr_10rem_13rem_auto] sm:items-end">
           <label className="block text-xs font-medium text-slate-500">
             Título
             <input name="titulo" defaultValue={titulo} required autoFocus className={campoChico} />
@@ -98,6 +102,10 @@ export function FilaActividad({
           <label className="block text-xs font-medium text-slate-500">
             Fecha de aplicación
             <input name="fecha" type="date" defaultValue={fecha} required className={campoChico} />
+          </label>
+          <label className="block text-xs font-medium text-slate-500">
+            Resultados visibles desde
+            <input name="resultadosDesde" type="datetime-local" defaultValue={aCampoFechaHora(resultadosDesde)} className={campoChico} />
           </label>
           <div className="flex gap-2">
             <Boton type="submit" disabled={pendiente} className="!px-3 !py-1.5">
@@ -109,7 +117,8 @@ export function FilaActividad({
           </div>
         </form>
         <p className="mt-2 text-xs text-slate-500">
-          Para cambiar los reactivos, usa{" "}
+          Deja vacío &quot;Resultados visibles desde&quot; para que los alumnos vean sus resultados en cuanto los apruebes (hora del centro
+          de México). Para cambiar los reactivos, usa{" "}
           <Link href={`/profesor/actividades/${id}/hoja`} className="font-medium text-tinta-700 hover:underline">
             la hoja imprimible
           </Link>{" "}
@@ -133,6 +142,7 @@ export function FilaActividad({
         </Link>
         <p className="text-sm text-slate-500">
           Aplicada {fechaLarga(fecha)} · {paginas} {paginas === 1 ? "página" : "páginas"}
+          {resultadosDesde && ` · Resultados desde ${fechaHoraLarga(resultadosDesde)}`}
         </p>
         {error && <p className="relative z-10 text-xs text-error">{error}</p>}
       </div>

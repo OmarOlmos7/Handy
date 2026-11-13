@@ -161,6 +161,15 @@ export function NuevaActividad({
           </span>
         </fieldset>
 
+        <label className="block max-w-sm text-sm font-medium text-slate-700">
+          Resultados visibles para alumnos desde
+          <input name="resultadosDesde" type="datetime-local" className={campo} />
+          <span className="mt-1 block text-xs font-normal text-slate-500">
+            Opcional. Antes de esta fecha y hora los alumnos no ven su calificación ni la retroalimentación, aunque ya las hayas
+            aprobado. Si lo dejas vacío, las ven en cuanto las apruebes. Hora del centro de México.
+          </span>
+        </label>
+
         {estado === "enviando" && (
           <p className="rounded-lg bg-tinta-50 p-3 text-sm text-tinta-700" role="status">
             {modo === "ia"

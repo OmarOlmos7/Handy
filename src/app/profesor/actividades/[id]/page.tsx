@@ -21,6 +21,7 @@ import { evaluandoAhora } from "@/lib/evaluacion";
 import { datosProfesor } from "@/lib/sesion";
 import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadisticas";
 import { qrDataUrl, urlBase } from "@/lib/qr";
+import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 
 export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
@@ -51,6 +52,11 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           <span className="flex flex-wrap items-center gap-2">
             Aplicada {fechaLarga(actividad.fechaAplicacion)}
             <InsigniaActividad estado={estadoActividad(db, actividad)} />
+            {actividad.resultadosDesde && (
+              <Insignia tono={resultadosDisponibles(actividad) ? "verde" : "ambar"}>
+                Resultados visibles desde {fechaHoraLarga(actividad.resultadosDesde)}
+              </Insignia>
+            )}
           </span>
         }
         acciones={

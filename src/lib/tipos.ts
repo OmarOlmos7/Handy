@@ -122,6 +122,8 @@ export interface Actividad {
   titulo: string;
   descripcion: string;
   fechaAplicacion: string; // ISO yyyy-mm-dd
+  /** Desde cuándo ven los alumnos sus resultados (ISO). Sin valor: en cuanto el profesor los aprueba. */
+  resultadosDesde?: string;
   paginas: number;
   estado: EstadoActividad;
   reactivos: Reactivo[];

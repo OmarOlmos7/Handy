@@ -1,8 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { ReporteAlumno } from "@/components/reporte-alumno";
-import { BotonLink, Encabezado } from "@/components/ui";
+import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { actividadDe, leer } from "@/lib/almacen";
+import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 import { alumnoActual } from "@/lib/sesion";
 
 export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/reporte/[id]">) {
@@ -18,6 +19,17 @@ export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/rep
   const matricula = alumno.matricula;
   const entrega = db.entregas.find((e) => e.actividadId === id && e.matricula === matricula);
   if (!entrega || entrega.estado !== "aprobada") notFound();
+  if (!resultadosDisponibles(actividad)) {
+    return (
+      <>
+        <Encabezado migas={[{ texto: "Mis actividades", href: "/alumno" }]} titulo="Reporte de retroalimentación" subtitulo={actividad.titulo} />
+        <Tarjeta className="text-sm text-slate-700">
+          Tus resultados todavía no están disponibles. Fecha de visualización de resultados:{" "}
+          <strong>{fechaHoraLarga(actividad.resultadosDesde!)}</strong> (hora del centro de México).
+        </Tarjeta>
+      </>
+    );
+  }
   return (
     <>
       <Encabezado
