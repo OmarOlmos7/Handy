@@ -104,7 +104,24 @@ describe("analiticasCurso", () => {
     expect(a.atencion[1].motivos.some((m) => m.startsWith("Bajó 80"))).toBe(true);
   });
 
+  it("cuenta aprobados, niveles y entregas para los pasteles", () => {
+    expect(a.general.aprobados + a.general.reprobados).toBe(3);
+    expect(a.general.entregadas + a.general.noEntregadas).toBe(6);
+    expect(a.niveles.alto + a.niveles.medio + a.niveles.bajo).toBe(3);
+  });
+
   it("redacta hallazgos con los números calculados", () => {
     expect(a.hallazgos[0]).toContain("2 trabajos no entregados");
+  });
+});
+
+describe("escala de color y conteos para gráficas", () => {
+  it("colorDesempeno va de rojo a verde", async () => {
+    const { colorDesempeno } = await import("../escala-color");
+    expect(colorDesempeno(0)).toBe("#b91c1c");
+    expect(colorDesempeno(100)).toBe("#15803d");
+    expect(colorDesempeno(60)).toBe("#f97316");
+    expect(colorDesempeno(-5)).toBe("#b91c1c");
+    expect(colorDesempeno(75)).toMatch(/^#[0-9a-f]{6}$/);
   });
 });
