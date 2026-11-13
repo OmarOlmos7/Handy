@@ -6,6 +6,7 @@ import { after } from "next/server";
 import { actividadDe, borrarCarpeta, modificar, slug } from "@/lib/almacen";
 import { esDelProfesor, normalizarMatricula, nuevoCodigoCurso } from "@/lib/cuentas";
 import { entregasPorEvaluar, evaluarVarias, marcarEnFila } from "@/lib/evaluacion";
+import { COLORES } from "@/lib/colores";
 import { requerirProfesor } from "@/lib/sesion";
 import type { BaseDeDatos, Reactivo, ResultadoReactivo } from "@/lib/tipos";
 
@@ -160,5 +161,33 @@ export async function borrarActividad(actividadId: string) {
     db.entregas = db.entregas.filter((e) => e.actividadId !== actividadId);
   });
   borrarCarpeta(`actividades/${actividadId}`);
+  revalidatePath("/profesor", "layout");
+}
+
+// ---------- Colores y etiquetas para organizar ----------
+
+function colorValido(color: string) {
+  return COLORES.some((c) => c.clave === color) ? color : undefined;
+}
+
+export async function colorGrupo(grupoId: string, color: string) {
+  await enGrupoPropio(grupoId, (db) => {
+    db.grupos.find((g) => g.id === grupoId)!.color = colorValido(color);
+  });
+  revalidatePath("/profesor", "layout");
+}
+
+export async function colorActividad(actividadId: string, color: string) {
+  await enActividadPropia(actividadId, (db) => {
+    actividadDe(db, actividadId)!.color = colorValido(color);
+  });
+  revalidatePath("/profesor", "layout");
+}
+
+export async function etiquetarActividad(actividadId: string, etiqueta: string) {
+  const e = etiqueta.trim().replace(/\s+/g, " ").slice(0, 30);
+  await enActividadPropia(actividadId, (db) => {
+    actividadDe(db, actividadId)!.etiqueta = e || undefined;
+  });
   revalidatePath("/profesor", "layout");
 }

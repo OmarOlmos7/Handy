@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
-import { borrarActividad, editarDatosActividad } from "@/app/acciones";
+import { borrarActividad, colorActividad, editarDatosActividad, etiquetarActividad } from "@/app/acciones";
+import { colorDe } from "@/lib/colores";
 import type { EstadoActividad } from "@/lib/tipos";
 import { BotonIcono, IconoBasura, IconoLapiz } from "./iconos";
+import { SelectorColor } from "./selector-color";
+import { SelectorEtiqueta } from "./selector-etiqueta";
 import { Boton, InsigniaActividad, fechaLarga } from "./ui";
 
 const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
@@ -21,6 +24,9 @@ export function FilaActividad({
   colorPromedio,
   estado,
   recibidas,
+  color,
+  etiqueta,
+  etiquetasCurso,
 }: {
   id: string;
   titulo: string;
@@ -31,6 +37,9 @@ export function FilaActividad({
   colorPromedio?: string;
   estado: EstadoActividad;
   recibidas: number;
+  color?: string;
+  etiqueta?: string;
+  etiquetasCurso: string[];
 }) {
   const router = useRouter();
   const [editando, setEditando] = useState(false);
@@ -45,6 +54,17 @@ export function FilaActividad({
       try {
         await editarDatosActividad(id, String(datos.get("titulo")), String(datos.get("fecha")));
         setEditando(false);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "No se pudo guardar");
+      }
+    });
+  }
+
+  function cambiar(accion: () => Promise<void>) {
+    iniciar(async () => {
+      try {
+        await accion();
         router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : "No se pudo guardar");
@@ -105,7 +125,8 @@ export function FilaActividad({
   }
 
   return (
-    <li className={`relative flex flex-col gap-2 px-5 py-4 hover:bg-slate-50 sm:flex-row sm:items-center ${pendiente ? "opacity-60" : ""}`}>
+    <li className={`relative flex flex-col gap-2 py-4 pl-6 pr-5 first:rounded-t-xl last:rounded-b-xl hover:bg-slate-50 sm:flex-row sm:items-center ${pendiente ? "opacity-60" : ""}`}>
+      {colorDe(color) && <span className={`absolute inset-y-0 left-0 w-1.5 [li:first-child>&]:rounded-tl-xl [li:last-child>&]:rounded-bl-xl ${colorDe(color)!.franja}`} aria-hidden />}
       <div className="flex-1">
         <Link href={`/profesor/actividades/${id}`} className="font-medium after:absolute after:inset-0">
           {titulo}
@@ -119,10 +140,17 @@ export function FilaActividad({
         <span className="text-slate-500">{entregas}</span>
         {promedio && <span className={`font-semibold ${colorPromedio}`}>Prom. {promedio}</span>}
         <InsigniaActividad estado={estado} />
-        <span className="flex gap-1">
+        <SelectorEtiqueta
+          valor={etiqueta}
+          sugeridas={etiquetasCurso}
+          onElegir={(e) => cambiar(() => etiquetarActividad(id, e))}
+          disabled={pendiente}
+        />
+        <span className="flex items-center gap-1">
           <BotonIcono etiqueta="Editar actividad" onClick={() => setEditando(true)} disabled={pendiente}>
             <IconoLapiz />
           </BotonIcono>
+          <SelectorColor valor={color} etiqueta="Cambiar color de la actividad" onElegir={(c) => cambiar(() => colorActividad(id, c))} disabled={pendiente} />
           <BotonIcono etiqueta="Borrar actividad" peligro onClick={borrar} disabled={pendiente}>
             <IconoBasura />
           </BotonIcono>
