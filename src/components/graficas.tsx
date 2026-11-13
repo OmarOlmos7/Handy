@@ -230,3 +230,91 @@ export function Radar({ ejes, aprobatoria }: { ejes: { nombre: string; valor: nu
     </svg>
   );
 }
+
+/** Colores para distinguir series (identidad, no desempeño), en orden fijo. */
+export const COLORES_SERIE = ["#3b6ef6", "#d946ef", "#14b8a6", "#f97316", "#8b5cf6", "#0ea5e9"];
+
+/**
+ * Radar con varias series sobre los mismos ejes (todos sobre 100). Cada serie tiene su
+ * color y aparece en la leyenda con su nombre; los valores van en el título de cada punto.
+ */
+export function RadarSeries({
+  ejes,
+  series,
+  aprobatoria,
+}: {
+  ejes: string[];
+  series: { nombre: string; color: string; valores: number[] }[];
+  aprobatoria?: number;
+}) {
+  const n = ejes.length;
+  const c = 150;
+  const r = 100;
+  const punto = (i: number, v: number) => {
+    const ang = -Math.PI / 2 + (2 * Math.PI * i) / n;
+    return [c + (Math.cos(ang) * r * v) / 100, c + (Math.sin(ang) * r * v) / 100];
+  };
+  const poligono = (v: (i: number) => number) => ejes.map((_, i) => punto(i, v(i)).map((x) => x.toFixed(1)).join(",")).join(" ");
+  return (
+    <div>
+      <svg viewBox="-70 -5 440 310" className="mx-auto h-auto w-full max-w-md" role="img" aria-label={`Radar de ${series.map((s) => s.nombre).join(", ")}`}>
+        {[25, 50, 75, 100].map((v) => (
+          <polygon key={v} points={poligono(() => v)} fill="none" stroke="#e2e8f0" strokeWidth="1" />
+        ))}
+        {[25, 50, 75, 100].map((v) => {
+          const [x, y] = punto(0, v);
+          return (
+            <text key={`t${v}`} x={x + 4} y={y} dominantBaseline="middle" className="fill-slate-400 text-[8px]">
+              {v}
+            </text>
+          );
+        })}
+        {ejes.map((_, i) => {
+          const [x, y] = punto(i, 100);
+          return <line key={i} x1={c} y1={c} x2={x} y2={y} stroke="#e2e8f0" strokeWidth="1" />;
+        })}
+        {aprobatoria !== undefined && (
+          <polygon points={poligono(() => aprobatoria)} fill="none" stroke="#94a3b8" strokeWidth="1.2" strokeDasharray="4 3" />
+        )}
+        {series.map((s) => (
+          <polygon
+            key={s.nombre}
+            points={poligono((i) => s.valores[i])}
+            fill={s.color}
+            fillOpacity="0.12"
+            stroke={s.color}
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+        ))}
+        {series.map((s) =>
+          s.valores.map((v, i) => {
+            const [x, y] = punto(i, v);
+            return (
+              <circle key={`${s.nombre}-${i}`} cx={x} cy={y} r="4" fill={s.color} stroke="#fff" strokeWidth="2">
+                <title>{`${s.nombre} · ${ejes[i]}: ${num(v)}`}</title>
+              </circle>
+            );
+          }),
+        )}
+        {ejes.map((e, i) => {
+          const [x, y] = punto(i, 118);
+          const anchor = Math.abs(x - c) < 8 ? "middle" : x > c ? "start" : "end";
+          return (
+            <text key={e} x={x} y={y} textAnchor={anchor} dominantBaseline="middle" className="fill-slate-700 text-[10px] font-medium">
+              {e}
+            </text>
+          );
+        })}
+      </svg>
+      <ul className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm">
+        {series.map((s) => (
+          <li key={s.nombre} className="flex items-center gap-1.5 text-slate-700">
+            <span className="h-3 w-3 rounded-sm" style={{ background: s.color }} />
+            {s.nombre}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}

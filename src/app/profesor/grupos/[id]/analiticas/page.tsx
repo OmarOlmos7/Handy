@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { BarrasH, Columnas, LeyendaDesempeno, Pastel, Radar } from "@/components/graficas";
+import { BarrasH, COLORES_SERIE, Columnas, LeyendaDesempeno, Pastel, Radar, RadarSeries } from "@/components/graficas";
 import { Tarjeta, fechaLarga } from "@/components/ui";
 import { grupoDe } from "@/lib/almacen";
 import { APROBATORIA, analiticasCurso, type ResumenAlumno } from "@/lib/analiticas";
@@ -160,32 +160,24 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {a.porTipo.length >= 3 ? (
-              <Seccion titulo="Desempeño por tipo de actividad" nota="Promedio sobre 100. El anillo punteado marca la calificación aprobatoria.">
-                <Radar aprobatoria={APROBATORIA} ejes={a.porTipo.map((t) => ({ nombre: t.nombre, valor: t.promedio }))} />
-              </Seccion>
-            ) : a.actividades.length >= 3 ? (
-              <Seccion
-                titulo="Desempeño por actividad"
-                nota="Promedio de cada actividad, con su tipo. El radar por tipo aparece con 3 o más tipos de actividad."
-              >
-                <Radar
-                  aprobatoria={APROBATORIA}
-                  ejes={a.actividades.map((s) => ({ nombre: `${s.etiqueta ?? "Sin tipo"}: ${s.titulo}`, valor: s.promedio }))}
-                />
-              </Seccion>
-            ) : (
-              <Seccion titulo="Promedio por tipo de actividad" nota="La línea gris marca la calificación aprobatoria.">
-                <BarrasH
-                  aprobatoria={APROBATORIA}
-                  filas={a.porTipo.map((t) => ({
+            <Seccion
+              titulo="Radar por tipo de actividad"
+              nota={`Cada color es un tipo de actividad; todo sobre 100. El anillo punteado marca ${APROBATORIA}.${a.porTipo.length > COLORES_SERIE.length ? ` Se muestran los ${COLORES_SERIE.length} tipos con más actividades.` : ""}`}
+            >
+              <RadarSeries
+                aprobatoria={APROBATORIA}
+                ejes={["Promedio", "Mediana", "Aprobación %", "Entrega %", "Prom. entregados"]}
+                series={[...a.porTipo]
+                  .sort((x, y) => y.cantidad - x.cantidad)
+                  .slice(0, COLORES_SERIE.length)
+                  .sort((x, y) => x.nombre.localeCompare(y.nombre, "es"))
+                  .map((t, i) => ({
                     nombre: t.nombre,
-                    valor: t.promedio,
-                    detalle: `${t.cantidad} ${t.cantidad === 1 ? "actividad" : "actividades"}`,
+                    color: COLORES_SERIE[i],
+                    valores: [t.promedio, t.mediana, t.aprobacion, t.tasaEntrega, t.promedioEntregadas],
                   }))}
-                />
-              </Seccion>
-            )}
+              />
+            </Seccion>
             {a.temas.length >= 3 ? (
               <Seccion
                 titulo="Acierto por tema"
@@ -202,7 +194,7 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
                 <BarrasH aprobatoria={APROBATORIA} sufijo="%" filas={a.temasDebiles.map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
               </Seccion>
             )}
-            {a.porTipo.length >= 1 && (a.porTipo.length >= 3 || a.actividades.length >= 3) && (
+            {a.porTipo.length >= 1 && (
               <Seccion titulo="Promedio por tipo de actividad" nota="La línea gris marca la calificación aprobatoria.">
                 <BarrasH
                   aprobatoria={APROBATORIA}

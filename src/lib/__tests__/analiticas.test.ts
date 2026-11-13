@@ -95,6 +95,12 @@ describe("analiticasCurso", () => {
   it("promedia por tipo de actividad", () => {
     expect(a.porTipo.map((p) => p.nombre)).toEqual(["Quiz", "Tarea"]);
     expect(a.porTipo[0].promedio).toBeCloseTo(76.7, 1);
+    // Tarea: 90, 0 (no entregó), 0 (no entregó)
+    const tarea = a.porTipo[1];
+    expect(tarea.mediana).toBe(0);
+    expect(tarea.aprobacion).toBe(33);
+    expect(tarea.tasaEntrega).toBe(33);
+    expect(tarea.promedioEntregadas).toBe(90);
   });
 
   it("separa mejores resultados de alumnos que requieren atención", () => {
