@@ -9,6 +9,7 @@ import { entregasPorEvaluar, evaluarVarias, marcarEnFila } from "@/lib/evaluacio
 import { COLORES } from "@/lib/colores";
 import { requerirProfesor } from "@/lib/sesion";
 import type { BaseDeDatos, Reactivo, ResultadoReactivo } from "@/lib/tipos";
+import { deCampoFechaHora } from "@/lib/resultados";
 
 /** Corre el cambio solo si la actividad es de un curso del profesor con sesión. */
 async function enActividadPropia<T>(actividadId: string, cambio: (db: BaseDeDatos) => T) {
@@ -147,14 +148,16 @@ export async function borrarGrupo(grupoId: string) {
   revalidatePath("/profesor", "layout");
 }
 
-export async function editarDatosActividad(actividadId: string, titulo: string, fecha: string) {
+export async function editarDatosActividad(actividadId: string, titulo: string, fecha: string, resultadosDesde = "") {
   const t = titulo.trim().slice(0, 120);
   if (!t) throw new Error("Escribe el título");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) throw new Error("Fecha no válida");
+  const desde = deCampoFechaHora(resultadosDesde);
   await enActividadPropia(actividadId, (db) => {
     const a = actividadDe(db, actividadId)!;
     a.titulo = t;
     a.fechaAplicacion = fecha;
+    a.resultadosDesde = desde;
   });
   revalidatePath("/profesor", "layout");
 }

@@ -4,6 +4,7 @@ import { ErrorIA, generarActividad } from "@/lib/ia";
 import { guardarSubidos } from "@/lib/imagenes";
 import { profesorActual } from "@/lib/sesion";
 import type { Actividad } from "@/lib/tipos";
+import { deCampoFechaHora } from "@/lib/resultados";
 
 export const maxDuration = 300;
 
@@ -21,6 +22,12 @@ export async function POST(req: Request) {
   const fecha = String(form.get("fecha") || new Date().toISOString().slice(0, 10));
   const instrucciones = String(form.get("instrucciones") ?? "").trim();
   const grupo = (await leer()).grupos.find((g) => g.id === grupoId && g.profesorId === profesor.id);
+  let resultadosDesde: string | undefined;
+  try {
+    resultadosDesde = deCampoFechaHora(String(form.get("resultadosDesde") ?? ""));
+  } catch {
+    return Response.json({ error: "La fecha y hora de los resultados no es válida" }, { status: 400 });
+  }
   if (!titulo || !grupo) return Response.json({ error: "Escribe el título y elige el grupo" }, { status: 400 });
 
   const id = slug(titulo);
@@ -36,6 +43,7 @@ export async function POST(req: Request) {
     reactivos: [],
     rubricaConfirmada: false,
     escala: form.get("escala") === "10" ? 10 : 100,
+    resultadosDesde,
   };
 
   if (modo === "ia") {

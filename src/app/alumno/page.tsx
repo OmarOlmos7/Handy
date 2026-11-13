@@ -5,6 +5,7 @@ import { InstalarApp } from "@/components/instalar-app";
 import { Boton, Encabezado, Insignia, campo, colorCalificacion, fechaLarga } from "@/components/ui";
 import { leer } from "@/lib/almacen";
 import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
+import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 import { alumnoActual } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Mis actividades" };
@@ -96,7 +97,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
     <>
       <Encabezado
         titulo="Mis actividades"
-        subtitulo={`${alumno.nombre} · ${alumno.correo}. Aquí aparecen tus resultados cuando tu profesor los aprueba.`}
+        subtitulo={`${alumno.nombre} · ${alumno.correo}. Aquí aparecen tus resultados cuando tu profesor los aprueba y llega la fecha de visualización.`}
       />
       <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <ul className="divide-y divide-slate-100">
@@ -107,7 +108,9 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
           )}
           {actividades.map(({ a, grupo, matricula }) => {
             const e = db.entregas.find((x) => x.actividadId === a.id && x.matricula === matricula);
-            const publicada = e?.estado === "aprobada";
+            const aprobada = e?.estado === "aprobada";
+            const disponible = resultadosDisponibles(a);
+            const publicada = aprobada && disponible;
             const contenido = (
               <>
                 <div className="flex-1">
@@ -115,12 +118,19 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                   <p className="text-sm text-slate-500">
                     {grupo.materia} · {fechaLarga(a.fechaAplicacion)}
                   </p>
+                  {a.resultadosDesde && (
+                    <p className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-tinta-50 px-2 py-0.5 text-xs font-medium text-tinta-700">
+                      Fecha de visualización de resultados: {fechaHoraLarga(a.resultadosDesde)}
+                    </p>
+                  )}
                 </div>
                 {publicada ? (
                   <span className={`text-xl font-semibold ${colorCalificacion(calificacion(a, e!), escalaDe(a))}`}>
                     {formatoCal(calificacion(a, e!), escalaDe(a))}
                     <span className="text-sm font-normal text-slate-400"> / {escalaDe(a)}</span>
                   </span>
+                ) : aprobada ? (
+                  <Insignia tono="ambar">Resultados listos a partir de la fecha indicada</Insignia>
                 ) : e && e.estado !== "sin_entregar" ? (
                   <Insignia tono="azul">En revisión del profesor</Insignia>
                 ) : (

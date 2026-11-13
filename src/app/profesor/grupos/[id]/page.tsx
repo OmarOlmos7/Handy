@@ -65,6 +65,7 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
                         id={a.id}
                         titulo={a.titulo}
                         fecha={a.fechaAplicacion}
+                        resultadosDesde={a.resultadosDesde}
                         paginas={a.paginas}
                         entregas={`${rep.entregadas}/${grupo.alumnos.length} entregas`}
                         promedio={rep.entregadas > 0 ? `${rep.promedio} / ${rep.escala}` : undefined}

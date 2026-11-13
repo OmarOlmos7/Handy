@@ -1,5 +1,6 @@
 import { leer, leerArchivo } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
+import { resultadosDisponibles } from "@/lib/resultados";
 import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 
 const tipos: Record<string, string> = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", pdf: "application/pdf" };
@@ -18,7 +19,12 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/archivos/[...ru
     const alumno = await alumnoActual();
     const actividad = db.actividades.find((a) => a.id === actividadId);
     const entrega = db.entregas.find((e) => e.actividadId === actividadId && e.matricula === matricula);
-    permitido = Boolean(actividad && matriculaEnCurso(alumno, actividad.grupoId) === matricula && entrega?.estado === "aprobada");
+    permitido = Boolean(
+      actividad &&
+        matriculaEnCurso(alumno, actividad.grupoId) === matricula &&
+        entrega?.estado === "aprobada" &&
+        resultadosDisponibles(actividad),
+    );
   }
   if (!permitido) return new Response("No autorizado", { status: 403 });
 
