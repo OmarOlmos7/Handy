@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { SelectorGenero } from "@/components/selector-genero";
 import { Tarjeta, fechaLarga } from "@/components/ui";
 import { grupoDe } from "@/lib/almacen";
 import { APROBATORIA, analiticasCurso, type ResumenAlumno } from "@/lib/analiticas";
@@ -183,14 +182,8 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
                 }))}
               />
             </Seccion>
-            <Seccion titulo="Promedio por género" nota="Promedio de los promedios de cada alumno.">
-              <BarrasH
-                filas={a.porGenero.map((x) => ({
-                  nombre: x.nombre,
-                  valor: x.promedio,
-                  detalle: `${x.cantidad} ${x.cantidad === 1 ? "alumno" : "alumnos"}`,
-                }))}
-              />
+            <Seccion titulo="Temas con menor acierto" nota="Porcentaje de puntos logrados en los reactivos de cada tema.">
+              <BarrasH filas={a.temasDebiles.map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
             </Seccion>
             <Seccion titulo="Evolución del promedio" nota="Promedio de cada actividad, en orden de fecha.">
               <Columnas
@@ -266,22 +259,6 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
               </p>
             )}
           </Seccion>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <Seccion titulo="Temas con menor acierto" nota="Porcentaje de puntos logrados en los reactivos de cada tema.">
-              <BarrasH filas={a.temasDebiles.map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
-            </Seccion>
-            <Seccion titulo="Género de los alumnos" nota="Asígnalo para comparar por género. Solo se usa aquí; no se envía a la IA.">
-              <ul className="max-h-80 divide-y divide-slate-100 overflow-y-auto pr-1">
-                {grupo.alumnos.map((al) => (
-                  <li key={al.matricula} className="flex items-center justify-between gap-3 py-1.5 text-sm">
-                    <span className="text-slate-800">{al.nombre}</span>
-                    <SelectorGenero grupoId={grupo.id} matricula={al.matricula} valor={al.genero} />
-                  </li>
-                ))}
-              </ul>
-            </Seccion>
-          </div>
         </div>
       )}
     </>
