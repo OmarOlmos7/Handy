@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  BotonLink,
-  Encabezado,
-  InsigniaActividad,
-  Tarjeta,
-  colorCalificacion,
-  fechaLarga,
-} from "@/components/ui";
-import { entregasDe, estadoActividad, leer, saldo } from "@/lib/almacen";
-import { reporteGrupo } from "@/lib/estadisticas";
+import { TarjetaCurso } from "@/components/tarjeta-curso";
+import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
+import { estadoActividad, saldo } from "@/lib/almacen";
+import { agruparPorColor } from "@/lib/colores";
+import { datosProfesor } from "@/lib/sesion";
 
 export const metadata: Metadata = { title: "Panel del profesor" };
 
 export default async function PanelProfesor() {
-  const db = await leer();
+  const { db, profesor } = await datosProfesor();
   const { grupos } = db;
   const saldoCreditos = saldo(db);
   const actividadesDeGrupo = (id: string) => db.actividades.filter((a) => a.grupoId === id);
@@ -23,7 +18,7 @@ export default async function PanelProfesor() {
   return (
     <>
       <Encabezado
-        titulo="Hola, Omar"
+        titulo={`Hola, ${profesor.nombre.split(" ")[0]}`}
         subtitulo={
           porRevisar.length
             ? `Tienes ${porRevisar.length} ${porRevisar.length === 1 ? "actividad lista" : "actividades listas"} para revisar.`
@@ -31,7 +26,7 @@ export default async function PanelProfesor() {
         }
         acciones={
           <>
-            <BotonLink href="/profesor/grupos/nuevo" variante="secundario">+ Nuevo grupo</BotonLink>
+            <BotonLink href="/profesor/grupos/nuevo" variante="secundario">+ Nuevo curso</BotonLink>
             <BotonLink href="/profesor/actividades/nueva">+ Nueva actividad</BotonLink>
           </>
         }
@@ -39,7 +34,7 @@ export default async function PanelProfesor() {
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <Tarjeta>
-          <p className="text-sm text-slate-500">Grupos</p>
+          <p className="text-sm text-slate-500">Cursos</p>
           <p className="mt-1 text-3xl font-semibold">{grupos.length}</p>
         </Tarjeta>
         <Tarjeta>
@@ -55,66 +50,49 @@ export default async function PanelProfesor() {
         </Tarjeta>
       </div>
 
-      <div className="space-y-8">
-        {grupos.map((g) => {
-          const acts = actividadesDeGrupo(g.id);
-          return (
-            <section key={g.id}>
-              <div className="mb-3 flex items-baseline justify-between">
-                <h2 className="text-lg font-semibold">
-                  {g.materia} · {g.nombre}
-                </h2>
-                <span className="text-sm text-slate-500">
-                  {g.alumnos.length} alumnos · ciclo {g.ciclo}
-                </span>
-              </div>
-              {acts.length === 0 ? (
-                <Tarjeta className="text-sm text-slate-500">
-                  Aún no hay actividades en este grupo.{" "}
-                  <Link href="/profesor/actividades/nueva" className="text-tinta-700 hover:underline">
-                    Crea la primera
-                  </Link>
-                  .
-                </Tarjeta>
-              ) : (
-                <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                  <ul className="divide-y divide-slate-100">
-                    {acts.map((a) => {
-                      const rep = reporteGrupo(a, entregasDe(db, a.id), g.alumnos);
-                      return (
-                        <li key={a.id}>
-                          <Link
-                            href={`/profesor/actividades/${a.id}`}
-                            className="flex flex-col gap-2 px-5 py-4 hover:bg-slate-50 sm:flex-row sm:items-center"
-                          >
-                            <div className="flex-1">
-                              <p className="font-medium">{a.titulo}</p>
-                              <p className="text-sm text-slate-500">
-                                Aplicada {fechaLarga(a.fechaAplicacion)} · {a.paginas} páginas
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm">
-                              <span className="text-slate-500">
-                                {rep.entregadas}/{g.alumnos.length} entregas
-                              </span>
-                              {rep.entregadas > 0 && (
-                                <span className={`font-semibold ${colorCalificacion(rep.promedio)}`}>
-                                  Prom. {rep.promedio}
-                                </span>
-                              )}
-                              <InsigniaActividad estado={estadoActividad(db, a)} />
-                            </div>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
+      {grupos.length === 0 && (
+        <Tarjeta className="text-sm text-slate-600">
+          Aún no tienes cursos. Crea tu primer curso. La lista de alumnos es opcional: cada alumno se registra al
+          entregar su primera actividad con su nombre, matrícula, correo y una clave de acceso para ver sus resultados.{" "}
+          <Link href="/profesor/grupos/nuevo" className="text-tinta-700 hover:underline">
+            Crear curso
+          </Link>
+        </Tarjeta>
+      )}
+
+      {grupos.length > 0 && (
+        <>
+          <h2 className="mb-3 text-lg font-semibold">Mis cursos</h2>
+          <div className="space-y-6">
+            {agruparPorColor(grupos).map(({ color, items }, _i, todos) => (
+              <section key={color?.clave ?? "sin-color"}>
+                {/* Con un solo grupo sin color no hace falta encabezado. */}
+                {(todos.length > 1 || color) && (
+                  <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-600">
+                    <span className={`h-3 w-3 rounded-full ${color ? color.punto : "border-2 border-dashed border-slate-400"}`} />
+                    {color?.nombre ?? "Sin color"}
+                  </h3>
+                )}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {items.map((g) => (
+                    <TarjetaCurso
+                      key={g.id}
+                      id={g.id}
+                      materia={g.materia}
+                      nombre={g.nombre}
+                      ciclo={g.ciclo}
+                      color={g.color}
+                      actividades={actividadesDeGrupo(g.id).length}
+                      alumnos={new Set(g.alumnos.map((a) => a.matricula)).size}
+                      porRevisar={porRevisar.filter((a) => a.grupoId === g.id).length}
+                    />
+                  ))}
                 </div>
-              )}
-            </section>
-          );
-        })}
-      </div>
+              </section>
+            ))}
+          </div>
+        </>
+      )}
     </>
   );
 }

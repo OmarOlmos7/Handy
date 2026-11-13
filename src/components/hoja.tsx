@@ -6,7 +6,7 @@
 // En producción la imagen de fondo es la foto escaneada y las marcas se dibujan
 // encima en el PDF (PyMuPDF). Aquí se simula la escritura con una fuente manuscrita.
 import type { Actividad, Alumno, Entrega, Reactivo, ResultadoReactivo } from "@/lib/tipos";
-import { calificacion } from "@/lib/estadisticas";
+import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
 
 const ANCHO = 850;
 const ALTO = 1100;
@@ -334,7 +334,7 @@ export function Hoja({
         <g>
           <circle cx={600} cy={145} r={44} fill="none" stroke={ROJO} strokeWidth={3} />
           <text x={600} y={158} textAnchor="middle" fontFamily={MANO} fontSize={40} fill={ROJO}>
-            {cal.toFixed(1)}
+            {formatoCal(cal, escalaDe(actividad))}
           </text>
         </g>
       )}

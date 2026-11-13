@@ -4,16 +4,17 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { guardarRevision } from "@/app/acciones";
 import type { Actividad, Alumno, Entrega, ResultadoReactivo } from "@/lib/tipos";
-import { calificacion, puntosTotales } from "@/lib/estadisticas";
+import { calificacionCalculada, escalaDe, formatoCal, puntosTotales } from "@/lib/estadisticas";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { Boton, Insignia, colorCalificacion } from "./ui";
+import { sinLatex } from "./texto-mat";
 
 const tonoConfianza = { alta: "verde", media: "gris", baja: "ambar" } as const;
 
 /**
  * Revisión del profesor: hoja anotada a la izquierda y la evaluación editable a la
- * derecha. Los cambios se reflejan al instante en la hoja. En esta iteración no se
- * guardan (falta la API).
+ * derecha. Los cambios se reflejan al instante en la hoja. La entrega se libera al alumno
+ * en cuanto la IA la evalúa; al guardar, el reporte del alumno se actualiza.
  */
 export function RevisionAlumno({
   actividad,
@@ -35,6 +36,8 @@ export function RevisionAlumno({
   const [pagina, setPagina] = useState(1);
   const [guardando, iniciar] = useTransition();
   const [aviso, setAviso] = useState("");
+  // Lo último que se guardó, para saber si hay cambios pendientes.
+  const [guardado, setGuardado] = useState(() => JSON.stringify([entregaInicial.resultados, entregaInicial.positivos, entregaInicial.mejoras]));
   const conFotos = Boolean(entregaInicial.imagenes?.length);
 
   const entrega: Entrega = useMemo(
@@ -46,12 +49,27 @@ export function RevisionAlumno({
     }),
     [entregaInicial, resultados, positivos, mejoras],
   );
-  const cal = calificacion(actividad, entrega);
+  // La sugerida sale de los puntos; un ajuste del cuaderno se muestra aparte.
+  const cal = calificacionCalculada(actividad, entrega);
   const cambiados = resultados.filter((r, i) => r.puntosObtenidos !== entregaInicial.resultados[i].puntosObtenidos || r.comentario !== entregaInicial.resultados[i].comentario).length;
+
+  const sinGuardar = JSON.stringify([resultados, entrega.positivos, entrega.mejoras]) !== guardado;
 
   function actualizar(numero: number, cambio: Partial<ResultadoReactivo>) {
     setAviso("");
     setResultados((rs) => rs.map((r) => (r.numero === numero ? { ...r, ...cambio } : r)));
+  }
+
+  /** Cambia un paso del desarrollo (completo → parcial → incorrecto) y recalcula los puntos del reactivo. */
+  function cambiarPaso(numero: number, indice: number) {
+    const r = actividad.reactivos.find((x) => x.numero === numero);
+    const res = resultados.find((x) => x.numero === numero);
+    if (!r?.pasos || !res?.pasos) return;
+    const actual = res.pasos[indice] ?? 0;
+    const siguiente = actual === 1 ? 0.5 : actual === 0.5 ? 0 : 1;
+    const pasos = r.pasos.map((_, i) => (i === indice ? siguiente : (res.pasos![i] ?? 0)));
+    const fraccion = r.pasos.reduce((s, p, i) => s + p.peso * pasos[i], 0);
+    actualizar(numero, { pasos, puntosObtenidos: Math.round(fraccion * r.puntos * 4) / 4 });
   }
 
   function guardar(aprobar: boolean) {
@@ -59,7 +77,8 @@ export function RevisionAlumno({
       try {
         await guardarRevision(actividad.id, alumno.matricula, { resultados, positivos: entrega.positivos, mejoras: entrega.mejoras }, aprobar);
         if (aprobar) setAprobada(true);
-        setAviso(aprobar ? "" : "Cambios guardados.");
+        setGuardado(JSON.stringify([resultados, entrega.positivos, entrega.mejoras]));
+        setAviso(aprobar ? "" : aprobada ? "Cambios guardados. El reporte del alumno ya muestra la corrección." : "Cambios guardados.");
       } catch {
         setAviso("No se pudo guardar. Intenta de nuevo.");
       }
@@ -96,29 +115,38 @@ export function RevisionAlumno({
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-slate-500">Calificación sugerida</p>
-              <p className={`text-4xl font-semibold ${colorCalificacion(cal)}`}>{cal.toFixed(1)}</p>
+              <p className={`text-4xl font-semibold ${colorCalificacion(cal, escalaDe(actividad))}`}>
+                {formatoCal(cal, escalaDe(actividad))}
+                <span className="text-base font-normal text-slate-400"> / {escalaDe(actividad)}</span>
+              </p>
+              {entregaInicial.calificacionManual !== undefined && (
+                <p className="mt-1 text-xs font-medium text-aviso">
+                  En el cuaderno quedó {formatoCal(entregaInicial.calificacionManual, escalaDe(actividad))}. Si cambias puntos y guardas, se usa la sugerida.
+                </p>
+              )}
               <p className="text-xs text-slate-500">
                 {resultados.reduce((s, r) => s + r.puntosObtenidos, 0)} de {puntosTotales(actividad)} puntos
                 {cambiados > 0 && ` · ${cambiados} reactivo${cambiados > 1 ? "s" : ""} ajustado${cambiados > 1 ? "s" : ""} por ti`}
               </p>
             </div>
-            {aprobada ? <Insignia tono="verde">Aprobada</Insignia> : <Insignia tono="azul">Sugerida por IA</Insignia>}
+            {aprobada ? <Insignia tono="verde">Liberada</Insignia> : <Insignia tono="azul">Sugerida por IA</Insignia>}
           </div>
           {aviso && <p className="mt-2 text-sm text-slate-600" role="status">{aviso}</p>}
           <div className="mt-4 flex flex-wrap gap-2">
             {aprobada ? (
-              <p className="text-sm text-acierto" role="status">
-                Aprobada. El alumno ya puede ver su reporte.
-              </p>
-            ) : (
               <>
-                <Boton onClick={() => guardar(true)} disabled={guardando}>
-                  {guardando ? "Guardando…" : "Aprobar"}
-                </Boton>
-                <Boton variante="secundario" onClick={() => guardar(false)} disabled={guardando}>
-                  Guardar cambios
+                <p className="w-full text-sm text-acierto" role="status">
+                  Liberada al alumno. Puedes corregir cada reactivo y guardar: su reporte se actualiza.
+                </p>
+                <Boton onClick={() => guardar(false)} disabled={guardando || !sinGuardar}>
+                  {guardando ? "Guardando…" : "Guardar cambios"}
                 </Boton>
               </>
+            ) : (
+              // Una entrega que aún no se libera (evaluada antes de la liberación automática) se libera al guardar.
+              <Boton onClick={() => guardar(true)} disabled={guardando}>
+                {guardando ? "Guardando…" : "Guardar y liberar"}
+              </Boton>
             )}
             {conFotos && (
               <a
@@ -127,15 +155,6 @@ export function RevisionAlumno({
                 className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50"
               >
                 PDF corregido
-              </a>
-            )}
-            {aprobada && (
-              <a
-                href={`/alumno/reporte/${actividad.id}?m=${encodeURIComponent(alumno.matricula)}`}
-                target="_blank"
-                className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50"
-              >
-                Ver como alumno
               </a>
             )}
             {siguienteHref && (
@@ -155,7 +174,7 @@ export function RevisionAlumno({
                 <li key={r.numero} className={`px-5 py-3 ${res.confianza === "baja" ? "bg-aviso-suave/40" : ""}`}>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{r.numero}.</span>
-                    <span className="flex-1 truncate text-sm text-slate-600" title={r.enunciado}>
+                    <span className="flex-1 truncate text-sm text-slate-600" title={sinLatex(r.enunciado)}>
                       {r.tema}
                     </span>
                     <Insignia tono={tonoConfianza[res.confianza]}>confianza {res.confianza}</Insignia>
@@ -171,7 +190,7 @@ export function RevisionAlumno({
                       max={r.puntos}
                       step={0.5}
                       value={res.puntosObtenidos}
-                      disabled={aprobada}
+                     
                       onChange={(e) =>
                         actualizar(r.numero, {
                           puntosObtenidos: Math.min(r.puntos, Math.max(0, Number(e.target.value))),
@@ -188,12 +207,31 @@ export function RevisionAlumno({
                     )}
                   </div>
                   {r.pasos && res.pasos && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {r.pasos.map((p, i) => (
-                        <Insignia key={p.nombre} tono={res.pasos![i] === 1 ? "verde" : res.pasos![i] === 0 ? "rojo" : "ambar"}>
-                          {p.nombre}
-                        </Insignia>
-                      ))}
+                    <div className="mt-2">
+                      <div className="flex flex-wrap gap-1">
+                        {r.pasos.map((p, i) => {
+                          const v = res.pasos![i] ?? 0;
+                          return (
+                            <button
+                              key={p.nombre}
+                              type="button"
+                              onClick={() => cambiarPaso(r.numero, i)}
+                              title={`${p.nombre}: ${v === 1 ? "completo" : v === 0 ? "incorrecto" : "parcial"}. Toca para cambiar.`}
+                              className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 transition hover:ring-2 ${
+                                v === 1
+                                  ? "bg-acierto-suave text-acierto ring-acierto/30"
+                                  : v === 0
+                                    ? "bg-error-suave text-error ring-error/30"
+                                    : "bg-aviso-suave text-aviso ring-aviso/30"
+                              }`}
+                            >
+                              <span aria-hidden>{v === 1 ? "✓" : v === 0 ? "✗" : "½"}</span>
+                              {p.nombre}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-1 text-[11px] text-slate-500">Toca un paso para marcarlo completo, parcial o incorrecto; los puntos se recalculan.</p>
                     </div>
                   )}
                   <label className="sr-only" htmlFor={`com-${r.numero}`}>
@@ -202,7 +240,7 @@ export function RevisionAlumno({
                   <textarea
                     id={`com-${r.numero}`}
                     value={res.comentario}
-                    disabled={aprobada}
+                   
                     onChange={(e) => actualizar(r.numero, { comentario: e.target.value })}
                     rows={2}
                     className="mt-2 w-full resize-y rounded-md border border-slate-200 px-2 py-1 text-sm text-slate-700"
@@ -217,11 +255,11 @@ export function RevisionAlumno({
           <label className="block text-sm font-semibold text-acierto" htmlFor="positivos">
             Puntos positivos
           </label>
-          <textarea id="positivos" rows={3} value={positivos} disabled={aprobada} onChange={(e) => setPositivos(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
+          <textarea id="positivos" rows={3} value={positivos} onChange={(e) => setPositivos(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
           <label className="mt-3 block text-sm font-semibold text-error" htmlFor="mejoras">
             Puntos de mejora
           </label>
-          <textarea id="mejoras" rows={4} value={mejoras} disabled={aprobada} onChange={(e) => setMejoras(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
+          <textarea id="mejoras" rows={4} value={mejoras} onChange={(e) => setMejoras(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
           <p className="mt-1 text-xs text-slate-500">Un punto por línea.</p>
         </div>
       </aside>

@@ -18,7 +18,7 @@ export function BarraApp({
     <header className="no-imprimir border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
         <Link href="/">
-          <Logo />
+          <Logo grande />
         </Link>
         <nav className="order-3 flex w-full gap-1 overflow-x-auto text-sm sm:order-none sm:w-auto">
           {enlaces.map((e) => {

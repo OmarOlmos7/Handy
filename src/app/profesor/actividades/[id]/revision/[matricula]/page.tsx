@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { RevisionAlumno } from "@/components/revision-alumno";
 import { Encabezado } from "@/components/ui";
-import { actividadDe, entregasDe, grupoDe, leer } from "@/lib/almacen";
+import { actividadDe, entregasDe, grupoDe } from "@/lib/almacen";
+import { datosProfesor } from "@/lib/sesion";
 
 export default async function Revision({ params }: PageProps<"/profesor/actividades/[id]/revision/[matricula]">) {
   const { id, matricula } = await params;
-  const db = await leer();
+  const { db } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
@@ -21,6 +22,7 @@ export default async function Revision({ params }: PageProps<"/profesor/activida
       <Encabezado
         migas={[
           { texto: "Panel", href: "/profesor" },
+          { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
           { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
         ]}
         titulo={alumno.nombre}

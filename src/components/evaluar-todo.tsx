@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Boton } from "./ui";
 
-/** Evalúa con IA, una por una, las entregas pendientes y muestra el avance. */
+/** Reintenta, una por una, las entregas que no se pudieron evaluar solas y muestra el avance. */
 export function EvaluarTodo({ actividadId, pendientes }: { actividadId: string; pendientes: { matricula: string; nombre: string }[] }) {
   const router = useRouter();
   const [hechas, setHechas] = useState(0);
@@ -36,7 +36,7 @@ export function EvaluarTodo({ actividadId, pendientes }: { actividadId: string; 
   return (
     <div className="flex flex-col items-end gap-1">
       <Boton onClick={evaluar} disabled={actual !== null}>
-        {actual ? `Evaluando ${hechas + 1} de ${pendientes.length + hechas}…` : `Evaluar con IA (${pendientes.length})`}
+        {actual ? `Evaluando ${hechas + 1} de ${pendientes.length + hechas}…` : `Reintentar evaluación (${pendientes.length})`}
       </Boton>
       {actual && <p className="text-xs text-slate-500">Leyendo la hoja de {actual}</p>}
       {errores.map((e) => (

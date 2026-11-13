@@ -2,10 +2,20 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PLANTILLA_CRITERIOS } from "@/lib/textos";
 import { Boton } from "./ui";
 
 /** Sube la solución del profesor y espera a que la IA proponga la rúbrica. */
-export function SubirSolucion({ actividadId, reemplazar = false }: { actividadId: string; reemplazar?: boolean }) {
+export function SubirSolucion({
+  actividadId,
+  reemplazar = false,
+  instruccionesIniciales = "",
+}: {
+  actividadId: string;
+  reemplazar?: boolean;
+  instruccionesIniciales?: string;
+}) {
+  const [instrucciones, setInstrucciones] = useState(instruccionesIniciales);
   const router = useRouter();
   const [archivos, setArchivos] = useState<File[]>([]);
   const [estado, setEstado] = useState<"listo" | "enviando" | "error">("listo");
@@ -16,6 +26,7 @@ export function SubirSolucion({ actividadId, reemplazar = false }: { actividadId
     setMensaje("");
     const datos = new FormData();
     archivos.forEach((f) => datos.append("archivos", f));
+    datos.append("instrucciones", instrucciones);
     try {
       const r = await fetch(`/api/actividades/${actividadId}/solucion`, { method: "POST", body: datos });
       const json = await r.json();
@@ -42,6 +53,20 @@ export function SubirSolucion({ actividadId, reemplazar = false }: { actividadId
           className="sr-only"
           onChange={(e) => setArchivos(Array.from(e.target.files ?? []))}
         />
+      </label>
+      <label className="block text-sm font-medium text-slate-700">
+        Criterios, porcentajes y recomendaciones para evaluar (opcional)
+        <textarea
+          rows={4}
+          value={instrucciones}
+          onChange={(e) => setInstrucciones(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-normal outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100"
+          placeholder={PLANTILLA_CRITERIOS}
+        />
+        <span className="mt-1 block text-xs font-normal text-slate-500">
+          Escribe o pega tus criterios con su % (o sube también una foto de tu rúbrica junto con la solución). La IA los usa para
+          armar la rúbrica y los sigue al evaluar.
+        </span>
       </label>
       {estado === "enviando" && (
         <p className="rounded-lg bg-tinta-50 p-3 text-sm text-tinta-700" role="status">

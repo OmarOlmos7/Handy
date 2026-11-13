@@ -14,6 +14,10 @@ const estilosBoton: Record<Variante, string> = {
 const baseBoton =
   "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tinta-500 disabled:opacity-50";
 
+/** Clase de los campos de formulario. */
+export const campo =
+  "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
+
 export function BotonLink({
   variante = "primario",
   className = "",
@@ -72,7 +76,7 @@ const textoEstadoEntrega: Record<EstadoEntrega, [string, Tono]> = {
   sin_entregar: ["Sin entregar", "rojo"],
   entregada: ["Entregada", "gris"],
   evaluada: ["Evaluada por IA", "azul"],
-  aprobada: ["Aprobada", "verde"],
+  aprobada: ["Liberada", "verde"],
 };
 
 export function InsigniaEntrega({ estado }: { estado: EstadoEntrega }) {
@@ -91,9 +95,10 @@ export function InsigniaNivel({ nivel }: { nivel: Nivel }) {
   return <Insignia tono={tono}>{texto}</Insignia>;
 }
 
-export function colorCalificacion(cal: number) {
-  if (cal >= 8.5) return "text-acierto";
-  if (cal >= 7) return "text-aviso";
+export function colorCalificacion(cal: number, escala: 10 | 100 = 10) {
+  const sobre10 = (cal * 10) / escala;
+  if (sobre10 >= 8.5) return "text-acierto";
+  if (sobre10 >= 7) return "text-aviso";
   return "text-error";
 }
 
@@ -143,22 +148,31 @@ export function Encabezado({
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{titulo}</h1>
         {subtitulo && <p className="mt-1 text-sm text-slate-600">{subtitulo}</p>}
       </div>
-      {acciones && <div className="no-imprimir flex flex-wrap gap-2">{acciones}</div>}
+      {acciones && <div className="no-imprimir flex flex-wrap gap-2 sm:shrink-0 sm:justify-end">{acciones}</div>}
     </div>
   );
 }
 
-export function Logo({ claro = false }: { claro?: boolean }) {
+export function Logo({ claro = false, grande = false }: { claro?: boolean; grande?: boolean }) {
+  const color = claro ? "text-white" : "text-slate-900";
+  if (grande) {
+    // Versión grande: logo y nombre en dos líneas que miden juntas el 60 % del alto del logo.
+    return (
+      <span className={`flex items-center gap-3 font-bold tracking-tight md:gap-5 ${color}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" width={330} height={382} className="h-24 w-auto md:h-40" />
+        <span className="flex flex-col text-[26px] leading-[29px] md:text-[43px] md:leading-[48px]">
+          <span>iEureka</span>
+          <span>Grader</span>
+        </span>
+      </span>
+    );
+  }
   return (
-    <span className={`flex items-center gap-2 font-semibold ${claro ? "text-white" : "text-slate-900"}`}>
-      <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden>
-        <rect x="3" y="2" width="22" height="28" rx="3" fill="#fff" stroke="#2554e8" strokeWidth="2" />
-        <path d="M8 11l3 3 5-6" fill="none" stroke="#15803d" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M8 20l6 6M14 20l-6 6" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx="25" cy="8" r="5" fill="#2554e8" />
-        <path d="M23 8h4M25 6v4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-      </svg>
-      Retroalimenta
+    <span className={`flex items-center gap-2 font-semibold ${color}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/logo.png" alt="" width={36} height={42} className="h-10 w-auto" />
+      iEureka-Grader
     </span>
   );
 }

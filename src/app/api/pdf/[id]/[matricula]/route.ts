@@ -1,5 +1,8 @@
 import { actividadDe, entregasDe, grupoDe, leer } from "@/lib/almacen";
 import { pdfRetroalimentacion } from "@/lib/pdf";
+import { esDelProfesor } from "@/lib/cuentas";
+import { resultadosDisponibles } from "@/lib/resultados";
+import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 
 // PDF de retroalimentación con la hoja corregida.
 export async function GET(_req: Request, ctx: RouteContext<"/api/pdf/[id]/[matricula]">) {
@@ -12,6 +15,12 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/pdf/[id]/[matri
   if (!actividad || !grupo || !entrega || !alumno || entrega.resultados.length === 0) {
     return new Response("Esta entrega aún no tiene evaluación", { status: 404 });
   }
+  const profesor = await profesorActual();
+  const alumnoSesion = await alumnoActual();
+  const permitido =
+    (profesor && esDelProfesor(db, id, profesor.id)) ||
+    (matriculaEnCurso(alumnoSesion, grupo.id) === matricula && entrega.estado === "aprobada" && resultadosDisponibles(actividad));
+  if (!permitido) return new Response("No autorizado", { status: 403 });
   const pdf = await pdfRetroalimentacion({ actividad, alumno, entrega, grupo });
   return new Response(new Uint8Array(pdf), {
     headers: {

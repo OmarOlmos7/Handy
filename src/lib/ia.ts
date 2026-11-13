@@ -5,8 +5,11 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
+import { modificar } from "./almacen";
+import { consumoDeRespuesta } from "./admin";
 import { esCerrado, puntosReactivoCerrado } from "./calificar";
-import type { Actividad, Reactivo, ResultadoReactivo } from "./tipos";
+import { svgSeguro } from "./svg";
+import type { Actividad, CriterioEvaluacion, Escala, Reactivo, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
 const MODELO = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
 
@@ -44,7 +47,27 @@ function bloquesImagen(imagenes: ImagenParaIA[], etiqueta: string): Anthropic.Be
   ]);
 }
 
+/** A quién se carga el consumo de tokens de una llamada (solo IDs, nunca datos del alumno). */
+export interface UsoIA {
+  profesorId?: string;
+  actividadId?: string;
+}
+
+/** Anota los tokens de la llamada para el panel de administración; si falla, no detiene la llamada. */
+function anotarConsumo(tipo: TipoConsumoIA, uso: UsoIA, respuesta: { model: string; usage: Anthropic.Beta.BetaUsage }, ok: boolean) {
+  try {
+    const consumo = consumoDeRespuesta(tipo, uso, respuesta, ok);
+    modificar((db) => {
+      (db.consumoIA ??= []).push(consumo);
+    });
+  } catch (e) {
+    console.error("No se pudo anotar el consumo de la IA", e);
+  }
+}
+
 async function pedir<T>(params: {
+  tipo: TipoConsumoIA;
+  uso: UsoIA;
   system: string;
   contenido: Anthropic.Beta.BetaContentBlockParam[];
   esquema: z.ZodType<T>;
@@ -67,6 +90,7 @@ async function pedir<T>(params: {
     if (e instanceof Anthropic.APIError) throw new ErrorIA(`Error de la API de Claude (${e.status ?? "red"}): ${e.message}`);
     throw e;
   }
+  anotarConsumo(params.tipo, params.uso, respuesta, Boolean(respuesta.parsed_output) && respuesta.stop_reason !== "refusal" && respuesta.stop_reason !== "max_tokens");
   if (respuesta.stop_reason === "refusal") throw new ErrorIA("La IA no pudo procesar estas imágenes.");
   if (respuesta.stop_reason === "max_tokens") throw new ErrorIA("La respuesta de la IA quedó incompleta.");
   if (!respuesta.parsed_output) throw new ErrorIA("La IA devolvió un formato inesperado.");
@@ -93,6 +117,8 @@ const EsquemaRubrica = z.object({
       solucionPasos: z.array(z.string()),
     }),
   ),
+  criterios: z.array(z.object({ nombre: z.string(), porcentaje: z.number(), descripcion: z.string() })),
+  recomendaciones: z.array(z.string()),
 });
 
 const SISTEMA_RUBRICA = `Eres un asistente de evaluación para profesores de secundaria y bachillerato en México.
@@ -109,13 +135,27 @@ Para cada reactivo, en el orden en que aparece:
 - pasos: solo para desarrollo. La estructura que siguió el profesor (por ejemplo Datos, Ecuación, Sustitución, Desarrollo, Resultado con unidades), con pesos que sumen 1. Respeta la estructura que use el profesor. Para los demás tipos, lista vacía.
 - solucionPasos: solo para desarrollo. Una línea por paso con lo que escribió el profesor. Para los demás tipos, lista vacía.
 
+Las indicaciones del profesor pueden traer criterios de evaluación con porcentajes (por ejemplo "Procedimiento 60 %, Resultado 30 %, Limpieza 10 %") y recomendaciones para calificar. Entre las imágenes también puede venir una hoja con su rúbrica o sus criterios; esa hoja no es un reactivo.
+- criterios: los criterios que indicó el profesor, con su porcentaje (0 si no dio porcentaje) y una descripción breve de qué se evalúa. Si no indicó criterios, lista vacía; no los inventes.
+- Si los criterios aplican a los desarrollos (procedimiento, resultado, unidades…), refléjalos en los pasos y sus pesos. Si indicó cuántos puntos vale cada reactivo, respétalo.
+- recomendaciones: las recomendaciones que dio el profesor para evaluar, una por elemento, redactadas de forma breve e imperativa (por ejemplo "Acepta procedimientos alternativos si son correctos"). Si no dio ninguna, lista vacía.
+
 Si algo es ilegible, escribe tu mejor lectura y menciónalo en el enunciado entre corchetes.`;
+
+export interface PropuestaRubrica {
+  reactivos: Reactivo[];
+  criterios: CriterioEvaluacion[];
+  recomendaciones: string[];
+}
 
 export async function proponerRubrica(
   imagenes: ImagenParaIA[],
   datos: { titulo: string; instrucciones?: string },
-): Promise<Reactivo[]> {
+  uso: UsoIA,
+): Promise<PropuestaRubrica> {
   const salida = await pedir({
+    tipo: "rubrica",
+    uso,
     system: SISTEMA_RUBRICA,
     esquema: EsquemaRubrica,
     contenido: [
@@ -126,7 +166,11 @@ export async function proponerRubrica(
       },
     ],
   });
-  return salida.reactivos.map((r, i) => {
+  return normalizarRubrica(salida);
+}
+
+function normalizarRubrica(salida: z.infer<typeof EsquemaRubrica>): PropuestaRubrica {
+  const reactivos = salida.reactivos.map((r, i) => {
     const sumaPesos = r.pasos.reduce((s, p) => s + p.peso, 0) || 1;
     return {
       ...r,
@@ -138,6 +182,236 @@ export async function proponerRubrica(
       solucionPasos: r.tipo === "desarrollo" && r.solucionPasos.length ? r.solucionPasos : undefined,
     };
   });
+  return {
+    reactivos,
+    criterios: salida.criterios
+      .filter((c) => c.nombre.trim())
+      .map((c) => ({ ...c, porcentaje: Math.max(0, Math.min(100, Math.round(c.porcentaje))) })),
+    recomendaciones: salida.recomendaciones.filter((r) => r.trim()),
+  };
+}
+
+/**
+ * Une la rúbrica nueva con los reactivos que ya tenía la actividad (por número), para no
+ * perder lo que se imprime en la hoja: opciones, columnas y renglones.
+ */
+export function unirConHoja(anteriores: Reactivo[], nuevos: Reactivo[]): Reactivo[] {
+  return nuevos.map((r) => {
+    const a = anteriores.find((x) => x.numero === r.numero);
+    return a ? { ...r, opciones: a.opciones, columnaA: a.columnaA, columnaB: a.columnaB, lineas: a.lineas, ilustracion: a.ilustracion } : r;
+  });
+}
+
+// ---------- Actividad nueva generada con IA ----------
+
+
+const EsquemaActividad = z.object({
+  instrucciones: z.array(z.string()),
+  criterios: z.array(z.object({ nombre: z.string(), porcentaje: z.number(), descripcion: z.string() })),
+  reactivos: z.array(
+    z.object({
+      numero: z.number().int(),
+      tipo: z.enum(TIPOS),
+      enunciado: z.string(),
+      opciones: z.array(z.string()),
+      columnaA: z.array(z.string()),
+      columnaB: z.array(z.string()),
+      puntos: z.number(),
+      tema: z.string(),
+      habilidad: z.string(),
+      lineas: z.number().int(),
+      ilustracion: z.string(),
+      ubicacionIlustracion: z.enum(["derecha", "abajo"]),
+    }),
+  ),
+});
+
+const SISTEMA_ACTIVIDAD = `Eres un diseñador de actividades para profesores de secundaria y bachillerato en México.
+El profesor describe la actividad que quiere: tipos de reactivos, ponderaciones (puntos o porcentajes), temas, nivel y cualquier otra condición. Diseña una actividad impresa para que el alumno la resuelva a mano y la entregue con una foto.
+
+Reglas:
+- Respeta exactamente lo que pide el profesor: cantidad y tipo de reactivos, temas y puntos. Si indica los puntos de cada reactivo, úsalos tal cual aunque el total no coincida con la escala. Si no indica puntos o da porcentajes, reparte los puntos para que el total sea igual a la escala de calificación indicada (100 o 10), salvo que pida otro total.
+- instrucciones: exactamente 3 instrucciones breves para el alumno (máximo 20 palabras cada una), en imperativo. Marca con **doble asterisco** las palabras clave (por ejemplo "Resuelve en orden: **datos** con unidades → **ecuaciones** → **desarrollo** → **respuesta** en recuadro."). Incluye cómo responder cada tipo de reactivo que uses, unidades y redondeo si aplica. No menciones puntos ni porcentajes (la hoja ya los muestra) ni la instrucción de escanear el QR.
+- criterios: cómo se evalúa cada problema, con porcentajes que sumen 100. Usa los que indique el profesor; si no indica y hay problemas de desarrollo, propón algo como Datos 5 %, Ecuaciones 15 %, Desarrollo 60 %, Respuesta 20 %. Si solo hay reactivos cerrados, lista vacía. descripcion: qué se evalúa, breve.
+- tipo: verdadero_falso, opcion_multiple, relacion_columnas, parentesis (relación con letras entre paréntesis), desarrollo (problemas con procedimiento) o abierto (explicación, ensayo, dibujo).
+- enunciado: el texto completo del reactivo, listo para imprimirse. No incluyas las opciones dentro del enunciado. Nunca escribas los puntos ni la ponderación dentro del enunciado: la hoja los muestra aparte. Si un problema tiene varias preguntas, escribe primero el planteamiento con sus datos y al final los incisos en orden: "a) … b) … c) …". Sé eficiente con las palabras: si los incisos comparten el verbo, escríbelo una sola vez antes de los incisos y no lo repitas (por ejemplo "Calcula: a) El momento de inercia del disco. b) El torque respecto al eje. c) La aceleración angular."). Sé conciso: planteamientos de máximo 45 palabras y hasta 3 incisos por problema, salvo que el profesor pida otra cosa. La actividad debe caber en las páginas tamaño carta indicadas (cada problema de desarrollo ocupa casi media página).
+- opciones: solo para opción múltiple, de 3 a 5 opciones con su letra, como "a) 9.8 m/s²". Para los demás tipos, lista vacía.
+- columnaA y columnaB: solo para relación de columnas y paréntesis. columnaA numerada ("1. Inercia"), columnaB con letras ("a) Resistencia de un cuerpo a cambiar su movimiento"); mezcla el orden de columnaB. El alumno escribe la letra de columnaB junto a cada elemento de columnaA. Para los demás, listas vacías.
+- ilustracion: solo si el profesor pide una ilustración, figura, gráfica, diagrama o esquema para el reactivo (puede pedirla para cualquier tipo, también opción múltiple). Si no la pide para ese reactivo, cadena vacía: no agregues dibujos por tu cuenta. Cuando la pida, dibújala en SVG: un solo elemento <svg> con xmlns="http://www.w3.org/2000/svg", viewBox="0 0 160 120" si va a la derecha o viewBox="0 0 320 200" si va abajo; solo figuras simples (line, rect, circle, ellipse, path, polygon, polyline, text); trazo #1e293b de 1.5 a 2, acentos en #2554e8; etiquetas cortas en font-family="Arial" de 10 a 12 px. En gráficas, dibuja ejes con su nombre y unidades (por ejemplo "t (s)", "x (m)"), marcas con valores legibles y una cuadrícula tenue (#e2e8f0) si ayuda a leer datos; los valores deben ser exactos y coherentes con el enunciado. Sin imágenes, scripts, enlaces ni estilos externos. No pongas la respuesta en el dibujo, salvo que el reactivo sea leer la gráfica.
+- ubicacionIlustracion: dónde va el dibujo, como lo indique el profesor: "derecha" (pequeño, a la derecha del texto) o "abajo" (más grande, debajo del enunciado, recomendado para gráficas que el alumno debe leer). Si no indica, "derecha" para esquemas y "abajo" para gráficas con datos. Sin dibujo, "derecha"
+- lineas: tamaño del espacio para responder: 0 para reactivos cerrados, de 4 a 8 para abiertos y de 10 a 16 para desarrollo (más incisos, más espacio).
+- puntos, tema (de la materia) y habilidad ("Comprensión de conceptos", "Resolución de problemas", "Interpretación de gráficas", "Comunicación escrita", etc.).
+- Expresiones matemáticas, físicas y químicas: escríbelas en LaTeX entre signos de dólar para que se impriman con tipografía de libro, tanto en el enunciado como en opciones y columnas. En línea con $…$ (por ejemplo "$\\int_0^1 x e^{x^2}\\,dx$", "$F = m a$", "$v_0 = 12\\ \\text{m/s}$", "$\\frac{3}{4}$", "$\\ce{H2SO4}$"); usa $$…$$ solo para una fórmula larga que deba ir en su propio renglón. No uses símbolos Unicode sueltos como ∫, ², √ o ½ fuera de LaTeX. Usa \\dfrac para fracciones dentro de integrales y ecuaciones principales, y la notación en español: \\operatorname{sen} para seno y \\operatorname{tg} solo si el profesor lo usa (si no, \\tan). Las letras de los incisos y opciones ("a)", "b)") van fuera de los signos de dólar. El texto normal y las palabras van fuera de LaTeX.
+- No escribas espacios en blanco, paréntesis vacíos ni líneas para responder dentro de los textos: la hoja impresa ya los agrega (círculos, casillas V/F, paréntesis y renglones).
+- No incluyas las respuestas: la solución se prepara después.
+- Usa español de México, lenguaje adecuado para adolescentes y datos realistas. No pidas datos personales al alumno.`;
+
+export interface ActividadGenerada {
+  instrucciones: string[];
+  criterios: CriterioEvaluacion[];
+  reactivos: Reactivo[];
+}
+
+export async function generarActividad(datos: { titulo: string; materia: string; grupo: string; prompt: string; paginas?: number; escala?: Escala }, uso: UsoIA): Promise<ActividadGenerada> {
+  const salida = await pedir({
+    tipo: "generar",
+    uso,
+    system: SISTEMA_ACTIVIDAD,
+    esquema: EsquemaActividad,
+    contenido: [
+      {
+        type: "text",
+        text: `Materia: ${datos.materia}\nGrupo: ${datos.grupo}\nTítulo: ${datos.titulo}\nPáginas tamaño carta: ${datos.paginas ?? 1}\nEscala de calificación: sobre ${datos.escala ?? 100}\n\nLo que pide el profesor:\n${datos.prompt}`,
+      },
+    ],
+  });
+  if (salida.reactivos.length === 0) throw new ErrorIA("La IA no generó reactivos. Describe con más detalle la actividad.");
+  return normalizarGenerada(salida);
+}
+
+function normalizarGenerada(salida: z.infer<typeof EsquemaActividad>, anteriores: Reactivo[] = []): ActividadGenerada {
+  // La hoja dibuja sus propios espacios para responder: se quitan los que la IA haya escrito.
+  const limpiar = (t: string) =>
+    t
+      .replace(/\(\s*_*\s*\)|_{3,}/g, "")
+      .replace(/[([]\s*(valor:?\s*)?\d+(\.\d+)?\s*(puntos?|pts?\.?|%)\s*[)\]]/gi, "").replace(/[ \t]{2,}/g, " ").trim();
+  const lista = (xs: string[]) => (xs.length ? xs.map(limpiar) : undefined);
+  return {
+    instrucciones: salida.instrucciones.filter((t) => t.trim() && !/\bQR\b/i.test(t)),
+    criterios: salida.criterios
+      .filter((c) => c.nombre.trim() && c.porcentaje > 0)
+      .map((c) => ({ ...c, porcentaje: Math.max(0, Math.min(100, Math.round(c.porcentaje))) })),
+    reactivos: salida.reactivos.map((r, i) => {
+      const cerrado = r.tipo !== "desarrollo" && r.tipo !== "abierto";
+      return {
+        numero: i + 1,
+        tipo: r.tipo,
+        enunciado: limpiar(r.enunciado),
+        respuesta: "",
+        puntos: r.puntos > 0 ? r.puntos : 1,
+        tema: r.tema,
+        habilidad: r.habilidad,
+        pagina: 1,
+        opciones: r.tipo === "opcion_multiple" ? lista(r.opciones) : undefined,
+        columnaA: lista(r.columnaA),
+        columnaB: lista(r.columnaB),
+        lineas: cerrado ? 0 : Math.max(3, Math.min(18, r.lineas || (r.tipo === "desarrollo" ? 12 : 6))),
+        // Al editar, "conservar" deja el dibujo que ya tenía el reactivo con ese número.
+        ilustracion:
+          r.ilustracion.trim().toLowerCase() === "conservar"
+            ? anteriores.find((x) => x.numero === i + 1)?.ilustracion
+            : svgSeguro(r.ilustracion),
+        ubicacionIlustracion: r.ubicacionIlustracion === "abajo" ? "abajo" : undefined,
+      };
+    }),
+  };
+}
+
+// ---------- Editar la hoja con un prompt ----------
+
+const SISTEMA_EDITAR = `${SISTEMA_ACTIVIDAD}
+
+Ahora recibes una actividad que ya existe y una petición del profesor para mejorarla o editarla.
+- Aplica exactamente lo que pide y conserva todo lo demás igual: mismos reactivos, textos, opciones, columnas, puntos y criterios, salvo lo que pida cambiar.
+- Devuelve la actividad completa (instrucciones, criterios y todos los reactivos), no solo los cambios.
+- ilustracion: escribe "conservar" para dejar el dibujo actual del reactivo, cadena vacía para quitarlo, o un SVG nuevo si el profesor pide otro dibujo o un reactivo nuevo lo necesita.`;
+
+/** Edita la hoja (instrucciones, criterios y reactivos) siguiendo la petición del profesor. */
+export async function editarActividad(act: Actividad, peticion: string, uso: UsoIA): Promise<ActividadGenerada> {
+  const actual = {
+    titulo: act.titulo,
+    instrucciones: act.instruccionesAlumno ?? [],
+    criterios: act.criterios ?? [],
+    reactivos: act.reactivos.map((r) => ({
+      numero: r.numero,
+      tipo: r.tipo,
+      enunciado: r.enunciado,
+      opciones: r.opciones ?? [],
+      columnaA: r.columnaA ?? [],
+      columnaB: r.columnaB ?? [],
+      puntos: r.puntos,
+      tema: r.tema,
+      habilidad: r.habilidad,
+      lineas: r.lineas ?? 0,
+      ilustracion: r.ilustracion ? "(tiene dibujo)" : "",
+      ubicacionIlustracion: r.ubicacionIlustracion ?? "derecha",
+    })),
+  };
+  const salida = await pedir({
+    tipo: "editar",
+    uso,
+    system: SISTEMA_EDITAR,
+    esquema: EsquemaActividad,
+    contenido: [
+      {
+        type: "text",
+        text: `Actividad actual:\n${JSON.stringify(actual, null, 1)}\n\nPáginas tamaño carta: ${act.paginas}\nEscala de calificación: sobre ${act.escala ?? 10}\n\nPetición del profesor:\n${peticion}`,
+      },
+    ],
+  });
+  if (salida.reactivos.length === 0) throw new ErrorIA("La IA dejó la actividad sin reactivos. Revisa tu petición.");
+  return normalizarGenerada(salida, act.reactivos);
+}
+
+// ---------- Solución generada con IA ----------
+
+const SISTEMA_RESOLVER = `Eres un profesor experto de secundaria y bachillerato en México. Resuelve la actividad que se te da como la resolvería el profesor, para usarla como rúbrica de evaluación.
+
+${SISTEMA_RUBRICA.split("\n").slice(2).join("\n")}
+
+Además:
+- Resuelve cada reactivo con cuidado y verifica tus cálculos. La respuesta debe ser correcta.
+- Para desarrollo, escribe en solucionPasos el procedimiento completo, una línea por paso, con unidades.
+- En solucionPasos escribe las expresiones en LaTeX entre $…$ (por ejemplo "$u = x^2,\\ du = 2x\\,dx$"). En respuesta usa texto simple sin LaTeX (por ejemplo "1/2 (e - 1) ≈ 0.86"), porque se copia a campos de texto y al PDF corregido.
+- Para abiertos, en respuesta pon los criterios que debe cumplir una buena respuesta y un ejemplo breve.
+- Respeta el número, el tipo y los puntos de cada reactivo tal como vienen. Si la actividad viene en imágenes, léela de ahí.
+- pagina e y: si la actividad viene como texto, usa pagina 1 e y 0.
+- Sigue las condiciones que dé el profesor para resolverla (nivel de detalle, método, cifras significativas, etc.).`;
+
+export async function resolverActividad(
+  act: Actividad,
+  datos: { condiciones: string; imagenes?: ImagenParaIA[] },
+  uso: UsoIA,
+): Promise<PropuestaRubrica> {
+  const comoTexto = act.reactivos.map((r) => ({
+    numero: r.numero,
+    tipo: r.tipo,
+    enunciado: r.enunciado,
+    opciones: r.opciones,
+    columnaA: r.columnaA,
+    columnaB: r.columnaB,
+    puntos: r.puntos,
+    tema: r.tema,
+  }));
+  const salida = await pedir({
+    tipo: "resolver",
+    uso,
+    system: SISTEMA_RESOLVER,
+    esquema: EsquemaRubrica,
+    contenido: [
+      ...(datos.imagenes?.length ? bloquesImagen(datos.imagenes, "Actividad en blanco") : []),
+      {
+        type: "text",
+        text:
+          `Actividad: ${act.titulo}\n` +
+          (comoTexto.length ? `Reactivos:\n${JSON.stringify(comoTexto, null, 1)}\n` : "") +
+          `Criterios e indicaciones del profesor para evaluar: ${act.instrucciones?.trim() || "ninguno"}${criteriosParaIA(act)}\n` +
+          `Condiciones para resolver: ${datos.condiciones.trim() || "ninguna"}\n\nResuelve la actividad y genera la rúbrica.`,
+      },
+    ],
+  });
+  const propuesta = normalizarRubrica(salida);
+  // Los criterios impresos en la hoja se conservan si la IA no propone otros.
+  if (!propuesta.criterios.length && act.criterios?.length) propuesta.criterios = act.criterios;
+  if (!comoTexto.length) return propuesta;
+  // Lo impreso (enunciado, tipo, puntos) manda: la IA solo agrega respuestas y pasos.
+  return {
+    ...propuesta,
+    reactivos: act.reactivos.map((r) => {
+      const ia = propuesta.reactivos.find((x) => x.numero === r.numero);
+      return ia ? { ...r, respuesta: ia.respuesta, pasos: ia.pasos, solucionPasos: ia.solucionPasos, habilidad: r.habilidad || ia.habilidad } : r;
+    }),
+  };
 }
 
 // ---------- Evaluación de la entrega de un alumno ----------
@@ -153,6 +427,7 @@ const EsquemaEvaluacion = z.object({
       pasos: z.array(z.number()),
       pagina: z.number().int(),
       y: z.number(),
+      x: z.number(),
     }),
   ),
   positivos: z.array(z.string()),
@@ -168,13 +443,23 @@ Para cada reactivo de la rúbrica:
 - confianza: alta si se lee con claridad; media si hay alguna duda; baja si la letra, la foto o el tachón no permiten leerlo con seguridad. Nunca adivines: si no se lee, usa confianza baja.
 - pasos: solo para desarrollo, un valor por cada paso de la rúbrica en el mismo orden: 1 si el paso está completo y correcto, 0.5 si está parcial o con un error menor, 0 si falta o es incorrecto. Acepta procedimientos distintos al del profesor si son correctos, salvo que sus indicaciones digan lo contrario. Para los demás tipos, lista vacía.
 - puntosSugeridos: puntos que asignarías según la rúbrica (entre 0 y el valor del reactivo).
-- comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta.
-- pagina e y: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo).
+- comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta. Sin LaTeX ni signos de dólar: se imprime en el PDF tal cual.
+- pagina, y, x: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo; x de 0 izquierda a 1 derecha, al final de la respuesta). Ahí se dibuja la marca de corrección.
+
+Si el profesor dio criterios de evaluación con porcentajes o recomendaciones, síguelos al asignar puntos y al redactar los comentarios.
 
 Además:
 - positivos: 2 o 3 aspectos que el alumno hizo bien, concretos.
 - mejoras: 2 o 3 aspectos a mejorar, concretos y accionables.
 Escribe en español claro y amable, adecuado para adolescentes.`;
+
+function criteriosParaIA(act: Actividad) {
+  let t = "";
+  if (act.criterios?.length)
+    t += `\nCriterios de evaluación: ${act.criterios.map((c) => `${c.nombre}${c.porcentaje ? ` (${c.porcentaje} %)` : ""}: ${c.descripcion}`).join("; ")}`;
+  if (act.recomendaciones?.length) t += `\nRecomendaciones para evaluar: ${act.recomendaciones.join("; ")}`;
+  return t;
+}
 
 function rubricaParaIA(act: Actividad) {
   return act.reactivos.map((r) => ({
@@ -196,9 +481,11 @@ export interface EvaluacionAlumno {
 
 const cuartos = (n: number) => Math.round(n * 4) / 4;
 
-export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[]): Promise<EvaluacionAlumno> {
+export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], uso: UsoIA): Promise<EvaluacionAlumno> {
   const salida = await pedir({
-    system: `${SISTEMA_EVALUACION}\n\nActividad: ${act.titulo}\nIndicaciones del profesor: ${act.instrucciones?.trim() || "ninguna"}\nRúbrica:\n${JSON.stringify(rubricaParaIA(act), null, 1)}`,
+    tipo: "evaluacion",
+    uso,
+    system: `${SISTEMA_EVALUACION}\n\nActividad: ${act.titulo}\nIndicaciones del profesor: ${act.instrucciones?.trim() || "ninguna"}${criteriosParaIA(act)}\nRúbrica:\n${JSON.stringify(rubricaParaIA(act), null, 1)}`,
     esquema: EsquemaEvaluacion,
     contenido: [...bloquesImagen(imagenes, "Hoja del alumno"), { type: "text", text: "Evalúa esta entrega con la rúbrica." }],
   });
@@ -245,6 +532,7 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[]): 
       ubicacion: {
         pagina: Math.max(1, Math.min(imagenes.length, ia.pagina || r.pagina)),
         y: Math.max(0, Math.min(1, ia.y)),
+        x: Math.max(0, Math.min(1, ia.x)),
       },
     };
   });

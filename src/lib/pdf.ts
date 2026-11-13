@@ -1,8 +1,11 @@
 // PDF de retroalimentación del alumno: portada con el reporte y sus hojas con
-// palomas verdes, taches rojos y comentarios en rojo sobre cada reactivo.
+// círculos numerados con paloma verde o tache rojo sobre cada reactivo y los
+// comentarios en orden en el margen derecho. El logo va como marca de agua.
 import "server-only";
+import fs from "node:fs";
+import path from "node:path";
 import { PDFDocument, type PDFFont, type PDFPage, StandardFonts, rgb } from "pdf-lib";
-import { calificacion, puntosObtenidos, puntosTotales } from "./estadisticas";
+import { calificacion, escalaDe, formatoCal, puntosObtenidos, puntosTotales } from "./estadisticas";
 import { leerArchivo } from "./almacen";
 import type { Actividad, Alumno, Entrega, Grupo } from "./tipos";
 
@@ -45,6 +48,18 @@ function paloma(p: PDFPage, x: number, y: number, s = 1) {
   p.drawLine({ start: { x: x + 6 * s, y }, end: { x: x + 18 * s, y: y + 16 * s }, thickness: 2.5 * s, color: VERDE });
 }
 
+/** Círculo relleno con el número de comentario en blanco. */
+function circuloNumero(p: PDFPage, f: PDFFont, n: number, x: number, y: number, color: ReturnType<typeof rgb>) {
+  p.drawCircle({ x, y, size: 7.5, color });
+  const t = String(n);
+  const tam = n > 9 ? 7.5 : 9;
+  p.drawText(t, { x: x - f.widthOfTextAtSize(t, tam) / 2, y: y - tam * 0.35, size: tam, font: f, color: rgb(1, 1, 1) });
+}
+
+export function leerLogo() {
+  return fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "public", "logo.png"));
+}
+
 function tache(p: PDFPage, x: number, y: number, s = 1) {
   const d = 8 * s;
   p.drawLine({ start: { x: x - d, y: y - d }, end: { x: x + d, y: y + d }, thickness: 2.5 * s, color: ROJO });
@@ -63,6 +78,8 @@ export async function pdfRetroalimentacion(datos: {
   const normal = await doc.embedFont(StandardFonts.Helvetica);
   const negrita = await doc.embedFont(StandardFonts.HelveticaBold);
   const cal = calificacion(actividad, entrega);
+  const escala = escalaDe(actividad);
+  const calTexto = formatoCal(cal, escala);
 
   // ---- 1. Portada con identificación y resumen ----
   let p = doc.addPage([CARTA.ancho, CARTA.alto]);
@@ -79,8 +96,8 @@ export async function pdfRetroalimentacion(datos: {
   texto("REPORTE DE RETROALIMENTACIÓN", 48, 9, negrita, GRIS);
   nuevaLinea(22);
   texto(actividad.titulo, 48, 18, negrita);
-  p.drawCircle({ x: CARTA.ancho - 90, y: y - 2, size: 34, borderColor: ROJO, borderWidth: 2 });
-  p.drawText(cal.toFixed(1), { x: CARTA.ancho - 90 - negrita.widthOfTextAtSize(cal.toFixed(1), 22) / 2, y: y - 9, size: 22, font: negrita, color: ROJO });
+  p.drawCircle({ x: CARTA.ancho - 130, y: y - 2, size: 34, borderColor: ROJO, borderWidth: 2 });
+  p.drawText(calTexto, { x: CARTA.ancho - 130 - negrita.widthOfTextAtSize(calTexto, 22) / 2, y: y - 9, size: 22, font: negrita, color: ROJO });
   nuevaLinea(30);
   texto("1. Datos del alumno", 48, 11, negrita);
   nuevaLinea(18);
@@ -89,7 +106,7 @@ export async function pdfRetroalimentacion(datos: {
     ["Matrícula", alumno.matricula],
     ["Grupo", `${grupo.materia} · ${grupo.nombre}`],
     ["Fecha de aplicación", actividad.fechaAplicacion],
-    ["Calificación", `${cal.toFixed(1)} / 10  (${puntosObtenidos(entrega)} de ${puntosTotales(actividad)} puntos)`],
+    ["Calificación", `${calTexto} / ${escala}  (${puntosObtenidos(entrega)} de ${puntosTotales(actividad)} puntos)`],
   ]) {
     texto(et, 48, 10, normal, GRIS);
     texto(val, 170, 10);
@@ -135,35 +152,85 @@ export async function pdfRetroalimentacion(datos: {
   texto("3. Tu actividad con correcciones (páginas siguientes)", 48, 11, negrita);
 
   // ---- 2. Hojas del alumno con marcas ----
+  // Cada reactivo lleva sobre la hoja un círculo relleno con su número de comentario y,
+  // a un lado, la paloma (verde) o el tache (rojo). Los comentarios van numerados en
+  // orden en el margen derecho, a la misma altura que su marca.
+  let numero = 0;
   for (const [i, ruta] of (entrega.imagenes ?? []).entries()) {
     const img = await doc.embedJpg(leerArchivo(ruta));
-    const escala = Math.min(CARTA.ancho / img.width, CARTA.alto / img.height);
+    const MARGEN = 170;
+    const escala = Math.min((CARTA.ancho - MARGEN - 12) / img.width, (CARTA.alto - 24) / img.height);
     const ancho = img.width * escala;
     const alto = img.height * escala;
-    const hoja = doc.addPage([ancho, alto]);
-    hoja.drawImage(img, { x: 0, y: 0, width: ancho, height: alto });
-    const marcas = entrega.resultados.filter((r) => (r.ubicacion?.pagina ?? 1) === i + 1);
+    const x0 = 12;
+    const y0 = (CARTA.alto - alto) / 2;
+    const xMargen = x0 + ancho + 10;
+    const anchoTexto = CARTA.ancho - xMargen - 12;
+    const hoja = doc.addPage([CARTA.ancho, CARTA.alto]);
+    hoja.drawImage(img, { x: x0, y: y0, width: ancho, height: alto });
+    hoja.drawLine({ start: { x: xMargen - 4, y: 12 }, end: { x: xMargen - 4, y: CARTA.alto - 12 }, thickness: 0.6, color: GRIS, opacity: 0.4 });
+
+    let limite = CARTA.alto - 70; // deja libre la marca de agua
+    if (i === 0) {
+      const xc = xMargen + 30;
+      hoja.drawCircle({ x: xc, y: CARTA.alto - 42, size: 26, borderColor: ROJO, borderWidth: 2 });
+      hoja.drawText(calTexto, { x: xc - negrita.widthOfTextAtSize(calTexto, 17) / 2, y: CARTA.alto - 48, size: 17, font: negrita, color: ROJO });
+    }
+
+    const marcas = entrega.resultados
+      .filter((r) => (r.ubicacion?.pagina ?? 1) === i + 1)
+      .sort((a, b) => (a.ubicacion?.y ?? 0.5) - (b.ubicacion?.y ?? 0.5) || (a.ubicacion?.x ?? 0.9) - (b.ubicacion?.x ?? 0.9));
     for (const res of marcas) {
       const r = actividad.reactivos.find((x) => x.numero === res.numero);
       if (!r) continue;
-      const yMarca = alto * (1 - (res.ubicacion?.y ?? 0.5)) - 14;
-      const xMarca = ancho - 46;
+      numero += 1;
       const completo = res.puntosObtenidos >= r.puntos;
-      if (completo) paloma(hoja, xMarca - 8, yMarca - 6);
-      else tache(hoja, xMarca, yMarca);
-      hoja.drawText(`${res.puntosObtenidos}/${r.puntos}`, { x: xMarca - 14, y: yMarca - 26, size: 10, font: negrita, color: completo ? VERDE : ROJO });
-      if (!completo && res.comentario) {
-        const lineas = envolver(normal, res.comentario, 9, 170);
-        const altoCaja = lineas.length * 11 + 8;
-        const xCaja = xMarca - 30 - 178;
-        hoja.drawRectangle({ x: xCaja, y: yMarca - altoCaja + 10, width: 178, height: altoCaja, color: rgb(1, 1, 1), opacity: 0.85, borderColor: ROJO, borderWidth: 0.8 });
-        lineas.forEach((l, k) => hoja.drawText(l, { x: xCaja + 5, y: yMarca + 1 - k * 11, size: 9, font: normal, color: ROJO }));
+      const color = completo ? VERDE : ROJO;
+
+      // Marca sobre la hoja del alumno, donde está su respuesta.
+      const xc = x0 + Math.min(ancho - 34, Math.max(10, ancho * (res.ubicacion?.x ?? 0.9) + 10)); // justo después de la respuesta
+      const yc = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, res.ubicacion?.y ?? 0.5)));
+      circuloNumero(hoja, negrita, numero, xc, yc, color);
+      if (completo) paloma(hoja, xc + 11, yc - 4, 0.6);
+      else tache(hoja, xc + 17, yc, 0.6);
+
+      // Comentario numerado en el margen, a la misma altura (baja si se enciman).
+      const yEntrada = Math.min(yc, limite - 8);
+      const lineas = envolver(normal, res.comentario || (completo ? "Correcto." : ""), 8.5, anchoTexto - 4);
+      hoja.drawLine({
+        start: { x: xc + 27, y: yc },
+        end: { x: xMargen + 2, y: yEntrada },
+        thickness: 0.6,
+        color,
+        opacity: 0.45,
+        dashArray: [2, 2],
+      });
+      circuloNumero(hoja, negrita, numero, xMargen + 10, yEntrada, color);
+      if (completo) paloma(hoja, xMargen + 22, yEntrada - 4, 0.6);
+      else tache(hoja, xMargen + 28, yEntrada, 0.6);
+      hoja.drawText(seguro(negrita, `Reactivo ${r.numero} · ${res.puntosObtenidos}/${r.puntos}`), {
+        x: xMargen + 40,
+        y: yEntrada - 3.5,
+        size: 9,
+        font: negrita,
+        color,
+      });
+      let yTexto = yEntrada - 17;
+      for (const l of lineas) {
+        hoja.drawText(l, { x: xMargen + 4, y: yTexto, size: 8.5, font: normal, color });
+        yTexto -= 10.5;
       }
+      limite = yTexto + 2;
     }
-    if (i === 0) {
-      hoja.drawCircle({ x: ancho - 60, y: alto - 50, size: 28, color: rgb(1, 1, 1), opacity: 0.85, borderColor: ROJO, borderWidth: 2 });
-      hoja.drawText(cal.toFixed(1), { x: ancho - 60 - negrita.widthOfTextAtSize(cal.toFixed(1), 18) / 2, y: alto - 56, size: 18, font: negrita, color: ROJO });
-    }
+  }
+
+  // ---- Marca de agua con el logo en la esquina superior derecha de cada página ----
+  const logo = await doc.embedPng(leerLogo());
+  const anchoLogo = 40;
+  const altoLogo = (logo.height / logo.width) * anchoLogo;
+  for (const pagina of doc.getPages()) {
+    const { width, height } = pagina.getSize();
+    pagina.drawImage(logo, { x: width - anchoLogo - 14, y: height - altoLogo - 12, width: anchoLogo, height: altoLogo, opacity: 0.35 });
   }
   return doc.save();
 }

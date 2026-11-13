@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { guardarRubrica } from "@/app/acciones";
 import type { Reactivo, TipoReactivo } from "@/lib/tipos";
 import { Boton, Insignia } from "./ui";
+import { TextoMat } from "./texto-mat";
 
 const nombreTipo: Record<string, string> = {
   verdadero_falso: "V / F",
@@ -70,7 +71,9 @@ export function RubricaEditor({
           <li key={r.numero} className="grid gap-3 px-5 py-4 md:grid-cols-[2rem_1fr_9rem]">
             <span className="font-semibold text-slate-700">{r.numero}.</span>
             <div className="min-w-0">
-              <p className="text-sm text-slate-800">{r.enunciado}</p>
+              <p className="text-sm text-slate-800">
+                <TextoMat texto={r.enunciado} />
+              </p>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                 <select
                   value={r.tipo}

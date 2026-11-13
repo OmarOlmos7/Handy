@@ -1,10 +1,10 @@
-# Retroalimenta · demo funcional
+# iEureka-Grader · demo funcional
 
 Web del profesor y del alumno para evaluar actividades impresas con apoyo de IA.
 Esta versión ya funciona de punta a punta: guarda grupos, actividades y entregas,
 recibe fotos desde el celular del alumno, califica con la API de Claude, genera el
-PDF corregido y exporta el Excel para Canvas. Todavía no tiene inicio de sesión real
-ni pagos.
+PDF corregido y exporta el Excel para Canvas. Los profesores tienen cuenta (correo y
+contraseña); los alumnos crean su cuenta con correo y clave de acceso al entregar por primera vez. Todavía no tiene pagos.
 
 ## Cómo correrlo
 
@@ -28,25 +28,31 @@ Variables opcionales en `.env.local`:
 | `APP_URL` | Dirección que va en el QR, por ejemplo `http://192.168.1.20:3000` para que los celulares de la misma red WiFi puedan entrar |
 | `DATA_DIR` | Carpeta donde se guardan la base de datos y las fotos (por omisión `./data`) |
 | `CLAUDE_MODEL` | Modelo de Claude a usar (por omisión `claude-opus-5-5`) |
+| `REGISTRO_CODIGO` | Si tiene valor, el registro de profesores pide este código de invitación |
+| `CREDITOS_INICIALES` | Créditos de regalo para cada profesor nuevo (por omisión 50) |
 
 Para probar con celulares, arranca con `npm start -- -H 0.0.0.0` y pon en `APP_URL`
 la IP de tu computadora.
 
 ## Flujo para validar con un grupo
 
-1. **Nuevo grupo**: pega la lista de alumnos (matrícula, nombre, correo), una por línea.
-2. **Nueva actividad**: título, grupo, fecha y páginas por alumno.
-3. **Solución y rúbrica**: sube fotos o PDF de tu solución hecha a mano. La IA propone
-   reactivos, respuestas, puntos y pasos. Revísala y confírmala.
-4. **Entregas**: los alumnos escanean el QR (o abren el enlace), eligen su nombre y toman
-   una foto por hoja. También puedes subir las hojas de un alumno desde la tabla.
-5. **Evaluar**: 1 crédito por página. Los reactivos cerrados los califica el código contra
-   tu clave; los de desarrollo los compara la IA paso por paso con tu solución.
+0. **Crea tu cuenta** en `/registro`. La primera cuenta se queda con los cursos de ejemplo.
+1. **Nuevo curso**: materia y grupo. La lista de alumnos es opcional.
+2. **Crear la actividad** (dos opciones):
+   - *Nueva actividad con IA*: describe tipos de reactivos, ponderaciones y temas. La IA arma la hoja
+     imprimible con logo, nombre, matrícula, calificación, instrucciones y el QR de entrega.
+   - *Cargar actividad escaneada*: sube fotos o PDF; se genera un PDF con encabezado y QR en cada página.
+3. **Solución y rúbrica** (dos opciones): *Escanea tu solución* (fotos o PDF resuelto a mano) o
+   *Generar solución con IA* con tus condiciones. Revisa la rúbrica y confírmala.
+4. **Entregas**: los alumnos escanean el QR, la primera vez crean su cuenta (nombre, matrícula, correo
+   y clave de acceso) y toman una foto por hoja.
+5. **Evaluación automática**: con la rúbrica confirmada, cada entrega se evalúa sola al llegar
+   (1 crédito por página). Los reactivos cerrados los califica el código contra tu clave.
 6. **Revisar y aprobar**: ajusta puntos y comentarios; descarga el PDF corregido.
-7. **Reporte del grupo**: estadísticas, Excel y CSV para Canvas. El alumno ve su reporte
-   en `/alumno?m=MATRICULA` cuando lo apruebas.
+7. **Reporte del grupo**: estadísticas, Excel y CSV para Canvas. El alumno ve solo sus resultados
+   en `/alumno` con su correo y clave de acceso cuando los apruebas.
 
-En **Créditos → Reiniciar demo** regresas todo a los datos de ejemplo.
+En **Créditos → Quitar datos de ejemplo** borras las actividades de ejemplo de tu cuenta.
 
 ## Privacidad
 
@@ -77,6 +83,8 @@ src/
   components/             UI; hoja-foto.tsx dibuja marcas sobre la foto
   lib/
     almacen.ts            base de datos JSON y archivos en disco
+    cuentas.ts            contraseñas, ID de curso y datos por profesor
+    sesion.ts             sesiones de profesor y alumno (cookies)
     ia.ts                 llamadas a la API de Claude (rúbrica y evaluación)
     calificar.ts          calificación exacta de reactivos cerrados
     pdf.ts                PDF de retroalimentación (pdf-lib)
@@ -86,7 +94,7 @@ src/
 
 ## Siguientes pasos
 
-1. Publicar en Hostinger (VPS con Node, o Docker con Caddy y HTTPS).
-2. Inicio de sesión real para profesores y alumnos.
+1. Publicar en Hostinger: guía paso a paso en `despliegue/PUBLICAR.md` (VPS con Docker y Caddy).
+2. Recuperar contraseña y clave de acceso por correo.
 3. Cambiar el JSON por PostgreSQL y las fotos por almacenamiento de objetos.
 4. Envío del reporte por correo y pagos de créditos.
