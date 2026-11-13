@@ -40,14 +40,11 @@ export function DescargasReporte({
 
   return (
     <>
-      <Boton onClick={bajarExcel} disabled={generando}>
+      <Boton variante="secundario" onClick={bajarExcel} disabled={generando}>
         {generando ? "Generando…" : "Descargar Excel"}
       </Boton>
       <Boton variante="secundario" onClick={bajarCsv}>
         CSV para Canvas
-      </Boton>
-      <Boton variante="secundario" onClick={() => window.print()}>
-        Imprimir / PDF
       </Boton>
     </>
   );
