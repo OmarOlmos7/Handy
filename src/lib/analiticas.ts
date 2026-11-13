@@ -50,6 +50,17 @@ export interface ResumenAlumno {
   motivos: string[];
 }
 
+/** Métricas de un tipo de actividad, todas sobre 100, para el radar por tipo. */
+export interface PerfilTipo {
+  mediana: number;
+  /** Porcentaje de calificaciones aprobatorias. */
+  aprobacion: number;
+  /** Porcentaje de trabajos entregados. */
+  tasaEntrega: number;
+  /** Promedio solo de lo entregado. */
+  promedioEntregadas: number;
+}
+
 export interface PromedioCategoria {
   nombre: string;
   promedio: number;
@@ -75,7 +86,7 @@ export interface Analiticas {
   };
   actividades: EstadisticasActividad[];
   sinResultados: { id: string; titulo: string }[];
-  porTipo: PromedioCategoria[];
+  porTipo: (PromedioCategoria & PerfilTipo)[];
   alumnos: ResumenAlumno[];
   mejores: ResumenAlumno[];
   atencion: ResumenAlumno[];
@@ -195,16 +206,28 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
   const promAlumnos = resumenes.map((r) => r.promedio);
 
   // Promedio por tipo de actividad (etiqueta): todos los puntajes de esas actividades.
-  const tipos = new Map<string, { valores: number[]; actividades: number }>();
+  const tipos = new Map<string, { puntajes: PuntajeAlumno[]; actividades: number }>();
   for (const s of statsActividad) {
     const nombre = s.etiqueta ?? "Sin etiqueta";
-    const t = tipos.get(nombre) ?? { valores: [], actividades: 0 };
+    const t = tipos.get(nombre) ?? { puntajes: [], actividades: 0 };
     t.actividades++;
-    t.valores.push(...todos.filter((p) => p.actividadId === s.id).map((p) => p.puntaje));
+    t.puntajes.push(...todos.filter((p) => p.actividadId === s.id));
     tipos.set(nombre, t);
   }
   const porTipo = [...tipos.entries()]
-    .map(([nombre, t]) => ({ nombre, promedio: r1(promedio(t.valores)), cantidad: t.actividades }))
+    .map(([nombre, t]) => {
+      const valores = t.puntajes.map((p) => p.puntaje);
+      const entregados = t.puntajes.filter((p) => p.entregada).map((p) => p.puntaje);
+      return {
+        nombre,
+        promedio: r1(promedio(valores)),
+        cantidad: t.actividades,
+        mediana: r1(mediana(valores)),
+        aprobacion: porcentaje(valores.filter((x) => x >= APROBATORIA).length, valores.length),
+        tasaEntrega: porcentaje(entregados.length, valores.length),
+        promedioEntregadas: r1(promedio(entregados)),
+      };
+    })
     .sort((a, b) => b.promedio - a.promedio);
 
   // Temas con menor acierto, sumando los reactivos de todas las actividades evaluadas.
