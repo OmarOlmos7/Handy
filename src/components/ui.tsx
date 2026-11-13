@@ -95,9 +95,10 @@ export function InsigniaNivel({ nivel }: { nivel: Nivel }) {
   return <Insignia tono={tono}>{texto}</Insignia>;
 }
 
-export function colorCalificacion(cal: number) {
-  if (cal >= 8.5) return "text-acierto";
-  if (cal >= 7) return "text-aviso";
+export function colorCalificacion(cal: number, escala: 10 | 100 = 10) {
+  const sobre10 = (cal * 10) / escala;
+  if (sobre10 >= 8.5) return "text-acierto";
+  if (sobre10 >= 7) return "text-aviso";
   return "text-error";
 }
 

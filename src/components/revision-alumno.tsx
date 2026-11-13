@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { guardarRevision } from "@/app/acciones";
 import type { Actividad, Alumno, Entrega, ResultadoReactivo } from "@/lib/tipos";
-import { calificacion, puntosTotales } from "@/lib/estadisticas";
+import { calificacion, escalaDe, formatoCal, puntosTotales } from "@/lib/estadisticas";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { Boton, Insignia, colorCalificacion } from "./ui";
 import { sinLatex } from "./texto-mat";
@@ -97,7 +97,10 @@ export function RevisionAlumno({
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-slate-500">Calificación sugerida</p>
-              <p className={`text-4xl font-semibold ${colorCalificacion(cal)}`}>{cal.toFixed(1)}</p>
+              <p className={`text-4xl font-semibold ${colorCalificacion(cal, escalaDe(actividad))}`}>
+                {formatoCal(cal, escalaDe(actividad))}
+                <span className="text-base font-normal text-slate-400"> / {escalaDe(actividad)}</span>
+              </p>
               <p className="text-xs text-slate-500">
                 {resultados.reduce((s, r) => s + r.puntosObtenidos, 0)} de {puntosTotales(actividad)} puntos
                 {cambiados > 0 && ` · ${cambiados} reactivo${cambiados > 1 ? "s" : ""} ajustado${cambiados > 1 ? "s" : ""} por ti`}

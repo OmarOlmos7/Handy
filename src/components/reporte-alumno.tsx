@@ -2,7 +2,7 @@
 // 1) identificación, 2) resumen (positivos, mejoras, elementos y calificación),
 // 3) la actividad anexa con las correcciones.
 import type { Actividad, Alumno, Entrega, Grupo } from "@/lib/tipos";
-import { calificacion, puntosObtenidos, puntosTotales } from "@/lib/estadisticas";
+import { calificacion, escalaDe, formatoCal, puntosObtenidos, puntosTotales } from "@/lib/estadisticas";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { colorCalificacion, fechaLarga } from "./ui";
 
@@ -27,6 +27,7 @@ export function ReporteAlumno({
   grupo: Grupo;
 }) {
   const cal = calificacion(actividad, entrega);
+  const escala = escalaDe(actividad);
   const grupoTexto = `${grupo.materia} · ${grupo.nombre}`;
   return (
     <article className="space-y-6">
@@ -55,8 +56,8 @@ export function ReporteAlumno({
           </div>
           <div>
             <dt className="text-slate-500">Calificación</dt>
-            <dd className={`text-2xl font-semibold ${colorCalificacion(cal)}`}>
-              {cal.toFixed(1)} <span className="text-sm font-normal text-slate-500">/ 10</span>
+            <dd className={`text-2xl font-semibold ${colorCalificacion(cal, escala)}`}>
+              {formatoCal(cal, escala)} <span className="text-sm font-normal text-slate-500">/ {escala}</span>
             </dd>
           </div>
         </dl>

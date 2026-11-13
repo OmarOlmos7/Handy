@@ -21,7 +21,7 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
   const alumno = comoProfesor ? undefined : await alumnoActual();
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
-      <Logo />
+      <Logo grande />
       <h1 className="mt-5 text-xl font-semibold">{actividad.titulo}</h1>
       <p className="text-sm text-slate-500">
         {grupo.materia} · {grupo.nombre}

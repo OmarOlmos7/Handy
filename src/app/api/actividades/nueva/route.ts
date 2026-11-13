@@ -35,13 +35,14 @@ export async function POST(req: Request) {
     instrucciones,
     reactivos: [],
     rubricaConfirmada: false,
+    escala: form.get("escala") === "10" ? 10 : 100,
   };
 
   if (modo === "ia") {
     const prompt = String(form.get("prompt") ?? "").trim().slice(0, 4000);
     if (prompt.length < 10) return Response.json({ error: "Describe la actividad: tipo de reactivos, ponderaciones y temas" }, { status: 400 });
     try {
-      const generada = await generarActividad({ titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas });
+      const generada = await generarActividad({ titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala });
       Object.assign(base, {
         origen: "ia",
         prompt,

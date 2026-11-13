@@ -109,8 +109,8 @@ export default async function PanelProfesor() {
                                 {rep.entregadas}/{g.alumnos.length} entregas
                               </span>
                               {rep.entregadas > 0 && (
-                                <span className={`font-semibold ${colorCalificacion(rep.promedio)}`}>
-                                  Prom. {rep.promedio}
+                                <span className={`font-semibold ${colorCalificacion(rep.promedio, rep.escala)}`}>
+                                  Prom. {rep.promedio} / {rep.escala}
                                 </span>
                               )}
                               <InsigniaActividad estado={estadoActividad(db, a)} />

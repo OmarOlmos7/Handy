@@ -5,6 +5,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import type { Actividad, Reactivo } from "@/lib/tipos";
 import { TextoMat, taparFormulas } from "./texto-mat";
+import { escalaDe } from "@/lib/estadisticas";
 import { fechaLarga } from "./ui";
 
 /** Separa el planteamiento de los incisos a), b), c)… y resalta cada letra (sin mirar dentro de las fórmulas). */
@@ -36,6 +37,8 @@ function Enunciado({ texto }: { texto: string }) {
     </>
   );
 }
+
+const svgUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
 const cuadricula: CSSProperties = {
   backgroundImage: "radial-gradient(circle, #cbd5e1 1px, transparent 1.3px)",
@@ -155,7 +158,7 @@ export function HojaActividad({
         </div>
         <div className="flex w-[130px] shrink-0 flex-col justify-between rounded-xl border-[1.5px] border-slate-800 px-3 py-2">
           <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Calificación</span>
-          <span className="text-right text-lg text-slate-500">/ 10</span>
+          <span className="text-right text-lg text-slate-500">/ {escalaDe(actividad)}</span>
         </div>
         <div className="flex w-[130px] shrink-0 flex-col items-center justify-center rounded-xl border border-slate-200 p-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -203,17 +206,18 @@ export function HojaActividad({
                 <span className="rounded-full border border-slate-300 px-3 py-0.5 text-[13px] font-bold text-slate-800">
                   {r.puntos} {r.puntos === 1 ? "pt" : "pts"}
                 </span>
-                {r.ilustracion && (
+                {r.ilustracion && r.ubicacionIlustracion !== "abajo" && (
                   // Dibujo de la IA ya revisado por svgSeguro; como <img> no puede ejecutar nada.
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(r.ilustracion)}`}
-                    alt=""
-                    className="h-[105px] w-[140px] rounded-lg border border-slate-200 bg-white p-1"
-                  />
+                  <img src={svgUrl(r.ilustracion)} alt="" className="h-[105px] w-[140px] rounded-lg border border-slate-200 bg-white p-1" />
                 )}
               </div>
             </div>
+            {r.ilustracion && r.ubicacionIlustracion === "abajo" && (
+              // Gráfica más grande debajo del enunciado, para que el alumno lea los datos.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={svgUrl(r.ilustracion)} alt="" className="sin-cortar mx-auto mt-3 block h-[200px] w-[320px] rounded-lg border border-slate-200 bg-white p-1.5" />
+            )}
             <div className={r.tipo === "desarrollo" || r.tipo === "abierto" ? "" : "pl-10"}>
               <CuerpoReactivo r={r} />
             </div>

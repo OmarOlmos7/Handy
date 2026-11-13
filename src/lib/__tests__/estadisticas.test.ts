@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { actividades, entregas, grupos } from "../datos-ejemplo";
 
 const entregasDeActividad = (id: string) => entregas.filter((e) => e.actividadId === id);
-import { calificacion, nivelDe, puntosTotales, reporteGrupo } from "../estadisticas";
+import { calificacion, formatoCal, nivelDe, puntosTotales, reporteGrupo } from "../estadisticas";
 import { csvCanvas, filasExcel } from "../exportar";
 import type { Actividad, Entrega } from "../tipos";
 
@@ -21,6 +21,24 @@ describe("calificación", () => {
     };
     expect(puntosTotales(act)).toBe(2);
     expect(calificacion(act, e)).toBe(5);
+  });
+
+  it("califica sobre 100 en enteros cuando la actividad usa esa escala", () => {
+    const act: Actividad = { ...actividad, escala: 100, reactivos: actividad.reactivos.slice(0, 3) };
+    const total = puntosTotales(act);
+    const e: Entrega = {
+      actividadId: act.id, matricula: "X", estado: "evaluada", paginasRecibidas: 1, positivos: [], mejoras: [],
+      resultados: act.reactivos.map((r, i) => ({ numero: r.numero, puntosObtenidos: i === 0 ? 0 : r.puntos, respuestaLeida: "", confianza: "alta" as const, comentario: "" })),
+    };
+    const esperado = Math.round(((total - act.reactivos[0].puntos) / total) * 100);
+    expect(calificacion(act, e)).toBe(esperado);
+    expect(formatoCal(85, 100)).toBe("85");
+    expect(formatoCal(8.5, 10)).toBe("8.5");
+    expect(nivelDe(85, 100)).toBe("alto");
+    expect(nivelDe(69, 100)).toBe("bajo");
+    const rep = reporteGrupo(act, [e], [{ ...grupo.alumnos[0], matricula: "X" }]);
+    expect(rep.escala).toBe(100);
+    expect(rep.distribucion.map((d) => d.rango)).toEqual(["0 a 59", "60 a 69", "70 a 79", "80 a 89", "90 a 100"]);
   });
 
   it("clasifica niveles con los umbrales", () => {
