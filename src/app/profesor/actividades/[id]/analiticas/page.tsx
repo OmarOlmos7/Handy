@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DescargarReportePdf } from "@/components/descargar-reporte-pdf";
-import { DescargasReporte } from "@/components/descargas-reporte";
 import { ConFlujo } from "@/components/flujo-actividad";
 import { BarrasH, Columnas, LeyendaDesempeno, Pastel, Radar } from "@/components/graficas";
 import { PestanasActividad } from "@/components/pestanas-actividad";
@@ -52,16 +51,6 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
               <DescargarReportePdf
                 reporte={reportePdf}
                 archivo={nombreArchivoReporte(["analiticas", grupo.materia, grupo.nombre, actividad.titulo])}
-              />
-            )}
-            {rep.entregadas > 0 && (
-              <DescargasReporte
-                filas={rep.filas}
-                actividad={actividad.titulo}
-                actividadId={actividad.id}
-                grupo={grupo.nombre}
-                materia={grupo.materia}
-                fecha={actividad.fechaAplicacion}
               />
             )}
             <BotonLink href={`/profesor/grupos/${grupo.id}/analiticas`} variante="secundario">
