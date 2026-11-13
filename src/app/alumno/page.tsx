@@ -97,7 +97,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
     <>
       <Encabezado
         titulo="Mis actividades"
-        subtitulo={`${alumno.nombre} · ${alumno.correo}. Aquí aparecen tus resultados cuando tu profesor los aprueba y llega la fecha de visualización.`}
+        subtitulo={`${alumno.nombre} · ${alumno.correo}. Aquí aparecen tus resultados en cuanto se evalúan, o desde la fecha de visualización que fije tu profesor.`}
       />
       <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <ul className="divide-y divide-slate-100">
@@ -132,7 +132,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                 ) : aprobada ? (
                   <Insignia tono="ambar">Resultados listos a partir de la fecha indicada</Insignia>
                 ) : e && e.estado !== "sin_entregar" ? (
-                  <Insignia tono="azul">En revisión del profesor</Insignia>
+                  <Insignia tono="azul">Evaluando</Insignia>
                 ) : (
                   <Link href={`/entregar/${a.id}`} className="text-sm font-medium text-tinta-700 hover:underline">
                     Entregar fotos

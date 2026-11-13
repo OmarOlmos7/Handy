@@ -165,8 +165,8 @@ export function NuevaActividad({
           Resultados visibles para alumnos desde
           <input name="resultadosDesde" type="datetime-local" className={campo} />
           <span className="mt-1 block text-xs font-normal text-slate-500">
-            Opcional. Antes de esta fecha y hora los alumnos no ven su calificación ni la retroalimentación, aunque ya las hayas
-            aprobado. Si lo dejas vacío, las ven en cuanto las apruebes. Hora del centro de México.
+            Opcional. Los resultados se liberan solos al evaluarse; con esta fecha y hora, los alumnos no los ven antes y tú
+            tienes tiempo de revisarlos y corregirlos. Si lo dejas vacío, los ven en cuanto se evalúan. Hora del centro de México.
           </span>
         </label>
 

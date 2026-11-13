@@ -103,3 +103,12 @@ describe("cuentas de alumno", () => {
     expect(migrar(db).sesiones.map((s) => s.token)).toEqual(["x"]);
   });
 });
+
+describe("liberación automática", () => {
+  it("las entregas evaluadas que esperaban aprobación quedan liberadas", () => {
+    const base = { version: 3, profesores: [], sesiones: [], cuentasAlumno: [], grupos: [], actividades: [], movimientos: [] };
+    const entrega = (estado: "evaluada" | "entregada") => ({ actividadId: "a", matricula: estado, estado, paginasRecibidas: 1, resultados: [], positivos: [], mejoras: [] });
+    const db = migrar({ ...base, entregas: [entrega("evaluada"), entrega("entregada")] } as never);
+    expect(db.entregas.map((e) => e.estado)).toEqual(["aprobada", "entregada"]);
+  });
+});

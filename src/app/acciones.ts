@@ -85,15 +85,6 @@ export async function guardarRevision(
   revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
 }
 
-export async function aprobarTodas(actividadId: string) {
-  const n = await enActividadPropia(actividadId, (db) => {
-    const es = db.entregas.filter((x) => x.actividadId === actividadId && x.estado === "evaluada");
-    es.forEach((e) => (e.estado = "aprobada"));
-    return es.length;
-  });
-  revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
-  return n;
-}
 
 /** Quita del panel del profesor las actividades de ejemplo y los cursos de ejemplo que queden vacíos. */
 export async function quitarDatosEjemplo() {

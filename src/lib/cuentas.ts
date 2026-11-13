@@ -110,6 +110,8 @@ export function migrar(db: BaseDeDatos): BaseDeDatos {
       codigos.push(g.codigo);
     }
   }
+  // Las entregas ya evaluadas se liberan solas: las que esperaban aprobación quedan liberadas.
+  for (const e of db.entregas ?? []) if (e.estado === "evaluada") e.estado = "aprobada";
   db.version = 3;
   return db;
 }

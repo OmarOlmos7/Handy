@@ -54,7 +54,9 @@ async function evaluarAhora(actividadId: string, matricula: string): Promise<Res
       const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
       // Si el alumno volvió a entregar mientras se evaluaba, no se pisa su entrega nueva.
       if (!e || e.estado !== "entregada" || e.imagenes?.join() !== imagenes.join()) return;
-      Object.assign(e, evaluacion, { estado: "evaluada", evaluadaEn: new Date().toISOString(), error: undefined, evaluandoDesde: undefined });
+      // Se libera al alumno en cuanto se evalúa (respetando la fecha de visualización de la actividad);
+      // el profesor puede corregirla después y el reporte del alumno se actualiza.
+      Object.assign(e, evaluacion, { estado: "aprobada", evaluadaEn: new Date().toISOString(), error: undefined, evaluandoDesde: undefined });
       d.movimientos.unshift({
         profesorId: grupo.profesorId,
         fecha: new Date().toISOString().slice(0, 10),

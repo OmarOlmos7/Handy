@@ -13,8 +13,8 @@ const tonoConfianza = { alta: "verde", media: "gris", baja: "ambar" } as const;
 
 /**
  * Revisión del profesor: hoja anotada a la izquierda y la evaluación editable a la
- * derecha. Los cambios se reflejan al instante en la hoja. Todo sigue editable aunque
- * la entrega ya esté aprobada; al guardar, el reporte del alumno se actualiza.
+ * derecha. Los cambios se reflejan al instante en la hoja. La entrega se libera al alumno
+ * en cuanto la IA la evalúa; al guardar, el reporte del alumno se actualiza.
  */
 export function RevisionAlumno({
   actividad,
@@ -129,28 +129,24 @@ export function RevisionAlumno({
                 {cambiados > 0 && ` · ${cambiados} reactivo${cambiados > 1 ? "s" : ""} ajustado${cambiados > 1 ? "s" : ""} por ti`}
               </p>
             </div>
-            {aprobada ? <Insignia tono="verde">Aprobada</Insignia> : <Insignia tono="azul">Sugerida por IA</Insignia>}
+            {aprobada ? <Insignia tono="verde">Liberada</Insignia> : <Insignia tono="azul">Sugerida por IA</Insignia>}
           </div>
           {aviso && <p className="mt-2 text-sm text-slate-600" role="status">{aviso}</p>}
           <div className="mt-4 flex flex-wrap gap-2">
             {aprobada ? (
               <>
                 <p className="w-full text-sm text-acierto" role="status">
-                  Aprobada. El alumno ya puede ver su reporte. Puedes seguir corrigiendo cada reactivo y guardar.
+                  Liberada al alumno. Puedes corregir cada reactivo y guardar: su reporte se actualiza.
                 </p>
                 <Boton onClick={() => guardar(false)} disabled={guardando || !sinGuardar}>
                   {guardando ? "Guardando…" : "Guardar cambios"}
                 </Boton>
               </>
             ) : (
-              <>
-                <Boton onClick={() => guardar(true)} disabled={guardando}>
-                  {guardando ? "Guardando…" : "Aprobar"}
-                </Boton>
-                <Boton variante="secundario" onClick={() => guardar(false)} disabled={guardando}>
-                  Guardar cambios
-                </Boton>
-              </>
+              // Una entrega que aún no se libera (evaluada antes de la liberación automática) se libera al guardar.
+              <Boton onClick={() => guardar(true)} disabled={guardando}>
+                {guardando ? "Guardando…" : "Guardar y liberar"}
+              </Boton>
             )}
             {conFotos && (
               <a

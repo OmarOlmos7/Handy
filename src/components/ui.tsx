@@ -76,7 +76,7 @@ const textoEstadoEntrega: Record<EstadoEntrega, [string, Tono]> = {
   sin_entregar: ["Sin entregar", "rojo"],
   entregada: ["Entregada", "gris"],
   evaluada: ["Evaluada por IA", "azul"],
-  aprobada: ["Aprobada", "verde"],
+  aprobada: ["Liberada", "verde"],
 };
 
 export function InsigniaEntrega({ estado }: { estado: EstadoEntrega }) {

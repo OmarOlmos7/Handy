@@ -2,7 +2,6 @@ import { IconoGrafica } from "@/components/iconos";
 import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AprobarTodo } from "@/components/aprobar-todo";
 import { AutoActualizar } from "@/components/auto-actualizar";
 import { EvaluarTodo } from "@/components/evaluar-todo";
 import { PestanasActividad } from "@/components/pestanas-actividad";
@@ -31,7 +30,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
   const grupo = grupoDe(db, actividad.grupoId)!;
   const entregas = entregasDe(db, id);
   const recibidas = entregas.filter((e) => e.estado !== "sin_entregar");
-  const porAprobar = entregas.filter((e) => e.estado === "evaluada");
+  const liberadas = entregas.filter((e) => e.estado === "aprobada");
   const evaluando = entregas.filter((e) => e.estado === "entregada" && evaluandoAhora(e.evaluandoDesde));
   // Las entregas se evalúan solas; el botón queda para reintentar las que fallaron.
   const porEvaluar = entregas.filter((e) => e.estado === "entregada" && e.imagenes?.length && !evaluandoAhora(e.evaluandoDesde));
@@ -110,34 +109,30 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           </p>
         </Tarjeta>
         <Tarjeta>
-          <p className="text-sm text-slate-500">Por revisar y aprobar</p>
-          <p className="mt-1 text-2xl font-semibold">{porAprobar.length}</p>
+          <p className="text-sm text-slate-500">Resultados liberados</p>
+          <p className="mt-1 text-2xl font-semibold">{liberadas.length}</p>
+          <p className="text-xs text-slate-500">
+            {actividad.resultadosDesde && !resultadosDisponibles(actividad)
+              ? `Los alumnos los verán desde el ${fechaHoraLarga(actividad.resultadosDesde)}.`
+              : "Se liberan solos al evaluarse; puedes corregir cada uno."}
+          </p>
         </Tarjeta>
         <Tarjeta>
           <p className="text-sm text-slate-500">Baja confianza</p>
           <p className={`mt-1 text-2xl font-semibold ${bajaConfianza ? "text-aviso" : ""}`}>{bajaConfianza}</p>
           {bajaConfianza > 0 && <p className="text-xs text-slate-500">Reactivos que la IA no leyó bien.</p>}
         </Tarjeta>
-        <div className="flex min-w-0 flex-col gap-3">
-          <Tarjeta className="flex min-w-0 flex-1 items-center gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qr} alt="Código QR para entregar" className="h-24 w-24 shrink-0" />
-            <div className="min-w-0 text-sm">
-              <p className="font-medium">Entregas desde el celular</p>
-              <p className="text-slate-500">Los alumnos escanean este código o abren el enlace:</p>
-              <a href={enlace} target="_blank" className="block truncate text-tinta-700 hover:underline">
-                {enlace}
-              </a>
-            </div>
-          </Tarjeta>
-          <AprobarTodo
-            actividadId={id}
-            pendientes={porAprobar.length}
-            visiblesDesde={
-              actividad.resultadosDesde && !resultadosDisponibles(actividad) ? fechaHoraLarga(actividad.resultadosDesde) : undefined
-            }
-          />
-        </div>
+        <Tarjeta className="flex min-w-0 items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={qr} alt="Código QR para entregar" className="h-24 w-24 shrink-0" />
+          <div className="min-w-0 text-sm">
+            <p className="font-medium">Entregas desde el celular</p>
+            <p className="text-slate-500">Los alumnos escanean este código o abren el enlace:</p>
+            <a href={enlace} target="_blank" className="block truncate text-tinta-700 hover:underline">
+              {enlace}
+            </a>
+          </div>
+        </Tarjeta>
       </div>
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
@@ -180,7 +175,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                   <td className="whitespace-nowrap px-4 py-3 text-right">
                     {e.resultados.length > 0 ? (
                       <Link href={`/profesor/actividades/${id}/revision/${e.matricula}`} className="font-medium text-tinta-700 hover:underline">
-                        {e.estado === "aprobada" ? "Ver" : "Revisar"}
+                        Revisar
                       </Link>
                     ) : (
                       <Link href={`/entregar/${id}?m=${encodeURIComponent(e.matricula)}&n=${encodeURIComponent(nombre(e.matricula))}`} className="text-xs text-tinta-700 hover:underline">
