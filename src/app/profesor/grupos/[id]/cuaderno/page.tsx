@@ -43,7 +43,7 @@ export default async function CuadernoCurso({ params }: PageProps<"/profesor/gru
           El cuaderno se llena en cuanto el curso tenga alumnos y actividades.
         </Tarjeta>
       ) : (
-        <TablaCuaderno cuaderno={cuaderno} />
+        <TablaCuaderno cuaderno={cuaderno} info={{ materia: grupo.materia, grupo: grupo.nombre, ciclo: grupo.ciclo }} />
       )}
     </>
   );
