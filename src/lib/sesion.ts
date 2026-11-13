@@ -3,7 +3,8 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { esAdmin } from "./admin";
 import { leer, modificar } from "./almacen";
 import { cursosDeAlumno, datosDeProfesor, hashToken, nuevoToken } from "./cuentas";
 import type { Alumno, BaseDeDatos, Grupo } from "./tipos";
@@ -64,6 +65,16 @@ export const profesorActual = cache(async () => {
 export async function requerirProfesor() {
   const p = await profesorActual();
   if (!p) redirect("/ingresar");
+  return p;
+}
+
+/**
+ * Exige sesión de un administrador (su correo está en ADMIN_CORREOS). A los demás
+ * la página les responde "no encontrada" para no revelar que existe.
+ */
+export async function requerirAdmin() {
+  const p = await requerirProfesor();
+  if (!esAdmin(p.correo)) notFound();
   return p;
 }
 

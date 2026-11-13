@@ -33,7 +33,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
   const { rutas, paraIA } = subidos;
 
   try {
-    const { reactivos, criterios, recomendaciones } = await proponerRubrica(paraIA, { titulo: actividad.titulo, instrucciones });
+    const { reactivos, criterios, recomendaciones } = await proponerRubrica(paraIA, { titulo: actividad.titulo, instrucciones }, { profesorId: profesor.id, actividadId: actividad.id });
     modificar((d) => {
       const a = actividadDe(d, id)!;
       a.solucion = rutas;

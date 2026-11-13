@@ -49,7 +49,7 @@ async function evaluarAhora(actividadId: string, matricula: string): Promise<Res
 
   try {
     // A la IA solo van las fotos y la rúbrica: nunca el nombre ni la matrícula.
-    const evaluacion = await evaluarEntrega(actividad, imagenesParaIA(imagenes));
+    const evaluacion = await evaluarEntrega(actividad, imagenesParaIA(imagenes), { profesorId: grupo.profesorId, actividadId });
     modificar((d) => {
       const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
       // Si el alumno volvió a entregar mientras se evaluaba, no se pisa su entrega nueva.

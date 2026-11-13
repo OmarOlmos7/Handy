@@ -205,6 +205,24 @@ export interface Sesion {
   alumnoId?: string;
 }
 
+/** Para qué se llamó a la IA (para el panel de administración). */
+export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver";
+
+/** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
+export interface ConsumoIA {
+  fecha: string;
+  tipo: TipoConsumoIA;
+  profesorId?: string;
+  actividadId?: string;
+  modelo: string;
+  entrada: number;
+  salida: number;
+  cacheLectura: number;
+  cacheEscritura: number;
+  /** false si la IA respondió pero la respuesta no sirvió (rechazo, incompleta o mal formada). */
+  ok: boolean;
+}
+
 export interface BaseDeDatos {
   version: 1 | 2 | 3;
   profesores: Profesor[];
@@ -214,4 +232,6 @@ export interface BaseDeDatos {
   actividades: Actividad[];
   entregas: Entrega[];
   movimientos: Movimiento[];
+  /** Consumo de tokens de la IA, el más reciente al final. */
+  consumoIA?: ConsumoIA[];
 }

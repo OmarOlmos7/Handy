@@ -37,7 +37,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
   const texto = String(peticion).trim().slice(0, 4000);
   if (!texto) return Response.json({ error: "Escribe qué quieres cambiar en la hoja." }, { status: 400 });
   try {
-    const nueva = await editarActividad(actividad, texto);
+    const nueva = await editarActividad(actividad, texto, { profesorId: profesor.id, actividadId: actividad.id });
     let cambioSolucion = false;
     const reactivos = nueva.reactivos.map((r) => {
       const antes = actividad.reactivos.find((x) => x.numero === r.numero);
