@@ -1,7 +1,7 @@
 // Analíticas de aprendizaje de un curso. Todos los números los calcula este código;
 // la IA no participa. Para comparar actividades con escalas distintas, todo se
 // expresa en puntaje sobre 100. Un trabajo no entregado cuenta como 0.
-import { puntosObtenidos, puntosTotales } from "./estadisticas";
+import { calificada, escalaDe, puntosObtenidos, puntosTotales } from "./estadisticas";
 import type { Actividad, Alumno, Entrega, Grupo } from "./tipos";
 
 /** Calificación mínima aprobatoria sobre 100 (6 sobre 10). */
@@ -107,6 +107,9 @@ function porcentaje(parte: number, total: number) {
 
 /** Puntaje sobre 100 de una entrega evaluada; null si no se puede calcular aún. */
 function puntajeDe(actividad: Actividad, entrega: Entrega | undefined): { puntaje: number; entregada: boolean } | null {
+  if (entrega?.calificacionManual !== undefined) {
+    return { puntaje: (entrega.calificacionManual / escalaDe(actividad)) * 100, entregada: true };
+  }
   if (!entrega || entrega.estado === "sin_entregar") return { puntaje: 0, entregada: false };
   if (entrega.resultados.length === 0) return null; // entregada, por evaluar
   const total = puntosTotales(actividad);
@@ -118,7 +121,7 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
   const ordenadas = [...actividades].sort((a, b) => a.fechaAplicacion.localeCompare(b.fechaAplicacion));
   // Solo cuentan las actividades que ya tienen al menos una entrega evaluada.
   const conResultados = ordenadas.filter((a) =>
-    entregas.some((e) => e.actividadId === a.id && e.resultados.length > 0),
+    entregas.some((e) => e.actividadId === a.id && calificada(e)),
   );
   const sinResultados = ordenadas.filter((a) => !conResultados.includes(a)).map((a) => ({ id: a.id, titulo: a.titulo }));
 

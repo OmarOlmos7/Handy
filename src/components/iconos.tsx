@@ -29,6 +29,15 @@ export function IconoGrafica() {
   );
 }
 
+export function IconoCuaderno() {
+  return (
+    <svg {...base}>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M4 9h16M4 15h16M10 3v18" />
+    </svg>
+  );
+}
+
 export function IconoBasura() {
   return (
     <svg {...base}>

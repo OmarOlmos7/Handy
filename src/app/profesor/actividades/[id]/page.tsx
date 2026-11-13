@@ -18,7 +18,7 @@ import {
 import { actividadDe, entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
 import { evaluandoAhora } from "@/lib/evaluacion";
 import { datosProfesor } from "@/lib/sesion";
-import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
+import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadisticas";
 import { qrDataUrl, urlBase } from "@/lib/qr";
 
 export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
@@ -139,7 +139,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
             {entregas.map((e) => {
               const cal = calificacion(actividad, e);
               const baja = e.resultados.filter((r) => r.confianza === "baja").length;
-              const evaluada = e.resultados.length > 0;
+              const evaluada = calificada(e);
               return (
                 <tr key={e.matricula} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium">{nombre(e.matricula)}</td>
@@ -160,7 +160,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                     {baja > 0 ? <Insignia tono="ambar">{baja} con baja confianza</Insignia> : evaluada ? <span className="text-slate-400">—</span> : null}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right">
-                    {evaluada ? (
+                    {e.resultados.length > 0 ? (
                       <Link href={`/profesor/actividades/${id}/revision/${e.matricula}`} className="font-medium text-tinta-700 hover:underline">
                         {e.estado === "aprobada" ? "Ver" : "Revisar"}
                       </Link>
