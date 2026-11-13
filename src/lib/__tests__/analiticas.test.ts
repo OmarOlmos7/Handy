@@ -44,8 +44,8 @@ const grupo: Grupo = {
   materia: "Física",
   ciclo: "2026-2027",
   alumnos: [
-    { matricula: "A1", nombre: "Ana", correo: "", genero: "F" },
-    { matricula: "A2", nombre: "Beto", correo: "", genero: "M" },
+    { matricula: "A1", nombre: "Ana", correo: "" },
+    { matricula: "A2", nombre: "Beto", correo: "" },
     { matricula: "A3", nombre: "Caro", correo: "" },
   ],
 };
@@ -92,11 +92,9 @@ describe("analiticasCurso", () => {
     expect(quiz.aprobacion).toBe(67);
   });
 
-  it("promedia por tipo de actividad y por género", () => {
+  it("promedia por tipo de actividad", () => {
     expect(a.porTipo.map((p) => p.nombre)).toEqual(["Quiz", "Tarea"]);
-    expect(a.porGenero.find((g) => g.clave === "F")?.promedio).toBe(95);
-    expect(a.porGenero.find((g) => g.clave === "M")?.promedio).toBe(25);
-    expect(a.porGenero.find((g) => g.clave === "sin")?.cantidad).toBe(1);
+    expect(a.porTipo[0].promedio).toBeCloseTo(76.7, 1);
   });
 
   it("separa mejores resultados de alumnos que requieren atención", () => {
@@ -108,6 +106,5 @@ describe("analiticasCurso", () => {
 
   it("redacta hallazgos con los números calculados", () => {
     expect(a.hallazgos[0]).toContain("2 trabajos no entregados");
-    expect(a.hallazgos.some((h) => h.includes("1 alumno no tiene género"))).toBe(true);
   });
 });

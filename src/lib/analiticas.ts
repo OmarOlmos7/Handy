@@ -2,19 +2,12 @@
 // la IA no participa. Para comparar actividades con escalas distintas, todo se
 // expresa en puntaje sobre 100. Un trabajo no entregado cuenta como 0.
 import { puntosObtenidos, puntosTotales } from "./estadisticas";
-import type { Actividad, Alumno, Entrega, Genero, Grupo } from "./tipos";
+import type { Actividad, Alumno, Entrega, Grupo } from "./tipos";
 
 /** Calificación mínima aprobatoria sobre 100 (6 sobre 10). */
 export const APROBATORIA = 60;
 /** Caída (en puntos sobre 100) de la última actividad contra el promedio previo que se marca como descenso. */
 export const CAIDA_ALERTA = 15;
-
-export const NOMBRE_GENERO: Record<Genero | "sin", string> = {
-  F: "Femenino",
-  M: "Masculino",
-  X: "Otro",
-  sin: "Sin dato",
-};
 
 export interface EstadisticasActividad {
   id: string;
@@ -60,7 +53,7 @@ export interface ResumenAlumno {
 export interface PromedioCategoria {
   nombre: string;
   promedio: number;
-  /** Actividades (por tipo) o alumnos (por género) que entran en el promedio. */
+  /** Actividades que entran en el promedio. */
   cantidad: number;
 }
 
@@ -78,7 +71,6 @@ export interface Analiticas {
   actividades: EstadisticasActividad[];
   sinResultados: { id: string; titulo: string }[];
   porTipo: PromedioCategoria[];
-  porGenero: (PromedioCategoria & { clave: Genero | "sin" })[];
   alumnos: ResumenAlumno[];
   mejores: ResumenAlumno[];
   atencion: ResumenAlumno[];
@@ -203,15 +195,6 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
     .map(([nombre, t]) => ({ nombre, promedio: r1(promedio(t.valores)), cantidad: t.actividades }))
     .sort((a, b) => b.promedio - a.promedio);
 
-  // Promedio por género: promedio de los promedios de cada alumno.
-  const claves: (Genero | "sin")[] = ["F", "M", "X", "sin"];
-  const porGenero = claves
-    .map((clave) => {
-      const grupoG = resumenes.filter((r) => (r.alumno.genero ?? "sin") === clave);
-      return { clave, nombre: NOMBRE_GENERO[clave], promedio: r1(promedio(grupoG.map((r) => r.promedio))), cantidad: grupoG.length };
-    })
-    .filter((g) => g.cantidad > 0);
-
   // Temas con menor acierto, sumando los reactivos de todas las actividades evaluadas.
   const temas = new Map<string, number[]>();
   for (const a of conResultados) {
@@ -255,7 +238,6 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
     actividades: statsActividad,
     sinResultados,
     porTipo,
-    porGenero,
     alumnos: porPromedio,
     mejores,
     atencion,
@@ -315,17 +297,6 @@ export function hallazgos(a: Analiticas): string[] {
   if (a.temasDebiles.length > 0 && a.temasDebiles[0].acierto < 70) {
     const t = a.temasDebiles[0];
     h.push(`El tema con menor acierto es ${t.nombre} (${t.acierto}%). Es buen candidato para repaso.`);
-  }
-
-  const generos = a.porGenero.filter((x) => x.clave !== "sin" && x.cantidad >= 3);
-  if (generos.length >= 2) {
-    const o = [...generos].sort((x, y) => y.promedio - x.promedio);
-    const brecha = r1(o[0].promedio - o[o.length - 1].promedio);
-    if (brecha >= 5) h.push(`Hay una brecha de ${brecha} puntos entre ${o[0].nombre.toLowerCase()} y ${o[o.length - 1].nombre.toLowerCase()}.`);
-  }
-  const sinDato = a.porGenero.find((x) => x.clave === "sin");
-  if (sinDato && sinDato.cantidad > 0) {
-    h.push(`${sinDato.cantidad} ${sinDato.cantidad === 1 ? "alumno no tiene" : "alumnos no tienen"} género asignado; asígnalo abajo para comparar por género.`);
   }
 
   if (a.atencion.length > 0) {
