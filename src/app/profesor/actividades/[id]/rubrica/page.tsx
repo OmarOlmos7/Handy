@@ -3,6 +3,7 @@ import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import type { Reactivo } from "@/lib/tipos";
 import { Hoja } from "@/components/hoja";
+import { HojaActividad } from "@/components/hoja-actividad";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import { RubricaEditor } from "@/components/rubrica-editor";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
@@ -22,6 +23,8 @@ export default async function Rubrica({
   const grupo = grupoDe(db, actividad.grupoId)!;
   // La rúbrica existe cuando los reactivos ya tienen respuesta (los generados en el paso 1 llegan sin ella).
   const conSolucion = actividad.reactivos.some((r) => r.respuesta.trim());
+  // La solución de la IA se muestra escrita sobre la misma hoja que se imprimió (actividades generadas con IA).
+  const enHoja = Boolean(actividad.solucionIA && actividad.origen === "ia");
   const puedeGenerar = actividad.reactivos.length > 0 || Boolean(actividad.archivos?.length);
   const opciones = (reemplazar: boolean) => (
     <OpcionesSolucion
@@ -66,15 +69,24 @@ export default async function Rubrica({
           <p className="mt-3 text-xs text-slate-400">Preparar la solución y la rúbrica no consume créditos.</p>
         </Tarjeta>
       ) : (
-        <>
-          <PropuestaEvaluacion actividad={actividad} />
-          <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-            <div className="space-y-4">
-              <p className="text-sm text-slate-500">{actividad.solucionIA ? "Solución generada con IA" : "Tu solución"}</p>
-              {actividad.solucionIA ? (
-                <SolucionTexto reactivos={actividad.reactivos} />
-              ) : actividad.solucion?.length
-                ? actividad.solucion.map((ruta, i) =>
+        <div className="space-y-6">
+          {/* 1. Cambios a la solución, arriba de todo. */}
+          <Tarjeta>
+            <p className="mb-3 text-sm font-medium">¿Quieres rehacer la solución o cambiar los criterios?</p>
+            {opciones(true)}
+          </Tarjeta>
+
+          {/* 2. La solución propuesta, sobre el formato de la hoja que se imprimió. */}
+          <section>
+            <h2 className="mb-3 text-lg font-semibold">{actividad.solucionIA ? "Solución propuesta por la IA" : "Tu solución"}</h2>
+            {enHoja ? (
+              <HojaActividad actividad={actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion />
+            ) : (
+              <div className="mx-auto max-w-3xl space-y-4">
+                {actividad.solucionIA ? (
+                  <SolucionTexto reactivos={actividad.reactivos} />
+                ) : actividad.solucion?.length ? (
+                  actividad.solucion.map((ruta, i) =>
                     ruta.endsWith(".pdf") ? (
                       <a
                         key={ruta}
@@ -94,27 +106,21 @@ export default async function Rubrica({
                       />
                     ),
                   )
-                : Array.from({ length: actividad.paginas }, (_, i) => (
-                    <Hoja
-                      key={i}
-                      actividad={actividad}
-                      pagina={i + 1}
-                      modo="solucion"
-                      grupoTexto={`${grupo.materia} · ${grupo.nombre}`}
-                    />
-                  ))}
-              <Tarjeta>
-                <p className="mb-3 text-sm font-medium">¿Quieres rehacer la solución o cambiar los criterios?</p>
-                {opciones(true)}
-              </Tarjeta>
-            </div>
-            <RubricaEditor
-              actividadId={id}
-              reactivosIniciales={actividad.reactivos}
-              confirmadaInicial={!!actividad.rubricaConfirmada}
-            />
-          </div>
-        </>
+                ) : (
+                  Array.from({ length: actividad.paginas }, (_, i) => (
+                    <Hoja key={i} actividad={actividad} pagina={i + 1} modo="solucion" grupoTexto={`${grupo.materia} · ${grupo.nombre}`} />
+                  ))
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* 3. La propuesta de rúbrica. */}
+          <section className="space-y-6">
+            <PropuestaEvaluacion actividad={actividad} />
+            <RubricaEditor actividadId={id} reactivosIniciales={actividad.reactivos} confirmadaInicial={!!actividad.rubricaConfirmada} />
+          </section>
+        </div>
       )}
       </ConFlujo>
     </>

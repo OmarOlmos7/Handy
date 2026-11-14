@@ -40,7 +40,4 @@ export function sinLatex(texto: string) {
   return texto.replace(/\$\$?([^$]+)\$\$?/g, "$1").replace(/\\[a-zA-Z]+/g, "").replace(/[{}]/g, "");
 }
 
-/** Copia del texto con las fórmulas tapadas (misma longitud), para buscar incisos fuera de ellas. */
-export function taparFormulas(texto: string) {
-  return texto.replace(/\$\$[^$]+\$\$|\$[^$\n]+\$/g, (m) => "§".repeat(m.length));
-}
+export { taparFormulas } from "@/lib/incisos";
