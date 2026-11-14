@@ -1,9 +1,9 @@
 // Hoja imprimible de una actividad generada con IA. Estilo de referencia del profesor:
 // letra Inter, encabezado limpio con logo, calificación y QR; instrucciones en dos columnas;
 // criterios de evaluación en etiquetas; cada problema con número y puntaje en un renglón,
-// el texto debajo, el dibujo a la derecha, un cuadro de desarrollo (cuadrícula de puntos) y
+// el texto debajo, el dibujo a la derecha, un cuadro de desarrollo en blanco y, al pie,
 // un recuadro de RESPUESTA por inciso.
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import type { Actividad, Reactivo } from "@/lib/tipos";
 import { TextoMat, taparFormulas } from "./texto-mat";
 import { escalaDe } from "@/lib/estadisticas";
@@ -47,19 +47,10 @@ function Enunciado({ texto }: { texto: string }) {
 
 const svgUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
-const cuadricula: CSSProperties = {
-  backgroundImage: "radial-gradient(circle, #cbd5e1 1px, transparent 1.3px)",
-  backgroundSize: "22px 22px",
-  backgroundPosition: "11px 11px",
-};
-
-const renglones: CSSProperties = {
-  backgroundImage: "repeating-linear-gradient(to bottom, transparent 0, transparent 31px, #e2e8f0 31px, #e2e8f0 32px)",
-};
-
-function Cuadro({ alto, estilo, children }: { alto: number; estilo: CSSProperties; children?: ReactNode }) {
+/** Recuadro en blanco (sin rejilla ni renglones) donde el alumno escribe. */
+function Cuadro({ alto, children }: { alto: number; children?: ReactNode }) {
   return (
-    <div className="sin-cortar relative mt-3 rounded-xl border border-slate-300" style={{ ...estilo, height: alto }}>
+    <div className="sin-cortar relative mt-3 rounded-xl border border-slate-300" style={{ height: alto }}>
       {children}
     </div>
   );
@@ -114,14 +105,14 @@ function CuerpoReactivo({ r }: { r: Reactivo }) {
     );
   }
   if (r.tipo === "abierto") {
-    return <Cuadro alto={Math.min(10, Math.max(4, r.lineas || 5)) * 32 + 16} estilo={renglones} />;
+    return <Cuadro alto={Math.min(10, Math.max(4, r.lineas || 5)) * 32 + 16} />;
   }
-  // Problema de desarrollo: cuadrícula de puntos para el procedimiento y, al pie, un recuadro de
-  // respuesta por inciso (o uno solo si el problema no tiene incisos).
+  // Problema de desarrollo: espacio en blanco para el procedimiento y, al pie, los recuadros de
+  // respuesta de cada inciso repartidos a lo ancho (o uno solo si el problema no tiene incisos).
   const letras = separarIncisos(r.enunciado).incisos.map((inc) => inc.slice(0, 2));
   const filas = Math.ceil(Math.max(1, letras.length) / 4);
   return (
-    <Cuadro alto={Math.min(290, Math.max(210, (r.lineas || 12) * 17 + 36)) + (filas - 1) * 72} estilo={cuadricula}>
+    <Cuadro alto={Math.min(290, Math.max(210, (r.lineas || 12) * 17 + 36)) + (filas - 1) * 72} >
       <div
         className={`absolute bottom-3 grid gap-2.5 ${letras.length > 1 ? "left-3 right-3" : "right-3 w-[29%]"}`}
         style={letras.length > 1 ? { gridTemplateColumns: `repeat(${Math.min(4, letras.length)}, minmax(0, 1fr))` } : undefined}
