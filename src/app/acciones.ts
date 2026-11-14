@@ -163,6 +163,21 @@ export async function borrarActividad(actividadId: string) {
   revalidatePath("/profesor", "layout");
 }
 
+/**
+ * Borra la entrega de un alumno (sus fotos y su evaluación) para que pueda volver a entregar.
+ * Los créditos ya usados en evaluarla no se devuelven.
+ */
+export async function borrarEntrega(actividadId: string, matricula: string) {
+  const m = normalizarMatricula(matricula);
+  const borrada = await enActividadPropia(actividadId, (db) => {
+    const entrega = db.entregas.find((e) => e.actividadId === actividadId && normalizarMatricula(e.matricula) === m);
+    if (entrega) db.entregas = db.entregas.filter((e) => e !== entrega);
+    return entrega;
+  });
+  if (borrada && !/[\\/]|^\.\.?$/.test(borrada.matricula)) borrarCarpeta(`actividades/${actividadId}/entregas/${borrada.matricula}`);
+  revalidatePath(`/profesor/actividades/${actividadId}`);
+}
+
 // ---------- Colores y etiquetas para organizar ----------
 
 function colorValido(color: string) {

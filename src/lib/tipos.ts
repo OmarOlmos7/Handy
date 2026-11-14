@@ -156,6 +156,8 @@ export interface Entrega {
   /** Fotos de las hojas del alumno, en orden (rutas relativas a la carpeta de datos). */
   imagenes?: string[];
   entregadaEn?: string;
+  /** Hora de la primera entrega; los reenvíos de los primeros minutos la conservan. */
+  primeraEntregaEn?: string;
   evaluadaEn?: string;
   /** Último error de evaluación, si lo hubo. */
   error?: string;

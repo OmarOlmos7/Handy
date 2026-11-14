@@ -4,7 +4,8 @@ import { EntregarForm } from "@/components/entregar-form";
 import { Logo } from "@/components/ui";
 import { actividadDe, grupoDe, leer } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
-import { alumnoActual, profesorActual } from "@/lib/sesion";
+import { primeraEntrega } from "@/lib/reenvio";
+import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 
 // Página pública del QR. El alumno entra con su correo y clave de acceso (o crea su cuenta
 // aquí la primera vez) y la entrega queda en el curso del profesor dueño de la actividad.
@@ -19,6 +20,10 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
   const profesor = await profesorActual();
   const comoProfesor = Boolean(profesor && esDelProfesor(db, id, profesor.id));
   const alumno = comoProfesor ? undefined : await alumnoActual();
+  // Si el alumno ya entregó, el formulario le ofrece reenviar (o le dice que ya no se puede).
+  const matricula = matriculaEnCurso(alumno, grupo.id);
+  const entrega = matricula ? db.entregas.find((e) => e.actividadId === id && e.matricula === matricula && e.estado !== "sin_entregar") : undefined;
+  const primera = entrega && primeraEntrega(entrega);
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
       <Logo grande />
@@ -47,6 +52,11 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
           automatica={Boolean(actividad.rubricaConfirmada)}
           matriculaInicial={typeof m === "string" ? m : undefined}
           nombreInicial={typeof n === "string" ? n : undefined}
+          previa={
+            entrega && primera
+              ? { primeraEntregaEn: primera, paginas: entrega.paginasRecibidas, evaluada: entrega.estado === "evaluada" || entrega.estado === "aprobada" }
+              : undefined
+          }
         />
       </div>
     </main>

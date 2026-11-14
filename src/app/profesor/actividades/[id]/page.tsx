@@ -3,6 +3,7 @@ import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AutoActualizar } from "@/components/auto-actualizar";
+import { BorrarEntrega } from "@/components/borrar-entrega";
 import { EvaluarTodo } from "@/components/evaluar-todo";
 import { PestanasActividad } from "@/components/pestanas-actividad";
 import {
@@ -146,6 +147,9 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
               <th className="px-4 py-3 font-medium">Calificación</th>
               <th className="px-4 py-3 font-medium">Revisar</th>
               <th className="px-4 py-3" />
+              <th className="w-12 px-2 py-3">
+                <span className="sr-only">Borrar entrega</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -182,6 +186,9 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                         {e.estado === "sin_entregar" ? "Subir sus hojas" : "Reemplazar hojas"}
                       </Link>
                     )}
+                  </td>
+                  <td className="px-2 py-2 text-right">
+                    {e.estado !== "sin_entregar" && <BorrarEntrega actividadId={id} matricula={e.matricula} nombre={nombre(e.matricula)} />}
                   </td>
                 </tr>
               );
