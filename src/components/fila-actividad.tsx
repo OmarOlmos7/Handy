@@ -123,8 +123,8 @@ export function FilaActividad({
             la hoja imprimible
           </Link>{" "}
           (editor con IA) o{" "}
-          <Link href={`/profesor/actividades/${id}/rubrica`} className="font-medium text-tinta-700 hover:underline">
-            la solución y rúbrica
+          <Link href={`/profesor/actividades/${id}/solucion`} className="font-medium text-tinta-700 hover:underline">
+            la solución
           </Link>
           .
         </p>

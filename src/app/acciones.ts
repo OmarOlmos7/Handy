@@ -176,6 +176,7 @@ export async function borrarEntrega(actividadId: string, matricula: string) {
   });
   if (borrada && !/[\\/]|^\.\.?$/.test(borrada.matricula)) borrarCarpeta(`actividades/${actividadId}/entregas/${borrada.matricula}`);
   revalidatePath(`/profesor/actividades/${actividadId}`);
+  revalidatePath(`/profesor/actividades/${actividadId}/entregas`);
 }
 
 // ---------- Colores y etiquetas para organizar ----------
