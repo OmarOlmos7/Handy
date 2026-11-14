@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AutoActualizar } from "@/components/auto-actualizar";
 import { BorrarEntrega } from "@/components/borrar-entrega";
 import { EvaluarTodo } from "@/components/evaluar-todo";
-import { PestanasActividad } from "@/components/pestanas-actividad";
+import { QrEntregas } from "@/components/qr-entregas";
 import {
   BotonLink,
   Encabezado,
@@ -76,8 +76,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           </>
         }
       />
-      <ConFlujo vista={4} db={db} actividad={actividad}>
-      <PestanasActividad id={id} activa="entregas" />
+      <ConFlujo vista={5} db={db} actividad={actividad}>
       <AutoActualizar activo={evaluando.length > 0} />
 
       {actividad.rubricaConfirmada && (
@@ -96,7 +95,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
               ? "La IA ya propuso la rúbrica. Revísala y confírmala: las entregas que ya llegaron se evaluarán solas."
               : "Escanea tu solución o genérala con IA para preparar la rúbrica. Mientras tanto, los alumnos ya pueden entregar."}
           </p>
-          <BotonLink href={`/profesor/actividades/${id}/rubrica`} className="mt-3">
+          <BotonLink href={`/profesor/actividades/${id}/${actividad.reactivos.some((r) => r.respuesta.trim()) ? "rubrica" : "solucion"}`} className="mt-3">
             {actividad.reactivos.some((r) => r.respuesta.trim()) ? "Revisar rúbrica" : "Preparar solución"}
           </BotonLink>
         </Tarjeta>
@@ -104,10 +103,11 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
 
       <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)]">
         <Tarjeta>
-          <p className="text-sm text-slate-500">Entregas recibidas</p>
+          <p className="text-sm text-slate-500">Entregas evaluadas</p>
           <p className="mt-1 text-2xl font-semibold">
-            {recibidas.length} <span className="text-base font-normal text-slate-400">de {entregas.length}</span>
+            {recibidas.filter((e) => calificada(e)).length} <span className="text-base font-normal text-slate-400">de {recibidas.length} recibidas</span>
           </p>
+          <p className="text-xs text-slate-500">{entregas.length - recibidas.length} alumnos sin entregar</p>
         </Tarjeta>
         <Tarjeta>
           <p className="text-sm text-slate-500">Resultados liberados</p>
@@ -123,17 +123,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           <p className={`mt-1 text-2xl font-semibold ${bajaConfianza ? "text-aviso" : ""}`}>{bajaConfianza}</p>
           {bajaConfianza > 0 && <p className="text-xs text-slate-500">Reactivos que la IA no leyó bien.</p>}
         </Tarjeta>
-        <Tarjeta className="flex min-w-0 items-center gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qr} alt="Código QR para entregar" className="h-24 w-24 shrink-0" />
-          <div className="min-w-0 text-sm">
-            <p className="font-medium">Entregas desde el celular</p>
-            <p className="text-slate-500">Los alumnos escanean este código o abren el enlace:</p>
-            <a href={enlace} target="_blank" className="block truncate text-tinta-700 hover:underline">
-              {enlace}
-            </a>
-          </div>
-        </Tarjeta>
+        <QrEntregas qr={qr} enlace={enlace} titulo={actividad.titulo} />
       </div>
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">

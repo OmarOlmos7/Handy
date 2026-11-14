@@ -18,7 +18,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
   const curso = `${grupo.materia} · ${grupo.nombre}`;
   const qr = await qrDataUrl(`${await urlBase()}/entregar/${id}`);
   const siguiente = actividad.reactivos.some((r) => r.respuesta.trim()) ? null : (
-    <BotonLink href={`/profesor/actividades/${id}/rubrica`} variante="secundario">
+    <BotonLink href={`/profesor/actividades/${id}/solucion`} variante="secundario">
       Siguiente: preparar la solución
     </BotonLink>
   );

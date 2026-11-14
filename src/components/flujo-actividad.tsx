@@ -1,18 +1,19 @@
 // Columna con los pasos del proceso de una actividad. Solo informa el avance; no cambia el flujo.
-// Pasos: 1 Alta de actividad · 2 Solución · 3 Rúbrica · 4 Evaluación.
+// Pasos: 1 Alta de actividad · 2 Solución · 3 Rúbrica · 4 Entregas · 5 Evaluación. Cada paso es su propia vista.
 // Círculo gris claro = pendiente; azul = en curso; azul con ✓ = terminado.
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { estadoActividad } from "@/lib/almacen";
+import { entregasDe, estadoActividad } from "@/lib/almacen";
 import type { Actividad, BaseDeDatos } from "@/lib/tipos";
 
-export type PasoFlujo = 1 | 2 | 3 | 4;
+export type PasoFlujo = 1 | 2 | 3 | 4 | 5;
 
 const PASOS: { numero: PasoFlujo; titulo: string; texto: string }[] = [
   { numero: 1, titulo: "Alta de actividad", texto: "Genera o carga la actividad e imprime la hoja con QR." },
   { numero: 2, titulo: "Solución", texto: "Escanea tu solución o genérala con IA." },
   { numero: 3, titulo: "Rúbrica", texto: "Revisa los criterios y confírmala." },
-  { numero: 4, titulo: "Evaluación", texto: "Los alumnos entregan con el QR; revisa y publica." },
+  { numero: 4, titulo: "Entregas", texto: "Los alumnos entregan con el QR desde su celular." },
+  { numero: 5, titulo: "Evaluación", texto: "Revisa las calificaciones y corrige lo necesario." },
 ];
 
 /** Pasos terminados según los datos de la actividad (sin actividad, todavía nada). */
@@ -22,15 +23,18 @@ export function avanceFlujo(db: BaseDeDatos | undefined, actividad: Actividad | 
     hechos.add(1);
     if (actividad.reactivos.some((r) => r.respuesta.trim() || r.pasos?.length)) hechos.add(2);
     if (actividad.rubricaConfirmada) hechos.add(3);
-    if (estadoActividad(db, actividad) === "publicada") hechos.add(4);
+    const entregas = entregasDe(db, actividad.id);
+    if (entregas.length > 0 && entregas.every((e) => e.estado !== "sin_entregar")) hechos.add(4);
+    if (estadoActividad(db, actividad) === "publicada") hechos.add(5);
   }
-  const enCurso = (PASOS.find((p) => !hechos.has(p.numero))?.numero ?? 4) as PasoFlujo;
+  const enCurso = (PASOS.find((p) => !hechos.has(p.numero))?.numero ?? 5) as PasoFlujo;
   return { hechos, enCurso };
 }
 
 function enlace(id: string | undefined, paso: PasoFlujo) {
   if (!id) return undefined;
-  return paso === 1 ? `/profesor/actividades/${id}/hoja` : paso === 4 ? `/profesor/actividades/${id}` : `/profesor/actividades/${id}/rubrica`;
+  const base = `/profesor/actividades/${id}`;
+  return { 1: `${base}/hoja`, 2: `${base}/solucion`, 3: `${base}/rubrica`, 4: `${base}/entregas`, 5: base }[paso];
 }
 
 function Circulo({ numero, hecho, enCurso }: { numero: number; hecho: boolean; enCurso: boolean }) {
@@ -72,10 +76,24 @@ export function ConFlujo({
                 {i > 0 && (
                   <span className={`absolute right-1/2 top-4 h-0.5 w-full ${hechos.has(PASOS[i - 1].numero) ? "bg-tinta-600" : "bg-slate-200"}`} />
                 )}
-                <Circulo numero={p.numero} {...e} />
-                <span className={`mt-1 text-[11px] leading-tight ${p.numero === vista ? "font-semibold text-slate-900" : "text-slate-500"}`}>
-                  {p.titulo}
-                </span>
+                {(() => {
+                  const href = enlace(actividad?.id, p.numero);
+                  const cuerpo = (
+                    <>
+                      <Circulo numero={p.numero} {...e} />
+                      <span className={`mt-1 text-[11px] leading-tight ${p.numero === vista ? "font-semibold text-slate-900" : "text-slate-500"}`}>
+                        {p.titulo}
+                      </span>
+                    </>
+                  );
+                  return href && p.numero !== vista ? (
+                    <Link href={href} className="flex flex-col items-center">
+                      {cuerpo}
+                    </Link>
+                  ) : (
+                    <span className="flex flex-col items-center">{cuerpo}</span>
+                  );
+                })()}
               </li>
             );
           })}

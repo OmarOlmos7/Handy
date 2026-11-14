@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 import { DescargarReportePdf } from "@/components/descargar-reporte-pdf";
 import { ConFlujo } from "@/components/flujo-actividad";
 import { BarrasH, Columnas, LeyendaDesempeno, Pastel, Radar } from "@/components/graficas";
-import { PestanasActividad } from "@/components/pestanas-actividad";
 import { Cifra, Seccion, TablaAlumnos, num } from "@/components/tablero";
 import { BotonLink, Encabezado, InsigniaNivel, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
 import { actividadDe, entregasDe, grupoDe } from "@/lib/almacen";
@@ -59,8 +58,7 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
           </>
         }
       />
-      <ConFlujo vista={4} db={db} actividad={actividad}>
-        <PestanasActividad id={id} activa="analiticas" />
+      <ConFlujo vista={5} db={db} actividad={actividad}>
         {!hay ? (
           <Tarjeta className="text-sm text-slate-600">Las analíticas aparecen en cuanto haya entregas evaluadas.</Tarjeta>
         ) : (
