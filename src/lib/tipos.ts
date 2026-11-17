@@ -170,6 +170,32 @@ export interface Entrega {
   calificacionManual?: number;
   /** Hora en que empezó la evaluación automática (mientras está en curso). */
   evaluandoDesde?: string;
+  /** Recomendaciones de estudio: videos sugeridos y ejercicios de repaso con su respuesta. */
+  estudio?: RecomendacionesEstudio;
+  /** PDF corregido final (ruta relativa a la carpeta de datos); al archivarlo se borran las fotos. */
+  pdf?: string;
+  /** Cuándo se archivó la entrega (fotos borradas, queda solo el PDF). */
+  archivadaEn?: string;
+}
+
+export interface VideoSugerido {
+  titulo: string;
+  /** Texto para buscar el video en YouTube (la IA no inventa enlaces). */
+  busqueda: string;
+}
+
+export interface EjercicioRepaso {
+  tema: string;
+  enunciado: string;
+  /** Solo la respuesta final, sin procedimiento. */
+  respuesta: string;
+}
+
+export interface RecomendacionesEstudio {
+  temas: string[];
+  videos: VideoSugerido[];
+  ejercicios: EjercicioRepaso[];
+  generadoEn: string;
 }
 
 export interface Movimiento {
@@ -237,7 +263,7 @@ export interface Sesion {
 }
 
 /** Para qué se llamó a la IA (para el panel de administración). */
-export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver";
+export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {

@@ -4,7 +4,7 @@
 import "server-only";
 import { actividadDe, grupoDe, leerAhora, modificar } from "./almacen";
 import { saldoDe } from "./cuentas";
-import { ErrorIA, evaluarEntrega } from "./ia";
+import { ErrorIA, evaluarEntrega, recomendarEstudio } from "./ia";
 import { imagenesParaIA } from "./imagenes";
 
 export type ResultadoEvaluacion = { ok: true } | { ok: false; error: string; status: number };
@@ -64,12 +64,37 @@ async function evaluarAhora(actividadId: string, matricula: string): Promise<Res
         cantidad: -paginas,
       });
     });
+    await generarEstudio(actividadId, matricula);
     return { ok: true };
   } catch (e) {
     const error = e instanceof ErrorIA ? e.message : "No se pudo evaluar la entrega.";
     console.error(e);
     marcar(actividadId, matricula, { evaluandoDesde: undefined, error });
     return { ok: false, error, status: 502 };
+  }
+}
+
+/**
+ * Videos sugeridos y ejercicios de repaso para el alumno. Si falla, la evaluación ya quedó
+ * guardada y el profesor puede volver a pedirlas desde el formato de retroalimentación.
+ */
+export async function generarEstudio(actividadId: string, matricula: string): Promise<boolean> {
+  const db = leerAhora();
+  const actividad = actividadDe(db, actividadId);
+  const grupo = actividad && grupoDe(db, actividad.grupoId);
+  const entrega = db.entregas.find((e) => e.actividadId === actividadId && e.matricula === matricula);
+  if (!actividad || !grupo || !entrega || entrega.resultados.length === 0) return false;
+  try {
+    // Solo temas, puntos y comentarios: nunca el nombre ni la matrícula.
+    const estudio = await recomendarEstudio(actividad, entrega.resultados, entrega.mejoras, { profesorId: grupo.profesorId, actividadId });
+    modificar((d) => {
+      const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
+      if (e) e.estudio = { ...estudio, generadoEn: new Date().toISOString() };
+    });
+    return true;
+  } catch (e) {
+    console.error("No se pudieron generar las recomendaciones de estudio", e);
+    return false;
   }
 }
 

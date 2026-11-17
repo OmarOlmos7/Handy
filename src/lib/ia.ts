@@ -10,7 +10,7 @@ import { consumoDeRespuesta } from "./admin";
 import { esCerrado, puntosReactivoCerrado } from "./calificar";
 import { parametrosIA } from "./configuracion";
 import { svgSeguro } from "./svg";
-import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, ResultadoReactivo, TipoConsumoIA } from "./tipos";
+import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
 export class ErrorIA extends Error {}
 
@@ -552,4 +552,46 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
   });
 
   return { resultados, positivos: salida.positivos, mejoras: salida.mejoras };
+}
+
+// ---------- Recomendaciones de estudio ----------
+
+const EsquemaEstudio = z.object({
+  temas: z.array(z.string()),
+  videos: z.array(z.object({ titulo: z.string(), busqueda: z.string() })),
+  ejercicios: z.array(z.object({ tema: z.string(), enunciado: z.string(), respuesta: z.string() })),
+});
+
+const SISTEMA_ESTUDIO = `Eres un asistente para profesores de secundaria y bachillerato en México.
+Recibes los resultados ya calificados de un alumno en una actividad: cada reactivo con su tema, sus puntos y el comentario de la corrección.
+Prepara recomendaciones de estudio para que el alumno repase por su cuenta los temas donde perdió puntos (si no perdió puntos, los temas de la actividad para reforzar).
+
+- temas: de 1 a 3 temas a repasar, en orden de prioridad. Nombres cortos (máximo 8 palabras), sin fórmulas.
+- videos: de 2 a 3 videos sugeridos con ejercicios resueltos de esos temas. NO inventes enlaces ni nombres de canales: da un título descriptivo y "busqueda", el texto exacto para buscarlo en YouTube en español (por ejemplo "aceleración angular ejercicios resueltos torca").
+- ejercicios: de 2 a 3 ejercicios nuevos de esos temas o equivalentes, del mismo nivel de la actividad, con datos completos. "respuesta" es SOLO el resultado final con unidades, sin procedimiento, para que el alumno lo compruebe al practicar en casa. Verifica que la respuesta sea correcta.
+En "tema" de cada ejercicio usa el nombre corto del tema, sin fórmulas. En enunciados y respuestas usa LaTeX entre $...$ para fórmulas. Escribe en español de México, dirigido al alumno (tú).`;
+
+/** Videos sugeridos y ejercicios de repaso a partir de los resultados (sin imágenes ni datos del alumno). */
+export async function recomendarEstudio(act: Actividad, resultados: ResultadoReactivo[], mejoras: string[], uso: UsoIA): Promise<Omit<RecomendacionesEstudio, "generadoEn">> {
+  const detalle = act.reactivos.map((r) => {
+    const res = resultados.find((x) => x.numero === r.numero);
+    return { numero: r.numero, tema: r.tema, habilidad: r.habilidad, enunciado: r.enunciado, puntos: r.puntos, obtenidos: res?.puntosObtenidos ?? 0, comentario: res?.comentario ?? "" };
+  });
+  const salida = await pedir({
+    tipo: "estudio",
+    uso,
+    system: SISTEMA_ESTUDIO,
+    esquema: EsquemaEstudio,
+    contenido: [
+      {
+        type: "text",
+        text: `Actividad: ${act.titulo}\nPuntos de mejora: ${mejoras.join("; ") || "ninguno"}\nResultados por reactivo:\n${JSON.stringify(detalle, null, 1)}`,
+      },
+    ],
+  });
+  return {
+    temas: salida.temas.slice(0, 3),
+    videos: salida.videos.filter((v) => v.busqueda.trim()).slice(0, 3),
+    ejercicios: salida.ejercicios.filter((e) => e.enunciado.trim() && e.respuesta.trim()).slice(0, 3),
+  };
 }

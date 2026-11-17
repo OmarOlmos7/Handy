@@ -37,7 +37,7 @@ export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/rep
         titulo="Reporte de retroalimentación"
         subtitulo={actividad.titulo}
         acciones={
-          entrega.imagenes?.length ? (
+          entrega.imagenes?.length || entrega.pdf ? (
             <BotonLink href={`/api/pdf/${id}/${encodeURIComponent(matricula)}`} target="_blank">
               Descargar PDF
             </BotonLink>
