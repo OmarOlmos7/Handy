@@ -52,7 +52,6 @@ export function ConfigPrecision({ motor, esfuerzos }: { motor: MotorIA; esfuerzo
               <span>
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-slate-900">{info.nombre}</span>
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">Motor {info.motor}</span>
                 </span>
                 <span className="mt-1 block text-sm text-slate-600">{info.descripcion}</span>
               </span>
@@ -108,7 +107,7 @@ export function DeslizadorPrecision({ inicial, esfuerzos }: { inicial: MotorIA; 
         value={indice}
         onChange={(e) => setIndice(Number(e.target.value))}
         aria-label="Precisión y consumo de la IA"
-        aria-valuetext={`${info.nombre}, motor ${info.motor}`}
+        aria-valuetext={`${info.nombre}, esfuerzo ${INFO_ESFUERZO[p.esfuerzo].nombre.toLowerCase()}`}
         className="mt-3 w-full accent-tinta-600"
       />
       <div className="mt-1 grid grid-cols-3 text-xs font-medium">
@@ -128,7 +127,7 @@ export function DeslizadorPrecision({ inicial, esfuerzos }: { inicial: MotorIA; 
       <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm ring-1 ring-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="font-medium text-slate-800">
-            {info.nombre} · motor {info.motor} · esfuerzo {INFO_ESFUERZO[p.esfuerzo].nombre.toLowerCase()}
+            {info.nombre} · esfuerzo {INFO_ESFUERZO[p.esfuerzo].nombre.toLowerCase()}
           </span>
           <MedidorConsumo nivel={nivelConsumo(p)} />
         </div>

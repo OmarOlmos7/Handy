@@ -60,24 +60,21 @@ export function rebanadasNiveles(conteo: Record<NivelReporte, number>, r: Rangos
 export const MOTORES: MotorIA[] = ["rapido", "medio", "preciso"];
 export const ESFUERZOS: EsfuerzoIA[] = ["bajo", "medio", "alto"];
 
-export const INFO_MOTOR: Record<MotorIA, { nombre: string; motor: string; modelo: string; descripcion: string; consumo: number }> = {
+export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; descripcion: string; consumo: number }> = {
   rapido: {
     nombre: "Rápido",
-    motor: "Haiku",
     modelo: "claude-haiku-5-5",
     descripcion: "Respuestas veloces y el menor consumo. Ideal para reactivos cerrados (opción múltiple, verdadero o falso) y letra clara.",
     consumo: 1,
   },
   medio: {
     nombre: "Medio",
-    motor: "Sonnet",
     modelo: "claude-sonnet-5-5",
     descripcion: "Equilibrio entre precisión y consumo. Recomendado para la mayoría de las actividades con desarrollos cortos.",
     consumo: 3,
   },
   preciso: {
     nombre: "Preciso",
-    motor: "Opus",
     modelo: "claude-opus-5-5",
     descripcion: "La lectura más cuidadosa de procedimientos largos, gráficas y letra difícil. Es el que más tokens consume.",
     consumo: 6,

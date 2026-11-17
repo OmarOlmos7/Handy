@@ -166,7 +166,6 @@ export default function Precios() {
                 <div key={m} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                   <div className="flex items-center justify-between">
                     <h3 className="font-semibold">{info.nombre}</h3>
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">Motor {info.motor}</span>
                   </div>
                   <p className="mt-2 text-sm text-slate-600">{info.descripcion}</p>
                   <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
