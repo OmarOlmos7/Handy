@@ -2,6 +2,7 @@ import Link from "next/link";
 import { EjemploEntregable, type TipoEntregable } from "@/components/ejemplo-entregable";
 import { EjemploReactivo, type TipoEjemplo } from "@/components/ejemplo-reactivo";
 import { BotonLink, Logo } from "@/components/ui";
+import { PLANES, pesos } from "@/lib/planes";
 
 const pasos = [
   {
@@ -50,12 +51,13 @@ const reactivos: { tipo: string; ejemplo: TipoEjemplo; proximamente?: boolean }[
   { tipo: "Audios · producción oral", ejemplo: "audio", proximamente: true },
 ];
 
-const paquetes = [
-  { nombre: "Prueba", creditos: 50, precio: "Gratis", detalle: "Prueba evaluar una actividad con todo tu grupo" },
-  { nombre: "Básico", creditos: 300, precio: "$249", detalle: "Para grupos con 2-3 actividades al mes por grupo" },
-  { nombre: "Pro", creditos: 1500, precio: "$850", detalle: "Adecuado para un curso tetrasemestral", destacado: true },
-  { nombre: "Escuela", creditos: 10000, precio: "Contáctanos", detalle: "Ideal para academias o grupos de profesores en una institución" },
-];
+const paquetes = PLANES.map((p) => ({
+  nombre: p.nombre,
+  creditos: p.creditos,
+  precio: p.precio === undefined ? "Contáctanos" : p.precio === 0 ? "Gratis" : pesos(p.precio),
+  detalle: p.lema,
+  destacado: p.destacado,
+}));
 
 function HojaDemo() {
   return (
@@ -249,6 +251,9 @@ export default function Inicio() {
                 </div>
               ))}
             </div>
+            <Link href="/precios" className="mt-6 inline-block text-sm font-medium text-tinta-700 hover:underline">
+              Ver qué incluye cada plan →
+            </Link>
           </div>
         </section>
 
@@ -273,7 +278,7 @@ export default function Inicio() {
           <Logo />
           <div className="flex gap-4">
             <Link href="#privacidad">Aviso de privacidad</Link>
-            <Link href="#precios">Precios</Link>
+            <Link href="/precios">Precios</Link>
             <Link href="/ingresar">Ingresar</Link>
           </div>
         </div>

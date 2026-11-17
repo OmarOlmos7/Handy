@@ -40,6 +40,20 @@ export default async function Ingresar({ searchParams }: PageProps<"/ingresar">)
         </Link>
         .
       </p>
+      <Link
+        href="/precios"
+        target="_blank"
+        rel="noopener"
+        className="mt-6 flex items-center justify-between rounded-xl bg-tinta-50 px-4 py-3 text-sm text-tinta-800 ring-1 ring-tinta-100 hover:bg-tinta-100"
+      >
+        <span>
+          <span className="block font-medium">Planes y precios</span>
+          <span className="block text-xs text-tinta-700">Gratis, Básico, Pro y Escuela · se abre en otra pestaña</span>
+        </span>
+        <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+          <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </Link>
       <InstalarApp />
     </TarjetaCuenta>
   );

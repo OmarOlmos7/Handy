@@ -7,6 +7,7 @@ import { Cifra, Seccion, TablaAlumnos, num, tonoPuntaje } from "@/components/tab
 import { Tarjeta, fechaLarga } from "@/components/ui";
 import { grupoDe } from "@/lib/almacen";
 import { APROBATORIA, analiticasCurso } from "@/lib/analiticas";
+import { configuracionDe, rebanadasNiveles } from "@/lib/configuracion";
 import { colorDesempeno } from "@/lib/escala-color";
 import { nombreArchivoReporte, reporteGrupoPdf } from "@/lib/reporte-analiticas";
 import { datosProfesor } from "@/lib/sesion";
@@ -16,12 +17,12 @@ export const metadata: Metadata = { title: "Analíticas de aprendizaje del grupo
 /** Tablero con los resultados de todas las actividades del curso. */
 export default async function AnaliticasCurso({ params }: PageProps<"/profesor/grupos/[id]/analiticas">) {
   const { id } = await params;
-  const { db } = await datosProfesor();
+  const { db, profesor } = await datosProfesor();
   const grupo = grupoDe(db, id);
   if (!grupo) notFound();
   const actividades = db.actividades.filter((a) => a.grupoId === id);
   const ids = new Set(actividades.map((a) => a.id));
-  const a = analiticasCurso(grupo, actividades, db.entregas.filter((e) => ids.has(e.actividadId)));
+  const a = analiticasCurso(grupo, actividades, db.entregas.filter((e) => ids.has(e.actividadId)), configuracionDe(profesor.config).rangos);
   const g = a.general;
   const hay = a.actividades.length > 0;
 
@@ -74,15 +75,11 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
                 ]}
               />
             </Seccion>
-            <Seccion titulo="Niveles de desempeño" nota="Alumnos según su promedio.">
+            <Seccion titulo="Niveles de desempeño" nota="Alumnos según su promedio, con los rangos de tu configuración.">
               <Pastel
                 centro={String(g.alumnos)}
                 subcentro="alumnos"
-                rebanadas={[
-                  { nombre: "Alto (85 o más)", valor: a.niveles.alto, color: "#16a34a" },
-                  { nombre: "Medio (70 a 84)", valor: a.niveles.medio, color: "#f59e0b" },
-                  { nombre: "Bajo (menos de 70)", valor: a.niveles.bajo, color: "#dc2626" },
-                ]}
+                rebanadas={rebanadasNiveles(a.niveles, a.rangos)}
               />
             </Seccion>
             <Seccion titulo="Entregas" nota="Trabajos de las actividades evaluadas.">

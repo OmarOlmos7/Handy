@@ -7,10 +7,10 @@ services:
     environment:
       RETROALIMENTA_CLAUDE_KEY: ${RETROALIMENTA_CLAUDE_KEY}
       APP_URL: https://${DOMINIO}
-      CLAUDE_MODEL: ${CLAUDE_MODEL:-claude-opus-5-5}
       REGISTRO_CODIGO: ${REGISTRO_CODIGO:-}
       CREDITOS_INICIALES: ${CREDITOS_INICIALES:-50}
       ADMIN_CORREOS: ${ADMIN_CORREOS:-}
+      CONTACTO_CORREO: ${CONTACTO_CORREO:-}
     volumes:
       - datos:/datos
     expose:

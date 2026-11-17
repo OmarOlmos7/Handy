@@ -27,7 +27,6 @@ Variables opcionales en `.env.local`:
 | --- | --- |
 | `APP_URL` | Dirección que va en el QR, por ejemplo `http://192.168.1.20:3000` para que los celulares de la misma red WiFi puedan entrar |
 | `DATA_DIR` | Carpeta donde se guardan la base de datos y las fotos (por omisión `./data`) |
-| `CLAUDE_MODEL` | Modelo de Claude a usar (por omisión `claude-opus-5-5`) |
 | `REGISTRO_CODIGO` | Si tiene valor, el registro de profesores pide este código de invitación |
 | `CREDITOS_INICIALES` | Créditos de regalo para cada profesor nuevo (por omisión 50) |
 

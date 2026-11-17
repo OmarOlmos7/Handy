@@ -2,7 +2,8 @@
 // la IA no participa. Para comparar actividades con escalas distintas, todo se
 // expresa en puntaje sobre 100. Un trabajo no entregado cuenta como 0.
 import { calificada, escalaDe, puntosObtenidos, puntosTotales } from "./estadisticas";
-import type { Actividad, Alumno, Entrega, Grupo } from "./tipos";
+import { RANGOS_PREDETERMINADOS, contarNiveles, type NivelReporte } from "./configuracion";
+import type { Actividad, Alumno, Entrega, Grupo, RangosCalificacion } from "./tipos";
 
 /** Calificación mínima aprobatoria sobre 100 (6 sobre 10). */
 export const APROBATORIA = 60;
@@ -95,7 +96,9 @@ export interface Analiticas {
   /** Todos los temas, de mayor a menor acierto. */
   temas: { nombre: string; acierto: number }[];
   /** Alumnos por nivel de desempeño según su promedio (alto ≥ 85, medio ≥ 70, bajo < 70). */
-  niveles: { alto: number; medio: number; bajo: number };
+  /** Alumnos por nivel de desempeño según los rangos del profesor. */
+  niveles: Record<NivelReporte, number>;
+  rangos: RangosCalificacion;
   hallazgos: string[];
 }
 
@@ -136,7 +139,12 @@ function puntajeDe(actividad: Actividad, entrega: Entrega | undefined): { puntaj
   return { puntaje: total ? (puntosObtenidos(entrega) / total) * 100 : 0, entregada: true };
 }
 
-export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas: Entrega[]): Analiticas {
+export function analiticasCurso(
+  grupo: Grupo,
+  actividades: Actividad[],
+  entregas: Entrega[],
+  rangos: RangosCalificacion = RANGOS_PREDETERMINADOS,
+): Analiticas {
   const alumnos = grupo.alumnos;
   const ordenadas = [...actividades].sort((a, b) => a.fechaAplicacion.localeCompare(b.fechaAplicacion));
   // Solo cuentan las actividades que ya tienen al menos una entrega evaluada.
@@ -245,7 +253,7 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
     .sort((a, b) => a.acierto - b.acierto);
   const temasDebiles = todosTemas.slice(0, 5);
 
-  const rangos = [
+  const tramos = [
     { rango: "0 a 59", min: 0, max: 60 },
     { rango: "60 a 69", min: 60, max: 70 },
     { rango: "70 a 79", min: 70, max: 80 },
@@ -279,17 +287,14 @@ export function analiticasCurso(grupo: Grupo, actividades: Actividad[], entregas
     alumnos: porPromedio,
     mejores,
     atencion,
-    distribucion: rangos.map(({ rango, min, max }) => ({
+    distribucion: tramos.map(({ rango, min, max }) => ({
       rango,
       cantidad: promAlumnos.filter((x) => x >= min && x < max).length,
     })),
     temasDebiles,
     temas: [...todosTemas].reverse(),
-    niveles: {
-      alto: promAlumnos.filter((x) => x >= 85).length,
-      medio: promAlumnos.filter((x) => x >= 70 && x < 85).length,
-      bajo: promAlumnos.filter((x) => x < 70).length,
-    },
+    niveles: contarNiveles(promAlumnos, rangos),
+    rangos,
     hallazgos: [],
   };
   analiticas.hallazgos = hallazgos(analiticas);

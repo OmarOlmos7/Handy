@@ -8,6 +8,7 @@ import { Cifra, Seccion, TablaAlumnos, num } from "@/components/tablero";
 import { BotonLink, Encabezado, InsigniaNivel, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
 import { actividadDe, entregasDe, grupoDe } from "@/lib/almacen";
 import { APROBATORIA, analiticasCurso } from "@/lib/analiticas";
+import { configuracionDe, rebanadasNiveles } from "@/lib/configuracion";
 import { colorDesempeno } from "@/lib/escala-color";
 import { formatoCal, reporteGrupo } from "@/lib/estadisticas";
 import { hallazgosActividad, nombreArchivoReporte, nombreTipoReactivo, reporteActividadPdf } from "@/lib/reporte-analiticas";
@@ -18,12 +19,12 @@ export const metadata: Metadata = { title: "Analíticas de la actividad" };
 /** Métricas de aprendizaje de una sola actividad, con el mismo tablero que el del grupo. */
 export default async function AnaliticasActividad({ params }: PageProps<"/profesor/actividades/[id]/analiticas">) {
   const { id } = await params;
-  const { db } = await datosProfesor();
+  const { db, profesor } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
   const entregas = entregasDe(db, id);
-  const a = analiticasCurso(grupo, [actividad], entregas);
+  const a = analiticasCurso(grupo, [actividad], entregas, configuracionDe(profesor.config).rangos);
   const rep = reporteGrupo(actividad, entregas, grupo.alumnos);
   const g = a.general;
   const s = a.actividades[0];
@@ -82,15 +83,11 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
                   ]}
                 />
               </Seccion>
-              <Seccion titulo="Niveles de desempeño" nota="Alumnos según su puntaje.">
+              <Seccion titulo="Niveles de desempeño" nota="Alumnos según su puntaje, con los rangos de tu configuración.">
                 <Pastel
                   centro={String(g.aprobados + g.reprobados)}
                   subcentro="alumnos"
-                  rebanadas={[
-                    { nombre: "Alto (85 o más)", valor: a.niveles.alto, color: "#16a34a" },
-                    { nombre: "Medio (70 a 84)", valor: a.niveles.medio, color: "#f59e0b" },
-                    { nombre: "Bajo (menos de 70)", valor: a.niveles.bajo, color: "#dc2626" },
-                  ]}
+                  rebanadas={rebanadasNiveles(a.niveles, a.rangos)}
                 />
               </Seccion>
               <Seccion titulo="Entregas" nota="Alumnos del curso.">
