@@ -40,6 +40,14 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
             <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
               Hoja imprimible con QR
             </BotonLink>
+            {entregas.some((e) => e.resultados.length > 0 && (e.imagenes?.length || e.pdf)) && (
+              <a
+                href={`/api/pdf/${id}/grupo`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-800 ring-1 ring-slate-300 hover:bg-slate-50"
+              >
+                Descargar PDF del grupo
+              </a>
+            )}
             <BotonLink href={`/profesor/actividades/${id}`}>Siguiente: evaluación</BotonLink>
           </>
         }
@@ -99,6 +107,15 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
                     <td className="px-4 py-3 text-slate-600">{e.paginasRecibidas || "—"}</td>
                     <td className="px-4 py-3 text-xs text-slate-600">{e.entregadaEn ? fechaHoraLarga(e.entregadaEn) : "—"}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
+                      {e.resultados.length > 0 && (e.imagenes?.length || e.pdf) && (
+                        <a
+                          href={`/api/pdf/${id}/${encodeURIComponent(e.matricula)}`}
+                          target="_blank"
+                          className="text-xs text-tinta-700 hover:underline"
+                        >
+                          Descargar PDF
+                        </a>
+                      )}
                       {e.resultados.length === 0 && (
                         <Link
                           href={`/entregar/${id}?m=${encodeURIComponent(e.matricula)}&n=${encodeURIComponent(nombre(e.matricula))}`}

@@ -1,12 +1,16 @@
 import Link from "next/link";
+import { after } from "next/server";
 import { salirProfesor } from "@/app/acciones-cuenta";
 import { BarraApp } from "@/components/barra-app";
 import { esAdmin } from "@/lib/admin";
+import { mantenimiento } from "@/lib/archivo";
 import { saldo } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 
 export default async function LayoutProfesor({ children }: LayoutProps<"/profesor">) {
   const { profesor, db } = await datosProfesor();
+  // Archiva fotos y borra lo vencido sin frenar la página (como máximo cada 10 minutos).
+  after(() => mantenimiento().catch((e) => console.error("Mantenimiento", e)));
   return (
     <>
       <BarraApp

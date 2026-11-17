@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { guardarRevision } from "@/app/acciones";
 import type { Actividad, Alumno, Entrega, ResultadoReactivo } from "@/lib/tipos";
 import { calificacionCalculada, escalaDe, formatoCal, puntosTotales } from "@/lib/estadisticas";
+import { archivarFotosDesde } from "@/lib/retencion";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { Boton, Insignia, colorCalificacion } from "./ui";
 import { sinLatex } from "./texto-mat";
@@ -38,7 +39,8 @@ export function RevisionAlumno({
   const [aviso, setAviso] = useState("");
   // Lo último que se guardó, para saber si hay cambios pendientes.
   const [guardado, setGuardado] = useState(() => JSON.stringify([entregaInicial.resultados, entregaInicial.positivos, entregaInicial.mejoras]));
-  const conFotos = Boolean(entregaInicial.imagenes?.length);
+  const conFotos = Boolean(entregaInicial.imagenes?.length || entregaInicial.pdf);
+  const archivarDesde = archivarFotosDesde(actividad, entregaInicial);
 
   const entrega: Entrega = useMemo(
     () => ({
@@ -132,6 +134,19 @@ export function RevisionAlumno({
             {aprobada ? <Insignia tono="verde">Liberada</Insignia> : <Insignia tono="azul">Sugerida por IA</Insignia>}
           </div>
           {aviso && <p className="mt-2 text-sm text-slate-600" role="status">{aviso}</p>}
+          {entregaInicial.archivadaEn ? (
+            <p className="mt-2 rounded-lg bg-slate-50 p-2 text-xs text-slate-600">
+              Las fotos ya se archivaron en el PDF: las marcas de la hoja quedan fijas. Los puntos y comentarios que cambies se
+              actualizan en el reporte y en la portada del PDF.
+            </p>
+          ) : (
+            Boolean(entregaInicial.imagenes?.length) &&
+            archivarDesde && (
+              <p className="mt-2 text-xs text-slate-500">
+                Las fotos se guardan hasta el {archivarDesde.toLocaleDateString("es-MX", { day: "numeric", month: "long", timeZone: "America/Mexico_City" })}; después queda solo el PDF corregido.
+              </p>
+            )
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             {aprobada ? (
               <>
@@ -157,6 +172,12 @@ export function RevisionAlumno({
                 PDF corregido
               </a>
             )}
+            <Link
+              href={`/profesor/actividades/${actividad.id}/revision/${encodeURIComponent(alumno.matricula)}/retroalimentacion`}
+              className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50"
+            >
+              Formato de retroalimentación
+            </Link>
             {siguienteHref && (
               <Link href={siguienteHref} className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50">
                 Siguiente alumno →
