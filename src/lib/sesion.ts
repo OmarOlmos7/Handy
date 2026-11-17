@@ -58,7 +58,7 @@ export const profesorActual = cache(async () => {
   const db = await leer();
   const sesion = await sesionDe(COOKIE_PROFESOR, db);
   const p = sesion?.profesorId ? db.profesores.find((x) => x.id === sesion.profesorId) : undefined;
-  return p ? { id: p.id, nombre: p.nombre, correo: p.correo } : undefined;
+  return p ? { id: p.id, nombre: p.nombre, correo: p.correo, config: p.config } : undefined;
 });
 
 /** Exige sesión de profesor; si no hay, manda a /ingresar. */

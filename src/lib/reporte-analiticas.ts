@@ -1,6 +1,7 @@
 // Contenido del reporte PDF de analíticas (grupo o actividad). Todos los números salen de
 // `analiticasCurso` y `reporteGrupo`; aquí solo se eligen y ordenan para la hoja carta.
 import { APROBATORIA, type Analiticas, type ResumenAlumno } from "./analiticas";
+import { rebanadasNiveles } from "./configuracion";
 import { colorDesempeno } from "./escala-color";
 import { formatoCal, type Nivel, type ReporteGrupo } from "./estadisticas";
 import type { Actividad, Grupo } from "./tipos";
@@ -89,13 +90,9 @@ function pasteles(a: Analiticas, porAlumno: string): BloqueReporte {
       {
         titulo: "Niveles de desempeño",
         nota: "Alumnos por nivel.",
-        centro: String(a.niveles.alto + a.niveles.medio + a.niveles.bajo),
+        centro: String(a.niveles.superior + a.niveles.alto + a.niveles.medio + a.niveles.bajo),
         subcentro: "alumnos",
-        rebanadas: [
-          { nombre: "Alto (85+)", valor: a.niveles.alto, color: "#16a34a" },
-          { nombre: "Medio (70-84)", valor: a.niveles.medio, color: "#f59e0b" },
-          { nombre: "Bajo (<70)", valor: a.niveles.bajo, color: "#dc2626" },
-        ],
+        rebanadas: rebanadasNiveles(a.niveles, a.rangos),
       },
       {
         titulo: "Entregas",

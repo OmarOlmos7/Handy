@@ -114,6 +114,8 @@ export interface Actividad {
   /** Imágenes de la solución del profesor (rutas relativas a la carpeta de datos). */
   solucion?: string[];
   rubricaConfirmada?: boolean;
+  /** Motor y esfuerzo de la IA para esta actividad; sin valor, el predeterminado (Medio). */
+  precision?: PrecisionIA;
   /** Criterios de evaluación con su porcentaje, tomados de las indicaciones del profesor. */
   criterios?: CriterioEvaluacion[];
   /** Recomendaciones del profesor a seguir al evaluar. */
@@ -184,6 +186,33 @@ export interface Profesor {
   /** scrypt: "sal:hash" en hexadecimal. Nunca la contraseña en claro. */
   contrasena: string;
   creadoEn: string;
+  /** Preferencias del profesor (rangos de calificación y precisión de la IA). */
+  config?: ConfiguracionProfesor;
+}
+
+/** Motor de IA: Rápido (Haiku), Medio (Sonnet) o Preciso (Opus). */
+export type MotorIA = "rapido" | "medio" | "preciso";
+/** Esfuerzo de razonamiento del motor. */
+export type EsfuerzoIA = "bajo" | "medio" | "alto";
+
+export interface PrecisionIA {
+  motor: MotorIA;
+  esfuerzo: EsfuerzoIA;
+}
+
+/** Límite inferior (sobre 100) de cada nivel; Bajo va de 0 al límite de Medio. */
+export interface RangosCalificacion {
+  medio: number;
+  alto: number;
+  superior: number;
+}
+
+export interface ConfiguracionProfesor {
+  rangos?: RangosCalificacion;
+  /** Motor predeterminado para las actividades nuevas. */
+  motor?: MotorIA;
+  /** Esfuerzo elegido para cada motor. */
+  esfuerzos?: Partial<Record<MotorIA, EsfuerzoIA>>;
 }
 
 /** Cuenta del alumno: entra con su correo y su clave de acceso para ver solo sus resultados. */

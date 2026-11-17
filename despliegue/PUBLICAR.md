@@ -124,7 +124,6 @@ Llena así:
 ```
 DOMINIO=tudominio.com
 RETROALIMENTA_CLAUDE_KEY=sk-ant-...tu llave...
-CLAUDE_MODEL=claude-opus-5-5
 REGISTRO_CODIGO=una-palabra-que-solo-tú-compartas
 CREDITOS_INICIALES=50
 ```

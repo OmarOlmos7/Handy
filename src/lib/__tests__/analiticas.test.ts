@@ -113,7 +113,7 @@ describe("analiticasCurso", () => {
   it("cuenta aprobados, niveles y entregas para los pasteles", () => {
     expect(a.general.aprobados + a.general.reprobados).toBe(3);
     expect(a.general.entregadas + a.general.noEntregadas).toBe(6);
-    expect(a.niveles.alto + a.niveles.medio + a.niveles.bajo).toBe(3);
+    expect(a.niveles.superior + a.niveles.alto + a.niveles.medio + a.niveles.bajo).toBe(3);
   });
 
   it("redacta hallazgos con los números calculados", () => {

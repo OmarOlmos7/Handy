@@ -2,6 +2,7 @@ import { PDFDocument } from "pdf-lib";
 import { borrarCarpeta, guardarArchivo, leer, leerArchivo, modificar, slug } from "@/lib/almacen";
 import { ErrorIA, generarActividad } from "@/lib/ia";
 import { guardarSubidos } from "@/lib/imagenes";
+import { precisionPara } from "@/lib/configuracion";
 import { profesorActual } from "@/lib/sesion";
 import type { Actividad } from "@/lib/tipos";
 import { deCampoFechaHora } from "@/lib/resultados";
@@ -44,13 +45,14 @@ export async function POST(req: Request) {
     rubricaConfirmada: false,
     escala: form.get("escala") === "10" ? 10 : 100,
     resultadosDesde,
+    precision: precisionPara(form.get("motor"), profesor.config),
   };
 
   if (modo === "ia") {
     const prompt = String(form.get("prompt") ?? "").trim().slice(0, 4000);
     if (prompt.length < 10) return Response.json({ error: "Describe la actividad: tipo de reactivos, ponderaciones y temas" }, { status: 400 });
     try {
-      const generada = await generarActividad({ titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala }, { profesorId: profesor.id, actividadId: id });
+      const generada = await generarActividad({ titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala }, { profesorId: profesor.id, actividadId: id, precision: base.precision });
       Object.assign(base, {
         origen: "ia",
         prompt,

@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import type { Grupo } from "@/lib/tipos";
+import type { EsfuerzoIA, Grupo, MotorIA } from "@/lib/tipos";
+import { DeslizadorPrecision } from "./precision-ia";
 import { Boton, BotonLink, campo } from "./ui";
 
 type Modo = "ia" | "escaneada";
@@ -18,10 +19,15 @@ export function NuevaActividad({
   grupos,
   hoy,
   grupoInicial,
+  motorInicial = "medio",
+  esfuerzos = { rapido: "medio", medio: "medio", preciso: "medio" },
 }: {
   grupos: Pick<Grupo, "id" | "materia" | "nombre">[];
   hoy: string;
   grupoInicial?: string;
+  /** Nivel de precisión con el que arranca el deslizador (el de la configuración; Medio si no hay). */
+  motorInicial?: MotorIA;
+  esfuerzos?: Record<MotorIA, EsfuerzoIA>;
 }) {
   const router = useRouter();
   const [modo, setModo] = useState<Modo>("ia");
@@ -160,6 +166,8 @@ export function NuevaActividad({
             Las calificaciones de esta actividad (hoja, reportes, PDF y Excel) se muestran en esta escala.
           </span>
         </fieldset>
+
+        <DeslizadorPrecision inicial={motorInicial} esfuerzos={esfuerzos} />
 
         <label className="block max-w-sm text-sm font-medium text-slate-700">
           Resultados visibles para alumnos desde

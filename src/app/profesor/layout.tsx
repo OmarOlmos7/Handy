@@ -18,6 +18,7 @@ export default async function LayoutProfesor({ children }: LayoutProps<"/profeso
           ...(esAdmin(profesor.correo) ? [{ href: "/admin", texto: "Administración" }] : []),
         ]}
         usuario={{ nombre: profesor.nombre, rol: profesor.correo }}
+        configuracion="/profesor/configuracion"
         extra={
           <>
             <Link

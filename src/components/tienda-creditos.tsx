@@ -1,19 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { PLANES, pesos } from "@/lib/planes";
 import { Boton } from "./ui";
 
-const paquetes = [
-  { id: "basico", nombre: "Básico", creditos: 300, precio: 249 },
-  { id: "pro", nombre: "Pro", creditos: 1500, precio: 850, destacado: true },
-];
-
-const pesos = (n: number) => n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+const paquetes = PLANES.filter((p) => p.enTienda).map((p) => ({ id: p.id, nombre: p.nombre, creditos: p.creditos, precio: p.precio ?? 0, destacado: p.destacado }));
 
 /** Demostración del flujo de compra. En producción redirige al checkout de Mercado Pago o Stripe
  * y los créditos se acreditan solo cuando llega el webhook de pago confirmado. */
 export function TiendaCreditos() {
-  const [elegido, setElegido] = useState("profesor");
+  const [elegido, setElegido] = useState<string>("pro");
   const [metodo, setMetodo] = useState("tarjeta");
   const [enviado, setEnviado] = useState(false);
   const p = paquetes.find((x) => x.id === elegido)!;

@@ -5,13 +5,12 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { modificar } from "./almacen";
+import { leerAhora, modificar } from "./almacen";
 import { consumoDeRespuesta } from "./admin";
 import { esCerrado, puntosReactivoCerrado } from "./calificar";
+import { parametrosIA } from "./configuracion";
 import { svgSeguro } from "./svg";
-import type { Actividad, CriterioEvaluacion, Escala, Reactivo, ResultadoReactivo, TipoConsumoIA } from "./tipos";
-
-const MODELO = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
+import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
 export class ErrorIA extends Error {}
 
@@ -51,6 +50,19 @@ function bloquesImagen(imagenes: ImagenParaIA[], etiqueta: string): Anthropic.Be
 export interface UsoIA {
   profesorId?: string;
   actividadId?: string;
+  /** Motor y esfuerzo; si falta, se toma de la actividad guardada (o el predeterminado, Medio). */
+  precision?: PrecisionIA;
+}
+
+/** Precisión de la llamada: la indicada o la de la actividad. */
+function precisionDe(uso: UsoIA): PrecisionIA | undefined {
+  if (uso.precision) return uso.precision;
+  if (!uso.actividadId) return undefined;
+  try {
+    return leerAhora().actividades.find((a) => a.id === uso.actividadId)?.precision;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Anota los tokens de la llamada para el panel de administración; si falla, no detiene la llamada. */
@@ -72,15 +84,17 @@ async function pedir<T>(params: {
   contenido: Anthropic.Beta.BetaContentBlockParam[];
   esquema: z.ZodType<T>;
 }): Promise<T> {
+  const { modelo, esfuerzo } = parametrosIA(precisionDe(params.uso));
+  // Si un clasificador de seguridad rechaza la petición, la API la reintenta con otro modelo
+  // (el motor Rápido no tiene ese respaldo).
+  const respaldo = modelo.includes("haiku") ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const };
   let respuesta;
   try {
     respuesta = await cliente().beta.messages.parse({
-      model: MODELO,
+      model: modelo,
       max_tokens: 16000,
-      // Si un clasificador de seguridad rechaza la petición, la API la reintenta con otro modelo.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "high", format: betaZodOutputFormat(params.esquema) },
+      ...respaldo,
+      output_config: { effort: esfuerzo, format: betaZodOutputFormat(params.esquema) },
       system: params.system,
       messages: [{ role: "user", content: params.contenido }],
     });
