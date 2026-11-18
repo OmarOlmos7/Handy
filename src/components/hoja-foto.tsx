@@ -3,6 +3,8 @@
 // Foto real de la hoja del alumno con las correcciones, igual que el PDF corregido:
 // sobre la hoja, un círculo relleno con el número de comentario y la paloma o el tache
 // a un lado; en el margen derecho, los comentarios numerados a la misma altura.
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
 import { useLayoutEffect, useRef } from "react";
 import type { Actividad, Entrega } from "@/lib/tipos";
 
@@ -19,6 +21,7 @@ export function HojaFoto({
   anotada?: boolean;
   modoProfesor?: boolean;
 }) {
+  const th = useTextos().t.profesor.hojaAlumno;
   const margen = useRef<HTMLDivElement>(null);
   const foto = useRef<HTMLImageElement>(null);
   const ruta = entrega.imagenes?.[pagina - 1];
@@ -61,7 +64,7 @@ export function HojaFoto({
         <img
           ref={foto}
           src={`/api/archivos/${ruta}`}
-          alt={`Página ${pagina} de la entrega`}
+          alt={formato(th.fotoAlt, { p: pagina })}
           className="block h-auto w-full"
         />
         {marcas.map(({ res, numero }) => {
@@ -107,11 +110,11 @@ export function HojaFoto({
                     {completo ? "✓" : "✗"}
                   </span>
                   <span className="text-xs font-semibold leading-none sm:text-sm">
-                    Reactivo {res.numero} · {res.puntosObtenidos}/{r.puntos}
+                    {formato(th.reactivo, { n: res.numero })} · {res.puntosObtenidos}/{r.puntos}
                   </span>
                   {modoProfesor && res.confianza === "baja" && (
                     <span className="rounded bg-aviso px-1 text-[10px] font-semibold text-white">
-                      Revisar
+                      {th.revisar}
                     </span>
                   )}
                 </div>
@@ -152,4 +155,22 @@ export function numerarMarcas(entrega: Entrega) {
         (a.ubicacion?.x ?? 0.9) - (b.ubicacion?.x ?? 0.9),
     )
     .map((res, i) => ({ res, numero: i + 1 }));
+}
+
+/** Hojas corregidas ya archivadas en el PDF (las fotos se borraron). */
+export function HojasArchivadas({ actividadId, matricula }: { actividadId: string; matricula: string }) {
+  const th = useTextos().t.profesor.hojaAlumno;
+  const url = `/api/pdf/${actividadId}/${encodeURIComponent(matricula)}?hojas=1`;
+  return (
+    <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+      <iframe src={`${url}#view=FitH`} title={th.hojasCorregidas} className="h-[80vh] w-full" />
+      <a
+        href={url}
+        target="_blank"
+        className="block border-t border-slate-100 px-4 py-2 text-center text-xs font-medium text-tinta-700 hover:bg-slate-50"
+      >
+        {th.abrirHojas}
+      </a>
+    </div>
+  );
 }

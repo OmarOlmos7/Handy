@@ -5,6 +5,7 @@ import { descargar } from "@/lib/exportar";
 import { pdfReporteAnaliticas } from "@/lib/pdf-reporte";
 import type { ReporteAnaliticas } from "@/lib/reporte-analiticas";
 import { Boton } from "./ui";
+import { useTextos } from "./proveedor-textos";
 
 /** Genera en el navegador el reporte de analíticas en PDF (hoja carta) y lo descarga. */
 export function DescargarReportePdf({
@@ -16,6 +17,7 @@ export function DescargarReportePdf({
   archivo: string;
   variante?: "primario" | "secundario";
 }) {
+  const tb = useTextos().t.profesor.botones;
   const [generando, setGenerando] = useState(false);
   const [error, setError] = useState("");
 
@@ -28,7 +30,7 @@ export function DescargarReportePdf({
         .catch(() => undefined);
       descargar(await pdfReporteAnaliticas(reporte, logo), `${archivo}.pdf`);
     } catch {
-      setError("No se pudo generar el PDF. Intenta de nuevo.");
+      setError(tb.noPdf);
     } finally {
       setGenerando(false);
     }
@@ -40,7 +42,7 @@ export function DescargarReportePdf({
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4" aria-hidden>
           <path d="M10 3v10m0 0-4-4m4 4 4-4M4 15v2h12v-2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {generando ? "Generando…" : "Descargar reporte PDF"}
+        {generando ? tb.generando : tb.descargarReporte}
       </Boton>
       {error && <span className="mt-1 text-xs text-error">{error}</span>}
     </span>

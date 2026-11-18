@@ -1,6 +1,6 @@
 import type { Actividad, Alumno, Entrega } from "@/lib/tipos";
 import { Hoja } from "./hoja";
-import { HojaFoto } from "./hoja-foto";
+import { HojaFoto, HojasArchivadas } from "./hoja-foto";
 
 /** Muestra la página con fotos reales si existen; si no (datos de ejemplo), la dibuja en SVG. */
 export function HojaEntrega(props: {
@@ -14,22 +14,7 @@ export function HojaEntrega(props: {
   if (!props.entrega.imagenes?.length && props.entrega.pdf) {
     // Fotos ya archivadas: se muestran las hojas corregidas guardadas en PDF.
     if (props.pagina !== 1) return null;
-    return (
-      <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-        <iframe
-          src={`/api/pdf/${props.actividad.id}/${encodeURIComponent(props.entrega.matricula)}?hojas=1#view=FitH`}
-          title="Hojas corregidas"
-          className="h-[80vh] w-full"
-        />
-        <a
-          href={`/api/pdf/${props.actividad.id}/${encodeURIComponent(props.entrega.matricula)}?hojas=1`}
-          target="_blank"
-          className="block border-t border-slate-100 px-4 py-2 text-center text-xs font-medium text-tinta-700 hover:bg-slate-50"
-        >
-          Abrir las hojas corregidas en otra pestaña
-        </a>
-      </div>
-    );
+    return <HojasArchivadas actividadId={props.actividad.id} matricula={props.entrega.matricula} />;
   }
   if (props.entrega.imagenes?.length) {
     return <HojaFoto actividad={props.actividad} entrega={props.entrega} pagina={props.pagina} modoProfesor={props.modoProfesor} />;

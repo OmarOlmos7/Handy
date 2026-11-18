@@ -11,10 +11,15 @@ import { APROBATORIA, analiticasCurso } from "@/lib/analiticas";
 import { configuracionDe, rebanadasNiveles } from "@/lib/configuracion";
 import { colorDesempeno } from "@/lib/escala-color";
 import { formatoCal, reporteGrupo } from "@/lib/estadisticas";
-import { hallazgosActividad, nombreArchivoReporte, nombreTipoReactivo, reporteActividadPdf } from "@/lib/reporte-analiticas";
+import { hallazgosActividad, nombreArchivoReporte, reporteActividadPdf } from "@/lib/reporte-analiticas";
 import { datosProfesor } from "@/lib/sesion";
+import { textos } from "@/lib/i18n/servidor";
+import { formato } from "@/lib/i18n/idiomas";
 
-export const metadata: Metadata = { title: "Analíticas de la actividad" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return { title: t.profesor.analiticas.metaActividad };
+}
 
 /** Métricas de aprendizaje de una sola actividad, con el mismo tablero que el del grupo. */
 export default async function AnaliticasActividad({ params }: PageProps<"/profesor/actividades/[id]/analiticas">) {
@@ -24,13 +29,19 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
   const entregas = entregasDe(db, id);
-  const a = analiticasCurso(grupo, [actividad], entregas, configuracionDe(profesor.config).rangos);
+  const { t, locale } = await textos();
+  const ta = t.profesor.analiticas;
+  const tc = t.profesor.comun;
+  const tipos: Record<string, string> = t.profesor.tipos;
+  const nombreTipoReactivo = (tipo: string) => tipos[tipo] ?? tipo;
+  const niveles = { nombres: t.configuracion.niveles, a: ta.rangoA };
+  const a = analiticasCurso(grupo, [actividad], entregas, configuracionDe(profesor.config).rangos, t.profesor.calculo);
   const rep = reporteGrupo(actividad, entregas, grupo.alumnos);
   const g = a.general;
   const s = a.actividades[0];
   const hay = Boolean(s);
 
-  const hallazgos = hallazgosActividad(a, rep);
+  const hallazgos = hallazgosActividad(a, rep, t.profesor.calculo);
   const reportePdf = reporteActividadPdf(grupo, actividad, a, rep);
 
   const sinEntregar = grupo.alumnos.filter((al) => !rep.filas.some((f) => f.alumno.matricula === al.matricula));
@@ -39,12 +50,12 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
     <>
       <Encabezado
         migas={[
-          { texto: "Panel", href: "/profesor" },
+          { texto: tc.panel, href: "/profesor" },
           { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
           { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
         ]}
-        titulo="Analíticas de la actividad"
-        subtitulo={`${actividad.titulo} · aplicada ${fechaLarga(actividad.fechaAplicacion)} · puntajes sobre 100 (la actividad se califica sobre ${rep.escala}); un trabajo no entregado cuenta como 0.`}
+        titulo={ta.metaActividad}
+        subtitulo={formato(ta.subtituloActividad, { titulo: actividad.titulo, f: fechaLarga(actividad.fechaAplicacion, locale), e: rep.escala })}
         acciones={
           <>
             {hay && (
@@ -54,55 +65,55 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
               />
             )}
             <BotonLink href={`/profesor/grupos/${grupo.id}/analiticas`} variante="secundario">
-              Analíticas del grupo
+              {ta.analiticasGrupo}
             </BotonLink>
           </>
         }
       />
       <ConFlujo vista={5} db={db} actividad={actividad}>
         {!hay ? (
-          <Tarjeta className="text-sm text-slate-600">Las analíticas aparecen en cuanto haya entregas evaluadas.</Tarjeta>
+          <Tarjeta className="text-sm text-slate-600">{ta.sinActividad}</Tarjeta>
         ) : (
           <div className="min-w-0 space-y-6">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              <Cifra titulo="Promedio" valor={num(s.promedio)} detalle={`${num(s.promedioEntregadas)} sin contar lo no entregado`} />
-              <Cifra titulo="Mediana" valor={num(s.mediana)} detalle={`Mín. ${num(s.minima)} · máx. ${num(s.maxima)}`} />
-              <Cifra titulo="Desviación estándar" valor={num(s.desviacion)} detalle="Qué tan dispersos están los puntajes" />
-              <Cifra titulo="Aprobación" valor={`${s.aprobacion}%`} detalle={`Alumnos con ${APROBATORIA} o más`} />
-              <Cifra titulo="Tasa de entrega" valor={`${s.tasaEntrega}%`} detalle={`${s.noEntregadas} sin entregar${s.pendientes ? ` · ${s.pendientes} por evaluar` : ""}`} />
+              <Cifra titulo={ta.promedio} valor={num(s.promedio)} detalle={formato(ta.sinContar, { n: num(s.promedioEntregadas) })} />
+              <Cifra titulo={ta.mediana} valor={num(s.mediana)} detalle={formato(ta.minMax, { a: num(s.minima), b: num(s.maxima) })} />
+              <Cifra titulo={ta.desviacion} valor={num(s.desviacion)} detalle={ta.dispersosPuntajes} />
+              <Cifra titulo={ta.aprobacion} valor={`${s.aprobacion}%`} detalle={formato(ta.alumnosCon, { n: APROBATORIA })} />
+              <Cifra titulo={ta.tasaEntrega} valor={`${s.tasaEntrega}%`} detalle={`${formato(ta.sinEntregar, { n: s.noEntregadas })}${s.pendientes ? formato(ta.porEvaluar, { n: s.pendientes }) : ""}`} />
             </div>
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <Seccion titulo="Aprobados vs. no aprobados" nota={`Aprueba con ${APROBATORIA} o más.`}>
+              <Seccion titulo={ta.aprobadosVs} nota={formato(ta.apruebaCon, { n: APROBATORIA })}>
                 <Pastel
                   centro={`${g.aprobacion}%`}
-                  subcentro="aprobados"
+                  subcentro={ta.aprobados}
                   rebanadas={[
-                    { nombre: "Aprobados", valor: g.aprobados, color: "#22c55e" },
-                    { nombre: "No aprobados", valor: g.reprobados, color: "#ef4444" },
+                    { nombre: ta.aprobadosM, valor: g.aprobados, color: "#22c55e" },
+                    { nombre: ta.noAprobados, valor: g.reprobados, color: "#ef4444" },
                   ]}
                 />
               </Seccion>
-              <Seccion titulo="Niveles de desempeño" nota="Alumnos según su puntaje, con los rangos de tu configuración.">
+              <Seccion titulo={ta.niveles} nota={ta.nivelesNotaActividad}>
                 <Pastel
                   centro={String(g.aprobados + g.reprobados)}
-                  subcentro="alumnos"
-                  rebanadas={rebanadasNiveles(a.niveles, a.rangos)}
+                  subcentro={ta.alumnos}
+                  rebanadas={rebanadasNiveles(a.niveles, a.rangos, niveles)}
                 />
               </Seccion>
-              <Seccion titulo="Entregas" nota="Alumnos del curso.">
+              <Seccion titulo={ta.entregas} nota={ta.entregasNotaActividad}>
                 <Pastel
                   centro={`${g.tasaEntrega}%`}
-                  subcentro="entregados"
+                  subcentro={ta.entregados}
                   rebanadas={[
-                    { nombre: "Entregados", valor: g.entregadas, color: "#3b6ef6" },
-                    { nombre: "No entregados (0)", valor: g.noEntregadas, color: "#94a3b8" },
+                    { nombre: ta.entregadosM, valor: g.entregadas, color: "#3b6ef6" },
+                    { nombre: ta.noEntregados, valor: g.noEntregadas, color: "#94a3b8" },
                   ]}
                 />
               </Seccion>
             </div>
 
-            <Seccion titulo="Hallazgos" nota="Calculados con los resultados de la actividad.">
+            <Seccion titulo={ta.hallazgos} nota={ta.hallazgosNotaActividad}>
               <ul className="list-disc space-y-1.5 pl-5 text-sm text-slate-700">
                 {hallazgos.map((h) => (
                   <li key={h}>{h}</li>
@@ -116,14 +127,14 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
               {rep.porReactivo.length >= 3 ? (
-                <Seccion titulo="Acierto por reactivo" nota="Porcentaje de puntos logrados en cada reactivo. El anillo punteado marca 60.">
+                <Seccion titulo={ta.aciertoReactivo} nota={ta.aciertoReactivoRadar}>
                   <Radar
                     aprobatoria={APROBATORIA}
                     ejes={rep.porReactivo.map((r) => ({ nombre: `${r.numero}. ${nombreTipoReactivo(r.tipo)}`, valor: r.acierto }))}
                   />
                 </Seccion>
               ) : (
-                <Seccion titulo="Acierto por reactivo" nota="Porcentaje de puntos logrados en cada reactivo.">
+                <Seccion titulo={ta.aciertoReactivo} nota={ta.aciertoReactivoNota}>
                   <BarrasH
                     aprobatoria={APROBATORIA}
                     sufijo="%"
@@ -132,42 +143,42 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
                 </Seccion>
               )}
               {a.temas.length >= 3 ? (
-                <Seccion titulo="Acierto por tema" nota="Porcentaje de puntos logrados en los reactivos de cada tema.">
+                <Seccion titulo={ta.aciertoTema} nota={ta.porcentajeTema}>
                   <Radar aprobatoria={APROBATORIA} ejes={[...a.temas].reverse().slice(0, 8).map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
                 </Seccion>
               ) : (
-                <Seccion titulo="Acierto por tema" nota="Porcentaje de puntos logrados en los reactivos de cada tema.">
+                <Seccion titulo={ta.aciertoTema} nota={ta.porcentajeTema}>
                   <BarrasH aprobatoria={APROBATORIA} sufijo="%" filas={a.temas.map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
                 </Seccion>
               )}
-              <Seccion titulo="Habilidades" nota="Sobresalientes arriba, áreas de mejora abajo.">
+              <Seccion titulo={ta.habilidades} nota={ta.habilidadesNota}>
                 <BarrasH aprobatoria={APROBATORIA} sufijo="%" filas={rep.porHabilidad.map((h) => ({ nombre: h.nombre, valor: h.acierto }))} />
               </Seccion>
-              <Seccion titulo="Distribución de puntajes" nota="Cuántos alumnos hay en cada rango (sobre 100).">
+              <Seccion titulo={ta.distribucionPuntajes} nota={ta.distribucionPuntajesNota}>
                 <Columnas
                   max={Math.max(...a.distribucion.map((d) => d.cantidad))}
-                  sufijo=" alumnos"
-                  filas={a.distribucion.map((d, i) => ({ nombre: d.rango, valor: d.cantidad, color: colorDesempeno([30, 65, 75, 85, 95][i] ?? 50) }))}
+                  sufijo={ta.sufijoAlumnos}
+                  filas={a.distribucion.map((d, i) => ({ nombre: d.rango.replace(" a ", ` ${ta.rangoA} `), valor: d.cantidad, color: colorDesempeno([30, 65, 75, 85, 95][i] ?? 50) }))}
                 />
               </Seccion>
-              <Seccion titulo="Mejores resultados" nota="Los cinco puntajes más altos.">
-                <TablaAlumnos filas={a.mejores} vacio="Aún no hay alumnos destacados." titulo="Puntaje" entregas={false} />
+              <Seccion titulo={ta.mejores} nota={ta.mejoresNotaActividad}>
+                <TablaAlumnos filas={a.mejores} vacio={ta.sinDestacados} titulo={ta.puntaje} entregas={false} />
               </Seccion>
-              <Seccion titulo="Atención urgente" nota={`Puntaje menor a ${APROBATORIA} o trabajo sin entregar.`} className="ring-red-200">
-                <TablaAlumnos filas={a.atencion} vacio="Ningún alumno requiere atención urgente." titulo="Puntaje" motivos />
+              <Seccion titulo={ta.atencion} nota={formato(ta.atencionNotaActividad, { n: APROBATORIA })} className="ring-red-200">
+                <TablaAlumnos filas={a.atencion} vacio={ta.nadieAtencion} titulo={ta.puntaje} motivos />
               </Seccion>
             </div>
 
-            <Seccion titulo="Calificaciones de la actividad" nota={`Calificación sobre ${rep.escala}. Toca un nombre para revisar su hoja.`}>
+            <Seccion titulo={ta.calificaciones} nota={formato(ta.calificacionesNota, { n: rep.escala })}>
               <div className="-mx-5 overflow-x-auto px-5">
                 <table className="w-full min-w-[520px] text-left text-sm">
                   <thead>
                     <tr className="text-xs uppercase tracking-wide text-slate-500">
                       <th className="pb-2 font-medium">#</th>
-                      <th className="pb-2 font-medium">Alumno</th>
-                      <th className="pb-2 font-medium">Matrícula</th>
-                      <th className="pb-2 font-medium">Nivel</th>
-                      <th className="pb-2 text-right font-medium">Calificación</th>
+                      <th className="pb-2 font-medium">{tc.alumno}</th>
+                      <th className="pb-2 font-medium">{tc.matricula}</th>
+                      <th className="pb-2 font-medium">{ta.nivel}</th>
+                      <th className="pb-2 text-right font-medium">{tc.calificacion}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -197,8 +208,8 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
                         <td className="py-2 text-slate-300">—</td>
                         <td className="py-2">{al.nombre}</td>
                         <td className="py-2 font-mono text-xs">{al.matricula}</td>
-                        <td className="py-2 text-xs">Sin calificación</td>
-                        <td className="py-2 text-right font-semibold text-error">0 NE</td>
+                        <td className="py-2 text-xs">{ta.sinCalificacion}</td>
+                        <td className="py-2 text-right font-semibold text-error">{ta.noEntrego}</td>
                       </tr>
                     ))}
                   </tbody>

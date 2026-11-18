@@ -8,6 +8,8 @@ import { OpcionesSolucion } from "@/components/opciones-solucion";
 import { actividadDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 import { TextoMat } from "@/components/texto-mat";
+import { textos } from "@/lib/i18n/servidor";
+import { formato } from "@/lib/i18n/idiomas";
 
 /** Paso 2 del flujo: preparar la solución (escaneada o con IA) y verla escrita sobre la hoja. */
 export default async function Solucion({ params }: PageProps<"/profesor/actividades/[id]/solucion">) {
@@ -16,6 +18,8 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
+  const { t } = await textos();
+  const ts = t.profesor.solucion;
   // La rúbrica existe cuando los reactivos ya tienen respuesta (los generados en el paso 1 llegan sin ella).
   const conSolucion = actividad.reactivos.some((r) => r.respuesta.trim());
   // La solución de la IA se muestra escrita sobre la misma hoja que se imprimió (actividades generadas con IA).
@@ -35,16 +39,16 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
     <>
       <Encabezado
         migas={[
-          { texto: "Panel", href: "/profesor" },
+          { texto: t.profesor.comun.panel, href: "/profesor" },
           { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
         ]}
         titulo={actividad.titulo}
         acciones={
           <>
             <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
-              Hoja imprimible con QR
+              {ts.hojaQr}
             </BotonLink>
-            {conSolucion && <BotonLink href={`/profesor/actividades/${id}/rubrica`}>Siguiente: revisar la rúbrica</BotonLink>}
+            {conSolucion && <BotonLink href={`/profesor/actividades/${id}/rubrica`}>{ts.siguiente}</BotonLink>}
           </>
         }
       />
@@ -52,25 +56,24 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
 
       {!conSolucion ? (
         <Tarjeta className="mx-auto max-w-2xl">
-          <h2 className="text-lg font-semibold">Paso 2 · Prepara la solución</h2>
+          <h2 className="text-lg font-semibold">{ts.paso2}</h2>
           <p className="mt-2 text-sm text-slate-600">
-            Elige cómo: sube fotos o un PDF de la actividad resuelta por ti, o deja que Claude la resuelva con las condiciones
-            que indiques. Con la solución se arma la rúbrica, que después revisas y confirmas.
+            {ts.paso2Texto}
           </p>
           <div className="mt-5">{opciones(false)}</div>
-          <p className="mt-3 text-xs text-slate-400">Preparar la solución y la rúbrica no consume créditos.</p>
+          <p className="mt-3 text-xs text-slate-400">{ts.sinCreditos}</p>
         </Tarjeta>
       ) : (
         <div className="space-y-6">
           {/* Cambios a la solución, arriba de todo. */}
           <Tarjeta>
-            <p className="mb-3 text-sm font-medium">¿Quieres rehacer la solución o cambiar los criterios?</p>
+            <p className="mb-3 text-sm font-medium">{ts.rehacer}</p>
             {opciones(true)}
           </Tarjeta>
 
           {/* La solución propuesta, sobre el formato de la hoja que se imprimió. */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold">{actividad.solucionIA ? "Solución propuesta por la IA" : "Tu solución"}</h2>
+            <h2 className="mb-3 text-lg font-semibold">{actividad.solucionIA ? ts.propuestaIA : ts.tuSolucion}</h2>
             {enHoja ? (
               <HojaActividad actividad={actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion />
             ) : (
@@ -86,14 +89,14 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
                         target="_blank"
                         className="block rounded-lg border border-slate-200 bg-white p-4 text-sm text-tinta-700 underline"
                       >
-                        Ver PDF de la solución ({i + 1})
+                        {formato(ts.verPdf, { n: i + 1 })}
                       </a>
                     ) : (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         key={ruta}
                         src={`/api/archivos/${ruta}`}
-                        alt={`Solución, página ${i + 1}`}
+                        alt={formato(ts.altPagina, { n: i + 1 })}
                         className="w-full rounded-md shadow-md ring-1 ring-slate-200"
                       />
                     ),
@@ -108,7 +111,7 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
           </section>
 
           <div className="flex justify-end">
-            <BotonLink href={`/profesor/actividades/${id}/rubrica`}>Siguiente: revisar la rúbrica</BotonLink>
+            <BotonLink href={`/profesor/actividades/${id}/rubrica`}>{ts.siguiente}</BotonLink>
           </div>
         </div>
       )}

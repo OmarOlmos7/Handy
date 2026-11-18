@@ -5,16 +5,11 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { entregasDe, estadoActividad } from "@/lib/almacen";
 import type { Actividad, BaseDeDatos } from "@/lib/tipos";
+import { textos } from "@/lib/i18n/servidor";
 
 export type PasoFlujo = 1 | 2 | 3 | 4 | 5;
 
-const PASOS: { numero: PasoFlujo; titulo: string; texto: string }[] = [
-  { numero: 1, titulo: "Alta de actividad", texto: "Genera o carga la actividad e imprime la hoja con QR." },
-  { numero: 2, titulo: "Solución", texto: "Escanea tu solución o genérala con IA." },
-  { numero: 3, titulo: "Rúbrica", texto: "Revisa los criterios y confírmala." },
-  { numero: 4, titulo: "Entregas", texto: "Los alumnos entregan con el QR desde su celular." },
-  { numero: 5, titulo: "Evaluación", texto: "Revisa las calificaciones y corrige lo necesario." },
-];
+const NUMEROS: PasoFlujo[] = [1, 2, 3, 4, 5];
 
 /** Pasos terminados según los datos de la actividad (sin actividad, todavía nada). */
 export function avanceFlujo(db: BaseDeDatos | undefined, actividad: Actividad | undefined) {
@@ -27,7 +22,7 @@ export function avanceFlujo(db: BaseDeDatos | undefined, actividad: Actividad | 
     if (entregas.length > 0 && entregas.every((e) => e.estado !== "sin_entregar")) hechos.add(4);
     if (estadoActividad(db, actividad) === "publicada") hechos.add(5);
   }
-  const enCurso = (PASOS.find((p) => !hechos.has(p.numero))?.numero ?? 5) as PasoFlujo;
+  const enCurso = (NUMEROS.find((n) => !hechos.has(n)) ?? 5) as PasoFlujo;
   return { hechos, enCurso };
 }
 
@@ -50,7 +45,7 @@ function Circulo({ numero, hecho, enCurso }: { numero: number; hecho: boolean; e
 }
 
 /** Contenido de la página con la columna de pasos a la izquierda (arriba en el celular). */
-export function ConFlujo({
+export async function ConFlujo({
   vista,
   db,
   actividad,
@@ -63,10 +58,13 @@ export function ConFlujo({
   children: ReactNode;
 }) {
   const { hechos, enCurso } = avanceFlujo(db, actividad);
+  const { t } = await textos();
+  const tf = t.profesor.flujo;
+  const PASOS = NUMEROS.map((numero, i) => ({ numero, titulo: tf.pasos[i][0], texto: tf.pasos[i][1] }));
   const estado = (n: PasoFlujo) => ({ hecho: hechos.has(n), enCurso: !hechos.has(n) && n === enCurso });
   return (
     <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8 print:block">
-      <nav aria-label="Avance de la actividad" className="no-imprimir">
+      <nav aria-label={tf.avance} className="no-imprimir">
         {/* Celular y tableta: fila compacta. */}
         <ol className="mb-5 flex items-start lg:hidden">
           {PASOS.map((p, i) => {
@@ -110,7 +108,7 @@ export function ConFlujo({
                   {p.titulo}
                 </span>
                 <span className="mt-0.5 block text-xs leading-snug text-slate-500">{p.texto}</span>
-                {actual && <span className="mt-1 inline-block rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] font-medium text-tinta-700">Estás aquí</span>}
+                {actual && <span className="mt-1 inline-block rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] font-medium text-tinta-700">{tf.estasAqui}</span>}
               </>
             );
             return (

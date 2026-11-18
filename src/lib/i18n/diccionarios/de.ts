@@ -1,4 +1,5 @@
 import type { Diccionario } from "../diccionario";
+import profesor from "./profesor/de";
 
 const de: Diccionario = {
   comun: {
@@ -316,7 +317,7 @@ const de: Diccionario = {
       "Wählen Sie die Sprache der Oberfläche. Ohne Auswahl wird die Amtssprache des Landes, aus dem Sie sich verbinden, oder die Sprache Ihres Browsers verwendet.",
     guardarIdioma: "Sprache speichern",
     idiomaGuardado: "Ihre Sprache wurde gespeichert.",
-    etapaIdioma: "Bisher sind Startseite, Anmeldung, Preise und diese Einstellungen übersetzt; die übrigen Ansichten folgen in den nächsten Updates.",
+    etapaIdioma: "Startseite, Anmeldung, Preise und die Lehreransichten sind übersetzt; die Schüleransichten folgen im nächsten Update.",
     cuentaTitulo: "Name und Passwort",
     correoAcceso: "Ihre Anmelde-E-Mail ist {correo}.",
     nombre: "Name",
@@ -378,6 +379,7 @@ const de: Diccionario = {
       idiomaGuardado: "Ihre Sprache wurde gespeichert.",
     },
   },
+  profesor,
 };
 
 export default de;

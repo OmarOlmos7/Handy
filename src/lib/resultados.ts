@@ -50,7 +50,10 @@ export function aCampoFechaHora(iso?: string) {
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 /** "20 nov 2026, 8:00 h" en hora del centro de México. */
-export function fechaHoraLarga(iso: string) {
+export function fechaHoraLarga(iso: string, locale?: string) {
+  if (locale && !locale.startsWith("es")) {
+    return new Date(iso).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short", timeZone: ZONA_HORARIA });
+  }
   const { a, m, d, h, min } = partes(iso);
   return `${Number(d)} ${MESES[Number(m) - 1]} ${a}, ${Number(h)}:${min} h`;
 }

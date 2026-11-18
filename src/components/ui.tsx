@@ -1,7 +1,5 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
-import type { EstadoActividad, EstadoEntrega } from "@/lib/tipos";
-import type { Nivel } from "@/lib/estadisticas";
 
 type Variante = "primario" | "secundario" | "fantasma";
 
@@ -42,7 +40,7 @@ export function Tarjeta({ children, className = "" }: { children: ReactNode; cla
   );
 }
 
-type Tono = "gris" | "azul" | "verde" | "rojo" | "ambar";
+export type Tono = "gris" | "azul" | "verde" | "rojo" | "ambar";
 const tonos: Record<Tono, string> = {
   gris: "bg-slate-100 text-slate-700",
   azul: "bg-tinta-50 text-tinta-700",
@@ -59,41 +57,7 @@ export function Insignia({ tono = "gris", children }: { tono?: Tono; children: R
   );
 }
 
-const textoEstadoActividad: Record<EstadoActividad, [string, Tono]> = {
-  esperando_entregas: ["Esperando entregas", "gris"],
-  rubrica_pendiente: ["Rúbrica pendiente", "ambar"],
-  evaluando: ["Por evaluar", "azul"],
-  en_revision: ["Lista para revisar", "ambar"],
-  publicada: ["Publicada", "verde"],
-};
-
-export function InsigniaActividad({ estado }: { estado: EstadoActividad }) {
-  const [texto, tono] = textoEstadoActividad[estado];
-  return <Insignia tono={tono}>{texto}</Insignia>;
-}
-
-const textoEstadoEntrega: Record<EstadoEntrega, [string, Tono]> = {
-  sin_entregar: ["Sin entregar", "rojo"],
-  entregada: ["Entregada", "gris"],
-  evaluada: ["Evaluada por IA", "azul"],
-  aprobada: ["Liberada", "verde"],
-};
-
-export function InsigniaEntrega({ estado }: { estado: EstadoEntrega }) {
-  const [texto, tono] = textoEstadoEntrega[estado];
-  return <Insignia tono={tono}>{texto}</Insignia>;
-}
-
-const textoNivel: Record<Nivel, [string, Tono]> = {
-  alto: ["Alto", "verde"],
-  medio: ["Medio", "ambar"],
-  bajo: ["Bajo", "rojo"],
-};
-
-export function InsigniaNivel({ nivel }: { nivel: Nivel }) {
-  const [texto, tono] = textoNivel[nivel];
-  return <Insignia tono={tono}>{texto}</Insignia>;
-}
+export { InsigniaActividad, InsigniaEntrega, InsigniaNivel } from "./insignias";
 
 export function colorCalificacion(cal: number, escala: 10 | 100 = 10) {
   const sobre10 = (cal * 10) / escala;
@@ -124,17 +88,19 @@ export function Encabezado({
   subtitulo,
   migas,
   acciones,
+  rutaEtiqueta = "Ruta",
 }: {
   titulo: string;
   subtitulo?: ReactNode;
   migas?: { texto: string; href: string }[];
   acciones?: ReactNode;
+  rutaEtiqueta?: string;
 }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         {migas && (
-          <nav className="mb-1 flex flex-wrap gap-1 text-sm text-slate-500" aria-label="Ruta">
+          <nav className="mb-1 flex flex-wrap gap-1 text-sm text-slate-500" aria-label={rutaEtiqueta}>
             {migas.map((m, i) => (
               <span key={m.href}>
                 <Link href={m.href} className="hover:text-tinta-700">

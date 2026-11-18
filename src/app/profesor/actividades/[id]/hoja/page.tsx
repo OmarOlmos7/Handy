@@ -8,6 +8,7 @@ import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { actividadDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 import { qrDataUrl, urlBase } from "@/lib/qr";
+import { textos } from "@/lib/i18n/servidor";
 
 export default async function HojaImprimible({ params }: PageProps<"/profesor/actividades/[id]/hoja">) {
   const { id } = await params;
@@ -15,15 +16,17 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
+  const { t } = await textos();
+  const th = t.profesor.hoja;
   const curso = `${grupo.materia} · ${grupo.nombre}`;
   const qr = await qrDataUrl(`${await urlBase()}/entregar/${id}`);
   const siguiente = actividad.reactivos.some((r) => r.respuesta.trim()) ? null : (
     <BotonLink href={`/profesor/actividades/${id}/solucion`} variante="secundario">
-      Siguiente: preparar la solución
+      {th.siguiente}
     </BotonLink>
   );
   const migas = [
-    { texto: "Panel", href: "/profesor" },
+    { texto: t.profesor.comun.panel, href: "/profesor" },
     { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
     { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
   ];
@@ -33,12 +36,12 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
       <>
         <Encabezado
           migas={migas}
-          titulo="Hoja imprimible"
-          subtitulo="Tu actividad escaneada con encabezado para nombre, matrícula y calificación, y el código QR de entrega en cada página."
+          titulo={th.titulo}
+          subtitulo={th.escaneadaTexto}
           acciones={
             <>
               <BotonLink href={`/api/hoja/${id}`} target="_blank">
-                Descargar PDF para imprimir
+                {th.descargar}
               </BotonLink>
               {siguiente}
             </>
@@ -46,7 +49,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
         />
         <ConFlujo vista={1} db={db} actividad={actividad}>
           <Tarjeta className="mx-auto max-w-3xl p-2">
-            <iframe src={`/api/hoja/${id}`} title="Hoja imprimible" className="h-[80vh] w-full rounded-lg" />
+            <iframe src={`/api/hoja/${id}`} title={th.titulo} className="h-[80vh] w-full rounded-lg" />
           </Tarjeta>
         </ConFlujo>
       </>
@@ -58,11 +61,11 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
       <div className="no-imprimir">
       <Encabezado
         migas={migas}
-        titulo="Hoja imprimible"
-        subtitulo="El alumno escribe su nombre y matrícula, resuelve, escanea el QR con su celular y envía la foto de cada hoja."
+        titulo={th.titulo}
+        subtitulo={th.texto}
         acciones={
           <>
-            <BotonImprimir texto="Imprimir o guardar PDF" />
+            <BotonImprimir texto={th.imprimir} />
             {siguiente}
           </>
         }

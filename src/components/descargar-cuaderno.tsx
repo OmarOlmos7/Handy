@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { Cuaderno, Orden } from "@/lib/cuaderno";
 import { descargar } from "@/lib/exportar";
+import { useTextos } from "./proveedor-textos";
 import { excelCuaderno, nombreArchivoCuaderno, pdfCuaderno, tablaExportable, type InfoCuaderno } from "@/lib/exportar-cuaderno";
 
 type Formato = "excel" | "pdf";
 
 /** Botón "Descargar" con menú para bajar el cuaderno en Excel o PDF, en el orden elegido. */
 export function DescargarCuaderno({ cuaderno, orden, info }: { cuaderno: Cuaderno; orden: Orden; info: InfoCuaderno }) {
+  const tq = useTextos().t.profesor.cuaderno;
   const [abierto, setAbierto] = useState(false);
   const [generando, setGenerando] = useState<Formato | null>(null);
   const [error, setError] = useState("");
@@ -37,7 +39,7 @@ export function DescargarCuaderno({ cuaderno, orden, info }: { cuaderno: Cuadern
       if (formato === "excel") descargar(await excelCuaderno(tabla, info), `${nombre}.xlsx`);
       else descargar(await pdfCuaderno(tabla, info), `${nombre}.pdf`);
     } catch {
-      setError("No se pudo generar el archivo. Intenta de nuevo.");
+      setError(tq.noArchivo);
     } finally {
       setGenerando(null);
     }
@@ -56,7 +58,7 @@ export function DescargarCuaderno({ cuaderno, orden, info }: { cuaderno: Cuadern
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4" aria-hidden>
           <path d="M10 3v10m0 0-4-4m4 4 4-4M4 15v2h12v-2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {generando ? "Generando…" : "Descargar cuaderno"}
+        {generando ? tq.generando : tq.descargar}
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 opacity-80" aria-hidden>
           <path d="M5.5 7.5 10 12l4.5-4.5" stroke="currentColor" strokeWidth={1.8} fill="none" strokeLinecap="round" />
         </svg>
@@ -73,7 +75,7 @@ export function DescargarCuaderno({ cuaderno, orden, info }: { cuaderno: Cuadern
             className="flex w-full flex-col px-3.5 py-2 text-left hover:bg-slate-50"
           >
             <span className="font-medium text-slate-800">Excel (.xlsx)</span>
-            <span className="text-xs text-slate-500">Con colores y números listos para editar</span>
+            <span className="text-xs text-slate-500">{tq.excelTexto}</span>
           </button>
           <button
             type="button"
@@ -82,7 +84,7 @@ export function DescargarCuaderno({ cuaderno, orden, info }: { cuaderno: Cuadern
             className="flex w-full flex-col px-3.5 py-2 text-left hover:bg-slate-50"
           >
             <span className="font-medium text-slate-800">PDF</span>
-            <span className="text-xs text-slate-500">Hoja carta horizontal para imprimir o compartir</span>
+            <span className="text-xs text-slate-500">{tq.pdfTexto}</span>
           </button>
         </div>
       )}

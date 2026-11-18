@@ -1,4 +1,5 @@
 import type { Diccionario } from "../diccionario";
+import profesor from "./profesor/ja";
 
 const ja: Diccionario = {
   comun: {
@@ -315,7 +316,7 @@ const ja: Diccionario = {
     idiomaTexto: "画面の言語を選びます。選ばない場合は、接続元の国の公用語またはブラウザの言語が使われます。",
     guardarIdioma: "言語を保存",
     idiomaGuardado: "言語を保存しました。",
-    etapaIdioma: "現在はトップページ、ログイン、料金、この設定画面が翻訳済みです。その他の画面は今後のアップデートで翻訳します。",
+    etapaIdioma: "トップページ、ログイン、料金、教師用の画面は翻訳済みです。生徒用の画面は次回のアップデートで翻訳します。",
     cuentaTitulo: "名前とパスワード",
     correoAcceso: "ログイン用メールアドレスは {correo} です。",
     nombre: "名前",
@@ -377,6 +378,7 @@ const ja: Diccionario = {
       idiomaGuardado: "言語を保存しました。",
     },
   },
+  profesor,
 };
 
 export default ja;

@@ -1,3 +1,5 @@
+"use client";
+
 // Vista de una página de la actividad como hoja tamaño carta (SVG).
 // Tres modos:
 //  - "en_blanco": hoja imprimible con QR y marcas de esquina.
@@ -7,6 +9,8 @@
 // encima en el PDF (PyMuPDF). Aquí se simula la escritura con una fuente manuscrita.
 import type { Actividad, Alumno, Entrega, Reactivo, ResultadoReactivo } from "@/lib/tipos";
 import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
 
 const ANCHO = 850;
 const ALTO = 1100;
@@ -33,6 +37,7 @@ function envolver(texto: string, max = 68) {
 
 /** Patrón tipo QR determinista a partir de un texto (solo visual en la demo). */
 function QR({ x, y, texto, tam = 96 }: { x: number; y: number; texto: string; tam?: number }) {
+  const th = useTextos().t.profesor.hojaAlumno;
   const n = 21;
   const c = tam / n;
   let h = 0;
@@ -54,7 +59,7 @@ function QR({ x, y, texto, tam = 96 }: { x: number; y: number; texto: string; ta
     </g>
   );
   return (
-    <g aria-label="Código QR de la página">
+    <g aria-label={th.qrPagina}>
       <rect x={x - 4} y={y - 4} width={tam + 8} height={tam + 8} fill="#fff" />
       {celdas.map(([i, j]) => (
         <rect key={`${i}-${j}`} x={x + j * c} y={y + i * c} width={c} height={c} fill="#111" />
@@ -135,6 +140,7 @@ function BloqueReactivo({
   anotada: boolean;
   modoProfesor: boolean;
 }) {
+  const th = useTextos().t.profesor.hojaAlumno;
   const lineasEnun = envolver(`${r.numero}. ${r.enunciado}`);
   const fraccion = res ? res.puntosObtenidos / r.puntos : 1;
   const comentario = lineasComentario(res, r, anotada);
@@ -164,7 +170,7 @@ function BloqueReactivo({
               )}
               {anotada && res && !texto && modo === "alumno" && (
                 <text x={90} y={yl} fontFamily={MANO} fontSize={26} fill={ROJO}>
-                  falta este paso
+                  {th.faltaPaso}
                 </text>
               )}
               {anotada && res && (
@@ -199,7 +205,7 @@ function BloqueReactivo({
     cuerpo = (
       <g>
         <text x={90} y={yCuerpo + 26} fontSize={16} fill="#64748b">
-          Respuesta:
+          {th.respuesta}
         </text>
         <line x1={180} x2={460} y1={yCuerpo + 32} y2={yCuerpo + 32} stroke="#cbd5e1" />
         <text x={190} y={yCuerpo + 26} fontFamily={MANO} fontSize={32} fill={LAPIZ}>
@@ -218,7 +224,7 @@ function BloqueReactivo({
         </text>
       ))}
       <text x={margen + 40} y={y + 18} fontSize={13} fill="#94a3b8" textAnchor="end">
-        {r.puntos} pt{r.puntos === 1 ? "" : "s"}
+        {r.puntos} {r.puntos === 1 ? th.pt : th.pts}
       </text>
       {cuerpo}
       {anotada && res && (
@@ -238,7 +244,7 @@ function BloqueReactivo({
         <g>
           <rect x={44} y={y - 8} width={772} height={alto - 6} rx={8} fill="#fef3c7" fillOpacity={0.35} stroke="#b45309" strokeDasharray="6 4" />
           <text x={56} y={y + alto - 22} fontSize={13} fill="#b45309" fontWeight={600}>
-            Baja confianza: la IA no pudo leer bien este reactivo. Verifica.
+            {th.bajaConfianza}
           </text>
         </g>
       )}
@@ -268,6 +274,7 @@ export function Hoja({
   /** Imagen (data URL) de un QR real; si falta se dibuja un patrón decorativo. */
   qrSrc?: string;
 }) {
+  const th = useTextos().t.profesor.hojaAlumno;
   const reactivos = actividad.reactivos.filter((r) => r.pagina === pagina);
   // Posición vertical de cada reactivo: se acumulan las alturas de los anteriores.
   const conResultado = reactivos.map((r) => ({
@@ -289,7 +296,7 @@ export function Hoja({
     />
   ));
 
-  const nombre = modo === "solucion" ? "SOLUCIÓN DEL PROFESOR" : modo === "alumno" ? alumno?.nombre : "";
+  const nombre = modo === "solucion" ? th.solucionProfesor : modo === "alumno" ? alumno?.nombre : "";
   const cal = anotada && entrega ? calificacion(actividad, entrega) : null;
 
   return (
@@ -297,7 +304,7 @@ export function Hoja({
       viewBox={`0 0 ${ANCHO} ${ALTO}`}
       className="h-auto w-full rounded-md bg-papel shadow-md ring-1 ring-slate-200"
       role="img"
-      aria-label={`Página ${pagina} de ${actividad.titulo}${alumno ? `, ${alumno.nombre}` : ""}`}
+      aria-label={`${formato(th.aria, { p: pagina, titulo: actividad.titulo })}${alumno ? `, ${alumno.nombre}` : ""}`}
     >
       <rect width={ANCHO} height={ALTO} fill={modo === "en_blanco" ? "#fff" : "#fbfaf7"} />
       {/* Marcas de alineación en las esquinas */}
@@ -321,14 +328,14 @@ export function Hoja({
         {actividad.titulo}
       </text>
       <text x={60} y={170} fontSize={17} fill="#475569">
-        Nombre:
+        {th.nombre}
       </text>
       <line x1={130} x2={560} y1={176} y2={176} stroke="#cbd5e1" />
       <text x={140} y={170} fontFamily={MANO} fontSize={modo === "solucion" ? 24 : 34} fill={modo === "solucion" ? "#1d43c9" : LAPIZ}>
         {nombre}
       </text>
       <text x={60} y={200} fontSize={13} fill="#94a3b8">
-        Página {pagina} de {actividad.paginas}
+        {formato(th.paginaDe, { p: pagina, n: actividad.paginas })}
       </text>
       {cal !== null && pagina === 1 && (
         <g>
@@ -342,7 +349,7 @@ export function Hoja({
       {bloques}
       {reactivos.length === 0 && (
         <text x={ANCHO / 2} y={500} textAnchor="middle" fontSize={18} fill="#94a3b8">
-          Espacio para la actividad
+          {th.espacio}
         </text>
       )}
     </svg>

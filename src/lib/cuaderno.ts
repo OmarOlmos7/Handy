@@ -53,7 +53,7 @@ export interface Cuaderno {
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const prom = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null);
 
-export function cuadernoCurso(grupo: Grupo, actividades: Actividad[], entregas: Entrega[]): Cuaderno {
+export function cuadernoCurso(grupo: Grupo, actividades: Actividad[], entregas: Entrega[], sinEtiqueta = "Sin etiqueta"): Cuaderno {
   const porFecha = [...actividades].sort((a, b) => a.fechaAplicacion.localeCompare(b.fechaAplicacion));
   const escala: Escala = porFecha.some((a) => escalaDe(a) === 100) ? 100 : 10;
   const entregaDe = (actividadId: string, matricula: string) =>
@@ -97,7 +97,7 @@ export function cuadernoCurso(grupo: Grupo, actividades: Actividad[], entregas: 
   };
 
   const grupos = agruparPorEtiqueta(porFecha).map(({ etiqueta, items }) => ({
-    etiqueta: etiqueta ?? "Sin etiqueta",
+    etiqueta: etiqueta ?? sinEtiqueta,
     columnas: items.map(columna),
   }));
 

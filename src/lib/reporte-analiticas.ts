@@ -1,5 +1,8 @@
 // Contenido del reporte PDF de analíticas (grupo o actividad). Todos los números salen de
 // `analiticasCurso` y `reporteGrupo`; aquí solo se eligen y ordenan para la hoja carta.
+import { formato } from "./i18n/idiomas";
+import profesorEs from "./i18n/diccionarios/profesor/es";
+import type { TextosCalculo } from "./analiticas";
 import { APROBATORIA, type Analiticas, type ResumenAlumno } from "./analiticas";
 import { rebanadasNiveles } from "./configuracion";
 import { colorDesempeno } from "./escala-color";
@@ -300,16 +303,16 @@ const NOMBRE_TIPO: Record<string, string> = {
 export const nombreTipoReactivo = (tipo: string) => NOMBRE_TIPO[tipo] ?? tipo;
 
 /** Hallazgos de una actividad: los del curso más reactivos y habilidades. */
-export function hallazgosActividad(a: Analiticas, rep: ReporteGrupo) {
+export function hallazgosActividad(a: Analiticas, rep: ReporteGrupo, tx: TextosCalculo = profesorEs.calculo) {
   const hallazgos = [...a.hallazgos];
   if (rep.porReactivo.length >= 2) {
     const debiles = [...rep.porReactivo].sort((x, y) => x.acierto - y.acierto).slice(0, 2);
-    hallazgos.splice(1, 0, `Conviene repasar los reactivos ${debiles.map((d) => `${d.numero} (${d.acierto}%)`).join(" y ")}, que tuvieron el menor acierto.`);
+    hallazgos.splice(1, 0, formato(tx.repasarReactivos, { lista: debiles.map((d) => `${d.numero} (${d.acierto}%)`).join(tx.y) }));
   }
   const fuerte = rep.porHabilidad[0];
   const debil = rep.porHabilidad[rep.porHabilidad.length - 1];
   if (fuerte && debil && fuerte.nombre !== debil.nombre) {
-    hallazgos.push(`La habilidad mejor lograda es ${fuerte.nombre} (${fuerte.acierto}%) y la más débil, ${debil.nombre} (${debil.acierto}%).`);
+    hallazgos.push(formato(tx.habilidades, { f: fuerte.nombre, fa: fuerte.acierto, d: debil.nombre, da: debil.acierto }));
   }
   return hallazgos;
 }

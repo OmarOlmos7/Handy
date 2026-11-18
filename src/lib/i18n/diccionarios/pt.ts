@@ -1,4 +1,5 @@
 import type { Diccionario } from "../diccionario";
+import profesor from "./profesor/pt";
 
 const pt: Diccionario = {
   comun: {
@@ -316,7 +317,7 @@ const pt: Diccionario = {
       "Escolha o idioma da interface. Se você não escolher, usa-se o idioma oficial do país de onde você acessa ou o do seu navegador.",
     guardarIdioma: "Salvar idioma",
     idiomaGuardado: "Seu idioma foi salvo.",
-    etapaIdioma: "Por enquanto estão traduzidas a página inicial, a entrada, os preços e estas configurações; as demais telas serão traduzidas nas próximas atualizações.",
+    etapaIdioma: "A página inicial, a entrada, os preços e as telas do professor já estão traduzidos; as telas do aluno serão traduzidas na próxima atualização.",
     cuentaTitulo: "Nome e senha",
     correoAcceso: "Seu e-mail de acesso é {correo}.",
     nombre: "Nome",
@@ -378,6 +379,7 @@ const pt: Diccionario = {
       idiomaGuardado: "Seu idioma foi salvo.",
     },
   },
+  profesor,
 };
 
 export default pt;

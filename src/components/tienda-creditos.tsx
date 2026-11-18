@@ -1,14 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { PLANES, pesos } from "@/lib/planes";
+import { PLANES, pesos, type Plan } from "@/lib/planes";
 import { Boton } from "./ui";
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
 
-const paquetes = PLANES.filter((p) => p.enTienda).map((p) => ({ id: p.id, nombre: p.nombre, creditos: p.creditos, precio: p.precio ?? 0, destacado: p.destacado }));
+const paquetes = PLANES.filter((p) => p.enTienda).map((p) => ({ id: p.id, creditos: p.creditos, precio: p.precio ?? 0, destacado: p.destacado }));
 
 /** Demostración del flujo de compra. En producción redirige al checkout de Mercado Pago o Stripe
  * y los créditos se acreditan solo cuando llega el webhook de pago confirmado. */
 export function TiendaCreditos() {
+  const { t, locale } = useTextos();
+  const tc = t.profesor.creditos;
+  const nombre = (id: Plan["id"]) => t.planes[id].nombre;
   const [elegido, setElegido] = useState<string>("pro");
   const [metodo, setMetodo] = useState("tarjeta");
   const [enviado, setEnviado] = useState(false);
@@ -28,61 +33,57 @@ export function TiendaCreditos() {
             className={`rounded-xl bg-white p-5 text-left ring-2 transition ${elegido === x.id ? "ring-tinta-600" : "ring-slate-200 hover:ring-slate-300"}`}
           >
             <span className="flex items-center justify-between">
-              <span className="font-semibold">{x.nombre}</span>
-              {x.destacado && <span className="rounded-full bg-tinta-50 px-2 py-0.5 text-xs text-tinta-700">Popular</span>}
+              <span className="font-semibold">{nombre(x.id)}</span>
+              {x.destacado && <span className="rounded-full bg-tinta-50 px-2 py-0.5 text-xs text-tinta-700">{tc.popular}</span>}
             </span>
-            <span className="mt-2 block text-2xl font-semibold">{pesos(x.precio)}</span>
-            <span className="block text-sm text-slate-500">{x.creditos.toLocaleString("es-MX")} créditos</span>
+            <span className="mt-2 block text-2xl font-semibold">{pesos(x.precio, locale)}</span>
+            <span className="block text-sm text-slate-500">{formato(t.comun.creditos, { n: x.creditos.toLocaleString(locale) })}</span>
             <span className="mt-2 block text-xs text-slate-500">
-              ${(x.precio / x.creditos).toFixed(2)} por página
+              {formato(tc.porPagina, { p: `$${(x.precio / x.creditos).toFixed(2)}` })}
             </span>
           </button>
         ))}
         <div className="rounded-xl border border-dashed border-slate-300 p-5 text-left">
-          <span className="font-semibold">Escuela</span>
-          <span className="mt-2 block text-lg font-semibold">Contáctanos</span>
-          <span className="mt-2 block text-xs text-slate-500">Ideal para academias o grupos de profesores en una institución.</span>
+          <span className="font-semibold">{nombre("escuela")}</span>
+          <span className="mt-2 block text-lg font-semibold">{tc.contactanos}</span>
+          <span className="mt-2 block text-xs text-slate-500">{tc.escuelaTexto}</span>
         </div>
       </div>
       <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <h2 className="font-semibold">Resumen</h2>
+        <h2 className="font-semibold">{tc.resumen}</h2>
         <dl className="mt-3 space-y-1 text-sm">
           <div className="flex justify-between">
-            <dt className="text-slate-500">Paquete</dt>
-            <dd>{p.nombre}</dd>
+            <dt className="text-slate-500">{tc.paquete}</dt>
+            <dd>{nombre(p.id)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-slate-500">Créditos</dt>
-            <dd>{p.creditos.toLocaleString("es-MX")}</dd>
+            <dt className="text-slate-500">{tc.creditos}</dt>
+            <dd>{p.creditos.toLocaleString(locale)}</dd>
           </div>
           <div className="flex justify-between border-t border-slate-100 pt-2 font-semibold">
-            <dt>Total (IVA incluido)</dt>
-            <dd>{pesos(p.precio)}</dd>
+            <dt>{tc.total}</dt>
+            <dd>{pesos(p.precio, locale)}</dd>
           </div>
         </dl>
         <fieldset className="mt-4 space-y-2 text-sm">
-          <legend className="mb-1 font-medium">Método de pago</legend>
-          {[
-            ["tarjeta", "Tarjeta de crédito o débito"],
-            ["oxxo", "Efectivo en OXXO"],
-            ["spei", "Transferencia SPEI"],
-          ].map(([v, t]) => (
+          <legend className="mb-1 font-medium">{tc.metodo}</legend>
+          {(["tarjeta", "oxxo", "spei"] as const).map((v) => (
             <label key={v} className="flex items-center gap-2">
               <input type="radio" name="metodo" value={v} checked={metodo === v} onChange={() => setMetodo(v)} />
-              {t}
+              {tc.metodos[v]}
             </label>
           ))}
         </fieldset>
         <label className="mt-4 flex items-center gap-2 text-sm">
-          <input type="checkbox" /> Necesito factura (CFDI)
+          <input type="checkbox" /> {tc.factura}
         </label>
         {enviado ? (
           <p className="mt-4 rounded-lg bg-aviso-suave p-3 text-sm text-aviso" role="status">
-            Demostración: aquí se abriría el pago de Mercado Pago. Los créditos se suman cuando el pago se confirma.
+            {tc.demo}
           </p>
         ) : (
           <Boton className="mt-4 w-full" onClick={() => setEnviado(true)}>
-            Pagar {pesos(p.precio)}
+            {formato(tc.pagar, { p: pesos(p.precio, locale) })}
           </Boton>
         )}
       </div>

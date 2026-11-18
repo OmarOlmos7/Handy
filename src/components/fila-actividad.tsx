@@ -11,6 +11,8 @@ import { BotonIcono, IconoBasura, IconoLapiz } from "./iconos";
 import { SelectorColor } from "./selector-color";
 import { SelectorEtiqueta } from "./selector-etiqueta";
 import { Boton, InsigniaActividad, fechaLarga } from "./ui";
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
 
 const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
 
@@ -46,6 +48,9 @@ export function FilaActividad({
   etiquetasCurso: string[];
 }) {
   const router = useRouter();
+  const { t, locale } = useTextos();
+  const c = t.profesor.comun;
+  const tf = t.profesor.filaActividad;
   const [editando, setEditando] = useState(false);
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
@@ -60,7 +65,7 @@ export function FilaActividad({
         setEditando(false);
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudo guardar");
+        setError(err instanceof Error ? err.message : c.noSeGuardo);
       }
     });
   }
@@ -71,22 +76,22 @@ export function FilaActividad({
         await accion();
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudo guardar");
+        setError(err instanceof Error ? err.message : c.noSeGuardo);
       }
     });
   }
 
   function borrar() {
     const aviso = recibidas
-      ? `¿Borrar la actividad "${titulo}"? También se borrarán las ${recibidas} entregas de alumnos y sus calificaciones. No se puede deshacer.`
-      : `¿Borrar la actividad "${titulo}"? No se puede deshacer.`;
+      ? formato(tf.confirmarConEntregas, { titulo, n: recibidas })
+      : formato(tf.confirmar, { titulo });
     if (!window.confirm(aviso)) return;
     iniciar(async () => {
       try {
         await borrarActividad(id);
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudo borrar");
+        setError(err instanceof Error ? err.message : c.noSeBorro);
       }
     });
   }
@@ -96,35 +101,34 @@ export function FilaActividad({
       <li className="px-5 py-4">
         <form onSubmit={guardar} className="grid gap-3 sm:grid-cols-[1fr_10rem_13rem_auto] sm:items-end">
           <label className="block text-xs font-medium text-slate-500">
-            Título
+            {tf.titulo}
             <input name="titulo" defaultValue={titulo} required autoFocus className={campoChico} />
           </label>
           <label className="block text-xs font-medium text-slate-500">
-            Fecha de aplicación
+            {tf.fechaAplicacion}
             <input name="fecha" type="date" defaultValue={fecha} required className={campoChico} />
           </label>
           <label className="block text-xs font-medium text-slate-500">
-            Resultados visibles desde
+            {tf.resultadosDesde}
             <input name="resultadosDesde" type="datetime-local" defaultValue={aCampoFechaHora(resultadosDesde)} className={campoChico} />
           </label>
           <div className="flex gap-2">
             <Boton type="submit" disabled={pendiente} className="!px-3 !py-1.5">
-              Guardar
+              {c.guardar}
             </Boton>
             <Boton type="button" variante="secundario" onClick={() => setEditando(false)} className="!px-3 !py-1.5">
-              Cancelar
+              {c.cancelar}
             </Boton>
           </div>
         </form>
         <p className="mt-2 text-xs text-slate-500">
-          Deja vacío &quot;Resultados visibles desde&quot; para que los alumnos vean sus resultados en cuanto los apruebes (hora del centro
-          de México). Para cambiar los reactivos, usa{" "}
+          {tf.ayudaAntes}
           <Link href={`/profesor/actividades/${id}/hoja`} className="font-medium text-tinta-700 hover:underline">
-            la hoja imprimible
-          </Link>{" "}
-          (editor con IA) o{" "}
+            {tf.hojaImprimible}
+          </Link>
+          {tf.ayudaMedio}
           <Link href={`/profesor/actividades/${id}/solucion`} className="font-medium text-tinta-700 hover:underline">
-            la solución
+            {tf.laSolucion}
           </Link>
           .
         </p>
@@ -141,14 +145,14 @@ export function FilaActividad({
           {titulo}
         </Link>
         <p className="text-sm text-slate-500">
-          Aplicada {fechaLarga(fecha)} · {paginas} {paginas === 1 ? "página" : "páginas"}
-          {resultadosDesde && ` · Resultados desde ${fechaHoraLarga(resultadosDesde)}`}
+          {formato(c.aplicada, { f: fechaLarga(fecha, locale) })} · {formato(paginas === 1 ? c.pagina1 : c.paginaN, { n: paginas })}
+          {resultadosDesde && formato(tf.resultadosDesdeCorto, { f: fechaHoraLarga(resultadosDesde, locale) })}
         </p>
         {error && <p className="relative z-10 text-xs text-error">{error}</p>}
       </div>
       <div className="flex flex-wrap items-center gap-4 text-sm">
         <span className="text-slate-500">{entregas}</span>
-        {promedio && <span className={`font-semibold ${colorPromedio}`}>Prom. {promedio}</span>}
+        {promedio && <span className={`font-semibold ${colorPromedio}`}>{formato(tf.promedio, { p: promedio })}</span>}
         <InsigniaActividad estado={estado} />
         <SelectorEtiqueta
           valor={etiqueta}
@@ -157,11 +161,11 @@ export function FilaActividad({
           disabled={pendiente}
         />
         <span className="flex items-center gap-1">
-          <BotonIcono etiqueta="Editar actividad" onClick={() => setEditando(true)} disabled={pendiente}>
+          <BotonIcono etiqueta={tf.editar} onClick={() => setEditando(true)} disabled={pendiente}>
             <IconoLapiz />
           </BotonIcono>
-          <SelectorColor valor={color} etiqueta="Cambiar color de la actividad" onElegir={(c) => cambiar(() => colorActividad(id, c))} disabled={pendiente} />
-          <BotonIcono etiqueta="Borrar actividad" peligro onClick={borrar} disabled={pendiente}>
+          <SelectorColor valor={color} etiqueta={tf.cambiarColor} onElegir={(c) => cambiar(() => colorActividad(id, c))} disabled={pendiente} />
+          <BotonIcono etiqueta={tf.borrar} peligro onClick={borrar} disabled={pendiente}>
             <IconoBasura />
           </BotonIcono>
         </span>

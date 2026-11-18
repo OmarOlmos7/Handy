@@ -10,6 +10,8 @@ import { evaluandoAhora } from "@/lib/evaluacion";
 import { qrDataUrl, urlBase } from "@/lib/qr";
 import { fechaHoraLarga } from "@/lib/resultados";
 import { datosProfesor } from "@/lib/sesion";
+import { textos } from "@/lib/i18n/servidor";
+import { formato } from "@/lib/i18n/idiomas";
 
 /** Paso 4 del flujo: quién ya entregó, el QR para entregar (proyectable) y las acciones sobre cada entrega. */
 export default async function Entregas({ params }: PageProps<"/profesor/actividades/[id]/entregas">) {
@@ -24,31 +26,34 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
   const evaluando = entregas.some((e) => e.estado === "entregada" && evaluandoAhora(e.evaluandoDesde));
   const enlace = `${await urlBase()}/entregar/${id}`;
   const qr = await qrDataUrl(enlace);
+  const { t, locale } = await textos();
+  const tc = t.profesor.comun;
+  const te = t.profesor.entregas;
   const nombre = (m: string) => grupo.alumnos.find((a) => a.matricula === m)?.nombre ?? m;
 
   return (
     <>
       <Encabezado
         migas={[
-          { texto: "Panel", href: "/profesor" },
+          { texto: tc.panel, href: "/profesor" },
           { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
         ]}
         titulo={actividad.titulo}
-        subtitulo={`Aplicada ${fechaLarga(actividad.fechaAplicacion)}`}
+        subtitulo={formato(tc.aplicada, { f: fechaLarga(actividad.fechaAplicacion, locale) })}
         acciones={
           <>
             <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
-              Hoja imprimible con QR
+              {tc.hojaQr}
             </BotonLink>
             {entregas.some((e) => e.resultados.length > 0 && (e.imagenes?.length || e.pdf)) && (
               <a
                 href={`/api/pdf/${id}/grupo`}
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-800 ring-1 ring-slate-300 hover:bg-slate-50"
               >
-                Descargar PDF del grupo
+                {tc.descargarPdfGrupo}
               </a>
             )}
-            <BotonLink href={`/profesor/actividades/${id}`}>Siguiente: evaluación</BotonLink>
+            <BotonLink href={`/profesor/actividades/${id}`}>{te.siguiente}</BotonLink>
           </>
         }
       />
@@ -56,24 +61,24 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
         <AutoActualizar activo={evaluando} />
         {!actividad.rubricaConfirmada && (
           <p className="mb-4 rounded-lg bg-aviso-suave px-4 py-2.5 text-sm text-slate-800">
-            Los alumnos ya pueden entregar. Las entregas se evaluarán solas en cuanto confirmes la{" "}
+            {te.yaPuedenAntes}
             <Link href={`/profesor/actividades/${id}/rubrica`} className="font-medium text-tinta-700 underline">
-              rúbrica
+              {te.rubrica}
             </Link>
-            .
+            {te.yaPuedenDespues}
           </p>
         )}
 
         <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.8fr)]">
           <Tarjeta>
-            <p className="text-sm text-slate-500">Entregas recibidas</p>
+            <p className="text-sm text-slate-500">{te.recibidas}</p>
             <p className="mt-1 text-2xl font-semibold">
-              {recibidas.length} <span className="text-base font-normal text-slate-400">de {entregas.length}</span>
+              {recibidas.length} <span className="text-base font-normal text-slate-400">{formato(te.deTotal, { n: entregas.length })}</span>
             </p>
-            <p className="text-xs text-slate-500">{paginas} páginas en total</p>
+            <p className="text-xs text-slate-500">{formato(te.paginasTotal, { n: paginas })}</p>
           </Tarjeta>
           <Tarjeta>
-            <p className="text-sm text-slate-500">Faltan por entregar</p>
+            <p className="text-sm text-slate-500">{te.faltan}</p>
             <p className={`mt-1 text-2xl font-semibold ${entregas.length - recibidas.length ? "text-aviso" : "text-acierto"}`}>
               {entregas.length - recibidas.length}
             </p>
@@ -85,14 +90,14 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
-                <th className="px-4 py-3 font-medium">Alumno</th>
-                <th className="px-4 py-3 font-medium">Matrícula</th>
-                <th className="px-4 py-3 font-medium">Entrega</th>
-                <th className="px-4 py-3 font-medium">Páginas</th>
-                <th className="px-4 py-3 font-medium">Recibida</th>
+                <th className="px-4 py-3 font-medium">{tc.alumno}</th>
+                <th className="px-4 py-3 font-medium">{tc.matricula}</th>
+                <th className="px-4 py-3 font-medium">{te.entrega}</th>
+                <th className="px-4 py-3 font-medium">{tc.paginas}</th>
+                <th className="px-4 py-3 font-medium">{te.recibida}</th>
                 <th className="px-4 py-3" />
                 <th className="w-12 px-2 py-3">
-                  <span className="sr-only">Borrar entrega</span>
+                  <span className="sr-only">{tc.borrarEntrega}</span>
                 </th>
               </tr>
             </thead>
@@ -103,9 +108,9 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
                   <tr key={e.matricula} className="hover:bg-slate-50">
                     <td className="px-4 py-3 font-medium">{nombre(e.matricula)}</td>
                     <td className="px-4 py-3 font-mono text-xs text-slate-600">{e.matricula}</td>
-                    <td className="px-4 py-3">{entrego ? <Insignia tono="verde">Entregó</Insignia> : <Insignia>Sin entregar</Insignia>}</td>
+                    <td className="px-4 py-3">{entrego ? <Insignia tono="verde">{te.entrego}</Insignia> : <Insignia>{t.profesor.estados.entrega.sin_entregar}</Insignia>}</td>
                     <td className="px-4 py-3 text-slate-600">{e.paginasRecibidas || "—"}</td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{e.entregadaEn ? fechaHoraLarga(e.entregadaEn) : "—"}</td>
+                    <td className="px-4 py-3 text-xs text-slate-600">{e.entregadaEn ? fechaHoraLarga(e.entregadaEn, locale) : "—"}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-right">
                       {e.resultados.length > 0 && (e.imagenes?.length || e.pdf) && (
                         <a
@@ -113,7 +118,7 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
                           target="_blank"
                           className="text-xs text-tinta-700 hover:underline"
                         >
-                          Descargar PDF
+                          {tc.descargarPdf}
                         </a>
                       )}
                       {e.resultados.length === 0 && (
@@ -121,7 +126,7 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
                           href={`/entregar/${id}?m=${encodeURIComponent(e.matricula)}&n=${encodeURIComponent(nombre(e.matricula))}`}
                           className="text-xs text-tinta-700 hover:underline"
                         >
-                          {entrego ? "Reemplazar hojas" : "Subir sus hojas"}
+                          {entrego ? tc.reemplazarHojas : tc.subirHojas}
                         </Link>
                       )}
                     </td>

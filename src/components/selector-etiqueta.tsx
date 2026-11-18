@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ETIQUETAS } from "@/lib/colores";
+import { useTextos } from "./proveedor-textos";
 
 /** Etiqueta de la actividad (Tarea, Quiz…); al tocarla se elige otra o se escribe una propia. */
 export function SelectorEtiqueta({
@@ -16,10 +16,12 @@ export function SelectorEtiqueta({
   onElegir: (etiqueta: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTextos();
+  const te = t.profesor.etiquetas;
   const [abierto, setAbierto] = useState(false);
   const [propia, setPropia] = useState("");
   const caja = useRef<HTMLDivElement>(null);
-  const opciones = [...new Set([...ETIQUETAS, ...sugeridas])];
+  const opciones = [...new Set([...te.sugeridas, ...sugeridas])];
 
   useEffect(() => {
     if (!abierto) return;
@@ -46,13 +48,13 @@ export function SelectorEtiqueta({
         type="button"
         disabled={disabled}
         aria-expanded={abierto}
-        title="Cambiar etiqueta"
+        title={te.cambiar}
         onClick={() => setAbierto((a) => !a)}
         className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition disabled:opacity-40 ${
           valor ? "bg-slate-800 text-white hover:bg-slate-700" : "border border-dashed border-slate-300 text-slate-500 hover:border-slate-400"
         }`}
       >
-        {valor || "+ Etiqueta"}
+        {valor || te.agregar}
       </button>
       {abierto && (
         <div className="absolute right-0 top-8 w-52 rounded-xl bg-white p-2 shadow-lg ring-1 ring-slate-200">
@@ -80,17 +82,17 @@ export function SelectorEtiqueta({
               value={propia}
               onChange={(e) => setPropia(e.target.value)}
               maxLength={30}
-              placeholder="Otra…"
-              aria-label="Escribe otra etiqueta"
+              placeholder={te.otra}
+              aria-label={te.escribeOtra}
               className="min-w-0 flex-1 rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-tinta-500"
             />
             <button type="submit" className="rounded-md bg-tinta-600 px-2 text-xs font-medium text-white disabled:opacity-40" disabled={!propia.trim()}>
-              Usar
+              {te.usar}
             </button>
           </form>
           {valor && (
             <button type="button" onClick={() => elegir("")} className="mt-1 w-full rounded-md py-1 text-xs text-slate-500 hover:bg-slate-100">
-              Quitar etiqueta
+              {te.quitar}
             </button>
           )}
         </div>

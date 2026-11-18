@@ -22,6 +22,8 @@ import { datosProfesor } from "@/lib/sesion";
 import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadisticas";
 import { qrDataUrl, urlBase } from "@/lib/qr";
 import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
+import { textos } from "@/lib/i18n/servidor";
+import { formato } from "@/lib/i18n/idiomas";
 
 export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
@@ -38,23 +40,26 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
   const bajaConfianza = entregas.reduce((s, e) => s + e.resultados.filter((r) => r.confianza === "baja").length, 0);
   const enlace = `${await urlBase()}/entregar/${id}`;
   const qr = await qrDataUrl(enlace);
+  const { t, locale } = await textos();
+  const tc = t.profesor.comun;
+  const ta = t.profesor.actividad;
   const nombre = (m: string) => grupo.alumnos.find((a) => a.matricula === m)?.nombre ?? m;
 
   return (
     <>
       <Encabezado
         migas={[
-          { texto: "Panel", href: "/profesor" },
+          { texto: tc.panel, href: "/profesor" },
           { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
         ]}
         titulo={actividad.titulo}
         subtitulo={
           <span className="flex flex-wrap items-center gap-2">
-            Aplicada {fechaLarga(actividad.fechaAplicacion)}
+            {formato(tc.aplicada, { f: fechaLarga(actividad.fechaAplicacion, locale) })}
             <InsigniaActividad estado={estadoActividad(db, actividad)} />
             {actividad.resultadosDesde && (
               <Insignia tono={resultadosDisponibles(actividad) ? "verde" : "ambar"}>
-                Resultados visibles desde {fechaHoraLarga(actividad.resultadosDesde)}
+                {formato(ta.resultadosVisibles, { f: fechaHoraLarga(actividad.resultadosDesde, locale) })}
               </Insignia>
             )}
           </span>
@@ -62,17 +67,17 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         acciones={
           <>
             <BotonLink href={`/profesor/actividades/${id}/analiticas`} variante="secundario">
-              <IconoGrafica /> Analíticas Actividad
+              <IconoGrafica /> {ta.analiticas}
             </BotonLink>
             <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
-              Hoja imprimible con QR
+              {tc.hojaQr}
             </BotonLink>
             {entregas.some((e) => e.resultados.length > 0 && (e.imagenes?.length || e.pdf)) && (
               <a
                 href={`/api/pdf/${id}/grupo`}
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-800 ring-1 ring-slate-300 hover:bg-slate-50"
               >
-                Descargar PDF del grupo
+                {tc.descargarPdfGrupo}
               </a>
             )}
             {actividad.rubricaConfirmada && (
@@ -90,46 +95,48 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
       {actividad.rubricaConfirmada && (
         <p className="mb-4 rounded-lg bg-tinta-50 px-4 py-2.5 text-sm text-tinta-900">
           {evaluando.length > 0
-            ? `La IA está evaluando ${evaluando.length} entrega${evaluando.length > 1 ? "s" : ""}. Esta página se actualiza sola.`
-            : "Evaluación automática activada: cada entrega se califica con IA en cuanto el alumno envía sus fotos."}
+            ? evaluando.length > 1
+              ? formato(ta.evaluandoN, { n: evaluando.length })
+              : ta.evaluando1
+            : ta.automatica}
         </p>
       )}
 
       {!actividad.rubricaConfirmada && (
         <Tarjeta className="mb-6 border-l-4 border-aviso">
-          <p className="font-medium">{actividad.reactivos.some((r) => r.respuesta.trim()) ? "Confirma la rúbrica" : "Falta la solución"}</p>
+          <p className="font-medium">{actividad.reactivos.some((r) => r.respuesta.trim()) ? ta.confirmaRubrica : ta.faltaSolucion}</p>
           <p className="mt-1 text-sm text-slate-600">
             {actividad.reactivos.some((r) => r.respuesta.trim())
-              ? "La IA ya propuso la rúbrica. Revísala y confírmala: las entregas que ya llegaron se evaluarán solas."
-              : "Escanea tu solución o genérala con IA para preparar la rúbrica. Mientras tanto, los alumnos ya pueden entregar."}
+              ? ta.confirmaTexto
+              : ta.faltaTexto}
           </p>
           <BotonLink href={`/profesor/actividades/${id}/${actividad.reactivos.some((r) => r.respuesta.trim()) ? "rubrica" : "solucion"}`} className="mt-3">
-            {actividad.reactivos.some((r) => r.respuesta.trim()) ? "Revisar rúbrica" : "Preparar solución"}
+            {actividad.reactivos.some((r) => r.respuesta.trim()) ? ta.revisarRubrica : ta.prepararSolucion}
           </BotonLink>
         </Tarjeta>
       )}
 
       <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)]">
         <Tarjeta>
-          <p className="text-sm text-slate-500">Entregas evaluadas</p>
+          <p className="text-sm text-slate-500">{ta.evaluadas}</p>
           <p className="mt-1 text-2xl font-semibold">
-            {recibidas.filter((e) => calificada(e)).length} <span className="text-base font-normal text-slate-400">de {recibidas.length} recibidas</span>
+            {recibidas.filter((e) => calificada(e)).length} <span className="text-base font-normal text-slate-400">{formato(ta.deRecibidas, { n: recibidas.length })}</span>
           </p>
-          <p className="text-xs text-slate-500">{entregas.length - recibidas.length} alumnos sin entregar</p>
+          <p className="text-xs text-slate-500">{formato(ta.sinEntregar, { n: entregas.length - recibidas.length })}</p>
         </Tarjeta>
         <Tarjeta>
-          <p className="text-sm text-slate-500">Resultados liberados</p>
+          <p className="text-sm text-slate-500">{ta.liberados}</p>
           <p className="mt-1 text-2xl font-semibold">{liberadas.length}</p>
           <p className="text-xs text-slate-500">
             {actividad.resultadosDesde && !resultadosDisponibles(actividad)
-              ? `Los alumnos los verán desde el ${fechaHoraLarga(actividad.resultadosDesde)}.`
-              : "Se liberan solos al evaluarse; puedes corregir cada uno."}
+              ? formato(ta.veranDesde, { f: fechaHoraLarga(actividad.resultadosDesde, locale) })
+              : ta.seLiberan}
           </p>
         </Tarjeta>
         <Tarjeta>
-          <p className="text-sm text-slate-500">Baja confianza</p>
+          <p className="text-sm text-slate-500">{ta.bajaConfianza}</p>
           <p className={`mt-1 text-2xl font-semibold ${bajaConfianza ? "text-aviso" : ""}`}>{bajaConfianza}</p>
-          {bajaConfianza > 0 && <p className="text-xs text-slate-500">Reactivos que la IA no leyó bien.</p>}
+          {bajaConfianza > 0 && <p className="text-xs text-slate-500">{ta.bajaTexto}</p>}
         </Tarjeta>
         <QrEntregas qr={qr} enlace={enlace} titulo={actividad.titulo} />
       </div>
@@ -138,15 +145,15 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="px-4 py-3 font-medium">Alumno</th>
-              <th className="px-4 py-3 font-medium">Matrícula</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Páginas</th>
-              <th className="px-4 py-3 font-medium">Calificación</th>
-              <th className="px-4 py-3 font-medium">Revisar</th>
+              <th className="px-4 py-3 font-medium">{tc.alumno}</th>
+              <th className="px-4 py-3 font-medium">{tc.matricula}</th>
+              <th className="px-4 py-3 font-medium">{tc.estado}</th>
+              <th className="px-4 py-3 font-medium">{tc.paginas}</th>
+              <th className="px-4 py-3 font-medium">{tc.calificacion}</th>
+              <th className="px-4 py-3 font-medium">{ta.revisar}</th>
               <th className="px-4 py-3" />
               <th className="w-12 px-2 py-3">
-                <span className="sr-only">Borrar entrega</span>
+                <span className="sr-only">{tc.borrarEntrega}</span>
               </th>
             </tr>
           </thead>
@@ -161,7 +168,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{e.matricula}</td>
                   <td className="px-4 py-3">
                     {e.estado === "entregada" && evaluandoAhora(e.evaluandoDesde) ? (
-                      <Insignia tono="azul">Evaluando con IA…</Insignia>
+                      <Insignia tono="azul">{ta.evaluandoIA}</Insignia>
                     ) : (
                       <InsigniaEntrega estado={e.estado} />
                     )}
@@ -172,20 +179,20 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                     {evaluada ? `${formatoCal(cal, escalaDe(actividad))} / ${escalaDe(actividad)}` : "—"}
                   </td>
                   <td className="px-4 py-3">
-                    {baja > 0 ? <Insignia tono="ambar">{baja} con baja confianza</Insignia> : evaluada ? <span className="text-slate-400">—</span> : null}
+                    {baja > 0 ? <Insignia tono="ambar">{formato(ta.conBaja, { n: baja })}</Insignia> : evaluada ? <span className="text-slate-400">—</span> : null}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right">
                     {e.resultados.length > 0 ? (
                       <span className="inline-flex items-center gap-3">
                         <Link href={`/profesor/actividades/${id}/revision/${e.matricula}`} className="font-medium text-tinta-700 hover:underline">
-                          Revisar
+                          {ta.revisar}
                         </Link>
                         {(e.imagenes?.length || e.pdf) && (
                           <a
                             href={`/api/pdf/${id}/${encodeURIComponent(e.matricula)}`}
                             target="_blank"
                             className="text-xs text-tinta-700 hover:underline"
-                            title={`Descargar el PDF de retroalimentación de ${nombre(e.matricula)}`}
+                            title={formato(ta.pdfDe, { nombre: nombre(e.matricula) })}
                           >
                             PDF
                           </a>
@@ -193,7 +200,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                       </span>
                     ) : (
                       <Link href={`/entregar/${id}?m=${encodeURIComponent(e.matricula)}&n=${encodeURIComponent(nombre(e.matricula))}`} className="text-xs text-tinta-700 hover:underline">
-                        {e.estado === "sin_entregar" ? "Subir sus hojas" : "Reemplazar hojas"}
+                        {e.estado === "sin_entregar" ? tc.subirHojas : tc.reemplazarHojas}
                       </Link>
                     )}
                   </td>

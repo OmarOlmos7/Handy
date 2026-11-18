@@ -7,13 +7,21 @@ import { entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
 import { agruparPorEtiqueta } from "@/lib/colores";
 import { reporteGrupo } from "@/lib/estadisticas";
 import { datosProfesor } from "@/lib/sesion";
+import { formato } from "@/lib/i18n/idiomas";
+import { textos } from "@/lib/i18n/servidor";
 
-export const metadata: Metadata = { title: "Curso" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return { title: t.profesor.curso.meta };
+}
 
 /** Vista de un curso: sus actividades, con editar, borrar y nueva actividad. */
 export default async function VistaCurso({ params }: PageProps<"/profesor/grupos/[id]">) {
   const { id } = await params;
   const { db } = await datosProfesor();
+  const { t } = await textos();
+  const c = t.profesor.comun;
+  const tc = t.profesor.curso;
   const grupo = grupoDe(db, id);
   if (!grupo) notFound();
   const actividades = db.actividades.filter((a) => a.grupoId === id);
@@ -24,34 +32,36 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
   return (
     <>
       <Encabezado
-        migas={[{ texto: "Panel", href: "/profesor" }]}
+        migas={[{ texto: c.panel, href: "/profesor" }]}
+        rutaEtiqueta={c.ruta}
         titulo={`${grupo.materia} · ${grupo.nombre}`}
-        subtitulo={`Ciclo ${grupo.ciclo} · ${actividades.length} ${actividades.length === 1 ? "actividad" : "actividades"} · ${alumnos} ${alumnos === 1 ? "alumno" : "alumnos"}`}
+        subtitulo={`${formato(c.ciclo, { c: grupo.ciclo })} · ${formato(actividades.length === 1 ? c.actividad1 : c.actividadN, { n: actividades.length })} · ${formato(alumnos === 1 ? c.alumno1 : c.alumnoN, { n: alumnos })}`}
         acciones={
           <>
             <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/analiticas`}>
-              <IconoGrafica /> Analíticas de aprendizaje grupo
+              <IconoGrafica /> {tc.analiticas}
             </BotonLink>
             <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/cuaderno`}>
-              <IconoCuaderno /> Cuaderno de calificaciones
+              <IconoCuaderno /> {tc.cuaderno}
             </BotonLink>
-            <BotonLink href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>+ Nueva actividad</BotonLink>
+            <BotonLink href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>{tc.nuevaActividad}</BotonLink>
           </>
         }
       />
       {actividades.length === 0 ? (
         <Tarjeta className="text-sm text-slate-600">
-          Aún no hay actividades en este curso. Crea la primera con el botón <strong>Nueva actividad</strong>: genérala con IA o
-          carga la tuya escaneada.
+          {tc.sinActividadesAntes}
+          <strong>{tc.sinActividadesBoton}</strong>
+          {tc.sinActividadesDespues}
         </Tarjeta>
       ) : (
         <div className="space-y-6">
           {agruparPorEtiqueta(actividades).map(({ etiqueta, items }) => (
             <section key={etiqueta ?? "sin-etiqueta"}>
               <h2 className="mb-2 flex items-baseline gap-2 text-base font-semibold text-slate-800">
-                {etiqueta ?? "Sin etiqueta"}
+                {etiqueta ?? tc.sinEtiqueta}
                 <span className="text-sm font-normal text-slate-500">
-                  {items.length} {items.length === 1 ? "actividad" : "actividades"}
+                  {formato(items.length === 1 ? c.actividad1 : c.actividadN, { n: items.length })}
                 </span>
               </h2>
               <div className="rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
@@ -67,7 +77,7 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
                         fecha={a.fechaAplicacion}
                         resultadosDesde={a.resultadosDesde}
                         paginas={a.paginas}
-                        entregas={`${rep.entregadas}/${grupo.alumnos.length} entregas`}
+                        entregas={formato(tc.entregas, { n: rep.entregadas, total: grupo.alumnos.length })}
                         promedio={rep.entregadas > 0 ? `${rep.promedio} / ${rep.escala}` : undefined}
                         colorPromedio={colorCalificacion(rep.promedio, rep.escala)}
                         estado={estadoActividad(db, a)}
