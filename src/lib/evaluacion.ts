@@ -4,7 +4,7 @@
 import "server-only";
 import { actividadDe, grupoDe, leerAhora, modificar } from "./almacen";
 import { saldoDe } from "./cuentas";
-import { ErrorIA, evaluarEntrega, recomendarEstudio } from "./ia";
+import { ErrorIA, buscarRecursos, evaluarEntrega, recomendarEstudio, temasDe } from "./ia";
 import { imagenesParaIA } from "./imagenes";
 
 export type ResultadoEvaluacion = { ok: true } | { ok: false; error: string; status: number };
@@ -78,7 +78,35 @@ async function evaluarAhora(actividadId: string, matricula: string): Promise<Res
  * Videos sugeridos y ejercicios de repaso para el alumno. Si falla, la evaluación ya quedó
  * guardada y el profesor puede volver a pedirlas desde el formato de retroalimentación.
  */
+const intentosRecursos = new Map<string, number>();
+
+/**
+ * Busca una sola vez por actividad los videos (Khan Academy, YouTube) y las lecturas de OpenStax
+ * de sus temas; todo el grupo los comparte. Si falla, no se reintenta en una hora.
+ */
+export async function asegurarRecursos(actividadId: string, forzar = false): Promise<void> {
+  const db = leerAhora();
+  const actividad = actividadDe(db, actividadId);
+  const grupo = actividad && grupoDe(db, actividad.grupoId);
+  if (!actividad || !grupo || (actividad.recursos && !forzar)) return;
+  const ultimo = intentosRecursos.get(actividadId) ?? 0;
+  if (!forzar && Date.now() - ultimo < 3_600_000) return;
+  intentosRecursos.set(actividadId, Date.now());
+  const temas = temasDe(actividad);
+  if (temas.length === 0) return;
+  try {
+    const porTema = await buscarRecursos({ titulo: actividad.titulo, materia: grupo.materia, temas: temas.slice(0, 8) }, { profesorId: grupo.profesorId, actividadId });
+    modificar((d) => {
+      const a = d.actividades.find((x) => x.id === actividadId);
+      if (a) a.recursos = { generadoEn: new Date().toISOString(), temas: porTema };
+    });
+  } catch (e) {
+    console.error("No se pudieron buscar videos y lecturas", e);
+  }
+}
+
 export async function generarEstudio(actividadId: string, matricula: string): Promise<boolean> {
+  await asegurarRecursos(actividadId);
   const db = leerAhora();
   const actividad = actividadDe(db, actividadId);
   const grupo = actividad && grupoDe(db, actividad.grupoId);

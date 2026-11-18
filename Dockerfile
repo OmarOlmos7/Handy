@@ -19,13 +19,18 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0 \
     DATA_DIR=/datos
 # pdftoppm convierte en imágenes los PDF que entregan los alumnos desde una tableta.
+# Chromium (sin interfaz) imprime la página de recomendaciones con las fórmulas de KaTeX.
+# chromium-headless-shell es opcional: si la distribución no lo tiene, se usa chromium.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends poppler-utils \
+    && apt-get install -y --no-install-recommends poppler-utils chromium fonts-dejavu-core \
+    && (apt-get install -y --no-install-recommends chromium-headless-shell || true) \
     && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /datos && chown node:node /datos
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
+# Hoja de estilos y fuentes de KaTeX para imprimir fórmulas en el PDF.
+COPY --from=build --chown=node:node /app/node_modules/katex/dist ./node_modules/katex/dist
 USER node
 EXPOSE 3000
 VOLUME ["/datos"]

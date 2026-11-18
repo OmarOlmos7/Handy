@@ -9,8 +9,9 @@ import { leerAhora, modificar } from "./almacen";
 import { consumoDeRespuesta } from "./admin";
 import { esCerrado, puntosReactivoCerrado } from "./calificar";
 import { parametrosIA } from "./configuracion";
+import { DOMINIOS_RECURSOS, extraerJson, limpiarRecursos } from "./recursos";
 import { svgSeguro } from "./svg";
-import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
+import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, RecursoEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
 export class ErrorIA extends Error {}
 
@@ -566,10 +567,15 @@ const SISTEMA_ESTUDIO = `Eres un asistente para profesores de secundaria y bachi
 Recibes los resultados ya calificados de un alumno en una actividad: cada reactivo con su tema, sus puntos y el comentario de la corrección.
 Prepara recomendaciones de estudio para que el alumno repase por su cuenta los temas donde perdió puntos (si no perdió puntos, los temas de la actividad para reforzar).
 
-- temas: de 1 a 3 temas a repasar, en orden de prioridad. Nombres cortos (máximo 8 palabras), sin fórmulas.
+- temas: de 1 a 3 temas a repasar, en orden de prioridad. Cópialos EXACTAMENTE de la lista "Temas de la actividad".
 - videos: de 2 a 3 videos sugeridos con ejercicios resueltos de esos temas. NO inventes enlaces ni nombres de canales: da un título descriptivo y "busqueda", el texto exacto para buscarlo en YouTube en español (por ejemplo "aceleración angular ejercicios resueltos torca").
 - ejercicios: de 2 a 3 ejercicios nuevos de esos temas o equivalentes, del mismo nivel de la actividad, con datos completos. "respuesta" es SOLO el resultado final con unidades, sin procedimiento, para que el alumno lo compruebe al practicar en casa. Verifica que la respuesta sea correcta.
 En "tema" de cada ejercicio usa el nombre corto del tema, sin fórmulas. En enunciados y respuestas usa LaTeX entre $...$ para fórmulas. Escribe en español de México, dirigido al alumno (tú).`;
+
+/** Temas distintos de la rúbrica, en orden. */
+export function temasDe(act: Pick<Actividad, "reactivos">): string[] {
+  return [...new Set(act.reactivos.map((r) => r.tema?.trim()).filter((t): t is string => Boolean(t)))];
+}
 
 /** Videos sugeridos y ejercicios de repaso a partir de los resultados (sin imágenes ni datos del alumno). */
 export async function recomendarEstudio(act: Actividad, resultados: ResultadoReactivo[], mejoras: string[], uso: UsoIA): Promise<Omit<RecomendacionesEstudio, "generadoEn">> {
@@ -585,13 +591,95 @@ export async function recomendarEstudio(act: Actividad, resultados: ResultadoRea
     contenido: [
       {
         type: "text",
-        text: `Actividad: ${act.titulo}\nPuntos de mejora: ${mejoras.join("; ") || "ninguno"}\nResultados por reactivo:\n${JSON.stringify(detalle, null, 1)}`,
+        text: `Actividad: ${act.titulo}\nTemas de la actividad: ${JSON.stringify(temasDe(act))}\nPuntos de mejora: ${mejoras.join("; ") || "ninguno"}\nResultados por reactivo:\n${JSON.stringify(detalle, null, 1)}`,
       },
     ],
   });
+  // Los temas se toman de la rúbrica para enlazar los videos y lecturas buscados para la actividad.
+  const validos = temasDe(act);
+  let temas = salida.temas.map((t) => validos.find((v) => v.toLowerCase() === t.trim().toLowerCase())).filter((t): t is string => Boolean(t));
+  if (temas.length === 0) {
+    temas = act.reactivos
+      .filter((r) => (resultados.find((x) => x.numero === r.numero)?.puntosObtenidos ?? 0) < r.puntos && r.tema)
+      .map((r) => r.tema);
+  }
   return {
-    temas: salida.temas.slice(0, 3),
+    temas: [...new Set(temas)].slice(0, 3),
     videos: salida.videos.filter((v) => v.busqueda.trim()).slice(0, 3),
     ejercicios: salida.ejercicios.filter((e) => e.enunciado.trim() && e.respuesta.trim()).slice(0, 3),
   };
+}
+
+// ---------- Videos y lecturas con enlaces reales (búsqueda web) ----------
+
+const EsquemaRecursos = z.object({
+  temas: z.array(
+    z.object({
+      tema: z.string(),
+      recursos: z.array(z.object({ tipo: z.string(), titulo: z.string(), url: z.string(), fuente: z.string().optional() })),
+    }),
+  ),
+});
+
+const SISTEMA_RECURSOS = `Eres un asistente para profesores de secundaria y bachillerato en México.
+Para cada tema que recibes, busca en la web material de estudio en español (o en inglés solo si no hay en español) y elige:
+- khan: 1 video o artículo de Khan Academy (de preferencia es.khanacademy.org) del tema.
+- video: hasta 2 videos de YouTube con ejercicios resueltos del tema, de canales educativos reconocidos y con muchas vistas (por ejemplo Julioprofe, Matemáticas profe Alex, Khan Academy Español, Unicoos, Profesor10demates o equivalentes de la materia). Usa enlaces de video (youtube.com/watch?v=...), no de canales ni listas.
+- openstax: 1 sección de un libro de OpenStax (openstax.org/books/.../pages/...) que explique el tema; de preferencia libros en español.
+Usa SOLO enlaces que aparecieron en tus resultados de búsqueda; nunca los inventes ni los completes. Si no encuentras algo, no lo incluyas.
+Responde únicamente con un bloque JSON con esta forma:
+{"temas":[{"tema":"<tema tal como lo recibiste>","recursos":[{"tipo":"khan|video|openstax","titulo":"...","url":"https://...","fuente":"canal, sitio o libro y sección"}]}]}`;
+
+/** Confirma con oEmbed que el video de YouTube existe (sin llave). Si no hay red, no lo descarta. */
+async function videoExiste(url: string): Promise<boolean> {
+  try {
+    const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(6000) });
+    return r.ok || r.status >= 500;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Busca en la web videos de Khan Academy, videos populares de YouTube y secciones de OpenStax
+ * para los temas de la actividad. Solo van el título y los temas (nunca datos del alumno).
+ */
+export async function buscarRecursos(datos: { titulo: string; materia: string; temas: string[] }, uso: UsoIA): Promise<Record<string, RecursoEstudio[]>> {
+  const modelo = "claude-sonnet-5-5";
+  const mensajes: Anthropic.Beta.BetaMessageParam[] = [
+    {
+      role: "user",
+      content: `Materia: ${datos.materia}\nActividad: ${datos.titulo}\nTemas:\n${datos.temas.map((t) => `- ${t}`).join("\n")}`,
+    },
+  ];
+  let texto = "";
+  for (let vuelta = 0; vuelta < 4; vuelta++) {
+    let respuesta;
+    try {
+      respuesta = await cliente().beta.messages.create({
+        model: modelo,
+        max_tokens: 8000,
+        output_config: { effort: "low" },
+        system: SISTEMA_RECURSOS,
+        tools: [{ type: "web_search_20260209", name: "web_search", max_uses: Math.min(12, datos.temas.length * 3), allowed_domains: DOMINIOS_RECURSOS }],
+        messages: mensajes,
+      });
+    } catch (e) {
+      if (e instanceof Anthropic.APIError) throw new ErrorIA(`Error de la API de Claude (${e.status ?? "red"}): ${e.message}`);
+      throw e;
+    }
+    anotarConsumo("recursos", uso, respuesta, respuesta.stop_reason === "end_turn");
+    texto = respuesta.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+    if (respuesta.stop_reason !== "pause_turn") break;
+    mensajes.push({ role: "assistant", content: respuesta.content as Anthropic.Beta.BetaContentBlockParam[] });
+  }
+  const salida = EsquemaRecursos.safeParse(extraerJson(texto));
+  if (!salida.success) throw new ErrorIA("La búsqueda de videos y lecturas devolvió un formato inesperado.");
+  const limpios = limpiarRecursos(salida.data.temas, datos.temas);
+  for (const tema of Object.keys(limpios)) {
+    const verificados: RecursoEstudio[] = [];
+    for (const r of limpios[tema]) if (r.tipo !== "video" || (await videoExiste(r.url))) verificados.push(r);
+    limpios[tema] = verificados;
+  }
+  return limpios;
 }
