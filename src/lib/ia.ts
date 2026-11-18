@@ -11,7 +11,7 @@ import { esCerrado, puntosReactivoCerrado } from "./calificar";
 import { parametrosIA } from "./configuracion";
 import { DOMINIOS_RECURSOS, extraerJson, limpiarRecursos } from "./recursos";
 import { svgSeguro } from "./svg";
-import { esIdioma, type Idioma } from "./i18n/idiomas";
+import { IDIOMA_PROFESOR_INICIAL, esIdioma, type Idioma } from "./i18n/idiomas";
 import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, RecursoEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
 export class ErrorIA extends Error {}
@@ -54,7 +54,7 @@ export interface UsoIA {
   actividadId?: string;
   /** Motor y esfuerzo; si falta, se toma de la actividad guardada (o el predeterminado, Medio). */
   precision?: PrecisionIA;
-  /** Idioma en que la IA redacta (el del profesor); si falta, español. */
+  /** Idioma en que la IA redacta (el del profesor; inglés si nunca eligió otro). */
   idioma?: Idioma;
 }
 
@@ -63,8 +63,11 @@ function idiomaDe(uso: UsoIA): Idioma | undefined {
   if (uso.idioma) return uso.idioma;
   if (!uso.profesorId) return undefined;
   try {
-    const guardado = leerAhora().profesores.find((p) => p.id === uso.profesorId)?.config?.idioma;
-    return esIdioma(guardado) ? guardado : undefined;
+    const profesor = leerAhora().profesores.find((p) => p.id === uso.profesorId);
+    if (!profesor) return undefined;
+    // Igual que sus vistas de trabajo: si nunca eligió idioma, inglés.
+    const guardado = profesor.config?.idioma;
+    return esIdioma(guardado) ? guardado : IDIOMA_PROFESOR_INICIAL;
   } catch {
     return undefined;
   }

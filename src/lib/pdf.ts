@@ -13,6 +13,7 @@ import { leerFuenteCjk } from "./pdf-fuente-cjk";
 import { fuentesPdf, renglones } from "./pdf-fuentes";
 import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
+import { fechaHoraLarga } from "./resultados";
 import { texAPlano } from "./tex-plano";
 import type { Actividad, Alumno, Entrega, Grupo, RecomendacionesEstudio } from "./tipos";
 
@@ -178,7 +179,7 @@ function paginaEstudio(doc: PDFDocument, actividad: Actividad, estudio: Recomend
       linea(v.url, 68, 9, normal, GRIS);
     }
   } else {
-    for (const v of estudio.videos) {
+    for (const v of estudio.videos.slice(0, 3)) {
       linea(`•  ${v.titulo}`, 56, 10);
       linea(formato(tx.buscarYoutube, { q: v.busqueda }), 68, 9, normal, GRIS);
     }
@@ -208,6 +209,7 @@ export async function pdfRetroalimentacion(
     grupo: Grupo;
   },
   tx: TextosPdf = alumnoEs.pdf,
+  locale?: string,
 ): Promise<Uint8Array> {
   const { actividad, alumno, entrega, grupo } = datos;
   const doc = await PDFDocument.create();
@@ -225,6 +227,7 @@ export async function pdfRetroalimentacion(
       ...entrega.positivos,
       ...entrega.mejoras,
       ...entrega.resultados.map((r) => r.comentario),
+      ...actividad.reactivos.flatMap((r) => [r.enunciado, r.respuesta, ...(r.solucionPasos ?? [])]),
       ...(e ? [...e.temas, ...e.videos.flatMap((v) => [v.titulo, v.busqueda]), ...e.ejercicios.flatMap((x) => [x.tema, x.enunciado, x.respuesta])] : []),
     ],
     leerFuenteCjk,
@@ -260,6 +263,7 @@ export async function pdfRetroalimentacion(
     [tx.actividad, actividad.titulo],
     [tx.temas, [...new Set(actividad.reactivos.map((r) => r.tema).filter(Boolean))].join(", ") || "-"],
     [tx.fechaAplicacion, actividad.fechaAplicacion],
+    [tx.entregada, entrega.entregadaEn ? fechaHoraLarga(entrega.entregadaEn, locale) : "-"],
     [tx.calificacion, `${calTexto} / ${escala}  ${formato(tx.puntosDe, { p: puntosObtenidos(entrega), t: puntosTotales(actividad) })}`],
   ]) {
     texto(et, 48, 10, normal, GRIS);
@@ -270,8 +274,26 @@ export async function pdfRetroalimentacion(
     nuevaLinea(15);
   }
   nuevaLinea(10);
-  texto(tx.retroRubrica, 48, 11, negrita);
-  nuevaLinea(18);
+  texto(tx.corregida, 48, 11, negrita);
+  nuevaLinea(14);
+  for (const [i, l] of envolver(normal, tx.leyenda, 9, 500).entries()) {
+    if (i > 0) nuevaLinea(12);
+    texto(l, 48, 9, normal, GRIS);
+  }
+
+  // ---- 2. Hojas del alumno con marcas (guardadas en el PDF archivado o dibujadas sobre las fotos) ----
+  if (entrega.pdf) {
+    const archivado = await PDFDocument.load(leerArchivo(entrega.pdf));
+    for (const pag of await doc.copyPages(archivado, archivado.getPageIndices())) doc.addPage(pag);
+  } else {
+    await dibujarHojas(doc, actividad, entrega, normal, negrita, calTexto, tx);
+  }
+
+  // ---- 3. Resumen del desempeño: aspectos positivos y de mejora, y puntos por reactivo ----
+  p = doc.addPage([CARTA.ancho, CARTA.alto]);
+  y = CARTA.alto - 56;
+  texto(tx.retroRubrica, 48, 13, negrita);
+  nuevaLinea(22);
   for (const [titulo, lista, color] of [
     [tx.positivos, entrega.positivos, VERDE],
     [tx.mejoras, entrega.mejoras, ROJO],
@@ -279,7 +301,7 @@ export async function pdfRetroalimentacion(
     texto(titulo, 48, 10, negrita, color);
     nuevaLinea(14);
     for (const item of lista) {
-      for (const [i, l] of envolver(normal, item, 10, 480).entries()) {
+      for (const [i, l] of envolver(normal, texAPlano(item), 10, 480).entries()) {
         texto(i === 0 ? `•  ${l}` : `   ${l}`, 56, 10);
         nuevaLinea(13);
       }
@@ -295,7 +317,7 @@ export async function pdfRetroalimentacion(
   for (const r of actividad.reactivos) {
     const res = entrega.resultados.find((x) => x.numero === r.numero);
     if (!res) continue;
-    const lineas = envolver(normal, res.comentario, 9, 300);
+    const lineas = envolver(normal, texAPlano(res.comentario), 9, 300);
     texto(String(r.numero), 48, 9);
     texto(envolver(normal, r.tema, 9, 100)[0] ?? "", 100, 9);
     texto(`${res.puntosObtenidos}/${r.puntos}`, 520, 9, negrita, res.puntosObtenidos === r.puntos ? VERDE : ROJO);
@@ -304,28 +326,6 @@ export async function pdfRetroalimentacion(
       nuevaLinea(12);
     }
     nuevaLinea(4);
-  }
-  nuevaLinea(8);
-  texto(tx.corregida, 48, 11, negrita);
-  nuevaLinea(14);
-  for (const [i, l] of envolver(normal, tx.leyenda, 9, 500).entries()) {
-    if (i > 0) nuevaLinea(12);
-    texto(l, 48, 9, normal, GRIS);
-  }
-  if (entrega.estudio) {
-    nuevaLinea(18);
-    for (const [i, l] of envolver(negrita, tx.recomendacionesFinal, 11, 500).entries()) {
-      if (i > 0) nuevaLinea(14);
-      texto(l, 48, 11, negrita);
-    }
-  }
-
-  // ---- 2. Hojas del alumno con marcas (guardadas en el PDF archivado o dibujadas sobre las fotos) ----
-  if (entrega.pdf) {
-    const archivado = await PDFDocument.load(leerArchivo(entrega.pdf));
-    for (const pag of await doc.copyPages(archivado, archivado.getPageIndices())) doc.addPage(pag);
-  } else {
-    await dibujarHojas(doc, actividad, entrega, normal, negrita, calTexto, tx);
   }
 
   // ---- 4. Recomendaciones de estudio (con fórmulas de KaTeX si hay Chromium; si no, en texto) ----
@@ -336,6 +336,30 @@ export async function pdfRetroalimentacion(
       for (const pag of await doc.copyPages(estudio, estudio.getPageIndices())) doc.addPage(pag);
     } else {
       paginaEstudio(doc, actividad, entrega.estudio, normal, negrita, tx);
+    }
+  }
+
+  // ---- 5. Solución de cada reactivo, al final ----
+  if (actividad.reactivos.some((r) => r.respuesta.trim() || r.solucionPasos?.length)) {
+    p = doc.addPage([CARTA.ancho, CARTA.alto]);
+    y = CARTA.alto - 56;
+    texto(tx.solucion, 48, 13, negrita);
+    nuevaLinea(22);
+    const parrafo = (t: string, x: number, tam: number, f: PDFFont, color = TINTA) => {
+      for (const l of envolver(f, texAPlano(t), tam, CARTA.ancho - x - 48)) {
+        texto(l, x, tam, f, color);
+        nuevaLinea(tam + 4);
+      }
+    };
+    for (const r of actividad.reactivos) {
+      parrafo(`${tx.reactivo} ${r.numero}${r.tema ? ` · ${r.tema}` : ""}`, 48, 10, negrita, GRIS);
+      if (r.enunciado) parrafo(r.enunciado, 48, 10, normal);
+      if (r.solucionPasos?.length) {
+        parrafo(tx.procedimiento, 56, 9, negrita, GRIS);
+        for (const [i, paso] of r.solucionPasos.entries()) parrafo(`${i + 1}. ${paso}`, 64, 9, normal);
+      }
+      if (r.respuesta.trim()) parrafo(`${tx.respuesta} ${r.respuesta}`, 56, 10, negrita, VERDE);
+      nuevaLinea(8);
     }
   }
 

@@ -5,8 +5,6 @@ import { redirect } from "next/navigation";
 import { leer, modificar } from "@/lib/almacen";
 import { adoptarSinDueno, hashContrasena, normalizarCorreo, verificarContrasena } from "@/lib/cuentas";
 import { crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
-import { recordarIdioma } from "@/app/acciones-idioma";
-import { idiomaActual } from "@/lib/i18n/servidor";
 import { cerrarSesionAlumno, cerrarSesionProfesor, iniciarSesionAlumno, iniciarSesionProfesor } from "@/lib/sesion";
 
 const CREDITOS_INICIALES = Number(process.env.CREDITOS_INICIALES ?? 50);
@@ -28,13 +26,11 @@ export async function registrarProfesor(form: FormData) {
   if (codigoRequerido && invitacion !== codigoRequerido) volver("/registro", "invitacion");
 
   const id = `p-${crypto.randomBytes(6).toString("hex")}`;
-  // El idioma con que se registra queda en su configuración: la IA redacta en ese idioma.
-  const idioma = await idiomaActual();
   const contrasenaHash = hashContrasena(contrasena);
   const creado = modificar((db) => {
     if (db.profesores.some((p) => p.correo === correo)) return false;
     const primero = db.profesores.length === 0;
-    db.profesores.push({ id, nombre, correo, contrasena: contrasenaHash, creadoEn: new Date().toISOString(), config: { idioma } });
+    db.profesores.push({ id, nombre, correo, contrasena: contrasenaHash, creadoEn: new Date().toISOString() });
     if (primero) adoptarSinDueno(db, id);
     if (CREDITOS_INICIALES > 0) {
       db.movimientos.unshift({
@@ -59,15 +55,7 @@ export async function ingresarProfesor(form: FormData) {
     volver("/ingresar", "credenciales");
   }
   await iniciarSesionProfesor(profesor.id);
-  if (profesor.config?.idioma) await recordarIdioma(profesor.config.idioma);
-  else {
-    // Cuentas anteriores a los idiomas: se guarda el idioma con que entra (la IA redacta en ese idioma).
-    const idioma = await idiomaActual();
-    modificar((db) => {
-      const p = db.profesores.find((x) => x.id === profesor.id);
-      if (p && !p.config?.idioma) p.config = { ...p.config, idioma };
-    });
-  }
+  // Las vistas de trabajo usan el idioma de su configuración (inglés si nunca eligió otro).
   redirect("/profesor");
 }
 

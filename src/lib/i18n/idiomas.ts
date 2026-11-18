@@ -5,6 +5,8 @@ export const IDIOMAS = ["es", "en", "fr", "de", "ja", "pt", "zh"] as const;
 export type Idioma = (typeof IDIOMAS)[number];
 
 export const IDIOMA_PREDETERMINADO: Idioma = "es";
+/** Idioma de las vistas de trabajo del profesor (y de la IA) mientras no elija otro en Configuración. */
+export const IDIOMA_PROFESOR_INICIAL: Idioma = "en";
 
 /** Nombre de cada idioma escrito en ese mismo idioma, para el selector. */
 export const NOMBRE_IDIOMA: Record<Idioma, string> = {
@@ -108,4 +110,14 @@ export function elegirIdioma({ pais, acceptLanguage }: { pais?: string; acceptLa
 /** Sustituye {nombre} en un texto del diccionario. */
 export function formato(texto: string, valores: Record<string, string | number>): string {
   return texto.replace(/\{(\w+)\}/g, (m, k: string) => (k in valores ? String(valores[k]) : m));
+}
+
+export type Vista = "trabajo" | "publica" | "api";
+
+/** Qué clase de vista es una ruta (la pone src/proxy.ts en la cabecera x-ruta). */
+export function vistaDeRuta(ruta: string | null | undefined): Vista {
+  if (!ruta) return "api";
+  if (/^\/(profesor|admin)(\/|$)/.test(ruta)) return "trabajo";
+  if (ruta.startsWith("/api/")) return "api";
+  return "publica";
 }

@@ -1,11 +1,11 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { modificar } from "@/lib/almacen";
 import { esIdioma } from "@/lib/i18n/idiomas";
-import { COOKIE_IDIOMA } from "@/lib/i18n/servidor";
+import { COOKIE_IDIOMA, vistaDeRuta } from "@/lib/i18n/servidor";
 import { profesorActual } from "@/lib/sesion";
 
 const UN_ANIO = 365 * 86_400;
@@ -17,15 +17,17 @@ export async function recordarIdioma(idioma: unknown) {
 }
 
 /**
- * Cambia el idioma de la interfaz. Lo recuerda el navegador y, si hay un profesor con sesión,
- * también su configuración (así lo encuentra al entrar desde otro equipo).
+ * Cambia el idioma de la interfaz. En las vistas de trabajo del profesor se guarda en su
+ * configuración (lo encuentra al entrar desde cualquier equipo); en las páginas públicas y del
+ * alumno lo recuerda este navegador.
  */
 export async function cambiarIdioma(form: FormData) {
   const idioma = form.get("idioma");
   if (!esIdioma(idioma)) return;
-  await recordarIdioma(idioma);
   const yo = await profesorActual();
-  if (yo) {
+  const enTrabajo = vistaDeRuta((await headers()).get("x-ruta")) === "trabajo";
+  if (!yo || !enTrabajo) await recordarIdioma(idioma);
+  if (yo && enTrabajo) {
     modificar((db) => {
       const p = db.profesores.find((x) => x.id === yo.id);
       if (p) p.config = { ...p.config, idioma };

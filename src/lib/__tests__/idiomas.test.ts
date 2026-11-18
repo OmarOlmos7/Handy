@@ -11,7 +11,7 @@ import ja from "../i18n/diccionarios/ja";
 import pt from "../i18n/diccionarios/pt";
 import zh from "../i18n/diccionarios/zh";
 import { buscarPais, ipv4ANumero, tablaDesdeCsv } from "../i18n/geoip";
-import { elegirIdioma, formato, idiomasDelNavegador } from "../i18n/idiomas";
+import { elegirIdioma, formato, idiomasDelNavegador, vistaDeRuta } from "../i18n/idiomas";
 
 describe("idioma del navegador", () => {
   it("ordena por peso y deja solo los idiomas de la app", () => {
@@ -97,5 +97,22 @@ describe("diccionarios", () => {
   it("sustituye valores", () => {
     expect(formato("{n} créditos", { n: 5 })).toBe("5 créditos");
     expect(formato("Hola {x}", {})).toBe("Hola {x}");
+  });
+});
+
+describe("vistaDeRuta", () => {
+  it("las vistas del profesor y de administración son de trabajo", () => {
+    expect(vistaDeRuta("/profesor")).toBe("trabajo");
+    expect(vistaDeRuta("/profesor/configuracion")).toBe("trabajo");
+    expect(vistaDeRuta("/admin")).toBe("trabajo");
+  });
+  it("la página de inicio, el registro y las del alumno son públicas", () => {
+    for (const r of ["/", "/precios", "/ingresar", "/registro", "/alumno", "/entregar/a1", "/profesores"]) {
+      expect(vistaDeRuta(r)).toBe("publica");
+    }
+  });
+  it("sin ruta o en la API depende de la sesión", () => {
+    expect(vistaDeRuta(null)).toBe("api");
+    expect(vistaDeRuta("/api/pdf/a1/A01")).toBe("api");
   });
 });
