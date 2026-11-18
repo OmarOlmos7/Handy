@@ -58,6 +58,13 @@ export async function medidas(datos: Buffer) {
 /** Máximo de páginas que se aceptan en una entrega. */
 export const MAX_PAGINAS_ENTREGA = 20;
 
+/** El PDF trae más páginas de las permitidas (el mensaje se traduce al mostrarlo). */
+export class ErrorPaginasPdf extends RangeError {
+  constructor(readonly paginas: number) {
+    super(`El PDF tiene ${paginas} páginas; el máximo es ${MAX_PAGINAS_ENTREGA}`);
+  }
+}
+
 /**
  * Convierte un PDF (por ejemplo, la hoja escrita a mano en una tableta) en una imagen JPG
  * por página, igual que si el alumno hubiera tomado una foto de cada hoja. Usa pdftoppm
@@ -66,7 +73,7 @@ export const MAX_PAGINAS_ENTREGA = 20;
 export async function pdfAImagenes(datos: Buffer): Promise<Buffer[]> {
   const paginas = (await PDFDocument.load(datos, { ignoreEncryption: true })).getPageCount();
   if (paginas < 1) throw new Error("El PDF no tiene páginas");
-  if (paginas > MAX_PAGINAS_ENTREGA) throw new RangeError(`El PDF tiene ${paginas} páginas; el máximo es ${MAX_PAGINAS_ENTREGA}`);
+  if (paginas > MAX_PAGINAS_ENTREGA) throw new ErrorPaginasPdf(paginas);
   const carpeta = await fs.mkdtemp(path.join(os.tmpdir(), "entrega-pdf-"));
   try {
     const entrada = path.join(carpeta, "hoja.pdf");

@@ -6,11 +6,12 @@ import { leer, modificar } from "@/lib/almacen";
 import { adoptarSinDueno, hashContrasena, normalizarCorreo, verificarContrasena } from "@/lib/cuentas";
 import { crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
 import { recordarIdioma } from "@/app/acciones-idioma";
+import { idiomaActual } from "@/lib/i18n/servidor";
 import { cerrarSesionAlumno, cerrarSesionProfesor, iniciarSesionAlumno, iniciarSesionProfesor } from "@/lib/sesion";
 
 const CREDITOS_INICIALES = Number(process.env.CREDITOS_INICIALES ?? 50);
 
-/** Vuelve al formulario con el error. En /registro e /ingresar es una clave de cuenta.errores del diccionario. */
+/** Vuelve al formulario con el error: una clave de cuenta.errores (profesor) o de alumno.errores (alumno). */
 function volver(ruta: string, error: string): never {
   redirect(`${ruta}${ruta.includes("?") ? "&" : "?"}error=${encodeURIComponent(error)}`);
 }
@@ -27,11 +28,13 @@ export async function registrarProfesor(form: FormData) {
   if (codigoRequerido && invitacion !== codigoRequerido) volver("/registro", "invitacion");
 
   const id = `p-${crypto.randomBytes(6).toString("hex")}`;
+  // El idioma con que se registra queda en su configuración: la IA redacta en ese idioma.
+  const idioma = await idiomaActual();
   const contrasenaHash = hashContrasena(contrasena);
   const creado = modificar((db) => {
     if (db.profesores.some((p) => p.correo === correo)) return false;
     const primero = db.profesores.length === 0;
-    db.profesores.push({ id, nombre, correo, contrasena: contrasenaHash, creadoEn: new Date().toISOString() });
+    db.profesores.push({ id, nombre, correo, contrasena: contrasenaHash, creadoEn: new Date().toISOString(), config: { idioma } });
     if (primero) adoptarSinDueno(db, id);
     if (CREDITOS_INICIALES > 0) {
       db.movimientos.unshift({
@@ -56,7 +59,15 @@ export async function ingresarProfesor(form: FormData) {
     volver("/ingresar", "credenciales");
   }
   await iniciarSesionProfesor(profesor.id);
-  await recordarIdioma(profesor.config?.idioma);
+  if (profesor.config?.idioma) await recordarIdioma(profesor.config.idioma);
+  else {
+    // Cuentas anteriores a los idiomas: se guarda el idioma con que entra (la IA redacta en ese idioma).
+    const idioma = await idiomaActual();
+    modificar((db) => {
+      const p = db.profesores.find((x) => x.id === profesor.id);
+      if (p && !p.config?.idioma) p.config = { ...p.config, idioma };
+    });
+  }
   redirect("/profesor");
 }
 
@@ -68,14 +79,14 @@ export async function salirProfesor() {
 /** El alumno entra con su correo y su clave de acceso para ver solo sus resultados. */
 export async function ingresarAlumno(form: FormData) {
   const cuenta = verificarAlumno(await leer(), String(form.get("correo") ?? ""), String(form.get("clave") ?? ""));
-  if (!cuenta) volver("/alumno", "Correo o clave de acceso incorrectos.");
+  if (!cuenta) volver("/alumno", "credenciales");
   await iniciarSesionAlumno(cuenta.id);
   redirect("/alumno");
 }
 
 export async function registrarAlumno(form: FormData) {
   const clave = String(form.get("clave") ?? "");
-  if (clave !== String(form.get("clave2") ?? "")) volver("/alumno?crear=1", "Las dos claves de acceso no coinciden.");
+  if (clave !== String(form.get("clave2") ?? "")) volver("/alumno?crear=1", "clavesDistintas");
   const r = crearCuentaAlumno({
     nombre: String(form.get("nombre") ?? ""),
     matricula: String(form.get("matricula") ?? ""),

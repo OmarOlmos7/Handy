@@ -1,4 +1,5 @@
 import type { Diccionario } from "../diccionario";
+import alumno from "./alumno/zh";
 import profesor from "./profesor/zh";
 
 const zh: Diccionario = {
@@ -294,7 +295,7 @@ const zh: Diccionario = {
     idiomaTexto: "选择界面语言。如果不选择，将使用你所在国家的官方语言或浏览器的语言。",
     guardarIdioma: "保存语言",
     idiomaGuardado: "已保存你的语言。",
-    etapaIdioma: "首页、登录、价格和教师页面已翻译；学生页面将在下一次更新中翻译。",
+    etapaIdioma: "AI 也会用这种语言编写作业、评分标准和给学生的反馈。",
     cuentaTitulo: "姓名和密码",
     correoAcceso: "你的登录邮箱是 {correo}。",
     nombre: "姓名",
@@ -352,6 +353,7 @@ const zh: Diccionario = {
     },
   },
   profesor,
+  alumno,
 };
 
 export default zh;

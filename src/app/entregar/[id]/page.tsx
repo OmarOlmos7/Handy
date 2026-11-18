@@ -4,6 +4,7 @@ import { EntregarForm } from "@/components/entregar-form";
 import { Logo } from "@/components/ui";
 import { actividadDe, grupoDe, leer } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
+import { textos } from "@/lib/i18n/servidor";
 import { primeraEntrega } from "@/lib/reenvio";
 import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 
@@ -24,6 +25,7 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
   const matricula = matriculaEnCurso(alumno, grupo.id);
   const entrega = matricula ? db.entregas.find((e) => e.actividadId === id && e.matricula === matricula && e.estado !== "sin_entregar") : undefined;
   const primera = entrega && primeraEntrega(entrega);
+  const { t } = await textos();
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
       <Logo grande />
@@ -34,12 +36,12 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
       {alumno && (
         <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-tinta-50 px-4 py-3 text-sm">
           <span>
-            Entregas como <strong>{alumno.nombre}</strong>
+            {t.alumno.entregar.entregasComo} <strong>{alumno.nombre}</strong>
             <span className="block text-xs text-slate-500">{alumno.correo}</span>
           </span>
           <form action={salirAlumno}>
             <button type="submit" className="text-xs text-tinta-700 underline">
-              ¿No eres tú? Salir
+              {t.alumno.entregar.noEresTu}
             </button>
           </form>
         </div>

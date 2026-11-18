@@ -3,11 +3,15 @@ import { BotonImprimir } from "@/components/boton-imprimir";
 import { ReporteAlumno } from "@/components/reporte-alumno";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { actividadDe, leer } from "@/lib/almacen";
+import { textos } from "@/lib/i18n/servidor";
 import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 import { alumnoActual } from "@/lib/sesion";
 
 export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/reporte/[id]">) {
   const { id } = await params;
+  const { t, locale } = await textos();
+  const tr = t.alumno.reporte;
+  const migas = [{ texto: t.alumno.panel.titulo, href: "/alumno" }];
   const sesion = await alumnoActual();
   if (!sesion) redirect("/alumno");
   const db = await leer();
@@ -22,10 +26,9 @@ export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/rep
   if (!resultadosDisponibles(actividad)) {
     return (
       <>
-        <Encabezado migas={[{ texto: "Mis actividades", href: "/alumno" }]} titulo="Reporte de retroalimentación" subtitulo={actividad.titulo} />
+        <Encabezado migas={migas} titulo={tr.titulo} subtitulo={actividad.titulo} />
         <Tarjeta className="text-sm text-slate-700">
-          Tus resultados todavía no están disponibles. Fecha de visualización de resultados:{" "}
-          <strong>{fechaHoraLarga(actividad.resultadosDesde!)}</strong> (hora del centro de México).
+          {tr.noDisponibleAntes} <strong>{fechaHoraLarga(actividad.resultadosDesde!, locale)}</strong> {tr.noDisponibleDespues}
         </Tarjeta>
       </>
     );
@@ -33,16 +36,16 @@ export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/rep
   return (
     <>
       <Encabezado
-        migas={[{ texto: "Mis actividades", href: "/alumno" }]}
-        titulo="Reporte de retroalimentación"
+        migas={migas}
+        titulo={tr.titulo}
         subtitulo={actividad.titulo}
         acciones={
           entrega.imagenes?.length || entrega.pdf ? (
             <BotonLink href={`/api/pdf/${id}/${encodeURIComponent(matricula)}`} target="_blank">
-              Descargar PDF
+              {tr.descargarPdf}
             </BotonLink>
           ) : (
-            <BotonImprimir texto="Descargar PDF" />
+            <BotonImprimir texto={tr.descargarPdf} />
           )
         }
       />

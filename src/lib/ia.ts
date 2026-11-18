@@ -11,6 +11,7 @@ import { esCerrado, puntosReactivoCerrado } from "./calificar";
 import { parametrosIA } from "./configuracion";
 import { DOMINIOS_RECURSOS, extraerJson, limpiarRecursos } from "./recursos";
 import { svgSeguro } from "./svg";
+import { esIdioma, type Idioma } from "./i18n/idiomas";
 import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, RecursoEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
 export class ErrorIA extends Error {}
@@ -53,6 +54,45 @@ export interface UsoIA {
   actividadId?: string;
   /** Motor y esfuerzo; si falta, se toma de la actividad guardada (o el predeterminado, Medio). */
   precision?: PrecisionIA;
+  /** Idioma en que la IA redacta (el del profesor); si falta, español. */
+  idioma?: Idioma;
+}
+
+/** Idioma de la llamada: el indicado o el que el profesor guardó en su configuración. */
+function idiomaDe(uso: UsoIA): Idioma | undefined {
+  if (uso.idioma) return uso.idioma;
+  if (!uso.profesorId) return undefined;
+  try {
+    const guardado = leerAhora().profesores.find((p) => p.id === uso.profesorId)?.config?.idioma;
+    return esIdioma(guardado) ? guardado : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Nombre del idioma para las indicaciones de la IA (las indicaciones van en español). */
+const IDIOMA_PARA_IA: Record<Idioma, string> = {
+  es: "español de México",
+  en: "inglés",
+  fr: "francés",
+  de: "alemán",
+  ja: "japonés",
+  pt: "portugués de Brasil",
+  zh: "chino simplificado",
+};
+
+/**
+ * Indicación de idioma que se agrega al final de las instrucciones. En español no cambia nada;
+ * en otro idioma reemplaza las menciones al español de las instrucciones base.
+ */
+export function indicacionIdioma(idioma: Idioma | undefined): string {
+  if (!idioma || idioma === "es") return "";
+  const nombre = IDIOMA_PARA_IA[idioma];
+  return (
+    `\n\nIDIOMA: escribe en ${nombre} todo el texto que leerán el profesor o el alumno (títulos, instrucciones, enunciados, opciones, respuestas, ` +
+    `pasos, comentarios, temas, habilidades, criterios, recomendaciones y búsquedas). Esta indicación reemplaza cualquier mención anterior al español ` +
+    `o a México; usa la notación matemática habitual en ${nombre} (por ejemplo \\sin en lugar de \\operatorname{sen}) y deja las fórmulas en LaTeX.`
+  );
 }
 
 /** Precisión de la llamada: la indicada o la de la actividad. */
@@ -96,7 +136,7 @@ async function pedir<T>(params: {
       max_tokens: 16000,
       ...respaldo,
       output_config: { effort: esfuerzo, format: betaZodOutputFormat(params.esquema) },
-      system: params.system,
+      system: params.system + indicacionIdioma(idiomaDe(params.uso)),
       messages: [{ role: "user", content: params.contenido }],
     });
   } catch (e) {
@@ -660,7 +700,7 @@ export async function buscarRecursos(datos: { titulo: string; materia: string; t
         model: modelo,
         max_tokens: 8000,
         output_config: { effort: "low" },
-        system: SISTEMA_RECURSOS,
+        system: SISTEMA_RECURSOS + indicacionIdioma(idiomaDe(uso)),
         tools: [{ type: "web_search_20260209", name: "web_search", max_uses: Math.min(12, datos.temas.length * 3), allowed_domains: DOMINIOS_RECURSOS }],
         messages: mensajes,
       });

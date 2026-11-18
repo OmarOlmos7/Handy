@@ -260,11 +260,11 @@ export function analiticasCurso(
   const temasDebiles = todosTemas.slice(0, 5);
 
   const tramos = [
-    { rango: "0 a 59", min: 0, max: 60 },
-    { rango: "60 a 69", min: 60, max: 70 },
-    { rango: "70 a 79", min: 70, max: 80 },
-    { rango: "80 a 89", min: 80, max: 90 },
-    { rango: "90 a 100", min: 90, max: 101 },
+    { rango: formato(tx.rango, { a: 0, b: 59 }), min: 0, max: 60 },
+    { rango: formato(tx.rango, { a: 60, b: 69 }), min: 60, max: 70 },
+    { rango: formato(tx.rango, { a: 70, b: 79 }), min: 70, max: 80 },
+    { rango: formato(tx.rango, { a: 80, b: 89 }), min: 80, max: 90 },
+    { rango: formato(tx.rango, { a: 90, b: 100 }), min: 90, max: 101 },
   ];
 
   const general = {

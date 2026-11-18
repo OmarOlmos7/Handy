@@ -24,8 +24,9 @@ ENV NODE_ENV=production \
 # pdftoppm convierte en imágenes los PDF que entregan los alumnos desde una tableta.
 # Chromium (sin interfaz) imprime la página de recomendaciones con las fórmulas de KaTeX.
 # chromium-headless-shell es opcional: si la distribución no lo tiene, se usa chromium.
+# fonts-wqy-microhei: letras japonesas y chinas para los PDF en esos idiomas.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends poppler-utils chromium fonts-dejavu-core \
+    && apt-get install -y --no-install-recommends poppler-utils chromium fonts-dejavu-core fonts-wqy-microhei \
     && (apt-get install -y --no-install-recommends chromium-headless-shell || true) \
     && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /datos && chown node:node /datos

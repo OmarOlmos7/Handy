@@ -3,14 +3,15 @@ import { actividadDe, borrarCarpeta, grupoDe, guardarArchivo, leer, modificar } 
 import { alumnoEnGrupo, esDelProfesor, normalizarCorreo, normalizarMatricula } from "@/lib/cuentas";
 import { crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
 import { evaluarYGuardar, marcarEnFila } from "@/lib/evaluacion";
-import { MAX_PAGINAS_ENTREGA, normalizarFoto, pdfAImagenes } from "@/lib/imagenes";
+import { errorAlumno } from "@/lib/i18n/alumno";
+import { textos } from "@/lib/i18n/servidor";
+import { ErrorPaginasPdf, MAX_PAGINAS_ENTREGA, normalizarFoto, pdfAImagenes } from "@/lib/imagenes";
 import { permisoReenvio, primeraEntrega } from "@/lib/reenvio";
 import { alumnoActual, iniciarSesionAlumno, profesorActual } from "@/lib/sesion";
 import type { Alumno } from "@/lib/tipos";
 
 export const maxDuration = 300;
 
-const error = (mensaje: string, status = 400) => Response.json({ error: mensaje }, { status });
 
 // Entrega del alumno: fotos de sus hojas en el orden elegido. El alumno entra con su
 // correo y clave de acceso (o crea su cuenta aquí mismo la primera vez). El profesor
@@ -18,19 +19,23 @@ const error = (mensaje: string, status = 400) => Response.json({ error: mensaje 
 // confirmada, la entrega se evalúa sola en cuanto se recibe.
 export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">) {
   const { id } = await ctx.params;
+  // Los errores llegan al alumno en su idioma.
+  const { t } = await textos();
+  const error = (clave: string, status = 400, valores: Record<string, string | number> = {}) =>
+    Response.json({ error: errorAlumno(t, clave, valores) }, { status });
   const db = await leer();
   const actividad = actividadDe(db, id);
   const grupo = actividad && grupoDe(db, actividad.grupoId);
-  if (!actividad || !grupo) return error("Actividad no encontrada", 404);
+  if (!actividad || !grupo) return error("actividadNoEncontrada", 404);
   const form = await req.formData();
 
   // Dos formas de entregar: fotos de cada hoja, o un PDF (hoja escrita a mano en una tableta).
   const fotos = form.getAll("fotos").filter((f): f is File => f instanceof File && f.size > 0);
   const pdf = form.get("pdf");
   const archivoPdf = pdf instanceof File && pdf.size > 0 ? pdf : undefined;
-  if (!archivoPdf && fotos.length === 0) return error("Agrega al menos una foto o un PDF");
-  if (fotos.length > MAX_PAGINAS_ENTREGA) return error(`Máximo ${MAX_PAGINAS_ENTREGA} páginas`);
-  if (archivoPdf && archivoPdf.size > 40 * 1024 * 1024) return error("El PDF pesa más de 40 MB");
+  if (!archivoPdf && fotos.length === 0) return error("sinArchivos");
+  if (fotos.length > MAX_PAGINAS_ENTREGA) return error("maxPaginas", 400, { n: MAX_PAGINAS_ENTREGA });
+  if (archivoPdf && archivoPdf.size > 40 * 1024 * 1024) return error("pdfPesado");
 
   // ¿Quién entrega?
   let alumno: Alumno;
@@ -40,9 +45,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
   if (comoProfesor) {
     const matricula = normalizarMatricula(String(form.get("matricula") ?? ""));
     const nombre = String(form.get("nombre") ?? "").replace(/\s+/g, " ").trim().slice(0, 120);
-    if (!/^[A-Z0-9-]{3,20}$/.test(matricula)) return error("Escribe la matrícula (letras y números, sin espacios)");
+    if (!/^[A-Z0-9-]{3,20}$/.test(matricula)) return error("matriculaProfesor");
     const existente = grupo.alumnos.find((a) => normalizarMatricula(a.matricula) === matricula);
-    if (!existente && nombre.length < 3) return error("Escribe el nombre completo del alumno");
+    if (!existente && nombre.length < 3) return error("nombreAlumno");
     alumno = existente ?? { matricula, nombre, correo: "" };
   } else {
     let cuenta = (await alumnoActual()) ?? undefined;
@@ -56,7 +61,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
         cuenta = { ...r.cuenta, cursos: [] };
       } else {
         const c = verificarAlumno(db, correo, clave);
-        if (!c) return error("Correo o clave de acceso incorrectos.", 401);
+        if (!c) return error("credenciales", 401);
         cuenta = { ...c, cursos: [] };
       }
       abrirSesion = true;
@@ -68,7 +73,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
     } else {
       const ocupada = grupo.alumnos.find((a) => normalizarMatricula(a.matricula) === cuenta.matricula);
       if (ocupada && ocupada.correo && normalizarCorreo(ocupada.correo) !== cuenta.correo) {
-        return error("Esa matrícula ya está registrada en este curso con otro correo. Habla con tu profesor.", 409);
+        return error("matriculaOcupada", 409);
       }
       alumno = { matricula: cuenta.matricula, nombre: cuenta.nombre, correo: cuenta.correo };
     }
@@ -86,16 +91,16 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
     try {
       jpgs.push(...(await pdfAImagenes(Buffer.from(await archivoPdf.arrayBuffer()))));
     } catch (e) {
-      if (e instanceof RangeError) return error(e.message);
+      if (e instanceof ErrorPaginasPdf) return error("pdfPaginas", 400, { paginas: e.paginas, max: MAX_PAGINAS_ENTREGA });
       console.error(e);
-      return error("No se pudo leer el PDF. Revisa que sea el archivo correcto y vuelve a intentarlo.");
+      return error("pdfIlegible");
     }
   } else {
     for (const [i, f] of fotos.entries()) {
       try {
         jpgs.push(await normalizarFoto(Buffer.from(await f.arrayBuffer())));
       } catch {
-        return error(`La página ${i + 1} no es una imagen válida (usa JPG o PNG)`);
+        return error("imagenInvalida", 400, { n: i + 1 });
       }
     }
   }

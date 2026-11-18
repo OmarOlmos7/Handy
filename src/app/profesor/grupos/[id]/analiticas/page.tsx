@@ -56,7 +56,7 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
         </div>
         {hay && (
           <div className="flex flex-wrap gap-2">
-            <DescargarReportePdf reporte={reporteGrupoPdf(grupo, a)} archivo={nombreArchivoReporte(["analiticas", grupo.materia, grupo.nombre])} />
+            <DescargarReportePdf reporte={reporteGrupoPdf(grupo, a, { tx: t.profesor.reportePdf, locale, niveles })} archivo={nombreArchivoReporte(["analiticas", grupo.materia, grupo.nombre])} />
           </div>
         )}
       </div>

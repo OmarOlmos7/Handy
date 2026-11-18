@@ -2,6 +2,9 @@
 // `cuadernoCurso` (src/lib/cuaderno.ts); aquí solo se acomodan en la tabla del archivo.
 import { ordenarFilas, ORDENES, type Cuaderno, type Orden } from "./cuaderno";
 import { formatoCal, nivelDe, type Nivel } from "./estadisticas";
+import profesorEs from "./i18n/diccionarios/profesor/es";
+import { formato } from "./i18n/idiomas";
+import { fuenteCjkDelServidor, fuentesPdf, renglones } from "./pdf-fuentes";
 import type { Escala } from "./tipos";
 
 export interface InfoCuaderno {
@@ -35,7 +38,12 @@ export interface TablaExportable {
   /** Promedio de cada actividad y, al final, el del grupo. */
   pie: CeldaExportable[];
   orden: string;
+  /** Textos del cuaderno (profesor.cuaderno) y formato regional del idioma elegido. */
+  textos: TextosCuaderno;
+  locale: string;
 }
+
+export type TextosCuaderno = typeof profesorEs.cuaderno;
 
 const vacia: CeldaExportable = { texto: "—", valor: null, nivel: null };
 
@@ -49,7 +57,8 @@ function promedio(valor: number | null, escala: Escala): CeldaExportable {
 }
 
 /** Tabla del cuaderno en el orden elegido, lista para escribirse en Excel o PDF. */
-export function tablaExportable(cuaderno: Cuaderno, orden: Orden): TablaExportable {
+export function tablaExportable(cuaderno: Cuaderno, orden: Orden, tx: TextosCuaderno = profesorEs.cuaderno, locale = "es-MX"): TablaExportable {
+  const tc = tx.exportar;
   const columnas = cuaderno.grupos.flatMap((g) => g.columnas);
   return {
     escala: cuaderno.escala,
@@ -70,22 +79,22 @@ export function tablaExportable(cuaderno: Cuaderno, orden: Orden): TablaExportab
               valor: celda.valor,
               nivel: nivelDe(celda.valor!, c.escala),
               nota: celda.manual
-                ? `Cambiada a mano${celda.calculada !== undefined ? ` (con la rúbrica: ${formatoCal(celda.calculada, c.escala)})` : ""}`
+                ? `${tc.cambiadaMano}${celda.calculada !== undefined ? formato(tx.conRubrica, { c: formatoCal(celda.calculada, c.escala) }) : ""}`
                 : undefined,
             };
           case "no_entregada":
             return {
-              texto: "0 NE",
+              texto: `0 ${tx.ne}`,
               valor: 0,
               nivel: "bajo",
-              nota: "No entregó: cuenta como 0",
+              nota: tc.noEntrego,
             };
           case "pendiente":
             return {
-              texto: "Por evaluar",
+              texto: tx.porEvaluar,
               valor: null,
               nivel: null,
-              nota: "Entregada, por evaluar",
+              nota: tc.entregadaPorEvaluar,
             };
           case "sin_resultados":
             return vacia;
@@ -94,7 +103,9 @@ export function tablaExportable(cuaderno: Cuaderno, orden: Orden): TablaExportab
       promedio: promedio(f.promedio, cuaderno.escala),
     })),
     pie: [...columnas.map((c) => promedio(c.promedio, c.escala)), promedio(cuaderno.promedioGrupo, cuaderno.escala)],
-    orden: ORDENES.find((o) => o.clave === orden)?.texto ?? "",
+    orden: tx.ordenes[orden] ?? ORDENES.find((o) => o.clave === orden)?.texto ?? "",
+    textos: tx,
+    locale,
   };
 }
 
@@ -109,14 +120,17 @@ export function nombreArchivoCuaderno(info: InfoCuaderno) {
   return base || "cuaderno";
 }
 
-const fechaHoy = () =>
-  new Date().toLocaleDateString("es-MX", {
+const fechaHoy = (locale: string) =>
+  new Date().toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 
 const subtitulo = (info: InfoCuaderno) => [info.materia, info.grupo, info.ciclo].filter(Boolean).join(" · ");
+
+const descargado = (tabla: TablaExportable) =>
+  formato(tabla.textos.exportar.descargado, { fecha: fechaHoy(tabla.locale), orden: tabla.orden, e: tabla.escala });
 
 // Colores del semáforo (los mismos tokens de globals.css).
 const FONDO: Record<Nivel, string> = {
@@ -134,17 +148,17 @@ export async function excelCuaderno(tabla: TablaExportable, info: InfoCuaderno):
   const ExcelJS = (await import("exceljs")).default;
   const libro = new ExcelJS.Workbook();
   libro.creator = "iEureka-Grader";
-  const hoja = libro.addWorksheet("Cuaderno", {
+  const tx = tabla.textos;
+  // Excel no acepta en el nombre de la hoja algunos signos; se quitan.
+  const hoja = libro.addWorksheet(tx.exportar.hoja.replace(/[\\/?*[\]:]/g, "").slice(0, 31) || "Cuaderno", {
     views: [{ state: "frozen", xSplit: 2, ySplit: 6 }],
   });
   const n = tabla.columnas.length;
   const ultima = n + 3;
 
-  hoja.addRow(["Cuaderno de calificaciones"]).font = { bold: true, size: 14 };
+  hoja.addRow([tx.titulo]).font = { bold: true, size: 14 };
   hoja.addRow([subtitulo(info)]);
-  hoja.addRow([
-    `Descargado el ${fechaHoy()} · ${tabla.orden} · NE: no entregó (cuenta 0) · Promedio del alumno sobre ${tabla.escala}`,
-  ]).font = {
+  hoja.addRow([descargado(tabla)]).font = {
     color: { argb: "FF64748B" },
     size: 9,
   };
@@ -161,8 +175,8 @@ export async function excelCuaderno(tabla: TablaExportable, info: InfoCuaderno):
   // Fila 5: tipos de actividad; fila 6: título de cada actividad.
   const r5 = hoja.getRow(5);
   const r6 = hoja.getRow(6);
-  r5.getCell(1).value = "Alumno";
-  r5.getCell(2).value = "Matrícula";
+  r5.getCell(1).value = tx.exportar.alumno;
+  r5.getCell(2).value = tx.exportar.matricula;
   hoja.mergeCells(5, 1, 6, 1);
   hoja.mergeCells(5, 2, 6, 2);
   let col = 3;
@@ -172,7 +186,7 @@ export async function excelCuaderno(tabla: TablaExportable, info: InfoCuaderno):
     col += g.columnas;
   }
   tabla.columnas.forEach((c, i) => (r6.getCell(i + 3).value = `${c.titulo} (/${c.escala})`));
-  r5.getCell(ultima).value = `Promedio (sobre ${tabla.escala})`;
+  r5.getCell(ultima).value = formato(tx.exportar.promedioSobre, { e: tabla.escala });
   hoja.mergeCells(5, ultima, 6, ultima);
   for (const r of [r5, r6]) {
     for (let c = 1; c <= ultima; c++) {
@@ -214,7 +228,7 @@ export async function excelCuaderno(tabla: TablaExportable, info: InfoCuaderno):
     f.celdas.forEach((c, i) => escribir(r.getCell(i + 3), c, tabla.columnas[i].escala));
     escribir(r.getCell(ultima), f.promedio, tabla.escala, true);
   }
-  const pie = hoja.addRow(["Promedio de la actividad"]);
+  const pie = hoja.addRow([tx.promedioActividad]);
   hoja.mergeCells(pie.number, 1, pie.number, 2);
   pie.getCell(1).font = { bold: true };
   pie.getCell(1).fill = fondoEncabezado;
@@ -233,16 +247,15 @@ export async function excelCuaderno(tabla: TablaExportable, info: InfoCuaderno):
 
 const hexRgb = (hex: string) => [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255) as [number, number, number];
 
-/** Las fuentes estándar del PDF solo traen caracteres latinos (y "…"); el resto se cambia por "?". */
-const latino = (t: string) => t.replace(/[^\x20-\x7e\xa0-\xff…]/g, "?");
 
 export async function pdfCuaderno(tabla: TablaExportable, info: InfoCuaderno): Promise<Blob> {
-  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+  const { PDFDocument, rgb } = await import("pdf-lib");
+  const tx = tabla.textos;
   const doc = await PDFDocument.create();
-  doc.setTitle(latino(`Cuaderno de calificaciones · ${subtitulo(info)}`));
+  doc.setTitle(`${tx.titulo} · ${subtitulo(info)}`);
   doc.setCreator("iEureka-Grader");
-  const normal = await doc.embedFont(StandardFonts.Helvetica);
-  const negrita = await doc.embedFont(StandardFonts.HelveticaBold);
+  // Con japonés o chino se pide al servidor la fuente CJK; si no, Helvetica.
+  const { normal, negrita, limpiar: latino } = await fuentesPdf(doc, [JSON.stringify(tabla), JSON.stringify(info)], fuenteCjkDelServidor);
   const color = (hex: string) => rgb(...hexRgb(hex));
 
   // Carta horizontal.
@@ -281,18 +294,7 @@ export async function pdfCuaderno(tabla: TablaExportable, info: InfoCuaderno): P
     return s.trimEnd() + "…";
   };
   const lineas = (t: string, f: typeof normal, size: number, max: number, maxLineas: number) => {
-    const palabras = latino(t).split(/\s+/);
-    const out: string[] = [];
-    let actual = "";
-    for (const p of palabras) {
-      const prueba = actual ? `${actual} ${p}` : p;
-      if (f.widthOfTextAtSize(prueba, size) <= max || !actual) actual = prueba;
-      else {
-        out.push(actual);
-        actual = p;
-      }
-    }
-    if (actual) out.push(actual);
+    const out = renglones(f, latino(t), size, max);
     if (out.length > maxLineas) {
       out.length = maxLineas;
       out[maxLineas - 1] = recortar(out[maxLineas - 1] + "…", f, size, max);
@@ -318,7 +320,7 @@ export async function pdfCuaderno(tabla: TablaExportable, info: InfoCuaderno): P
 
   const encabezadoPagina = (primera: boolean) => {
     if (primera) {
-      pagina.drawText("Cuaderno de calificaciones", {
+      pagina.drawText(latino(tx.titulo), {
         x: M,
         y: y - 14,
         size: 16,
@@ -335,9 +337,7 @@ export async function pdfCuaderno(tabla: TablaExportable, info: InfoCuaderno): P
       });
       y -= 14;
       pagina.drawText(
-        latino(
-          `Descargado el ${fechaHoy()} · ${tabla.orden} · NE: no entregó (cuenta 0) · Promedio del alumno sobre ${tabla.escala}`,
-        ),
+        latino(descargado(tabla)),
         { x: M, y, size: 8, font: normal, color: gris },
       );
       y -= 16;
@@ -353,14 +353,14 @@ export async function pdfCuaderno(tabla: TablaExportable, info: InfoCuaderno): P
       height: alto1 + alto2,
       color: color("f1f5f9"),
     });
-    pagina.drawText("ALUMNO", {
+    pagina.drawText(latino(tx.exportar.alumno.toLocaleUpperCase(tabla.locale)), {
       x: M + 5,
       y: top - alto1 - alto2 / 2,
       size: fs * 0.9,
       font: negrita,
       color: gris,
     });
-    pagina.drawText("MATRÍCULA", {
+    pagina.drawText(latino(tx.exportar.matricula.toLocaleUpperCase(tabla.locale)), {
       x: xs[1] + 4,
       y: top - alto1 - alto2 / 2,
       size: fs * 0.9,
@@ -402,8 +402,8 @@ export async function pdfCuaderno(tabla: TablaExportable, info: InfoCuaderno): P
       thickness: 0.6,
       color: color("cbd5e1"),
     });
-    centrado("PROMEDIO", negrita, fs * 0.9, xp, w.promedio, top - alto1 - alto2 / 2 + 2, color("334155"));
-    centrado(`sobre ${tabla.escala}`, normal, fs * 0.75, xp, w.promedio, top - alto1 - alto2 / 2 - fs, gris);
+    centrado(tx.promedio.toLocaleUpperCase(tabla.locale), negrita, fs * 0.9, xp, w.promedio, top - alto1 - alto2 / 2 + 2, color("334155"));
+    centrado(formato(tx.sobre, { n: tabla.escala }), normal, fs * 0.75, xp, w.promedio, top - alto1 - alto2 / 2 - fs, gris);
     pagina.drawLine({
       start: { x: xs[2], y: top - alto1 },
       end: { x: xp, y: top - alto1 },
@@ -471,7 +471,7 @@ export async function pdfCuaderno(tabla: TablaExportable, info: InfoCuaderno): P
     height: fila + 4,
     color: color("f8fafc"),
   });
-  pagina.drawText("PROMEDIO DE LA ACTIVIDAD", {
+  pagina.drawText(latino(tx.promedioActividad.toLocaleUpperCase(tabla.locale)), {
     x: M + 5,
     y: y - (fila + 4) / 2 - fs * 0.35,
     size: fs * 0.85,
@@ -483,7 +483,7 @@ export async function pdfCuaderno(tabla: TablaExportable, info: InfoCuaderno): P
   // Número de página.
   const paginas = doc.getPages();
   paginas.forEach((p, i) => {
-    const t = `iEureka-Grader · Página ${i + 1} de ${paginas.length}`;
+    const t = formato(tx.exportar.pagina, { i: i + 1, n: paginas.length });
     p.drawText(latino(t), {
       x: ANCHO - M - normal.widthOfTextAtSize(latino(t), 7),
       y: M / 2,
