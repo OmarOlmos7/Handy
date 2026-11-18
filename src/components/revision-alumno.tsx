@@ -9,6 +9,8 @@ import { archivarFotosDesde } from "@/lib/retencion";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
 import { Boton, Insignia, colorCalificacion } from "./ui";
 import { sinLatex } from "./texto-mat";
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
 
 const tonoConfianza = { alta: "verde", media: "gris", baja: "ambar" } as const;
 
@@ -30,6 +32,8 @@ export function RevisionAlumno({
   grupoTexto: string;
   siguienteHref?: string;
 }) {
+  const { t, locale } = useTextos();
+  const tr = t.profesor.revision;
   const [resultados, setResultados] = useState<ResultadoReactivo[]>(entregaInicial.resultados);
   const [positivos, setPositivos] = useState(entregaInicial.positivos.join("\n"));
   const [mejoras, setMejoras] = useState(entregaInicial.mejoras.join("\n"));
@@ -80,9 +84,9 @@ export function RevisionAlumno({
         await guardarRevision(actividad.id, alumno.matricula, { resultados, positivos: entrega.positivos, mejoras: entrega.mejoras }, aprobar);
         if (aprobar) setAprobada(true);
         setGuardado(JSON.stringify([resultados, entrega.positivos, entrega.mejoras]));
-        setAviso(aprobar ? "" : aprobada ? "Cambios guardados. El reporte del alumno ya muestra la corrección." : "Cambios guardados.");
+        setAviso(aprobar ? "" : aprobada ? tr.guardadosLiberada : tr.guardados);
       } catch {
-        setAviso("No se pudo guardar. Intenta de nuevo.");
+        setAviso(tr.noSeGuardo);
       }
     });
   }
@@ -97,10 +101,10 @@ export function RevisionAlumno({
               onClick={() => setPagina(i + 1)}
               className={`rounded-lg px-3 py-1 text-sm ${pagina === i + 1 ? "bg-tinta-600 text-white" : "bg-white text-slate-700 ring-1 ring-slate-300"}`}
             >
-              Página {i + 1}
+              {formato(tr.pagina, { n: i + 1 })}
             </button>
           ))}
-          <span className="ml-auto text-xs text-slate-500">Vista previa del PDF corregido</span>
+          <span className="ml-auto text-xs text-slate-500">{tr.vistaPrevia}</span>
         </div>
         <HojaEntrega
           actividad={actividad}
@@ -116,34 +120,33 @@ export function RevisionAlumno({
         <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-slate-500">Calificación sugerida</p>
+              <p className="text-sm text-slate-500">{tr.sugerida}</p>
               <p className={`text-4xl font-semibold ${colorCalificacion(cal, escalaDe(actividad))}`}>
                 {formatoCal(cal, escalaDe(actividad))}
                 <span className="text-base font-normal text-slate-400"> / {escalaDe(actividad)}</span>
               </p>
               {entregaInicial.calificacionManual !== undefined && (
                 <p className="mt-1 text-xs font-medium text-aviso">
-                  En el cuaderno quedó {formatoCal(entregaInicial.calificacionManual, escalaDe(actividad))}. Si cambias puntos y guardas, se usa la sugerida.
+                  {formato(tr.enCuaderno, { c: formatoCal(entregaInicial.calificacionManual, escalaDe(actividad)) })}
                 </p>
               )}
               <p className="text-xs text-slate-500">
-                {resultados.reduce((s, r) => s + r.puntosObtenidos, 0)} de {puntosTotales(actividad)} puntos
-                {cambiados > 0 && ` · ${cambiados} reactivo${cambiados > 1 ? "s" : ""} ajustado${cambiados > 1 ? "s" : ""} por ti`}
+                {formato(tr.dePuntos, { n: resultados.reduce((s, r) => s + r.puntosObtenidos, 0), total: puntosTotales(actividad) })}
+                {cambiados > 0 && formato(cambiados > 1 ? tr.ajustadoN : tr.ajustado1, { n: cambiados })}
               </p>
             </div>
-            {aprobada ? <Insignia tono="verde">Liberada</Insignia> : <Insignia tono="azul">Sugerida por IA</Insignia>}
+            {aprobada ? <Insignia tono="verde">{tr.liberada}</Insignia> : <Insignia tono="azul">{tr.sugeridaIA}</Insignia>}
           </div>
           {aviso && <p className="mt-2 text-sm text-slate-600" role="status">{aviso}</p>}
           {entregaInicial.archivadaEn ? (
             <p className="mt-2 rounded-lg bg-slate-50 p-2 text-xs text-slate-600">
-              Las fotos ya se archivaron en el PDF: las marcas de la hoja quedan fijas. Los puntos y comentarios que cambies se
-              actualizan en el reporte y en la portada del PDF.
+              {tr.archivadas}
             </p>
           ) : (
             Boolean(entregaInicial.imagenes?.length) &&
             archivarDesde && (
               <p className="mt-2 text-xs text-slate-500">
-                Las fotos se guardan hasta el {archivarDesde.toLocaleDateString("es-MX", { day: "numeric", month: "long", timeZone: "America/Mexico_City" })}; después queda solo el PDF corregido.
+                {formato(tr.fotosHasta, { f: archivarDesde.toLocaleDateString(locale, { day: "numeric", month: "long", timeZone: "America/Mexico_City" }) })}
               </p>
             )
           )}
@@ -151,16 +154,16 @@ export function RevisionAlumno({
             {aprobada ? (
               <>
                 <p className="w-full text-sm text-acierto" role="status">
-                  Liberada al alumno. Puedes corregir cada reactivo y guardar: su reporte se actualiza.
+                  {tr.liberadaTexto}
                 </p>
                 <Boton onClick={() => guardar(false)} disabled={guardando || !sinGuardar}>
-                  {guardando ? "Guardando…" : "Guardar cambios"}
+                  {guardando ? tr.guardando : tr.guardarCambios}
                 </Boton>
               </>
             ) : (
               // Una entrega que aún no se libera (evaluada antes de la liberación automática) se libera al guardar.
               <Boton onClick={() => guardar(true)} disabled={guardando}>
-                {guardando ? "Guardando…" : "Guardar y liberar"}
+                {guardando ? tr.guardando : tr.guardarLiberar}
               </Boton>
             )}
             {conFotos && (
@@ -169,25 +172,25 @@ export function RevisionAlumno({
                 target="_blank"
                 className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50"
               >
-                PDF corregido
+                {tr.pdfCorregido}
               </a>
             )}
             <Link
               href={`/profesor/actividades/${actividad.id}/revision/${encodeURIComponent(alumno.matricula)}/retroalimentacion`}
               className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50"
             >
-              Formato de retroalimentación
+              {tr.formato}
             </Link>
             {siguienteHref && (
               <Link href={siguienteHref} className="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium text-tinta-700 hover:bg-tinta-50">
-                Siguiente alumno →
+                {tr.siguiente}
               </Link>
             )}
           </div>
         </div>
 
         <div className="rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-          <h2 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold">Reactivos</h2>
+          <h2 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold">{tr.reactivos}</h2>
           <ul className="divide-y divide-slate-100">
             {actividad.reactivos.map((r) => {
               const res = resultados.find((x) => x.numero === r.numero)!;
@@ -198,11 +201,11 @@ export function RevisionAlumno({
                     <span className="flex-1 truncate text-sm text-slate-600" title={sinLatex(r.enunciado)}>
                       {r.tema}
                     </span>
-                    <Insignia tono={tonoConfianza[res.confianza]}>confianza {res.confianza}</Insignia>
+                    <Insignia tono={tonoConfianza[res.confianza]}>{tr.confianza[res.confianza]}</Insignia>
                   </div>
                   <div className="mt-2 flex items-center gap-2 text-sm">
                     <label className="sr-only" htmlFor={`pts-${r.numero}`}>
-                      Puntos del reactivo {r.numero}
+                      {formato(tr.puntosDe, { n: r.numero })}
                     </label>
                     <input
                       id={`pts-${r.numero}`}
@@ -222,7 +225,7 @@ export function RevisionAlumno({
                     <span className="text-slate-500">/ {r.puntos}</span>
                     {r.tipo !== "desarrollo" && r.tipo !== "abierto" && (
                       <span className="ml-auto text-xs text-slate-500">
-                        Leído: <span className="font-mono">{res.respuestaLeida}</span> · Clave:{" "}
+                        {tr.leido} <span className="font-mono">{res.respuestaLeida}</span> · {tr.clave}{" "}
                         <span className="font-mono">{r.respuesta}</span>
                       </span>
                     )}
@@ -237,7 +240,7 @@ export function RevisionAlumno({
                               key={p.nombre}
                               type="button"
                               onClick={() => cambiarPaso(r.numero, i)}
-                              title={`${p.nombre}: ${v === 1 ? "completo" : v === 0 ? "incorrecto" : "parcial"}. Toca para cambiar.`}
+                              title={formato(tr.pasoEstado, { paso: p.nombre, estado: v === 1 ? tr.completo : v === 0 ? tr.incorrecto : tr.parcial })}
                               className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 transition hover:ring-2 ${
                                 v === 1
                                   ? "bg-acierto-suave text-acierto ring-acierto/30"
@@ -252,11 +255,11 @@ export function RevisionAlumno({
                           );
                         })}
                       </div>
-                      <p className="mt-1 text-[11px] text-slate-500">Toca un paso para marcarlo completo, parcial o incorrecto; los puntos se recalculan.</p>
+                      <p className="mt-1 text-[11px] text-slate-500">{tr.pasosAyuda}</p>
                     </div>
                   )}
                   <label className="sr-only" htmlFor={`com-${r.numero}`}>
-                    Comentario del reactivo {r.numero}
+                    {formato(tr.comentarioDe, { n: r.numero })}
                   </label>
                   <textarea
                     id={`com-${r.numero}`}
@@ -274,14 +277,14 @@ export function RevisionAlumno({
 
         <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
           <label className="block text-sm font-semibold text-acierto" htmlFor="positivos">
-            Puntos positivos
+            {tr.positivos}
           </label>
           <textarea id="positivos" rows={3} value={positivos} onChange={(e) => setPositivos(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
           <label className="mt-3 block text-sm font-semibold text-error" htmlFor="mejoras">
-            Puntos de mejora
+            {tr.mejoras}
           </label>
           <textarea id="mejoras" rows={4} value={mejoras} onChange={(e) => setMejoras(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1 text-sm" />
-          <p className="mt-1 text-xs text-slate-500">Un punto por línea.</p>
+          <p className="mt-1 text-xs text-slate-500">{tr.unoPorLinea}</p>
         </div>
       </aside>
     </div>

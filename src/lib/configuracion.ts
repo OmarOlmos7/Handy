@@ -38,14 +38,14 @@ export function nivelReporte(valor: number, r: RangosCalificacion = RANGOS_PREDE
 }
 
 /** Texto del intervalo de cada nivel, por ejemplo "70 a 84". */
-export function intervaloNivel(nivel: NivelReporte, r: RangosCalificacion = RANGOS_PREDETERMINADOS): string {
+export function intervaloNivel(nivel: NivelReporte, r: RangosCalificacion = RANGOS_PREDETERMINADOS, a = "a"): string {
   const [desde, hasta] = {
     bajo: [0, r.medio - 1],
     medio: [r.medio, r.alto - 1],
     alto: [r.alto, r.superior - 1],
     superior: [r.superior, 100],
   }[nivel];
-  return `${desde} a ${hasta}`;
+  return `${desde} ${a} ${hasta}`;
 }
 
 /** Cuántos valores (sobre 100) caen en cada nivel. */
@@ -56,8 +56,17 @@ export function contarNiveles(valores: number[], r: RangosCalificacion = RANGOS_
 }
 
 /** Rebanadas para el pastel de niveles, de Superior a Bajo. */
-export function rebanadasNiveles(conteo: Record<NivelReporte, number>, r: RangosCalificacion = RANGOS_PREDETERMINADOS) {
-  return NIVELES_REPORTE.map((n) => ({ nombre: `${n.nombre} (${intervaloNivel(n.clave, r)})`, valor: conteo[n.clave], color: n.color }));
+export function rebanadasNiveles(
+  conteo: Record<NivelReporte, number>,
+  r: RangosCalificacion = RANGOS_PREDETERMINADOS,
+  /** Nombres de los niveles y la palabra del intervalo ("a") en el idioma de la interfaz. */
+  tx?: { nombres: Record<NivelReporte, string>; a: string },
+) {
+  return NIVELES_REPORTE.map((n) => ({
+    nombre: `${tx?.nombres[n.clave] ?? n.nombre} (${intervaloNivel(n.clave, r, tx?.a)})`,
+    valor: conteo[n.clave],
+    color: n.color,
+  }));
 }
 
 // ---------- Precisión de la IA ----------

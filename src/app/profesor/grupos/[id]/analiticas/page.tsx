@@ -11,8 +11,13 @@ import { configuracionDe, rebanadasNiveles } from "@/lib/configuracion";
 import { colorDesempeno } from "@/lib/escala-color";
 import { nombreArchivoReporte, reporteGrupoPdf } from "@/lib/reporte-analiticas";
 import { datosProfesor } from "@/lib/sesion";
+import { textos } from "@/lib/i18n/servidor";
+import { formato } from "@/lib/i18n/idiomas";
 
-export const metadata: Metadata = { title: "Analíticas de aprendizaje del grupo" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return { title: t.profesor.analiticas.metaGrupo };
+}
 
 /** Tablero con los resultados de todas las actividades del curso. */
 export default async function AnaliticasCurso({ params }: PageProps<"/profesor/grupos/[id]/analiticas">) {
@@ -22,7 +27,11 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
   if (!grupo) notFound();
   const actividades = db.actividades.filter((a) => a.grupoId === id);
   const ids = new Set(actividades.map((a) => a.id));
-  const a = analiticasCurso(grupo, actividades, db.entregas.filter((e) => ids.has(e.actividadId)), configuracionDe(profesor.config).rangos);
+  const { t, locale } = await textos();
+  const ta = t.profesor.analiticas;
+  const tc = t.profesor.comun;
+  const a = analiticasCurso(grupo, actividades, db.entregas.filter((e) => ids.has(e.actividadId)), configuracionDe(profesor.config).rangos, t.profesor.calculo);
+  const niveles = { nombres: t.configuracion.niveles, a: ta.rangoA };
   const g = a.general;
   const hay = a.actividades.length > 0;
 
@@ -30,17 +39,19 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
     <>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <nav className="mb-1 flex flex-wrap gap-1 text-sm text-slate-500" aria-label="Ruta">
-            <Link href="/profesor" className="hover:text-tinta-700">Panel</Link>
+          <nav className="mb-1 flex flex-wrap gap-1 text-sm text-slate-500" aria-label={tc.ruta}>
+            <Link href="/profesor" className="hover:text-tinta-700">{tc.panel}</Link>
             <span>/</span>
             <Link href={`/profesor/grupos/${grupo.id}`} className="hover:text-tinta-700">
               {grupo.materia} · {grupo.nombre}
             </Link>
           </nav>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Analíticas de aprendizaje del grupo</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{ta.metaGrupo}</h1>
           <p className="mt-1 text-sm text-slate-600">
-            {a.actividades.length} {a.actividades.length === 1 ? "actividad evaluada" : "actividades evaluadas"} · {g.alumnos}{" "}
-            {g.alumnos === 1 ? "alumno" : "alumnos"} · Puntajes sobre 100; un trabajo no entregado cuenta como 0.
+            {formato(ta.resumenGrupo, {
+              a: formato(a.actividades.length === 1 ? ta.evaluada1 : ta.evaluadaN, { n: a.actividades.length }),
+              b: formato(g.alumnos === 1 ? tc.alumno1 : tc.alumnoN, { n: g.alumnos }),
+            })}
           </p>
         </div>
         {hay && (
@@ -52,49 +63,49 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
 
       {!hay ? (
         <Tarjeta className="text-sm text-slate-600">
-          Aún no hay actividades evaluadas en este curso. Las analíticas aparecen en cuanto se evalúe la primera entrega.
+          {ta.sinGrupo}
         </Tarjeta>
       ) : (
         <div className="min-w-0 space-y-6">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            <Cifra titulo="Promedio general" valor={num(g.promedio)} detalle={`${num(g.promedioEntregadas)} sin contar lo no entregado`} />
-            <Cifra titulo="Mediana" valor={num(g.mediana)} detalle="De los promedios por alumno" />
-            <Cifra titulo="Desviación estándar" valor={num(g.desviacion)} detalle="Qué tan dispersos están los promedios" />
-            <Cifra titulo="Aprobación" valor={`${g.aprobacion}%`} detalle={`Alumnos con promedio de ${APROBATORIA} o más`} />
-            <Cifra titulo="Tasa de entrega" valor={`${g.tasaEntrega}%`} detalle={`${g.noEntregadas} sin entregar`} />
+            <Cifra titulo={ta.promedioGeneral} valor={num(g.promedio)} detalle={formato(ta.sinContar, { n: num(g.promedioEntregadas) })} />
+            <Cifra titulo={ta.mediana} valor={num(g.mediana)} detalle={ta.deLosPromedios} />
+            <Cifra titulo={ta.desviacion} valor={num(g.desviacion)} detalle={ta.dispersosPromedios} />
+            <Cifra titulo={ta.aprobacion} valor={`${g.aprobacion}%`} detalle={formato(ta.alumnosConPromedio, { n: APROBATORIA })} />
+            <Cifra titulo={ta.tasaEntrega} valor={`${g.tasaEntrega}%`} detalle={formato(ta.sinEntregar, { n: g.noEntregadas })} />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <Seccion titulo="Aprobados vs. no aprobados" nota={`Por promedio del alumno; aprueba con ${APROBATORIA} o más.`}>
+            <Seccion titulo={ta.aprobadosVs} nota={formato(ta.porPromedioAprueba, { n: APROBATORIA })}>
               <Pastel
                 centro={`${g.aprobacion}%`}
-                subcentro="aprobados"
+                subcentro={ta.aprobados}
                 rebanadas={[
-                  { nombre: "Aprobados", valor: g.aprobados, color: "#22c55e" },
-                  { nombre: "No aprobados", valor: g.reprobados, color: "#ef4444" },
+                  { nombre: ta.aprobadosM, valor: g.aprobados, color: "#22c55e" },
+                  { nombre: ta.noAprobados, valor: g.reprobados, color: "#ef4444" },
                 ]}
               />
             </Seccion>
-            <Seccion titulo="Niveles de desempeño" nota="Alumnos según su promedio, con los rangos de tu configuración.">
+            <Seccion titulo={ta.niveles} nota={ta.nivelesNotaGrupo}>
               <Pastel
                 centro={String(g.alumnos)}
-                subcentro="alumnos"
-                rebanadas={rebanadasNiveles(a.niveles, a.rangos)}
+                subcentro={ta.alumnos}
+                rebanadas={rebanadasNiveles(a.niveles, a.rangos, niveles)}
               />
             </Seccion>
-            <Seccion titulo="Entregas" nota="Trabajos de las actividades evaluadas.">
+            <Seccion titulo={ta.entregas} nota={ta.entregasNotaGrupo}>
               <Pastel
                 centro={`${g.tasaEntrega}%`}
-                subcentro="entregados"
+                subcentro={ta.entregados}
                 rebanadas={[
-                  { nombre: "Entregados", valor: g.entregadas, color: "#3b6ef6" },
-                  { nombre: "No entregados (0)", valor: g.noEntregadas, color: "#94a3b8" },
+                  { nombre: ta.entregadosM, valor: g.entregadas, color: "#3b6ef6" },
+                  { nombre: ta.noEntregados, valor: g.noEntregadas, color: "#94a3b8" },
                 ]}
               />
             </Seccion>
           </div>
 
-          <Seccion titulo="Hallazgos" nota="Calculados con los resultados del curso.">
+          <Seccion titulo={ta.hallazgos} nota={ta.hallazgosNotaGrupo}>
             <ul className="list-disc space-y-1.5 pl-5 text-sm text-slate-700">
               {a.hallazgos.map((h) => (
                 <li key={h}>{h}</li>
@@ -108,97 +119,97 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Seccion
-              titulo="Radar por tipo de actividad"
-              nota={`Cada color es un tipo de actividad; todo sobre 100. El anillo punteado marca ${APROBATORIA}.${a.porTipo.length > COLORES_SERIE.length ? ` Se muestran los ${COLORES_SERIE.length} tipos con más actividades.` : ""}`}
+              titulo={ta.radarTipo}
+              nota={`${formato(ta.radarTipoNota, { n: APROBATORIA })}${a.porTipo.length > COLORES_SERIE.length ? formato(ta.radarTipoMas, { n: COLORES_SERIE.length }) : ""}`}
             >
               <RadarSeries
                 aprobatoria={APROBATORIA}
-                ejes={["Promedio", "Mediana", "Aprobación %", "Entrega %", "Prom. entregados"]}
+                ejes={[...ta.ejes]}
                 series={[...a.porTipo]
                   .sort((x, y) => y.cantidad - x.cantidad)
                   .slice(0, COLORES_SERIE.length)
-                  .sort((x, y) => x.nombre.localeCompare(y.nombre, "es"))
-                  .map((t, i) => ({
-                    nombre: t.nombre,
+                  .sort((x, y) => x.nombre.localeCompare(y.nombre, locale))
+                  .map((tp, i) => ({
+                    nombre: tp.nombre,
                     color: COLORES_SERIE[i],
-                    valores: [t.promedio, t.mediana, t.aprobacion, t.tasaEntrega, t.promedioEntregadas],
+                    valores: [tp.promedio, tp.mediana, tp.aprobacion, tp.tasaEntrega, tp.promedioEntregadas],
                   }))}
               />
             </Seccion>
             {a.temas.length >= 3 ? (
               <Seccion
-                titulo="Acierto por tema"
+                titulo={ta.aciertoTema}
                 nota={
                   a.temas.length > 8
-                    ? "Los 8 temas con menor acierto: porcentaje de puntos logrados en sus reactivos."
-                    : "Porcentaje de puntos logrados en los reactivos de cada tema."
+                    ? ta.ochoTemas
+                    : ta.porcentajeTema
                 }
               >
-                <Radar aprobatoria={APROBATORIA} ejes={[...a.temas].reverse().slice(0, 8).map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
+                <Radar aprobatoria={APROBATORIA} ejes={[...a.temas].reverse().slice(0, 8).map((x) => ({ nombre: x.nombre, valor: x.acierto }))} />
               </Seccion>
             ) : (
-              <Seccion titulo="Temas con menor acierto" nota="Porcentaje de puntos logrados en los reactivos de cada tema.">
+              <Seccion titulo={ta.temasMenor} nota={ta.porcentajeTema}>
                 <BarrasH aprobatoria={APROBATORIA} sufijo="%" filas={a.temasDebiles.map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
               </Seccion>
             )}
             {a.porTipo.length >= 1 && (
-              <Seccion titulo="Promedio por tipo de actividad" nota="La línea gris marca la calificación aprobatoria.">
+              <Seccion titulo={ta.promedioTipo} nota={ta.lineaGris}>
                 <BarrasH
                   aprobatoria={APROBATORIA}
-                  filas={a.porTipo.map((t) => ({
-                    nombre: t.nombre,
-                    valor: t.promedio,
-                    detalle: `${t.cantidad} ${t.cantidad === 1 ? "actividad" : "actividades"}`,
+                  filas={a.porTipo.map((tp) => ({
+                    nombre: tp.nombre,
+                    valor: tp.promedio,
+                    detalle: formato(tp.cantidad === 1 ? tc.actividad1 : tc.actividadN, { n: tp.cantidad }),
                   }))}
                 />
               </Seccion>
             )}
             {a.temas.length >= 3 && (
-              <Seccion titulo="Temas con menor acierto" nota="Los cinco temas con menos puntos logrados.">
+              <Seccion titulo={ta.temasMenor} nota={ta.cincoTemas}>
                 <BarrasH aprobatoria={APROBATORIA} sufijo="%" filas={a.temasDebiles.map((t) => ({ nombre: t.nombre, valor: t.acierto }))} />
               </Seccion>
             )}
-            <Seccion titulo="Evolución del promedio" nota="Promedio de cada actividad, en orden de fecha. La línea punteada es la aprobatoria.">
+            <Seccion titulo={ta.evolucion} nota={ta.evolucionNota}>
               <Columnas
                 max={100}
                 lineaEn={APROBATORIA}
-                filas={a.actividades.map((s) => ({ nombre: s.titulo, valor: s.promedio, detalle: fechaLarga(s.fecha) }))}
+                filas={a.actividades.map((s) => ({ nombre: s.titulo, valor: s.promedio, detalle: fechaLarga(s.fecha, locale) }))}
               />
             </Seccion>
-            <Seccion titulo="Distribución de promedios" nota="Cuántos alumnos hay en cada rango.">
+            <Seccion titulo={ta.distribucionPromedios} nota={ta.distribucionNota}>
               <Columnas
                 max={Math.max(...a.distribucion.map((d) => d.cantidad))}
-                sufijo=" alumnos"
-                filas={a.distribucion.map((d, i) => ({ nombre: d.rango, valor: d.cantidad, color: colorDesempeno([30, 65, 75, 85, 95][i] ?? 50) }))}
+                sufijo={ta.sufijoAlumnos}
+                filas={a.distribucion.map((d, i) => ({ nombre: d.rango.replace(" a ", ` ${ta.rangoA} `), valor: d.cantidad, color: colorDesempeno([30, 65, 75, 85, 95][i] ?? 50) }))}
               />
             </Seccion>
-            <Seccion titulo="Mejores resultados" nota="Los cinco promedios más altos.">
-              <TablaAlumnos filas={a.mejores} vacio="Aún no hay alumnos destacados." />
+            <Seccion titulo={ta.mejores} nota={ta.mejoresNotaGrupo}>
+              <TablaAlumnos filas={a.mejores} vacio={ta.sinDestacados} />
             </Seccion>
             <Seccion
-              titulo="Atención urgente"
-              nota={`Promedio menor a ${APROBATORIA}, dos o más trabajos sin entregar, o una caída de 15 puntos o más.`}
+              titulo={ta.atencion}
+              nota={formato(ta.atencionNotaGrupo, { n: APROBATORIA })}
               className="ring-red-200"
             >
-              <TablaAlumnos filas={a.atencion} vacio="Ningún alumno requiere atención urgente." motivos />
+              <TablaAlumnos filas={a.atencion} vacio={ta.nadieAtencion} motivos />
             </Seccion>
           </div>
 
-          <Seccion titulo="Estadísticas por actividad" nota="Sobre 100. El promedio cuenta como 0 lo no entregado.">
+          <Seccion titulo={ta.porActividad} nota={ta.porActividadNota}>
             <div className="-mx-5 overflow-x-auto px-5">
               <table className="w-full min-w-[760px] text-sm">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-                    <th className="pb-2 font-medium">Actividad</th>
-                    <th className="pb-2 font-medium">Tipo</th>
-                    <th className="pb-2 text-right font-medium">Entrega</th>
-                    <th className="pb-2 text-right font-medium">Promedio</th>
-                    <th className="pb-2 text-right font-medium" title="Promedio solo de quienes entregaron">Prom. entregados</th>
-                    <th className="pb-2 text-right font-medium">Mediana</th>
-                    <th className="pb-2 text-right font-medium">Desv. est.</th>
-                    <th className="pb-2 text-right font-medium">Mín.</th>
-                    <th className="pb-2 text-right font-medium">Máx.</th>
-                    <th className="pb-2 text-right font-medium">Aprobación</th>
+                    <th className="pb-2 font-medium">{ta.colActividad}</th>
+                    <th className="pb-2 font-medium">{ta.colTipo}</th>
+                    <th className="pb-2 text-right font-medium">{ta.colEntrega}</th>
+                    <th className="pb-2 text-right font-medium">{ta.colPromedio}</th>
+                    <th className="pb-2 text-right font-medium" title={ta.colPromEntregadosTitulo}>{ta.colPromEntregados}</th>
+                    <th className="pb-2 text-right font-medium">{ta.colMediana}</th>
+                    <th className="pb-2 text-right font-medium">{ta.colDesv}</th>
+                    <th className="pb-2 text-right font-medium">{ta.colMin}</th>
+                    <th className="pb-2 text-right font-medium">{ta.colMax}</th>
+                    <th className="pb-2 text-right font-medium">{ta.colAprobacion}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 tabular-nums">
@@ -209,8 +220,8 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
                           {s.titulo}
                         </Link>
                         <span className="block text-xs text-slate-500">
-                          {fechaLarga(s.fecha)}
-                          {s.pendientes > 0 && ` · ${s.pendientes} por evaluar`}
+                          {fechaLarga(s.fecha, locale)}
+                          {s.pendientes > 0 && formato(ta.porEvaluar, { n: s.pendientes })}
                         </span>
                       </td>
                       <td className="py-2 pr-3 text-slate-600">{s.etiqueta ?? "—"}</td>
@@ -229,7 +240,7 @@ export default async function AnaliticasCurso({ params }: PageProps<"/profesor/g
             </div>
             {a.sinResultados.length > 0 && (
               <p className="mt-3 text-xs text-slate-500">
-                Sin resultados todavía (no cuentan): {a.sinResultados.map((s) => s.titulo).join(", ")}.
+                {formato(ta.sinResultados, { lista: a.sinResultados.map((s) => s.titulo).join(", ") })}
               </p>
             )}
           </Seccion>

@@ -2,14 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PLANTILLA_CRITERIOS } from "@/lib/textos";
 import { SubirSolucion } from "./subir-solucion";
 import { Boton, campo } from "./ui";
-
-const EJEMPLO_CONDICIONES = `Ejemplo:
-Resuelve como lo haría un alumno de 2.º de secundaria.
-Usa g = 9.8 m/s² y redondea a dos decimales.
-En los problemas escribe Datos, Fórmula, Sustitución y Resultado con unidades.`;
+import { useTextos } from "./proveedor-textos";
 
 /** Paso 3: escanear la solución del profesor o generarla con IA. */
 export function OpcionesSolucion({
@@ -25,6 +20,7 @@ export function OpcionesSolucion({
   instruccionesIniciales?: string;
   condicionesIniciales?: string;
 }) {
+  const to = useTextos().t.profesor.solucionOpciones;
   const [opcion, setOpcion] = useState<"escanear" | "ia">(puedeGenerar ? "ia" : "escanear");
   const pestana = (valor: "escanear" | "ia", texto: string, deshabilitada = false) => (
     <button
@@ -42,8 +38,8 @@ export function OpcionesSolucion({
   return (
     <div className="space-y-4">
       <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
-        {pestana("escanear", "📷 Escanea tu solución")}
-        {pestana("ia", "✨ Generar solución con IA", !puedeGenerar)}
+        {pestana("escanear", to.escanear)}
+        {pestana("ia", to.generarIA, !puedeGenerar)}
       </div>
       {opcion === "escanear" ? (
         <SubirSolucion actividadId={actividadId} reemplazar={reemplazar} instruccionesIniciales={instruccionesIniciales} />
@@ -57,7 +53,7 @@ export function OpcionesSolucion({
       )}
       {!puedeGenerar && (
         <p className="text-xs text-slate-500">
-          La solución con IA está disponible para actividades creadas con IA o cargadas escaneadas.
+          {to.soloIA}
         </p>
       )}
     </div>
@@ -76,6 +72,7 @@ function GenerarSolucion({
   condicionesIniciales: string;
 }) {
   const router = useRouter();
+  const to = useTextos().t.profesor.solucionOpciones;
   const [condiciones, setCondiciones] = useState(condicionesIniciales);
   const [instrucciones, setInstrucciones] = useState(instruccionesIniciales);
   const [estado, setEstado] = useState<"listo" | "enviando" | "error">("listo");
@@ -96,31 +93,31 @@ function GenerarSolucion({
       router.refresh();
     } catch (e) {
       setEstado("error");
-      setMensaje(e instanceof Error ? e.message : "No se pudo generar la solución");
+      setMensaje(e instanceof Error ? e.message : to.noSeGenero);
     }
   }
 
   return (
     <div className="space-y-3">
       <label className="block text-sm font-medium text-slate-700">
-        Condiciones para resolver la actividad (opcional)
-        <textarea rows={4} value={condiciones} onChange={(e) => setCondiciones(e.target.value)} className={campo} placeholder={EJEMPLO_CONDICIONES} />
+        {to.condiciones}
+        <textarea rows={4} value={condiciones} onChange={(e) => setCondiciones(e.target.value)} className={campo} placeholder={to.ejemploCondiciones} />
         <span className="mt-1 block text-xs font-normal text-slate-500">
-          Indica el nivel, el método, las constantes, el redondeo o los pasos que debe mostrar la solución.
+          {to.condicionesAyuda}
         </span>
       </label>
       <label className="block text-sm font-medium text-slate-700">
-        Criterios, porcentajes y recomendaciones para evaluar (opcional)
-        <textarea rows={4} value={instrucciones} onChange={(e) => setInstrucciones(e.target.value)} className={campo} placeholder={PLANTILLA_CRITERIOS} />
+        {to.criterios}
+        <textarea rows={4} value={instrucciones} onChange={(e) => setInstrucciones(e.target.value)} className={campo} placeholder={to.plantillaCriterios} />
       </label>
       {estado === "enviando" && (
         <p className="rounded-lg bg-tinta-50 p-3 text-sm text-tinta-700" role="status">
-          Claude está resolviendo la actividad y preparando la rúbrica. Tarda entre 30 segundos y 2 minutos…
+          {to.resolviendo}
         </p>
       )}
       {estado === "error" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{mensaje}</p>}
       <Boton onClick={generar} disabled={estado === "enviando"}>
-        {estado === "enviando" ? "Generando solución…" : reemplazar ? "Volver a generar la solución con IA" : "Generar solución con IA"}
+        {estado === "enviando" ? to.generandoSolucion : reemplazar ? to.volverGenerar : to.generar}
       </Boton>
     </div>
   );

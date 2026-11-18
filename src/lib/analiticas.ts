@@ -4,6 +4,11 @@
 import { calificada, escalaDe, puntosObtenidos, puntosTotales } from "./estadisticas";
 import { RANGOS_PREDETERMINADOS, contarNiveles, type NivelReporte } from "./configuracion";
 import type { Actividad, Alumno, Entrega, Grupo, RangosCalificacion } from "./tipos";
+import { formato } from "./i18n/idiomas";
+import profesorEs from "./i18n/diccionarios/profesor/es";
+
+/** Textos de motivos y hallazgos; en español si no se indica otro idioma. */
+export type TextosCalculo = typeof profesorEs.calculo;
 
 /** Calificación mínima aprobatoria sobre 100 (6 sobre 10). */
 export const APROBATORIA = 60;
@@ -144,6 +149,7 @@ export function analiticasCurso(
   actividades: Actividad[],
   entregas: Entrega[],
   rangos: RangosCalificacion = RANGOS_PREDETERMINADOS,
+  tx: TextosCalculo = profesorEs.calculo,
 ): Analiticas {
   const alumnos = grupo.alumnos;
   const ordenadas = [...actividades].sort((a, b) => a.fechaAplicacion.localeCompare(b.fechaAplicacion));
@@ -201,10 +207,10 @@ export function analiticasCurso(
       const noEntregadas = puntajes.filter((p) => !p.entregada).length;
       const tendencia = valores.length >= 2 ? r1(valores[valores.length - 1] - promedio(valores.slice(0, -1))) : null;
       const motivos: string[] = [];
-      if (prom < APROBATORIA) motivos.push("Promedio reprobatorio");
-      if (noEntregadas >= 2) motivos.push(`${noEntregadas} actividades sin entregar`);
-      else if (noEntregadas === 1 && puntajes.length <= 2) motivos.push("1 actividad sin entregar");
-      if (tendencia !== null && tendencia <= -CAIDA_ALERTA) motivos.push(`Bajó ${Math.abs(Math.round(tendencia))} puntos en la última actividad`);
+      if (prom < APROBATORIA) motivos.push(tx.reprobatorio);
+      if (noEntregadas >= 2) motivos.push(formato(tx.sinEntregarN, { n: noEntregadas }));
+      else if (noEntregadas === 1 && puntajes.length <= 2) motivos.push(tx.sinEntregar1);
+      if (tendencia !== null && tendencia <= -CAIDA_ALERTA) motivos.push(formato(tx.bajo, { n: Math.abs(Math.round(tendencia)) }));
       return { alumno: al, promedio: r1(prom), noEntregadas, tendencia, puntajes, motivos };
     });
 
@@ -216,7 +222,7 @@ export function analiticasCurso(
   // Promedio por tipo de actividad (etiqueta): todos los puntajes de esas actividades.
   const tipos = new Map<string, { puntajes: PuntajeAlumno[]; actividades: number }>();
   for (const s of statsActividad) {
-    const nombre = s.etiqueta ?? "Sin etiqueta";
+    const nombre = s.etiqueta ?? tx.sinEtiqueta;
     const t = tipos.get(nombre) ?? { puntajes: [], actividades: 0 };
     t.actividades++;
     t.puntajes.push(...todos.filter((p) => p.actividadId === s.id));
@@ -297,30 +303,34 @@ export function analiticasCurso(
     rangos,
     hallazgos: [],
   };
-  analiticas.hallazgos = hallazgos(analiticas);
+  analiticas.hallazgos = hallazgos(analiticas, tx);
   return analiticas;
 }
 
 /** Observaciones redactadas con plantillas a partir de los números ya calculados. */
-export function hallazgos(a: Analiticas): string[] {
+export function hallazgos(a: Analiticas, tx: TextosCalculo = profesorEs.calculo): string[] {
   const h: string[] = [];
   const g = a.general;
-  if (a.actividades.length === 0) return ["Aún no hay actividades evaluadas en este curso."];
+  if (a.actividades.length === 0) return [tx.sinActividades];
 
   if (g.noEntregadas > 0) {
     h.push(
-      `Hay ${g.noEntregadas} ${g.noEntregadas === 1 ? "trabajo no entregado" : "trabajos no entregados"} (tasa de entrega ${g.tasaEntrega}%). ` +
-        `Con ellos en 0 el promedio es ${g.promedio}; solo con lo entregado sería ${g.promedioEntregadas}.`,
+      formato(g.noEntregadas === 1 ? tx.noEntregados1 : tx.noEntregadosN, {
+        n: g.noEntregadas,
+        t: g.tasaEntrega,
+        p: g.promedio,
+        pe: g.promedioEntregadas,
+      }),
     );
   } else {
-    h.push(`Todos los alumnos entregaron todas las actividades evaluadas.`);
+    h.push(tx.todosEntregaron);
   }
 
   if (a.porTipo.length >= 2) {
     const mejor = a.porTipo[0];
     const peor = a.porTipo[a.porTipo.length - 1];
     if (mejor.promedio - peor.promedio >= 5) {
-      h.push(`El grupo rinde mejor en ${mejor.nombre} (${mejor.promedio}) que en ${peor.nombre} (${peor.promedio}).`);
+      h.push(formato(tx.mejorEn, { mejor: mejor.nombre, pm: mejor.promedio, peor: peor.nombre, pp: peor.promedio }));
     }
   }
 
@@ -330,28 +340,22 @@ export function hallazgos(a: Analiticas): string[] {
     const ultima = tendencia[tendencia.length - 1];
     const dif = r1(ultima.promedioEntregadas - primera.promedioEntregadas);
     if (Math.abs(dif) >= 5) {
-      h.push(
-        `Entre "${primera.titulo}" y "${ultima.titulo}" el promedio de lo entregado ${dif > 0 ? "subió" : "bajó"} ${Math.abs(dif)} puntos.`,
-      );
+      h.push(formato(dif > 0 ? tx.subio : tx.bajoEntre, { a: primera.titulo, b: ultima.titulo, n: Math.abs(dif) }));
     }
   }
 
   const dispersa = [...a.actividades].sort((x, y) => y.desviacion - x.desviacion)[0];
   if (dispersa && dispersa.desviacion >= 20) {
-    h.push(
-      `"${dispersa.titulo}" tiene la mayor dispersión (desviación ${dispersa.desviacion}): el grupo quedó dividido y conviene trabajo diferenciado.`,
-    );
+    h.push(formato(tx.dispersion, { titulo: dispersa.titulo, d: dispersa.desviacion }));
   }
 
   if (a.temasDebiles.length > 0 && a.temasDebiles[0].acierto < 70) {
     const t = a.temasDebiles[0];
-    h.push(`El tema con menor acierto es ${t.nombre} (${t.acierto}%). Es buen candidato para repaso.`);
+    h.push(formato(tx.temaDebil, { tema: t.nombre, a: t.acierto }));
   }
 
   if (a.atencion.length > 0) {
-    h.push(
-      `${a.atencion.length} ${a.atencion.length === 1 ? "alumno requiere" : "alumnos requieren"} atención urgente por promedio reprobatorio, trabajos sin entregar o una caída reciente.`,
-    );
+    h.push(formato(a.atencion.length === 1 ? tx.atencion1 : tx.atencionN, { n: a.atencion.length }));
   }
   return h;
 }

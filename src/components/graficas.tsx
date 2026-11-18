@@ -1,14 +1,17 @@
 // Gráficas en SVG/CSS sin dependencias, para el tablero de analíticas.
 // El color de cada marca sale de la escala de desempeño; los textos van en tinta neutra.
+import { textos } from "@/lib/i18n/servidor";
+import { formato } from "@/lib/i18n/idiomas";
 import { colorDesempeno, degradadoDesempeno } from "@/lib/escala-color";
 
 const num = (n: number) => n.toLocaleString("es-MX", { maximumFractionDigits: 1 });
 
 /** Leyenda de la escala de color: degradado con marcas. */
-export function LeyendaDesempeno({ aprobatoria }: { aprobatoria: number }) {
+export async function LeyendaDesempeno({ aprobatoria }: { aprobatoria: number }) {
+  const ta = (await textos()).t.profesor.analiticas;
   return (
     <div className="flex items-center gap-3 text-xs text-slate-600">
-      <span>Escala de color</span>
+      <span>{ta.escalaColor}</span>
       <div className="relative w-48 sm:w-64">
         <div className="h-2.5 rounded-full" style={{ background: degradadoDesempeno() }} />
         <div className="relative mt-0.5 h-3.5">
@@ -24,7 +27,7 @@ export function LeyendaDesempeno({ aprobatoria }: { aprobatoria: number }) {
 }
 
 /** Barras horizontales sobre 100, coloreadas por desempeño, con la línea aprobatoria. */
-export function BarrasH({
+export async function BarrasH({
   filas,
   aprobatoria,
   sufijo = "",
@@ -33,11 +36,12 @@ export function BarrasH({
   aprobatoria: number;
   sufijo?: string;
 }) {
-  if (filas.length === 0) return <p className="text-sm text-slate-500">Sin datos todavía.</p>;
+  const ta = (await textos()).t.profesor.analiticas;
+  if (filas.length === 0) return <p className="text-sm text-slate-500">{ta.sinDatos}</p>;
   return (
     <ul className="space-y-3">
       {filas.map((f) => (
-        <li key={f.nombre} title={`${f.nombre}: ${num(f.valor)}${sufijo} de 100${f.detalle ? ` · ${f.detalle}` : ""}`}>
+        <li key={f.nombre} title={`${f.nombre}: ${num(f.valor)}${sufijo} ${ta.de100}${f.detalle ? ` · ${f.detalle}` : ""}`}>
           <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
             <span className="text-slate-700">
               {f.nombre}
@@ -65,7 +69,7 @@ export function BarrasH({
  * Columnas verticales. El color de cada una sale de `colorDe` (por defecto, su valor sobre 100).
  * `max` fija la escala del eje.
  */
-export function Columnas({
+export async function Columnas({
   filas,
   max,
   sufijo = "",
@@ -79,7 +83,8 @@ export function Columnas({
   /** Valor donde dibujar una línea de referencia punteada (por ejemplo, la aprobatoria). */
   lineaEn?: number;
 }) {
-  if (filas.length === 0) return <p className="text-sm text-slate-500">Sin datos todavía.</p>;
+  const ta = (await textos()).t.profesor.analiticas;
+  if (filas.length === 0) return <p className="text-sm text-slate-500">{ta.sinDatos}</p>;
   const tope = Math.max(max, 1);
   return (
     <div>
@@ -238,7 +243,7 @@ export const COLORES_SERIE = ["#3b6ef6", "#d946ef", "#14b8a6", "#f97316", "#8b5c
  * Radar con varias series sobre los mismos ejes (todos sobre 100). Cada serie tiene su
  * color y aparece en la leyenda con su nombre; los valores van en el título de cada punto.
  */
-export function RadarSeries({
+export async function RadarSeries({
   ejes,
   series,
   aprobatoria,
@@ -247,6 +252,7 @@ export function RadarSeries({
   series: { nombre: string; color: string; valores: number[] }[];
   aprobatoria?: number;
 }) {
+  const ta = (await textos()).t.profesor.analiticas;
   const n = ejes.length;
   const c = 150;
   const r = 100;
@@ -257,7 +263,7 @@ export function RadarSeries({
   const poligono = (v: (i: number) => number) => ejes.map((_, i) => punto(i, v(i)).map((x) => x.toFixed(1)).join(",")).join(" ");
   return (
     <div>
-      <svg viewBox="-70 -5 440 310" className="mx-auto h-auto w-full max-w-md" role="img" aria-label={`Radar de ${series.map((s) => s.nombre).join(", ")}`}>
+      <svg viewBox="-70 -5 440 310" className="mx-auto h-auto w-full max-w-md" role="img" aria-label={formato(ta.radarDe, { lista: series.map((s) => s.nombre).join(", ") })}>
         {[25, 50, 75, 100].map((v) => (
           <polygon key={v} points={poligono(() => v)} fill="none" stroke="#e2e8f0" strokeWidth="1" />
         ))}

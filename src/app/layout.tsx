@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Geist, Geist_Mono, Inter } from "next/font/google";
+import { ProveedorTextos } from "@/components/proveedor-textos";
 import { textos } from "@/lib/i18n/servidor";
 import "./globals.css";
 
@@ -29,13 +30,15 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { idioma } = await textos();
+  const { idioma, t, locale } = await textos();
   return (
     <html
       lang={idioma}
       className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <ProveedorTextos valor={{ idioma, t, locale }}>{children}</ProveedorTextos>
+      </body>
     </html>
   );
 }

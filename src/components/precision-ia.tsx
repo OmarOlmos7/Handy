@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ESFUERZOS, INFO_ESFUERZO, INFO_MOTOR, MOTORES, consumoRelativo, nivelConsumo } from "@/lib/configuracion";
 import { formato } from "@/lib/i18n/idiomas";
 import type { EsfuerzoIA, MotorIA } from "@/lib/tipos";
+import { useTextos } from "./proveedor-textos";
 
 /** Cinco rayitas que se llenan según el consumo de tokens. */
 export function MedidorConsumo({ nivel, etiqueta = "Consumo", ariaLabel }: { nivel: number; etiqueta?: string; ariaLabel?: string }) {
@@ -118,13 +119,17 @@ export function ConfigPrecision({
 
 /** Deslizador de precisión y consumo para una actividad nueva (Rápido · Medio · Preciso). */
 export function DeslizadorPrecision({ inicial, esfuerzos }: { inicial: MotorIA; esfuerzos: Record<MotorIA, EsfuerzoIA> }) {
+  const { t } = useTextos();
+  const td = t.profesor.deslizador;
+  const tconf = t.configuracion;
   const [indice, setIndice] = useState(MOTORES.indexOf(inicial));
   const motor = MOTORES[indice] ?? "medio";
-  const info = INFO_MOTOR[motor];
+  const info = t.motores[motor];
+  const esfuerzo = (e: EsfuerzoIA) => t.esfuerzos[e].toLocaleLowerCase();
   const p = { motor, esfuerzo: esfuerzos[motor] };
   return (
     <fieldset>
-      <legend className="text-sm font-medium text-slate-700">Precisión y consumo de la IA</legend>
+      <legend className="text-sm font-medium text-slate-700">{td.leyenda}</legend>
       <input type="hidden" name="motor" value={motor} />
       <input
         type="range"
@@ -133,8 +138,8 @@ export function DeslizadorPrecision({ inicial, esfuerzos }: { inicial: MotorIA; 
         step={1}
         value={indice}
         onChange={(e) => setIndice(Number(e.target.value))}
-        aria-label="Precisión y consumo de la IA"
-        aria-valuetext={`${info.nombre}, esfuerzo ${INFO_ESFUERZO[p.esfuerzo].nombre.toLowerCase()}`}
+        aria-label={td.leyenda}
+        aria-valuetext={formato(td.esfuerzo, { m: info.nombre, e: esfuerzo(p.esfuerzo) })}
         className="mt-3 w-full accent-tinta-600"
       />
       <div className="mt-1 grid grid-cols-3 text-xs font-medium">
@@ -147,20 +152,24 @@ export function DeslizadorPrecision({ inicial, esfuerzos }: { inicial: MotorIA; 
               i === indice ? "text-tinta-700" : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            {INFO_MOTOR[m].nombre}
+            {t.motores[m].nombre}
           </button>
         ))}
       </div>
       <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm ring-1 ring-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="font-medium text-slate-800">
-            {info.nombre} · esfuerzo {INFO_ESFUERZO[p.esfuerzo].nombre.toLowerCase()}
+            {formato(td.resumen, { m: info.nombre, e: esfuerzo(p.esfuerzo) })}
           </span>
-          <MedidorConsumo nivel={nivelConsumo(p)} />
+          <MedidorConsumo
+            nivel={nivelConsumo(p)}
+            etiqueta={tconf.consumo}
+            ariaLabel={formato(tconf.consumoDe, { e: tconf.consumo, n: nivelConsumo(p) })}
+          />
         </div>
         <p className="mt-1 text-xs text-slate-600">{info.descripcion}</p>
         <p className="mt-1 text-xs text-slate-500">
-          Se usa para generar, resolver y evaluar esta actividad. El esfuerzo de cada nivel se ajusta en Configuración.
+          {td.ayuda}
         </p>
       </div>
     </fieldset>

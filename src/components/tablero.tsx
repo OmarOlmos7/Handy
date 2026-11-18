@@ -2,6 +2,7 @@
 import type { ReactNode } from "react";
 import { Tarjeta } from "@/components/ui";
 import type { ResumenAlumno } from "@/lib/analiticas";
+import { textos } from "@/lib/i18n/servidor";
 
 export const num = (n: number) => n.toLocaleString("es-MX", { maximumFractionDigits: 1 });
 
@@ -32,11 +33,11 @@ export function Seccion({ titulo, nota, children, className = "" }: { titulo: st
   );
 }
 
-export function TablaAlumnos({
+export async function TablaAlumnos({
   filas,
   vacio,
   motivos,
-  titulo = "Promedio",
+  titulo,
   entregas = true,
 }: {
   filas: ResumenAlumno[];
@@ -47,14 +48,15 @@ export function TablaAlumnos({
   /** Muestra la columna de entregas (no aplica en una sola actividad). */
   entregas?: boolean;
 }) {
+  const t = (await textos()).t.profesor;
   if (filas.length === 0) return <p className="text-sm text-slate-500">{vacio}</p>;
   return (
     <table className="w-full text-sm">
       <thead>
         <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-          <th className="pb-2 font-medium">Alumno</th>
-          <th className="pb-2 text-right font-medium">{titulo}</th>
-          {motivos ? <th className="pb-2 pl-4 font-medium">Motivo</th> : entregas ? <th className="pb-2 text-right font-medium">Entregas</th> : null}
+          <th className="pb-2 font-medium">{t.comun.alumno}</th>
+          <th className="pb-2 text-right font-medium">{titulo ?? t.analiticas.promedio}</th>
+          {motivos ? <th className="pb-2 pl-4 font-medium">{t.analiticas.motivo}</th> : entregas ? <th className="pb-2 text-right font-medium">{t.analiticas.entregas}</th> : null}
         </tr>
       </thead>
       <tbody className="divide-y divide-slate-100">

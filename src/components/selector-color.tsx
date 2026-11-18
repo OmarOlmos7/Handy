@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { COLORES, colorDe } from "@/lib/colores";
+import { useTextos } from "./proveedor-textos";
 
 /** Círculo de color que abre la paleta para elegir otro (o quitarlo). */
 export function SelectorColor({
@@ -15,6 +16,8 @@ export function SelectorColor({
   onElegir: (clave: string) => void;
   disabled?: boolean;
 }) {
+  const { t } = useTextos();
+  const c = t.profesor.comun;
   const [abierto, setAbierto] = useState(false);
   const caja = useRef<HTMLDivElement>(null);
   const actual = colorDe(valor);
@@ -50,23 +53,23 @@ export function SelectorColor({
       {abierto && (
         <div
           role="listbox"
-          aria-label="Colores"
+          aria-label={c.colores}
           className="absolute bottom-11 right-0 w-48 rounded-xl bg-white p-3 shadow-lg ring-1 ring-slate-200"
         >
           <div className="grid grid-cols-4 gap-2">
-            {COLORES.map((c) => (
+            {COLORES.map((col) => (
               <button
-                key={c.clave}
+                key={col.clave}
                 type="button"
                 role="option"
-                aria-selected={c.clave === valor}
-                title={c.nombre}
-                aria-label={c.nombre}
+                aria-selected={col.clave === valor}
+                title={c.nombresColores[col.clave as keyof typeof c.nombresColores] ?? col.nombre}
+                aria-label={c.nombresColores[col.clave as keyof typeof c.nombresColores] ?? col.nombre}
                 onClick={() => {
                   setAbierto(false);
-                  onElegir(c.clave);
+                  onElegir(col.clave);
                 }}
-                className={`h-8 w-8 rounded-full ${c.punto} ${c.clave === valor ? "ring-2 ring-slate-900 ring-offset-2" : "hover:scale-110"} transition`}
+                className={`h-8 w-8 rounded-full ${col.punto} ${col.clave === valor ? "ring-2 ring-slate-900 ring-offset-2" : "hover:scale-110"} transition`}
               />
             ))}
           </div>
@@ -78,7 +81,7 @@ export function SelectorColor({
             }}
             className="mt-2 w-full rounded-md py-1 text-xs text-slate-500 hover:bg-slate-100"
           >
-            Sin color
+            {c.sinColor}
           </button>
         </div>
       )}

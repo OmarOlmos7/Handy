@@ -8,6 +8,8 @@ import { colorDe } from "@/lib/colores";
 import { BotonIcono, IconoBasura, IconoLapiz } from "./iconos";
 import { SelectorColor } from "./selector-color";
 import { Boton } from "./ui";
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
 
 const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
 
@@ -32,6 +34,9 @@ export function TarjetaCurso({
   color?: string;
 }) {
   const router = useRouter();
+  const { t } = useTextos();
+  const c = t.profesor.comun;
+  const tc = t.profesor.tarjetaCurso;
   const [editando, setEditando] = useState(false);
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
@@ -46,7 +51,7 @@ export function TarjetaCurso({
         setEditando(false);
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudo guardar");
+        setError(err instanceof Error ? err.message : c.noSeGuardo);
       }
     });
   }
@@ -57,7 +62,7 @@ export function TarjetaCurso({
         await colorGrupo(id, clave);
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudo cambiar el color");
+        setError(err instanceof Error ? err.message : tc.noColor);
       }
     });
   }
@@ -65,15 +70,15 @@ export function TarjetaCurso({
   function borrar() {
     const aviso =
       actividades > 0
-        ? `¿Borrar el curso "${materia} · ${nombre}"? También se borrarán sus ${actividades} actividades con todas las entregas y calificaciones. No se puede deshacer.`
-        : `¿Borrar el curso "${materia} · ${nombre}"? No se puede deshacer.`;
+        ? formato(tc.confirmarConActividades, { curso: `${materia} · ${nombre}`, n: actividades })
+        : formato(tc.confirmar, { curso: `${materia} · ${nombre}` });
     if (!window.confirm(aviso)) return;
     iniciar(async () => {
       try {
         await borrarGrupo(id);
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "No se pudo borrar");
+        setError(err instanceof Error ? err.message : c.noSeBorro);
       }
     });
   }
@@ -88,19 +93,19 @@ export function TarjetaCurso({
       {editando ? (
         <form onSubmit={guardar} className="space-y-2">
           <label className="block text-xs font-medium text-slate-500">
-            Materia
+            {c.materia}
             <input name="materia" defaultValue={materia} required autoFocus className={campoChico} />
           </label>
           <label className="block text-xs font-medium text-slate-500">
-            Grupo
+            {c.grupo}
             <input name="nombre" defaultValue={nombre} required className={campoChico} />
           </label>
           <div className="flex gap-2 pt-1">
             <Boton type="submit" disabled={pendiente} className="!px-3 !py-1.5">
-              Guardar
+              {c.guardar}
             </Boton>
             <Boton type="button" variante="secundario" onClick={() => setEditando(false)} className="!px-3 !py-1.5">
-              Cancelar
+              {c.cancelar}
             </Boton>
           </div>
         </form>
@@ -111,34 +116,34 @@ export function TarjetaCurso({
             <span className="block text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
             <span className="mt-0.5 block text-xl font-semibold text-slate-900">{nombre}</span>
           </Link>
-          <span className="text-xs text-slate-500">Ciclo {ciclo}</span>
+          <span className="text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>
         </>
       )}
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
       <div className="mt-auto flex items-end justify-between gap-3 pt-4">
         <dl className="flex gap-4 text-sm">
           <div>
-            <dt className="whitespace-nowrap text-xs text-slate-500">Actividades</dt>
+            <dt className="whitespace-nowrap text-xs text-slate-500">{c.actividades}</dt>
             <dd className="text-2xl font-semibold text-slate-900">{actividades}</dd>
           </div>
           <div>
-            <dt className="whitespace-nowrap text-xs text-slate-500">Alumnos</dt>
+            <dt className="whitespace-nowrap text-xs text-slate-500">{c.alumnos}</dt>
             <dd className="text-2xl font-semibold text-slate-900">{alumnos}</dd>
           </div>
           {porRevisar > 0 && (
             <div>
-              <dt className="whitespace-nowrap text-xs text-slate-500">Por revisar</dt>
+              <dt className="whitespace-nowrap text-xs text-slate-500">{tc.porRevisar}</dt>
               <dd className="text-2xl font-semibold text-aviso">{porRevisar}</dd>
             </div>
           )}
         </dl>
         {!editando && (
           <div className="flex gap-1">
-            <BotonIcono etiqueta="Editar nombre del curso" onClick={() => setEditando(true)} disabled={pendiente}>
+            <BotonIcono etiqueta={tc.editar} onClick={() => setEditando(true)} disabled={pendiente}>
               <IconoLapiz />
             </BotonIcono>
-            <SelectorColor valor={color} etiqueta="Cambiar color del curso" onElegir={pintar} disabled={pendiente} />
-            <BotonIcono etiqueta="Borrar curso" peligro onClick={borrar} disabled={pendiente}>
+            <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
+            <BotonIcono etiqueta={tc.borrar} peligro onClick={borrar} disabled={pendiente}>
               <IconoBasura />
             </BotonIcono>
           </div>

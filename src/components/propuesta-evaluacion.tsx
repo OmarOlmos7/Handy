@@ -3,19 +3,15 @@
 import type { Actividad } from "@/lib/tipos";
 import { Tarjeta } from "./ui";
 import { TextoMat } from "./texto-mat";
-
-const nombreTipo: Record<string, string> = {
-  verdadero_falso: "V / F",
-  opcion_multiple: "Opción múltiple",
-  relacion_columnas: "Relación de columnas",
-  parentesis: "Paréntesis",
-  desarrollo: "Desarrollo",
-  abierto: "Abierto",
-};
+import { textos } from "@/lib/i18n/servidor";
+import { formato } from "@/lib/i18n/idiomas";
 
 const pct = (n: number) => `${Math.round(n * 100)} %`;
 
-export function PropuestaEvaluacion({ actividad }: { actividad: Actividad }) {
+export async function PropuestaEvaluacion({ actividad }: { actividad: Actividad }) {
+  const { t } = await textos();
+  const tp = t.profesor.propuesta;
+  const nombreTipo: Record<string, string> = t.profesor.tipos;
   const total = actividad.reactivos.reduce((s, r) => s + r.puntos, 0);
   const criterios = actividad.criterios ?? [];
   const recomendaciones = actividad.recomendaciones ?? [];
@@ -24,23 +20,23 @@ export function PropuestaEvaluacion({ actividad }: { actividad: Actividad }) {
   return (
     <Tarjeta className="mb-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold">Propuesta de evaluación</h2>
+        <h2 className="text-lg font-semibold">{tp.titulo}</h2>
         <p className="text-sm text-slate-500">
-          {actividad.reactivos.length} elementos · {total} puntos en total
+          {formato(tp.resumen, { n: actividad.reactivos.length, p: total })}
         </p>
       </div>
 
       <div className="mt-4 grid gap-6 lg:grid-cols-2">
         <div>
-          <h3 className="text-sm font-semibold text-slate-700">Elementos que se evalúan</h3>
+          <h3 className="text-sm font-semibold text-slate-700">{tp.elementos}</h3>
           <div className="mt-2 overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="py-2 pr-2 font-medium">#</th>
-                  <th className="py-2 pr-2 font-medium">Elemento</th>
-                  <th className="py-2 pr-2 font-medium">Tipo</th>
-                  <th className="py-2 text-right font-medium">Puntos</th>
+                  <th className="py-2 pr-2 font-medium">{tp.elemento}</th>
+                  <th className="py-2 pr-2 font-medium">{tp.tipo}</th>
+                  <th className="py-2 text-right font-medium">{tp.puntos}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -66,7 +62,7 @@ export function PropuestaEvaluacion({ actividad }: { actividad: Actividad }) {
               <tfoot>
                 <tr className="border-t border-slate-200 font-semibold">
                   <td className="py-2" colSpan={3}>
-                    Total
+                    {tp.total}
                   </td>
                   <td className="py-2 text-right">{total}</td>
                 </tr>
@@ -77,7 +73,7 @@ export function PropuestaEvaluacion({ actividad }: { actividad: Actividad }) {
 
         <div className="space-y-5">
           <div>
-            <h3 className="text-sm font-semibold text-slate-700">Criterios de evaluación</h3>
+            <h3 className="text-sm font-semibold text-slate-700">{tp.criterios}</h3>
             {criterios.length ? (
               <ul className="mt-2 divide-y divide-slate-100 text-sm">
                 {criterios.map((c) => (
@@ -92,18 +88,18 @@ export function PropuestaEvaluacion({ actividad }: { actividad: Actividad }) {
               </ul>
             ) : (
               <p className="mt-2 text-sm text-slate-500">
-                No indicaste criterios con porcentaje. La IA califica con los puntos de cada elemento.
+                {tp.sinCriterios}
               </p>
             )}
             {criterios.length > 0 && sumaCriterios !== 100 && sumaCriterios > 0 && (
               <p className="mt-2 rounded-lg bg-aviso-suave p-2 text-xs text-aviso">
-                Los porcentajes suman {sumaCriterios} %, no 100 %. Revísalos y vuelve a generar la rúbrica.
+                {formato(tp.sumaMal, { n: sumaCriterios })}
               </p>
             )}
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-slate-700">Recomendaciones a seguir al evaluar</h3>
+            <h3 className="text-sm font-semibold text-slate-700">{tp.recomendaciones}</h3>
             {recomendaciones.length ? (
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
                 {recomendaciones.map((r) => (
@@ -111,13 +107,13 @@ export function PropuestaEvaluacion({ actividad }: { actividad: Actividad }) {
                 ))}
               </ul>
             ) : (
-              <p className="mt-2 text-sm text-slate-500">Sin recomendaciones. Puedes agregarlas abajo y volver a generar.</p>
+              <p className="mt-2 text-sm text-slate-500">{tp.sinRecomendaciones}</p>
             )}
           </div>
 
           {actividad.instrucciones?.trim() && (
             <details className="text-sm">
-              <summary className="cursor-pointer text-slate-600">Tus indicaciones originales</summary>
+              <summary className="cursor-pointer text-slate-600">{tp.indicaciones}</summary>
               <p className="mt-2 whitespace-pre-line rounded-lg bg-slate-50 p-3 text-slate-700">{actividad.instrucciones}</p>
             </details>
           )}

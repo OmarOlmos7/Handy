@@ -11,6 +11,11 @@ import { letraDe, respuestasColumnas, respuestasIncisos, separarIncisos } from "
 export { separarIncisos };
 import { escalaDe } from "@/lib/estadisticas";
 import { fechaLarga } from "./ui";
+import { textos } from "@/lib/i18n/servidor";
+import { formato } from "@/lib/i18n/idiomas";
+import type { Diccionario } from "@/lib/i18n/diccionario";
+
+type TextosHoja = Diccionario["profesor"]["hojaImpresa"];
 
 /** Planteamiento e incisos con la letra resaltada. */
 function Enunciado({ texto }: { texto: string }) {
@@ -49,7 +54,7 @@ function Cuadro({ alto, crecer = false, children }: { alto: number; crecer?: boo
 /** Tinta de la solución propuesta: azul, con la misma tipografía de la hoja. */
 const TINTA = "text-[#1d43c9]";
 
-function CuerpoReactivo({ r, solucion }: { r: Reactivo; solucion: boolean }) {
+function CuerpoReactivo({ r, solucion, th }: { r: Reactivo; solucion: boolean; th: TextosHoja }) {
   if (r.tipo === "opcion_multiple" && r.opciones?.length) {
     const correcta = solucion && r.respuesta.trim() ? letraDe(r.respuesta) : undefined;
     return (
@@ -79,7 +84,7 @@ function CuerpoReactivo({ r, solucion }: { r: Reactivo; solucion: boolean }) {
             key={v}
             className={`rounded-lg border-[1.5px] px-4 py-1 ${correcta === v ? `border-[#1d43c9] bg-[#1d43c9]/10 ${TINTA}` : "border-slate-300"}`}
           >
-            {v}
+            {v === "V" ? th.verdadero : th.falso}
           </span>
         ))}
       </p>
@@ -129,7 +134,7 @@ function CuerpoReactivo({ r, solucion }: { r: Reactivo; solucion: boolean }) {
   // respuesta de cada inciso repartidos a lo ancho (o uno solo si el problema no tiene incisos).
   const letras = separarIncisos(r.enunciado).incisos.map((inc) => inc.slice(0, 2));
   const filas = Math.ceil(Math.max(1, letras.length) / 4);
-  if (solucion) return <DesarrolloResuelto r={r} letras={letras} alto={Math.min(290, Math.max(210, (r.lineas || 12) * 17 + 36))} />;
+  if (solucion) return <DesarrolloResuelto th={th} r={r} letras={letras} alto={Math.min(290, Math.max(210, (r.lineas || 12) * 17 + 36))} />;
   return (
     <Cuadro alto={Math.min(290, Math.max(210, (r.lineas || 12) * 17 + 36)) + (filas - 1) * 72} >
       <div
@@ -139,7 +144,7 @@ function CuerpoReactivo({ r, solucion }: { r: Reactivo; solucion: boolean }) {
         {(letras.length ? letras : [""]).map((letra) => (
           <div key={letra || "unica"} className="relative h-[64px] rounded-lg border-[1.5px] border-slate-800 bg-white">
             <span className="absolute bottom-1.5 left-2.5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-              Respuesta{letra && <span className="ml-1 normal-case tracking-normal text-tinta-600 text-[12px]">{letra}</span>}
+              {th.respuesta}{letra && <span className="ml-1 normal-case tracking-normal text-tinta-600 text-[12px]">{letra}</span>}
             </span>
           </div>
         ))}
@@ -149,7 +154,7 @@ function CuerpoReactivo({ r, solucion }: { r: Reactivo; solucion: boolean }) {
 }
 
 /** Problema de desarrollo con la solución propuesta: el procedimiento en el cuadro y la respuesta en sus recuadros. */
-function DesarrolloResuelto({ r, letras, alto }: { r: Reactivo; letras: string[]; alto: number }) {
+function DesarrolloResuelto({ r, letras, alto, th }: { r: Reactivo; letras: string[]; alto: number; th: TextosHoja }) {
   const respuesta = respuestasIncisos(r.enunciado, r.respuesta);
   const recuadro = (clave: string, letra: string, texto: string) => (
     <div key={clave} className="flex min-h-[64px] flex-col justify-between rounded-lg border-[1.5px] border-slate-800 bg-white px-2.5 pb-1.5 pt-2">
@@ -157,7 +162,7 @@ function DesarrolloResuelto({ r, letras, alto }: { r: Reactivo; letras: string[]
         <TextoMat texto={texto} negritas="font-semibold" />
       </span>
       <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-        Respuesta{letra && <span className="ml-1 text-[12px] normal-case tracking-normal text-tinta-600">{letra}</span>}
+        {th.respuesta}{letra && <span className="ml-1 text-[12px] normal-case tracking-normal text-tinta-600">{letra}</span>}
       </span>
     </div>
   );
@@ -173,7 +178,7 @@ function DesarrolloResuelto({ r, letras, alto }: { r: Reactivo; letras: string[]
             ))}
           </ol>
         ) : (
-          <p className="text-sm text-slate-400">La solución no trae procedimiento; revisa la respuesta final.</p>
+          <p className="text-sm text-slate-400">{th.sinProcedimiento}</p>
         )}
         {"letras" in respuesta ? (
           <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${Math.min(4, respuesta.letras.length)}, minmax(0, 1fr))` }}>
@@ -189,7 +194,7 @@ function DesarrolloResuelto({ r, letras, alto }: { r: Reactivo; letras: string[]
   );
 }
 
-export function HojaActividad({
+export async function HojaActividad({
   actividad,
   curso,
   qrSrc,
@@ -204,8 +209,10 @@ export function HojaActividad({
 }) {
   const total = actividad.reactivos.reduce((s, r) => s + r.puntos, 0);
   const criterios = (actividad.criterios ?? []).filter((c) => c.porcentaje > 0);
-  const instrucciones = [...(actividad.instruccionesAlumno ?? []).slice(0, 3), "Al terminar, escanea el QR y envía una foto de cada hoja completa."];
-  const fecha = fechaLarga(actividad.fechaAplicacion);
+  const { t, locale } = await textos();
+  const th = t.profesor.hojaImpresa;
+  const instrucciones = [...(actividad.instruccionesAlumno ?? []).slice(0, 3), th.alTerminar];
+  const fecha = fechaLarga(actividad.fechaAplicacion, locale);
   return (
     <article className="hoja-actividad mx-auto max-w-[8.5in] rounded-xl bg-white px-10 py-9 font-hoja text-slate-800 shadow-md ring-1 ring-slate-200">
       <header className="sin-cortar flex items-stretch gap-5">
@@ -217,29 +224,29 @@ export function HojaActividad({
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-tinta-600">{curso}</p>
               <h1 className="mt-0.5 text-[28px] font-bold leading-[1.1] tracking-tight text-slate-900">{actividad.titulo}</h1>
               <p className="mt-1 text-sm text-slate-500">
-                {fecha} · {actividad.reactivos.length} reactivos · {total} puntos
+                {fecha} · {formato(th.resumen, { n: actividad.reactivos.length, p: total })}
               </p>
             </div>
           </div>
           <div className="mt-auto flex items-end gap-6 pt-5 text-[15px] font-semibold text-slate-800">
             <span className="flex flex-[3] items-end gap-2">
-              Nombre{" "}
-              <span className={`mb-1 flex-1 border-b border-slate-400 text-[15px] ${TINTA}`}>{solucion ? "Solución propuesta" : ""}</span>
+              {th.nombre}{" "}
+              <span className={`mb-1 flex-1 border-b border-slate-400 text-[15px] ${TINTA}`}>{solucion ? th.solucionPropuesta : ""}</span>
             </span>
             <span className="flex flex-[2] items-end gap-2">
-              Matrícula <span className="mb-1 flex-1 border-b border-slate-400" />
+              {th.matricula} <span className="mb-1 flex-1 border-b border-slate-400" />
             </span>
           </div>
         </div>
         <div className="flex w-[130px] shrink-0 flex-col justify-between rounded-xl border-[1.5px] border-slate-800 px-3 py-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Calificación</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{th.calificacion}</span>
           <span className="text-right text-lg text-slate-500">/ {escalaDe(actividad)}</span>
         </div>
         {qrSrc && (
           <div className="flex w-[130px] shrink-0 flex-col items-center justify-center rounded-xl border border-slate-200 p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={qrSrc} alt="Código QR para entregar" className="h-[100px] w-[100px]" />
-            <span className="mt-0.5 text-center text-[10px] font-semibold leading-tight text-slate-500">Escanea para entregar</span>
+            <img src={qrSrc} alt={th.altQr} className="h-[100px] w-[100px]" />
+            <span className="mt-0.5 text-center text-[10px] font-semibold leading-tight text-slate-500">{th.escanea}</span>
           </div>
         )}
       </header>
@@ -248,18 +255,18 @@ export function HojaActividad({
 
       <section className="sin-cortar mt-4">
         <ol className="grid grid-cols-2 gap-x-10 gap-y-1.5 text-[14px] leading-snug text-slate-700">
-          {instrucciones.map((t, i) => (
+          {instrucciones.map((ins, i) => (
             <li key={i} className="flex gap-2">
               <span className="font-bold text-tinta-600">{i + 1}</span>
               <span>
-                <TextoMat texto={t} />
+                <TextoMat texto={ins} />
               </span>
             </li>
           ))}
         </ol>
         {criterios.length > 0 && (
           <p className="mt-3 flex flex-wrap items-center gap-2 text-[13px]">
-            <span className="mr-1 font-bold text-slate-900">Evaluación por problema:</span>
+            <span className="mr-1 font-bold text-slate-900">{th.evaluacionPorProblema}</span>
             {criterios.map((c) => (
               <span key={c.nombre} className="rounded-full bg-tinta-50 px-3 py-0.5 font-semibold text-tinta-600">
                 {c.nombre} {c.porcentaje}%
@@ -281,7 +288,7 @@ export function HojaActividad({
                     {r.numero}
                   </span>
                   <span className="rounded-full border border-slate-300 px-3 py-0.5 text-[13px] font-bold text-slate-800">
-                    {r.puntos} {r.puntos === 1 ? "pt" : "pts"}
+                    {r.puntos} {r.puntos === 1 ? th.pt : th.pts}
                   </span>
                 </div>
                 <div className="mt-2">
@@ -302,7 +309,7 @@ export function HojaActividad({
               <img src={svgUrl(r.ilustracion)} alt="" className="sin-cortar mx-auto mt-3 block h-[200px] w-[320px] rounded-lg border border-slate-200 bg-white p-1.5" />
             )}
             <div>
-              <CuerpoReactivo r={r} solucion={solucion} />
+              <CuerpoReactivo r={r} solucion={solucion} th={th} />
             </div>
           </li>
         ))}

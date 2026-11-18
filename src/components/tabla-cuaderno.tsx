@@ -9,6 +9,8 @@ import { formatoCal, nivelDe, type Nivel } from "@/lib/estadisticas";
 import type { InfoCuaderno } from "@/lib/exportar-cuaderno";
 import type { Escala } from "@/lib/tipos";
 import { DescargarCuaderno } from "./descargar-cuaderno";
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
 
 const SEMAFORO: Record<Nivel, string> = {
   alto: "bg-acierto-suave text-acierto",
@@ -29,6 +31,7 @@ function Promedio({ valor, escala, fuerte }: { valor: number | null; escala: Esc
 }
 
 function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; columna: Columna; matricula: string; nombre: string }) {
+  const tq = useTextos().t.profesor.cuaderno;
   const router = useRouter();
   const [editando, setEditando] = useState(false);
   const [valor, setValor] = useState("");
@@ -43,7 +46,7 @@ function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; co
         setEditando(false);
         router.refresh();
       } catch (e) {
-        setError(e instanceof Error ? e.message : "No se pudo guardar");
+        setError(e instanceof Error ? e.message : tq.noSeGuardo);
       }
     });
   }
@@ -52,7 +55,7 @@ function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; co
     const t = valor.trim().replace(",", ".");
     if (t === "") return setEditando(false);
     const n = Number(t);
-    if (!Number.isFinite(n) || n < 0 || n > columna.escala) return setError(`De 0 a ${columna.escala}`);
+    if (!Number.isFinite(n) || n < 0 || n > columna.escala) return setError(formato(tq.rango, { n: columna.escala }));
     if (celda.valor !== null && n === celda.valor) return setEditando(false);
     guardar(n);
   }
@@ -69,7 +72,7 @@ function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; co
           max={columna.escala}
           value={valor}
           disabled={pendiente}
-          aria-label={`Calificación de ${nombre} en ${columna.titulo}`}
+          aria-label={formato(tq.aria, { nombre, actividad: columna.titulo })}
           onChange={(e) => setValor(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") confirmar();
@@ -87,7 +90,7 @@ function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; co
             onClick={() => guardar(null)}
             className="whitespace-nowrap text-[11px] font-medium text-tinta-700 hover:underline"
           >
-            Usar la de la rúbrica
+            {tq.usarRubrica}
           </button>
         )}
         {error && <span className="text-[11px] text-error">{error}</span>}
@@ -97,14 +100,14 @@ function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; co
 
   const titulo =
     celda.estado === "no_entregada"
-      ? "No entregó: cuenta como 0. Clic para calificar."
+      ? tq.noEntrego
       : celda.estado === "pendiente"
-        ? "Entregada, por evaluar. Clic para calificar a mano."
+        ? tq.pendiente
         : celda.estado === "sin_resultados"
-          ? "La actividad aún no tiene calificaciones. Clic para calificar a mano."
+          ? tq.sinResultados
           : celda.manual
-            ? `Cambiada a mano${celda.calculada !== undefined ? ` (con la rúbrica: ${texto(celda.calculada, columna.escala)})` : ""}. Clic para cambiar.`
-            : "Clic para corregir la calificación.";
+            ? formato(tq.manual, { r: celda.calculada !== undefined ? formato(tq.conRubrica, { c: texto(celda.calculada, columna.escala) }) : "" })
+            : tq.corregir;
 
   return (
     <div className="flex items-center justify-center">
@@ -126,18 +129,20 @@ function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; co
         {celda.estado === "calificada" && texto(celda.valor!, columna.escala)}
         {celda.estado === "no_entregada" && (
           <>
-            0 <span className="text-[10px] font-semibold">NE</span>
+            0 <span className="text-[10px] font-semibold">{tq.ne}</span>
           </>
         )}
-        {celda.estado === "pendiente" && "Por evaluar"}
+        {celda.estado === "pendiente" && tq.porEvaluar}
         {celda.estado === "sin_resultados" && "—"}
-        {celda.manual && <span className="h-1.5 w-1.5 rounded-full bg-tinta-600" aria-label="cambiada a mano" />}
+        {celda.manual && <span className="h-1.5 w-1.5 rounded-full bg-tinta-600" aria-label={tq.cambiadaMano} />}
       </button>
     </div>
   );
 }
 
 export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: InfoCuaderno }) {
+  const tq = useTextos().t.profesor.cuaderno;
+  const tc = useTextos().t.profesor.comun;
   const [orden, setOrden] = useState<Orden>("apellido");
   const filas = ordenarFilas(cuaderno.filas, orden);
   const columnas = cuaderno.grupos.flatMap((g) => g.columnas);
@@ -148,25 +153,25 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-acierto-suave ring-1 ring-acierto/40" /> Alto
+            <span className="h-3 w-3 rounded bg-acierto-suave ring-1 ring-acierto/40" /> {tq.alto}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-aviso-suave ring-1 ring-aviso/40" /> Medio
+            <span className="h-3 w-3 rounded bg-aviso-suave ring-1 ring-aviso/40" /> {tq.medio}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-error-suave ring-1 ring-error/40" /> Bajo
+            <span className="h-3 w-3 rounded bg-error-suave ring-1 ring-error/40" /> {tq.bajo}
           </span>
           <span>
-            <strong className="font-semibold">NE</strong> no entregó (cuenta 0)
+            <strong className="font-semibold">{tq.ne}</strong>{tq.noEntregoLeyenda}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-1.5 w-1.5 rounded-full bg-tinta-600" /> cambiada a mano
+            <span className="h-1.5 w-1.5 rounded-full bg-tinta-600" /> {tq.cambiadaMano}
           </span>
         </div>
         <div className="flex flex-col items-end gap-2">
           <DescargarCuaderno cuaderno={cuaderno} orden={orden} info={info} />
           <label className="flex items-center gap-2 text-sm text-slate-600">
-            Ordenar por
+            {tq.ordenarPor}
             <select
               value={orden}
               onChange={(e) => setOrden(e.target.value as Orden)}
@@ -174,7 +179,7 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
             >
               {ORDENES.map((o) => (
                 <option key={o.clave} value={o.clave}>
-                  {o.texto}
+                  {tq.ordenes[o.clave]}
                 </option>
               ))}
             </select>
@@ -187,10 +192,10 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
           <thead>
             <tr className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               <th rowSpan={2} className="sticky left-0 z-20 border-b border-slate-200 bg-slate-50 px-4 py-2 text-left">
-                Alumno
+                {tc.alumno}
               </th>
               <th rowSpan={2} className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-left">
-                Matrícula
+                {tc.matricula}
               </th>
               {cuaderno.grupos.map((g) => (
                 <th
@@ -202,8 +207,8 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
                 </th>
               ))}
               <th rowSpan={2} className="border-b border-l border-slate-200 bg-slate-50 px-3 py-2 text-center text-slate-700">
-                Promedio
-                <span className="block text-[10px] font-normal normal-case">sobre {cuaderno.escala}</span>
+                {tq.promedio}
+                <span className="block text-[10px] font-normal normal-case">{formato(tq.sobre, { n: cuaderno.escala })}</span>
               </th>
             </tr>
             <tr>
@@ -241,7 +246,7 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
           <tfoot>
             <tr className="bg-slate-50">
               <td className="sticky left-0 z-10 bg-slate-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-600" colSpan={2}>
-                Promedio de la actividad
+                {tq.promedioActividad}
               </td>
               {columnas.map((c) => (
                 <td key={c.id} className={`px-2 py-2.5 text-center ${borde.has(c.id) ? "border-l border-slate-200" : ""}`}>
@@ -256,8 +261,7 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
         </table>
       </div>
       <p className="text-xs text-slate-500">
-        Toca una calificación para corregirla; se guarda al presionar Enter o al salir del cuadro. El cambio se refleja en los
-        reportes y las analíticas. En una calificación cambiada a mano aparece la opción para volver a la de la rúbrica.
+        {tq.ayuda}
       </p>
     </div>
   );
