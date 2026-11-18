@@ -1,11 +1,16 @@
 import { salirProfesor } from "@/app/acciones-cuenta";
 import { BarraApp } from "@/components/barra-app";
+import { IdiomaDocumento } from "@/components/idioma-documento";
+import { ProveedorTextos } from "@/components/proveedor-textos";
+import { idiomaPublico, textos } from "@/lib/i18n/servidor";
 import { requerirAdmin } from "@/lib/sesion";
 
 export default async function LayoutAdmin({ children }: LayoutProps<"/admin">) {
   const admin = await requerirAdmin();
+  const { idioma, t, locale } = await textos();
   return (
-    <>
+    <ProveedorTextos valor={{ idioma, t, locale }}>
+      <IdiomaDocumento idioma={idioma} alSalir={await idiomaPublico()} />
       <BarraApp
         enlaces={[
           { href: "/admin", texto: "Administración", exacto: true },
@@ -21,6 +26,6 @@ export default async function LayoutAdmin({ children }: LayoutProps<"/admin">) {
         }
       />
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">{children}</main>
-    </>
+    </ProveedorTextos>
   );
 }

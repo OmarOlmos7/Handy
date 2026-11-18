@@ -25,7 +25,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/pdf/[id]/grupo"
     const entrega = entregasDe(db, id).find((e) => e.matricula === alumno.matricula);
     if (!entrega || entrega.resultados.length === 0) continue;
     if (!entrega.imagenes?.length && !entrega.pdf) continue;
-    const uno = await PDFDocument.load(await pdfRetroalimentacion({ actividad, alumno, entrega, grupo }, t.alumno.pdf));
+    const uno = await PDFDocument.load(await pdfRetroalimentacion({ actividad, alumno, entrega, grupo }, t.alumno.pdf, locale));
     for (const p of await doc.copyPages(uno, uno.getPageIndices())) doc.addPage(p);
     incluidos++;
   }

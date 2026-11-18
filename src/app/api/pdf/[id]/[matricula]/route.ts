@@ -8,7 +8,7 @@ import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 // PDF de retroalimentación con la hoja corregida.
 export async function GET(req: Request, ctx: RouteContext<"/api/pdf/[id]/[matricula]">) {
   const { id, matricula } = await ctx.params;
-  const { t } = await textos();
+  const { t, locale } = await textos();
   const db = await leer();
   const actividad = actividadDe(db, id);
   const grupo = actividad && grupoDe(db, actividad.grupoId);
@@ -29,7 +29,7 @@ export async function GET(req: Request, ctx: RouteContext<"/api/pdf/[id]/[matric
       headers: { "Content-Type": "application/pdf", "Content-Disposition": `inline; filename="hojas-${matricula}.pdf"` },
     });
   }
-  const pdf = await pdfRetroalimentacion({ actividad, alumno, entrega, grupo }, t.alumno.pdf);
+  const pdf = await pdfRetroalimentacion({ actividad, alumno, entrega, grupo }, t.alumno.pdf, locale);
   return new Response(new Uint8Array(pdf), {
     headers: {
       "Content-Type": "application/pdf",

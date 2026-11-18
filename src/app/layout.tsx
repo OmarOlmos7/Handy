@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Geist, Geist_Mono, Inter } from "next/font/google";
 import { ProveedorTextos } from "@/components/proveedor-textos";
-import { textos } from "@/lib/i18n/servidor";
+import { idiomaActual, textos, textosPublicos } from "@/lib/i18n/servidor";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -30,10 +30,12 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const { idioma, t, locale } = await textos();
+  // Las vistas de trabajo ponen su propio proveedor de textos (con el idioma del profesor);
+  // aquí van los de las páginas públicas porque este layout no se vuelve a dibujar al navegar.
+  const { idioma, t, locale } = await textosPublicos();
   return (
     <html
-      lang={idioma}
+      lang={await idiomaActual()}
       className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
