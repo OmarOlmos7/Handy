@@ -2,7 +2,9 @@
 // (y las borra) y elimina las actividades que cumplieron su año de conservación.
 import "server-only";
 import fs from "node:fs";
-import { actividadDe, borrarCarpeta, guardarArchivo, leerAhora, modificar, rutaAbsoluta } from "./almacen";
+import { actividadDe, borrarCarpeta, grupoDe, guardarArchivo, leerAhora, modificar, rutaAbsoluta } from "./almacen";
+import { diccionarioDe } from "./i18n/diccionario";
+import { esIdioma } from "./i18n/idiomas";
 import { pdfHojasCorregidas } from "./pdf";
 import { debeArchivarse, fechaBorrado } from "./retencion";
 
@@ -13,7 +15,10 @@ export async function archivarEntrega(actividadId: string, matricula: string): P
   const entrega = db.entregas.find((e) => e.actividadId === actividadId && e.matricula === matricula);
   if (!actividad || !entrega?.imagenes?.length || entrega.pdf || /[\\/]|^\.\.?$/.test(matricula)) return false;
   const fotos = entrega.imagenes;
-  const pdf = await pdfHojasCorregidas(actividad, entrega);
+  // Las anotaciones fijas ("Reactivo 3 · 2/4") van en el idioma del profesor, como los comentarios de la IA.
+  const grupo = grupoDe(db, actividad.grupoId);
+  const idioma = db.profesores.find((p) => p.id === grupo?.profesorId)?.config?.idioma;
+  const pdf = await pdfHojasCorregidas(actividad, entrega, diccionarioDe(esIdioma(idioma) ? idioma : "es").alumno.pdf);
   const ruta = guardarArchivo(`actividades/${actividadId}/entregas/${matricula}/corregida-${Date.now()}.pdf`, pdf);
   const listo = modificar((d) => {
     const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);

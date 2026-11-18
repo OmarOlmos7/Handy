@@ -10,6 +10,8 @@ import path from "node:path";
 import { promisify } from "node:util";
 import katex from "katex";
 import { guardarArchivo, leerArchivo, rutaAbsoluta } from "./almacen";
+import alumnoEs from "./i18n/diccionarios/alumno/es";
+import { formato } from "./i18n/idiomas";
 import { recursosParaTemas } from "./recursos";
 import type { Actividad, Entrega } from "./tipos";
 import { enlaceVideo } from "./videos";
@@ -50,15 +52,20 @@ export function htmlConFormulas(texto: string): string {
     .join("");
 }
 
-export function htmlEstudio(actividad: Pick<Actividad, "titulo" | "recursos">, entrega: Pick<Entrega, "estudio">, cssKatex: string): string {
+export function htmlEstudio(
+  actividad: Pick<Actividad, "titulo" | "recursos">,
+  entrega: Pick<Entrega, "estudio">,
+  cssKatex: string,
+  tx: typeof alumnoEs.pdf = alumnoEs.pdf,
+): string {
   const e = entrega.estudio!;
   const { videos, lecturas } = recursosParaTemas(actividad, e.temas);
   const listaVideos = videos.length
     ? videos.map((v) => `<li><a href="${escapar(v.url)}">${escapar(v.titulo)}</a><span class="fuente"> · ${escapar(v.fuente)}</span></li>`)
-    : e.videos.map((v) => `<li><a href="${escapar(enlaceVideo(v.busqueda))}">${escapar(v.titulo)}</a><span class="fuente"> · búsqueda en YouTube</span></li>`);
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><style>${cssKatex}
+    : e.videos.map((v) => `<li><a href="${escapar(enlaceVideo(v.busqueda))}">${escapar(v.titulo)}</a><span class="fuente"> · ${escapar(tx.busquedaYoutube)}</span></li>`);
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${cssKatex}
 @page { size: letter; margin: 18mm 17mm; }
-body { font-family: "Inter", "DejaVu Sans", "Helvetica", sans-serif; font-size: 10.5pt; color: #0f172a; line-height: 1.45; }
+body { font-family: "Inter", "DejaVu Sans", "Helvetica", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", sans-serif; font-size: 10.5pt; color: #0f172a; line-height: 1.45; }
 h1 { font-size: 15pt; margin: 0 0 4pt; }
 h2 { font-size: 11.5pt; margin: 14pt 0 4pt; }
 .gris { color: #64748b; font-size: 9.5pt; }
@@ -70,17 +77,17 @@ ul { margin: 4pt 0; padding-left: 16pt; } li { margin: 3pt 0; }
 .resp { color: #15803d; font-weight: 600; margin-top: 4pt; }
 .katex { font-size: 1.08em; }
 </style></head><body>
-<h1>4. Recomendaciones de estudio</h1>
-<p class="gris">${escapar(actividad.titulo)}${e.temas.length ? ` · Temas a repasar: ${e.temas.map(escapar).join(", ")}` : ""}</p>
-<h2>Videos con ejercicios resueltos</h2>
+<h1>${escapar(tx.recomendaciones)}</h1>
+<p class="gris">${escapar(actividad.titulo)}${e.temas.length ? ` · ${escapar(formato(tx.temasRepasar, { temas: e.temas.join(", ") }))}` : ""}</p>
+<h2>${escapar(tx.videos)}</h2>
 <ul>${listaVideos.join("")}</ul>
-${lecturas.length ? `<h2>Lecturas de referencia (OpenStax)</h2><ul>${lecturas.map((l) => `<li><a href="${escapar(l.url)}">${escapar(l.titulo)}</a><span class="fuente"> · ${escapar(l.fuente)}</span></li>`).join("")}</ul>` : ""}
-<h2>Ejercicios para practicar en casa</h2>
-<p class="gris">Resuélvelos y compara tu resultado con la respuesta. No incluye el procedimiento.</p>
+${lecturas.length ? `<h2>${escapar(tx.lecturas)}</h2><ul>${lecturas.map((l) => `<li><a href="${escapar(l.url)}">${escapar(l.titulo)}</a><span class="fuente"> · ${escapar(l.fuente)}</span></li>`).join("")}</ul>` : ""}
+<h2>${escapar(tx.ejercicios)}</h2>
+<p class="gris">${escapar(tx.ejerciciosAyuda)}</p>
 ${e.ejercicios
   .map(
     (x, i) =>
-      `<div class="ej"><div class="tema">Ejercicio ${i + 1} · ${htmlConFormulas(x.tema)}</div><div>${htmlConFormulas(x.enunciado)}</div><div class="resp">Respuesta: ${htmlConFormulas(x.respuesta)}</div></div>`,
+      `<div class="ej"><div class="tema">${escapar(formato(tx.ejercicio, { n: i + 1 }))} · ${htmlConFormulas(x.tema)}</div><div>${htmlConFormulas(x.enunciado)}</div><div class="resp">${escapar(tx.respuesta)} ${htmlConFormulas(x.respuesta)}</div></div>`,
   )
   .join("")}
 </body></html>`;
@@ -90,13 +97,13 @@ ${e.ejercicios
  * PDF de la página de recomendaciones, guardado junto a la entrega para no volver a imprimirlo.
  * Devuelve undefined si no hay Chromium o falla la impresión.
  */
-export async function pdfEstudio(actividad: Actividad, entrega: Entrega): Promise<Uint8Array | undefined> {
+export async function pdfEstudio(actividad: Actividad, entrega: Entrega, tx: typeof alumnoEs.pdf = alumnoEs.pdf): Promise<Uint8Array | undefined> {
   if (!entrega.estudio) return undefined;
   const navegador = chromium();
   const katexDir = carpetaKatex();
   if (!navegador || !katexDir || /[\\/]|^\.\.?$/.test(entrega.matricula)) return undefined;
   const { videos, lecturas } = recursosParaTemas(actividad, entrega.estudio.temas);
-  const huella = crypto.createHash("sha1").update(JSON.stringify([entrega.estudio, videos, lecturas, actividad.titulo])).digest("hex").slice(0, 12);
+  const huella = crypto.createHash("sha1").update(JSON.stringify([entrega.estudio, videos, lecturas, actividad.titulo, tx])).digest("hex").slice(0, 12);
   const carpeta = `actividades/${actividad.id}/entregas/${entrega.matricula}`;
   const ruta = `${carpeta}/estudio-${huella}.pdf`;
   try {
@@ -109,7 +116,7 @@ export async function pdfEstudio(actividad: Actividad, entrega: Entrega): Promis
   try {
     const html = path.join(tmp, "estudio.html");
     const salida = path.join(tmp, "estudio.pdf");
-    fs.writeFileSync(html, htmlEstudio(actividad, entrega, css));
+    fs.writeFileSync(html, htmlEstudio(actividad, entrega, css, tx));
     await ejecutar(
       navegador,
       ["--headless", `--user-data-dir=${path.join(tmp, "perfil")}`, "--no-sandbox", "--disable-gpu", "--disable-dev-shm-usage", "--no-pdf-header-footer", "--allow-file-access-from-files", `--print-to-pdf=${salida}`, `file://${html}`],

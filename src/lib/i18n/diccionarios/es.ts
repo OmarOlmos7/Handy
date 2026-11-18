@@ -1,5 +1,6 @@
 // Textos de la interfaz en español (idioma base). Los demás diccionarios tienen la misma forma;
 // TypeScript avisa si a alguno le falta un texto.
+import alumno from "./alumno/es";
 import profesor from "./profesor/es";
 
 const es = {
@@ -318,7 +319,7 @@ const es = {
       "Elige el idioma de la interfaz. Si no eliges uno, se usa el idioma oficial del país desde donde entras o el de tu navegador.",
     guardarIdioma: "Guardar idioma",
     idiomaGuardado: "Guardamos tu idioma.",
-    etapaIdioma: "Ya están traducidas la página principal, el ingreso, los precios y las vistas del profesor; las vistas del alumno se traducen en la siguiente actualización.",
+    etapaIdioma: "La IA también redacta en este idioma las actividades, rúbricas y retroalimentación de tus alumnos.",
     cuentaTitulo: "Nombre y contraseña",
     correoAcceso: "Tu correo de acceso es {correo}.",
     nombre: "Nombre",
@@ -381,6 +382,7 @@ const es = {
     },
   },
   profesor,
+  alumno,
 };
 
 export default es;

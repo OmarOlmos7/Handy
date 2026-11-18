@@ -122,7 +122,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           <p className="mt-1 text-2xl font-semibold">
             {recibidas.filter((e) => calificada(e)).length} <span className="text-base font-normal text-slate-400">{formato(ta.deRecibidas, { n: recibidas.length })}</span>
           </p>
-          <p className="text-xs text-slate-500">{formato(ta.sinEntregar, { n: entregas.length - recibidas.length })}</p>
+          <p className="text-xs text-slate-500">{entregas.length - recibidas.length === 1 ? ta.sinEntregar1 : formato(ta.sinEntregar, { n: entregas.length - recibidas.length })}</p>
         </Tarjeta>
         <Tarjeta>
           <p className="text-sm text-slate-500">{ta.liberados}</p>

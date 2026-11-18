@@ -7,7 +7,10 @@ import type { BaseDeDatos, CuentaAlumno } from "./tipos";
 
 export const LARGO_MINIMO_CLAVE = 6;
 
-export type ResultadoCuenta = { ok: true; cuenta: CuentaAlumno } | { ok: false; error: string };
+/** Error de cuenta: clave de alumno.errores del diccionario (se traduce al mostrarlo). */
+export type ErrorCuentaAlumno = "nombre" | "matricula" | "correo" | "claveCorta" | "yaExiste";
+
+export type ResultadoCuenta = { ok: true; cuenta: CuentaAlumno } | { ok: false; error: ErrorCuentaAlumno };
 
 /** Cuenta del alumno si el correo y la clave coinciden. */
 export function verificarAlumno(db: BaseDeDatos, correo: string, clave: string): CuentaAlumno | undefined {
@@ -20,12 +23,10 @@ export function crearCuentaAlumno(datos: { nombre: string; matricula: string; co
   const nombre = datos.nombre.replace(/\s+/g, " ").trim().slice(0, 120);
   const matricula = normalizarMatricula(datos.matricula);
   const correo = normalizarCorreo(datos.correo);
-  if (nombre.length < 3) return { ok: false, error: "Escribe tu nombre completo." };
-  if (!/^[A-Z0-9-]{3,20}$/.test(matricula)) return { ok: false, error: "Escribe tu matrícula (letras y números, sin espacios)." };
-  if (!correoValido(correo)) return { ok: false, error: "Escribe un correo válido." };
-  if (datos.clave.length < LARGO_MINIMO_CLAVE) {
-    return { ok: false, error: `Tu clave de acceso debe tener al menos ${LARGO_MINIMO_CLAVE} caracteres.` };
-  }
+  if (nombre.length < 3) return { ok: false, error: "nombre" };
+  if (!/^[A-Z0-9-]{3,20}$/.test(matricula)) return { ok: false, error: "matricula" };
+  if (!correoValido(correo)) return { ok: false, error: "correo" };
+  if (datos.clave.length < LARGO_MINIMO_CLAVE) return { ok: false, error: "claveCorta" };
   const cuenta: CuentaAlumno = {
     id: `al-${crypto.randomBytes(6).toString("hex")}`,
     correo,
@@ -39,5 +40,5 @@ export function crearCuentaAlumno(datos: { nombre: string; matricula: string; co
     db.cuentasAlumno.push(cuenta);
     return true;
   });
-  return creada ? { ok: true, cuenta } : { ok: false, error: "Ya existe una cuenta con ese correo. Entra con tu clave de acceso." };
+  return creada ? { ok: true, cuenta } : { ok: false, error: "yaExiste" };
 }

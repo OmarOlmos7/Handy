@@ -15,7 +15,8 @@ export function limiteReenvio(e: Pick<Entrega, "primeraEntregaEn" | "entregadaEn
   return primera ? new Date(Date.parse(primera) + MINUTOS_REENVIO * 60_000) : undefined;
 }
 
-export type PermisoReenvio = { ok: true; reemplaza: boolean } | { ok: false; error: string };
+/** El error es una clave de alumno.errores del diccionario (se traduce al mostrarlo). */
+export type PermisoReenvio = { ok: true; reemplaza: boolean } | { ok: false; error: "evaluadaProfesor" | "evaluadaAlumno" };
 
 /**
  * ¿Se acepta una nueva entrega de este alumno?
@@ -29,10 +30,5 @@ export function permisoReenvio(previa: Entrega | undefined, comoProfesor: boolea
   if (previa.estado === "entregada") return { ok: true, reemplaza: true };
   const limite = limiteReenvio(previa);
   if (limite && ahora <= limite) return { ok: true, reemplaza: true };
-  return {
-    ok: false,
-    error: comoProfesor
-      ? "Esta entrega ya fue evaluada. Bórrala con el bote de basura de la lista de entregas para subir otra."
-      : `Ya pasaron más de ${MINUTOS_REENVIO} minutos desde tu primera entrega y ya fue evaluada. Si necesitas cambiarla, pide a tu profesor que la borre para volver a entregar.`,
-  };
+  return { ok: false, error: comoProfesor ? "evaluadaProfesor" : "evaluadaAlumno" };
 }

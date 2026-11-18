@@ -27,9 +27,9 @@ describe("reenvío de entregas", () => {
     expect(permisoReenvio(e, false, new Date("2026-11-13T18:05:00Z")).ok).toBe(true);
     const tarde = permisoReenvio(e, false, new Date("2026-11-13T18:05:01Z"));
     expect(tarde.ok).toBe(false);
-    if (!tarde.ok) expect(tarde.error).toMatch(/profesor/);
+    if (!tarde.ok) expect(tarde.error).toBe("evaluadaAlumno");
     const profe = permisoReenvio(e, true, new Date("2026-11-13T18:06:00Z"));
-    if (!profe.ok) expect(profe.error).toMatch(/bote de basura/);
+    if (!profe.ok) expect(profe.error).toBe("evaluadaProfesor");
   });
 
   it("el plazo se cuenta desde la primera entrega, aunque haya reenvíos", () => {

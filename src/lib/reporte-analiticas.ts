@@ -53,18 +53,39 @@ export type BloqueReporte =
 
 export interface ReporteAnaliticas {
   titulo: string;
-  /** Datos del encabezado: grupo, actividad, fechas. */
-  datos: { etiqueta: string; valor: string }[];
+  /** Datos del encabezado: grupo, actividad, fechas. `corto`: también va en el encabezado de las demás páginas. */
+  datos: { etiqueta: string; valor: string; corto?: boolean }[];
   bloques: BloqueReporte[];
+  /** Textos fijos del PDF en el idioma de la interfaz. */
+  textos: { sinDatos: string; sinResultados: string; generado: string; pagina: string };
 }
 
-const num = (n: number) => n.toLocaleString("es-MX", { maximumFractionDigits: 1 });
+/** Textos del reporte PDF (profesor.reportePdf del diccionario). */
+export type TextosReportePdf = typeof profesorEs.reportePdf;
+
+/** Idioma del reporte: textos, formato regional, hallazgos y nombres de los niveles. */
+export interface OpcionesReporte {
+  tx?: TextosReportePdf;
+  locale?: string;
+  calculo?: TextosCalculo;
+  niveles?: Parameters<typeof rebanadasNiveles>[2];
+}
+
+function ayudas(o: OpcionesReporte) {
+  const tx = o.tx ?? profesorEs.reportePdf;
+  const locale = o.locale ?? "es-MX";
+  const num = (n: number) => n.toLocaleString(locale, { maximumFractionDigits: 1 });
+  const fecha = (iso: string) => {
+    const [a, m, d] = iso.split("-").map(Number);
+    if (locale.startsWith("es")) return `${d} ${MESES[m - 1]} ${a}`;
+    return new Date(Date.UTC(a, m - 1, d)).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  };
+  const hoy = () => new Date().toLocaleDateString(locale, { day: "numeric", month: "long", year: "numeric" });
+  const textos = { sinDatos: tx.sinDatos, sinResultados: tx.sinResultados, generado: formato(tx.generado, { fecha: hoy() }), pagina: tx.pagina };
+  return { tx, num, fecha, hoy, textos };
+}
+
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-const fecha = (iso: string) => {
-  const [a, m, d] = iso.split("-").map(Number);
-  return `${d} ${MESES[m - 1]} ${a}`;
-};
-const hoy = () => new Date().toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
 
 /** Tinta del semáforo para un puntaje sobre 100 (85 alto, 70 medio). */
 export function tintaPuntaje(p: number) {
@@ -73,49 +94,48 @@ export function tintaPuntaje(p: number) {
   return "#dc2626";
 }
 const TINTA_NIVEL: Record<Nivel, string> = { alto: "#15803d", medio: "#b45309", bajo: "#dc2626" };
-const TEXTO_NIVEL: Record<Nivel, string> = { alto: "Alto", medio: "Medio", bajo: "Bajo" };
 
-function pasteles(a: Analiticas, porAlumno: string): BloqueReporte {
+function pasteles(a: Analiticas, porAlumno: string, tx: TextosReportePdf, niveles: OpcionesReporte["niveles"]): BloqueReporte {
   const g = a.general;
   return {
     tipo: "pasteles",
     items: [
       {
-        titulo: "Aprobados vs. no aprobados",
-        nota: `${porAlumno}; aprueba con ${APROBATORIA} o más.`,
+        titulo: tx.aprobadosVs,
+        nota: formato(tx.apruebaCon, { base: porAlumno, n: APROBATORIA }),
         centro: `${g.aprobacion}%`,
-        subcentro: "aprobados",
+        subcentro: tx.aprobadosMin,
         rebanadas: [
-          { nombre: "Aprobados", valor: g.aprobados, color: "#22c55e" },
-          { nombre: "No aprobados", valor: g.reprobados, color: "#ef4444" },
+          { nombre: tx.aprobados, valor: g.aprobados, color: "#22c55e" },
+          { nombre: tx.noAprobados, valor: g.reprobados, color: "#ef4444" },
         ],
       },
       {
-        titulo: "Niveles de desempeño",
-        nota: "Alumnos por nivel.",
+        titulo: tx.niveles,
+        nota: tx.alumnosPorNivel,
         centro: String(a.niveles.superior + a.niveles.alto + a.niveles.medio + a.niveles.bajo),
-        subcentro: "alumnos",
-        rebanadas: rebanadasNiveles(a.niveles, a.rangos),
+        subcentro: tx.alumnosMin,
+        rebanadas: rebanadasNiveles(a.niveles, a.rangos, niveles),
       },
       {
-        titulo: "Entregas",
-        nota: "Trabajos de lo evaluado.",
+        titulo: tx.entregas,
+        nota: tx.trabajosEvaluado,
         centro: `${g.tasaEntrega}%`,
-        subcentro: "entregados",
+        subcentro: tx.entregadosMin,
         rebanadas: [
-          { nombre: "Entregados", valor: g.entregadas, color: "#3b6ef6" },
-          { nombre: "No entregados (0)", valor: g.noEntregadas, color: "#94a3b8" },
+          { nombre: tx.entregados, valor: g.entregadas, color: "#3b6ef6" },
+          { nombre: tx.noEntregados, valor: g.noEntregadas, color: "#94a3b8" },
         ],
       },
     ],
   };
 }
 
-function distribucion(a: Analiticas, titulo: string): BloqueReporte {
+function distribucion(a: Analiticas, titulo: string, tx: TextosReportePdf): BloqueReporte {
   return {
     tipo: "columnas",
     titulo,
-    nota: "Cuántos alumnos hay en cada rango (sobre 100).",
+    nota: tx.cuantosRango,
     max: Math.max(1, ...a.distribucion.map((d) => d.cantidad)),
     filas: a.distribucion.map((d, i) => ({
       nombre: d.rango,
@@ -127,6 +147,7 @@ function distribucion(a: Analiticas, titulo: string): BloqueReporte {
 }
 
 function tablaAlumnos(
+  ay: ReturnType<typeof ayudas>,
   titulo: string,
   nota: string,
   filas: ResumenAlumno[],
@@ -134,12 +155,13 @@ function tablaAlumnos(
   valor: string,
   extra: "motivos" | "entregas" | null,
 ): BloqueReporte {
+  const { tx, num } = ay;
   const columnas: ColumnaTabla[] = [
-    { titulo: "Alumno", ancho: extra === "motivos" ? 3 : 4 },
+    { titulo: tx.alumno, ancho: extra === "motivos" ? 3 : 4 },
     { titulo: valor, ancho: 1, alinear: "der" },
   ];
-  if (extra === "motivos") columnas.push({ titulo: "Motivo", ancho: 4 });
-  if (extra === "entregas") columnas.push({ titulo: "Entregas", ancho: 1, alinear: "der" });
+  if (extra === "motivos") columnas.push({ titulo: tx.motivo, ancho: 4 });
+  if (extra === "entregas") columnas.push({ titulo: tx.entregas, ancho: 1, alinear: "der" });
   return {
     tipo: "tabla",
     titulo,
@@ -156,51 +178,53 @@ function tablaAlumnos(
 }
 
 /** Reporte de las analíticas de todo el grupo. */
-export function reporteGrupoPdf(grupo: Grupo, a: Analiticas): ReporteAnaliticas {
+export function reporteGrupoPdf(grupo: Grupo, a: Analiticas, opciones: OpcionesReporte = {}): ReporteAnaliticas {
+  const ay = ayudas(opciones);
+  const { tx, num, fecha, hoy } = ay;
   const g = a.general;
   const bloques: BloqueReporte[] = [
     {
       tipo: "cifras",
       items: [
-        { titulo: "Promedio general", valor: num(g.promedio), detalle: `${num(g.promedioEntregadas)} sin contar lo no entregado` },
-        { titulo: "Mediana", valor: num(g.mediana), detalle: "De los promedios por alumno" },
-        { titulo: "Desviación estándar", valor: num(g.desviacion), detalle: "Dispersión de los promedios" },
-        { titulo: "Aprobación", valor: `${g.aprobacion}%`, detalle: `Promedio de ${APROBATORIA} o más` },
-        { titulo: "Tasa de entrega", valor: `${g.tasaEntrega}%`, detalle: `${g.noEntregadas} sin entregar` },
+        { titulo: tx.promedioGeneral, valor: num(g.promedio), detalle: formato(tx.sinNoEntregado, { n: num(g.promedioEntregadas) }) },
+        { titulo: tx.mediana, valor: num(g.mediana), detalle: tx.deLosPromedios },
+        { titulo: tx.desviacion, valor: num(g.desviacion), detalle: tx.dispersionPromedios },
+        { titulo: tx.aprobacion, valor: `${g.aprobacion}%`, detalle: formato(tx.promedioDeOMas, { n: APROBATORIA }) },
+        { titulo: tx.tasaEntrega, valor: `${g.tasaEntrega}%`, detalle: formato(tx.sinEntregar, { n: g.noEntregadas }) },
       ],
     },
-    pasteles(a, "Por promedio del alumno"),
-    { tipo: "lista", titulo: "Hallazgos", nota: "Calculados con los resultados del curso.", items: a.hallazgos },
+    pasteles(a, tx.porPromedioAlumno, tx, opciones.niveles),
+    { tipo: "lista", titulo: tx.hallazgos, nota: tx.calculadosCurso, items: a.hallazgos },
     {
       tipo: "par",
       bloques: [
         {
           tipo: "barras",
-          titulo: "Promedio por tipo de actividad",
-          nota: `La línea gris marca ${APROBATORIA}.`,
+          titulo: tx.promedioPorTipo,
+          nota: formato(tx.lineaGris, { n: APROBATORIA }),
           filas: a.porTipo.map((t) => ({
             nombre: t.nombre,
             valor: t.promedio,
-            detalle: `${t.cantidad} ${t.cantidad === 1 ? "actividad" : "actividades"}`,
+            detalle: t.cantidad === 1 ? tx.unaActividad : formato(tx.nActividades, { n: t.cantidad }),
           })),
         },
-        distribucion(a, "Distribución de promedios"),
+        distribucion(a, tx.distribucionPromedios, tx),
       ],
     },
   ];
   if (a.porTipo.length) {
     bloques.push({
       tipo: "tabla",
-      titulo: "Métricas por tipo de actividad",
-      nota: "Todo sobre 100; lo no entregado cuenta como 0 en el promedio.",
+      titulo: tx.metricasTipo,
+      nota: tx.todoSobre100,
       columnas: [
-        { titulo: "Tipo", ancho: 2.4 },
-        { titulo: "Actividades", ancho: 1.1, alinear: "der" },
-        { titulo: "Promedio", ancho: 1, alinear: "der" },
-        { titulo: "Mediana", ancho: 1, alinear: "der" },
-        { titulo: "Aprobación", ancho: 1.1, alinear: "der" },
-        { titulo: "Entrega", ancho: 1, alinear: "der" },
-        { titulo: "Prom. entregados", ancho: 1.4, alinear: "der" },
+        { titulo: tx.tipo, ancho: 2.4 },
+        { titulo: tx.actividades, ancho: 1.1, alinear: "der" },
+        { titulo: tx.promedio, ancho: 1, alinear: "der" },
+        { titulo: tx.mediana, ancho: 1, alinear: "der" },
+        { titulo: tx.aprobacion, ancho: 1.1, alinear: "der" },
+        { titulo: tx.entrega, ancho: 1, alinear: "der" },
+        { titulo: tx.promEntregados, ancho: 1.4, alinear: "der" },
       ],
       filas: a.porTipo.map((t) => [
         { texto: t.nombre, negrita: true },
@@ -216,8 +240,8 @@ export function reporteGrupoPdf(grupo: Grupo, a: Analiticas): ReporteAnaliticas 
   if (a.actividades.length) {
     bloques.push({
       tipo: "columnas",
-      titulo: "Evolución del promedio",
-      nota: `Promedio de cada actividad, en orden de fecha. La línea punteada marca ${APROBATORIA}.`,
+      titulo: tx.evolucion,
+      nota: formato(tx.evolucionNota, { n: APROBATORIA }),
       max: 100,
       linea: APROBATORIA,
       filas: a.actividades.map((s) => ({ nombre: s.titulo, valor: s.promedio, etiqueta: num(s.promedio), color: colorDesempeno(s.promedio) })),
@@ -227,40 +251,30 @@ export function reporteGrupoPdf(grupo: Grupo, a: Analiticas): ReporteAnaliticas 
     const temas = a.temas.length > 12 ? a.temas.slice(-12) : a.temas;
     bloques.push({
       tipo: "barras",
-      titulo: "Acierto por tema",
-      nota:
-        a.temas.length > 12
-          ? "Los 12 temas con menor acierto: porcentaje de puntos logrados en sus reactivos."
-          : "Porcentaje de puntos logrados en los reactivos de cada tema, de mayor a menor.",
+      titulo: tx.aciertoTema,
+      nota: a.temas.length > 12 ? tx.temas12 : tx.temasTodos,
       sufijo: "%",
       filas: temas.map((t) => ({ nombre: t.nombre, valor: t.acierto })),
     });
   }
   bloques.push(
-    tablaAlumnos("Mejores resultados", "Los cinco promedios más altos.", a.mejores, "Aún no hay alumnos destacados.", "Promedio", "entregas"),
-    tablaAlumnos(
-      "Atención urgente",
-      `Promedio menor a ${APROBATORIA}, dos o más trabajos sin entregar, o una caída de 15 puntos o más.`,
-      a.atencion,
-      "Ningún alumno requiere atención urgente.",
-      "Promedio",
-      "motivos",
-    ),
+    tablaAlumnos(ay, tx.mejores, tx.cincoPromedios, a.mejores, tx.sinDestacados, tx.promedio, "entregas"),
+    tablaAlumnos(ay, tx.atencion, formato(tx.atencionNotaGrupo, { n: APROBATORIA }), a.atencion, tx.sinAtencion, tx.promedio, "motivos"),
     {
       tipo: "tabla",
-      titulo: "Estadísticas por actividad",
-      nota: "Sobre 100. El promedio cuenta como 0 lo no entregado.",
+      titulo: tx.estadisticasActividad,
+      nota: tx.sobre100Nota,
       columnas: [
-        { titulo: "Actividad", ancho: 4.4 },
-        { titulo: "Tipo", ancho: 1.1 },
-        { titulo: "Entrega", ancho: 0.9, alinear: "der" },
-        { titulo: "Prom.", ancho: 0.9, alinear: "der" },
-        { titulo: "Prom. entr.", ancho: 1.2, alinear: "der" },
-        { titulo: "Mediana", ancho: 0.9, alinear: "der" },
-        { titulo: "Desv.", ancho: 0.8, alinear: "der" },
-        { titulo: "Mín.", ancho: 0.7, alinear: "der" },
-        { titulo: "Máx.", ancho: 0.7, alinear: "der" },
-        { titulo: "Aprob.", ancho: 0.8, alinear: "der" },
+        { titulo: tx.actividad, ancho: 4.4 },
+        { titulo: tx.tipo, ancho: 1.1 },
+        { titulo: tx.entrega, ancho: 0.9, alinear: "der" },
+        { titulo: tx.prom, ancho: 0.9, alinear: "der" },
+        { titulo: tx.promEntr, ancho: 1.2, alinear: "der" },
+        { titulo: tx.mediana, ancho: 0.9, alinear: "der" },
+        { titulo: tx.desv, ancho: 0.8, alinear: "der" },
+        { titulo: tx.min, ancho: 0.7, alinear: "der" },
+        { titulo: tx.max, ancho: 0.7, alinear: "der" },
+        { titulo: tx.aprob, ancho: 0.8, alinear: "der" },
       ],
       filas: a.actividades.map((s) => [
         { texto: `${s.titulo} (${fecha(s.fecha)})`, negrita: true },
@@ -278,29 +292,31 @@ export function reporteGrupoPdf(grupo: Grupo, a: Analiticas): ReporteAnaliticas 
   );
 
   return {
-    titulo: "Analíticas de aprendizaje del grupo",
+    titulo: tx.tituloGrupo,
     datos: [
-      { etiqueta: "Materia", valor: grupo.materia },
-      { etiqueta: "Grupo", valor: grupo.nombre },
-      { etiqueta: "Ciclo", valor: grupo.ciclo },
-      { etiqueta: "Alumnos", valor: String(g.alumnos) },
-      { etiqueta: "Actividades evaluadas", valor: String(a.actividades.length) },
-      { etiqueta: "Fecha del reporte", valor: hoy() },
+      { etiqueta: tx.materia, valor: grupo.materia, corto: true },
+      { etiqueta: tx.grupo, valor: grupo.nombre, corto: true },
+      { etiqueta: tx.ciclo, valor: grupo.ciclo },
+      { etiqueta: tx.alumnos, valor: String(g.alumnos) },
+      { etiqueta: tx.actividadesEvaluadas, valor: String(a.actividades.length) },
+      { etiqueta: tx.fechaReporte, valor: hoy() },
     ],
     bloques,
+    textos: ay.textos,
   };
 }
 
-const NOMBRE_TIPO: Record<string, string> = {
-  verdadero_falso: "V/F",
-  opcion_multiple: "Opción múltiple",
-  relacion_columnas: "Relación",
-  parentesis: "Paréntesis",
-  desarrollo: "Desarrollo",
-  abierto: "Abierto",
-};
-
-export const nombreTipoReactivo = (tipo: string) => NOMBRE_TIPO[tipo] ?? tipo;
+export function nombreTipoReactivo(tipo: string, tx: TextosReportePdf = profesorEs.reportePdf) {
+  const nombres: Record<string, string> = {
+    verdadero_falso: tx.tipoVf,
+    opcion_multiple: tx.tipoOpcion,
+    relacion_columnas: tx.tipoRelacion,
+    parentesis: tx.tipoParentesis,
+    desarrollo: tx.tipoDesarrollo,
+    abierto: tx.tipoAbierto,
+  };
+  return nombres[tipo] ?? tipo;
+}
 
 /** Hallazgos de una actividad: los del curso más reactivos y habilidades. */
 export function hallazgosActividad(a: Analiticas, rep: ReporteGrupo, tx: TextosCalculo = profesorEs.calculo) {
@@ -318,52 +334,54 @@ export function hallazgosActividad(a: Analiticas, rep: ReporteGrupo, tx: TextosC
 }
 
 /** Reporte de las analíticas de una actividad. */
-export function reporteActividadPdf(grupo: Grupo, actividad: Actividad, a: Analiticas, rep: ReporteGrupo): ReporteAnaliticas {
+export function reporteActividadPdf(grupo: Grupo, actividad: Actividad, a: Analiticas, rep: ReporteGrupo, opciones: OpcionesReporte = {}): ReporteAnaliticas {
+  const ay = ayudas(opciones);
+  const { tx, num, fecha, hoy, textos } = ay;
   const s = a.actividades[0];
   const datos = [
-    { etiqueta: "Materia", valor: grupo.materia },
-    { etiqueta: "Grupo", valor: grupo.nombre },
-    { etiqueta: "Ciclo", valor: grupo.ciclo },
-    { etiqueta: "Actividad", valor: actividad.titulo },
-    { etiqueta: "Tipo", valor: actividad.etiqueta ?? "Sin etiqueta" },
-    { etiqueta: "Aplicada", valor: fecha(actividad.fechaAplicacion) },
-    { etiqueta: "Calificación", valor: `sobre ${rep.escala} (el reporte usa puntajes sobre 100)` },
-    { etiqueta: "Fecha del reporte", valor: hoy() },
+    { etiqueta: tx.materia, valor: grupo.materia, corto: true },
+    { etiqueta: tx.grupo, valor: grupo.nombre, corto: true },
+    { etiqueta: tx.ciclo, valor: grupo.ciclo },
+    { etiqueta: tx.actividad, valor: actividad.titulo, corto: true },
+    { etiqueta: tx.tipo, valor: actividad.etiqueta ?? tx.sinEtiqueta },
+    { etiqueta: tx.aplicada, valor: fecha(actividad.fechaAplicacion) },
+    { etiqueta: tx.calificacion, valor: formato(tx.sobreEscala, { e: rep.escala }) },
+    { etiqueta: tx.fechaReporte, valor: hoy() },
   ];
-  if (!s) return { titulo: "Analíticas de la actividad", datos, bloques: [] };
+  if (!s) return { titulo: tx.tituloActividad, datos, bloques: [], textos };
 
   const sinEntregar = grupo.alumnos.filter((al) => !rep.filas.some((f) => f.alumno.matricula === al.matricula));
   const bloques: BloqueReporte[] = [
     {
       tipo: "cifras",
       items: [
-        { titulo: "Promedio", valor: num(s.promedio), detalle: `${num(s.promedioEntregadas)} sin contar lo no entregado` },
-        { titulo: "Mediana", valor: num(s.mediana), detalle: `Mín. ${num(s.minima)} · máx. ${num(s.maxima)}` },
-        { titulo: "Desviación estándar", valor: num(s.desviacion), detalle: "Dispersión de los puntajes" },
-        { titulo: "Aprobación", valor: `${s.aprobacion}%`, detalle: `Alumnos con ${APROBATORIA} o más` },
+        { titulo: tx.promedio, valor: num(s.promedio), detalle: formato(tx.sinNoEntregado, { n: num(s.promedioEntregadas) }) },
+        { titulo: tx.mediana, valor: num(s.mediana), detalle: formato(tx.minMax, { min: num(s.minima), max: num(s.maxima) }) },
+        { titulo: tx.desviacion, valor: num(s.desviacion), detalle: tx.dispersionPuntajes },
+        { titulo: tx.aprobacion, valor: `${s.aprobacion}%`, detalle: formato(tx.alumnosConOMas, { n: APROBATORIA }) },
         {
-          titulo: "Tasa de entrega",
+          titulo: tx.tasaEntrega,
           valor: `${s.tasaEntrega}%`,
-          detalle: `${s.noEntregadas} sin entregar${s.pendientes ? ` · ${s.pendientes} por evaluar` : ""}`,
+          detalle: `${formato(tx.sinEntregar, { n: s.noEntregadas })}${s.pendientes ? formato(tx.porEvaluar, { n: s.pendientes }) : ""}`,
         },
       ],
     },
-    pasteles(a, "Por puntaje del alumno"),
-    { tipo: "lista", titulo: "Hallazgos", nota: "Calculados con los resultados de la actividad.", items: hallazgosActividad(a, rep) },
+    pasteles(a, tx.porPuntajeAlumno, tx, opciones.niveles),
+    { tipo: "lista", titulo: tx.hallazgos, nota: tx.calculadosActividad, items: hallazgosActividad(a, rep, opciones.calculo) },
     {
       tipo: "par",
       bloques: [
         {
           tipo: "barras",
-          titulo: "Acierto por reactivo",
-          nota: "Porcentaje de puntos logrados en cada reactivo.",
+          titulo: tx.aciertoReactivo,
+          nota: tx.aciertoReactivoNota,
           sufijo: "%",
-          filas: rep.porReactivo.map((r) => ({ nombre: `${r.numero}. ${nombreTipoReactivo(r.tipo)}`, valor: r.acierto })),
+          filas: rep.porReactivo.map((r) => ({ nombre: `${r.numero}. ${nombreTipoReactivo(r.tipo, tx)}`, valor: r.acierto })),
         },
         {
           tipo: "barras",
-          titulo: "Acierto por tema",
-          nota: "Porcentaje de puntos logrados por tema.",
+          titulo: tx.aciertoTema,
+          nota: tx.aciertoTemaNota,
           sufijo: "%",
           filas: a.temas.map((t) => ({ nombre: t.nombre, valor: t.acierto })),
         },
@@ -374,53 +392,46 @@ export function reporteActividadPdf(grupo: Grupo, actividad: Actividad, a: Anali
       bloques: [
         {
           tipo: "barras",
-          titulo: "Habilidades",
-          nota: "Sobresalientes arriba, áreas de mejora abajo.",
+          titulo: tx.habilidades,
+          nota: tx.habilidadesNota,
           sufijo: "%",
           filas: rep.porHabilidad.map((h) => ({ nombre: h.nombre, valor: h.acierto })),
         },
-        distribucion(a, "Distribución de puntajes"),
+        distribucion(a, tx.distribucionPuntajes, tx),
       ],
     },
-    tablaAlumnos("Mejores resultados", "Los cinco puntajes más altos.", a.mejores, "Aún no hay alumnos destacados.", "Puntaje", null),
-    tablaAlumnos(
-      "Atención urgente",
-      `Puntaje menor a ${APROBATORIA} o trabajo sin entregar.`,
-      a.atencion,
-      "Ningún alumno requiere atención urgente.",
-      "Puntaje",
-      "motivos",
-    ),
+    tablaAlumnos(ay, tx.mejores, tx.cincoPuntajes, a.mejores, tx.sinDestacados, tx.puntaje, null),
+    tablaAlumnos(ay, tx.atencion, formato(tx.atencionNotaActividad, { n: APROBATORIA }), a.atencion, tx.sinAtencion, tx.puntaje, "motivos"),
     {
       tipo: "tabla",
-      titulo: "Calificaciones de la actividad",
-      nota: `Calificación sobre ${rep.escala}. NE: no entregó (cuenta 0).`,
+      titulo: tx.calificacionesActividad,
+      nota: formato(tx.calificacionesNota, { e: rep.escala }),
       columnas: [
         { titulo: "#", ancho: 0.5 },
-        { titulo: "Alumno", ancho: 4 },
-        { titulo: "Matrícula", ancho: 1.5 },
-        { titulo: "Nivel", ancho: 1.3 },
-        { titulo: "Calificación", ancho: 1.3, alinear: "der" },
+        { titulo: tx.alumno, ancho: 4 },
+        { titulo: tx.matricula, ancho: 1.5 },
+        { titulo: tx.nivel, ancho: 1.3 },
+        { titulo: tx.calificacion, ancho: 1.3, alinear: "der" },
       ],
       filas: [
         ...rep.filas.map((f, i) => [
           { texto: String(i + 1), color: "#94a3b8" },
           { texto: f.alumno.nombre },
           { texto: f.alumno.matricula, color: "#475569" },
-          { texto: TEXTO_NIVEL[f.nivel], color: TINTA_NIVEL[f.nivel] },
+          { texto: tx[f.nivel], color: TINTA_NIVEL[f.nivel] },
           { texto: formatoCal(f.calificacion, rep.escala), color: TINTA_NIVEL[f.nivel], negrita: true },
         ]),
         ...sinEntregar.map((al) => [
           { texto: "—", color: "#cbd5e1" },
           { texto: al.nombre, color: "#64748b" },
           { texto: al.matricula, color: "#64748b" },
-          { texto: "Sin calificación", color: "#64748b" },
-          { texto: "0 NE", color: "#dc2626", negrita: true },
+          { texto: tx.sinCalificacion, color: "#64748b" },
+          { texto: tx.ne, color: "#dc2626", negrita: true },
         ]),
       ],
     },
   ];
-  return { titulo: "Analíticas de la actividad", datos, bloques };
+  return { titulo: tx.tituloActividad, datos, bloques, textos };
 }
 
 /** Nombre de archivo sin acentos ni espacios. */

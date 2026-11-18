@@ -4,9 +4,13 @@
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
-import { PDFDocument, type PDFFont, type PDFPage, StandardFonts, rgb } from "pdf-lib";
+import { PDFDocument, type PDFFont, type PDFPage, rgb } from "pdf-lib";
 import { calificacion, escalaDe, formatoCal, puntosObtenidos, puntosTotales } from "./estadisticas";
 import { leerArchivo } from "./almacen";
+import alumnoEs from "./i18n/diccionarios/alumno/es";
+import { formato } from "./i18n/idiomas";
+import { leerFuenteCjk } from "./pdf-fuente-cjk";
+import { fuentesPdf, renglones } from "./pdf-fuentes";
 import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
 import { texAPlano } from "./tex-plano";
@@ -18,9 +22,14 @@ const TINTA = rgb(0.06, 0.09, 0.16);
 const GRIS = rgb(0.4, 0.45, 0.53);
 const CARTA = { ancho: 612, alto: 792 };
 
-/** Quita caracteres que la fuente estándar del PDF no puede escribir. */
+/** Textos fijos del PDF (alumno.pdf del diccionario del idioma). */
+export type TextosPdf = typeof alumnoEs.pdf;
+
+/** Quita caracteres que la fuente del PDF no puede escribir (con la fuente CJK pasan todos). */
 function seguro(font: PDFFont, texto: string) {
   let salida = "";
+  // La fuente CJK no trae la viñeta "•": se usa el punto medio.
+  if (!font.name.startsWith("Helvetica")) texto = texto.replace(/•/g, "·");
   for (const ch of texto.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/[–—]/g, "-").replace(/√/g, "raiz")) {
     try {
       font.widthOfTextAtSize(ch, 10);
@@ -33,17 +42,7 @@ function seguro(font: PDFFont, texto: string) {
 }
 
 function envolver(font: PDFFont, texto: string, tam: number, ancho: number) {
-  const lineas: string[] = [];
-  let actual = "";
-  for (const palabra of seguro(font, texto).split(/\s+/)) {
-    const prueba = actual ? `${actual} ${palabra}` : palabra;
-    if (font.widthOfTextAtSize(prueba, tam) > ancho && actual) {
-      lineas.push(actual);
-      actual = palabra;
-    } else actual = prueba;
-  }
-  if (actual) lineas.push(actual);
-  return lineas;
+  return renglones(font, seguro(font, texto), tam, ancho);
 }
 
 function paloma(p: PDFPage, x: number, y: number, s = 1) {
@@ -70,7 +69,7 @@ function tache(p: PDFPage, x: number, y: number, s = 1) {
 }
 
 /** Dibuja las fotos del alumno con los círculos numerados, palomas, taches y comentarios. */
-async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Entrega, normal: PDFFont, negrita: PDFFont, calTexto: string) {
+async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Entrega, normal: PDFFont, negrita: PDFFont, calTexto: string, tx: TextosPdf) {
   // Cada reactivo lleva sobre la hoja un círculo relleno con su número de comentario y,
   // a un lado, la paloma (verde) o el tache (rojo). Los comentarios van numerados en
   // orden en el margen derecho, a la misma altura que su marca.
@@ -115,7 +114,7 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
 
       // Comentario numerado en el margen, a la misma altura (baja si se enciman).
       const yEntrada = Math.min(yc, limite - 8);
-      const lineas = envolver(normal, res.comentario || (completo ? "Correcto." : ""), 8.5, anchoTexto - 4);
+      const lineas = envolver(normal, res.comentario || (completo ? tx.correcto : ""), 8.5, anchoTexto - 4);
       hoja.drawLine({
         start: { x: xc + 27, y: yc },
         end: { x: xMargen + 2, y: yEntrada },
@@ -127,7 +126,7 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       circuloNumero(hoja, negrita, numero, xMargen + 10, yEntrada, color);
       if (completo) paloma(hoja, xMargen + 22, yEntrada - 4, 0.6);
       else tache(hoja, xMargen + 28, yEntrada, 0.6);
-      hoja.drawText(seguro(negrita, `Reactivo ${r.numero} · ${res.puntosObtenidos}/${r.puntos}`), {
+      hoja.drawText(seguro(negrita, formato(tx.reactivoPuntos, { n: r.numero, p: res.puntosObtenidos, t: r.puntos })), {
         x: xMargen + 40,
         y: yEntrada - 3.5,
         size: 9,
@@ -146,16 +145,15 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
 }
 
 /** Hojas corregidas solas (sin portada ni marca de agua): es lo que se guarda al archivar la entrega. */
-export async function pdfHojasCorregidas(actividad: Actividad, entrega: Entrega): Promise<Uint8Array> {
+export async function pdfHojasCorregidas(actividad: Actividad, entrega: Entrega, tx: TextosPdf = alumnoEs.pdf): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  const normal = await doc.embedFont(StandardFonts.Helvetica);
-  const negrita = await doc.embedFont(StandardFonts.HelveticaBold);
-  await dibujarHojas(doc, actividad, entrega, normal, negrita, formatoCal(calificacion(actividad, entrega), escalaDe(actividad)));
+  const { normal, negrita } = await fuentesPdf(doc, [tx.reactivoPuntos, tx.correcto, ...entrega.resultados.map((r) => r.comentario)], leerFuenteCjk);
+  await dibujarHojas(doc, actividad, entrega, normal, negrita, formatoCal(calificacion(actividad, entrega), escalaDe(actividad)), tx);
   return doc.save({ useObjectStreams: true });
 }
 
 
-function paginaEstudio(doc: PDFDocument, actividad: Actividad, estudio: RecomendacionesEstudio, normal: PDFFont, negrita: PDFFont) {
+function paginaEstudio(doc: PDFDocument, actividad: Actividad, estudio: RecomendacionesEstudio, normal: PDFFont, negrita: PDFFont, tx: TextosPdf) {
   const { videos, lecturas } = recursosParaTemas(actividad, estudio.temas);
   let p = doc.addPage([CARTA.ancho, CARTA.alto]);
   let y = CARTA.alto - 56;
@@ -169,11 +167,11 @@ function paginaEstudio(doc: PDFDocument, actividad: Actividad, estudio: Recomend
       y -= tam + 4;
     }
   };
-  linea("4. Recomendaciones de estudio", 48, 13, negrita);
+  linea(tx.recomendaciones, 48, 13, negrita);
   y -= 4;
-  if (estudio.temas.length) linea(`Temas a repasar: ${estudio.temas.join(", ")}`, 48, 10, normal, GRIS);
+  if (estudio.temas.length) linea(formato(tx.temasRepasar, { temas: estudio.temas.join(", ") }), 48, 10, normal, GRIS);
   y -= 8;
-  linea("Videos con ejercicios resueltos", 48, 11, negrita);
+  linea(tx.videos, 48, 11, negrita);
   if (videos.length) {
     for (const v of videos) {
       linea(`•  ${v.titulo} (${v.fuente})`, 56, 10);
@@ -182,37 +180,55 @@ function paginaEstudio(doc: PDFDocument, actividad: Actividad, estudio: Recomend
   } else {
     for (const v of estudio.videos) {
       linea(`•  ${v.titulo}`, 56, 10);
-      linea(`Buscar en YouTube: "${v.busqueda}"`, 68, 9, normal, GRIS);
+      linea(formato(tx.buscarYoutube, { q: v.busqueda }), 68, 9, normal, GRIS);
     }
   }
   if (lecturas.length) {
     y -= 8;
-    linea("Lecturas de referencia (OpenStax)", 48, 11, negrita);
+    linea(tx.lecturas, 48, 11, negrita);
     for (const l of lecturas) {
       linea(`•  ${l.titulo} (${l.fuente})`, 56, 10);
       linea(l.url, 68, 9, normal, GRIS);
     }
   }
   y -= 8;
-  linea("Ejercicios para practicar en casa", 48, 11, negrita);
+  linea(tx.ejercicios, 48, 11, negrita);
   for (const [i, e] of estudio.ejercicios.entries()) {
     linea(`${i + 1}. ${e.enunciado}`, 56, 10);
-    linea(`Tema: ${e.tema} · Respuesta: ${e.respuesta}`, 68, 9, negrita, VERDE);
+    linea(formato(tx.temaRespuesta, { tema: e.tema, r: e.respuesta }), 68, 9, negrita, VERDE);
     y -= 4;
   }
 }
 
-export async function pdfRetroalimentacion(datos: {
-  actividad: Actividad;
-  alumno: Alumno;
-  entrega: Entrega;
-  grupo: Grupo;
-}): Promise<Uint8Array> {
+export async function pdfRetroalimentacion(
+  datos: {
+    actividad: Actividad;
+    alumno: Alumno;
+    entrega: Entrega;
+    grupo: Grupo;
+  },
+  tx: TextosPdf = alumnoEs.pdf,
+): Promise<Uint8Array> {
   const { actividad, alumno, entrega, grupo } = datos;
   const doc = await PDFDocument.create();
-  doc.setTitle(`Retroalimentación · ${actividad.titulo} · ${alumno.nombre}`);
-  const normal = await doc.embedFont(StandardFonts.Helvetica);
-  const negrita = await doc.embedFont(StandardFonts.HelveticaBold);
+  doc.setTitle(`${tx.tituloDoc} · ${actividad.titulo} · ${alumno.nombre}`);
+  const e = entrega.estudio;
+  const { normal, negrita } = await fuentesPdf(
+    doc,
+    [
+      ...Object.values(tx),
+      actividad.titulo,
+      alumno.nombre,
+      grupo.materia,
+      grupo.nombre,
+      ...actividad.reactivos.map((r) => r.tema),
+      ...entrega.positivos,
+      ...entrega.mejoras,
+      ...entrega.resultados.map((r) => r.comentario),
+      ...(e ? [...e.temas, ...e.videos.flatMap((v) => [v.titulo, v.busqueda]), ...e.ejercicios.flatMap((x) => [x.tema, x.enunciado, x.respuesta])] : []),
+    ],
+    leerFuenteCjk,
+  );
   const cal = calificacion(actividad, entrega);
   const escala = escalaDe(actividad);
   const calTexto = formatoCal(cal, escala);
@@ -229,22 +245,22 @@ export async function pdfRetroalimentacion(datos: {
     }
   };
 
-  texto("REPORTE DE RETROALIMENTACIÓN", 48, 9, negrita, GRIS);
+  texto(tx.encabezado.toLocaleUpperCase(), 48, 9, negrita, GRIS);
   nuevaLinea(22);
   texto(actividad.titulo, 48, 18, negrita);
   p.drawCircle({ x: CARTA.ancho - 130, y: y - 2, size: 34, borderColor: ROJO, borderWidth: 2 });
   p.drawText(calTexto, { x: CARTA.ancho - 130 - negrita.widthOfTextAtSize(calTexto, 22) / 2, y: y - 9, size: 22, font: negrita, color: ROJO });
   nuevaLinea(30);
-  texto("1. Identificación", 48, 11, negrita);
+  texto(tx.identificacion, 48, 11, negrita);
   nuevaLinea(18);
   for (const [et, val] of [
-    ["Nombre", alumno.nombre],
-    ["Matrícula", alumno.matricula],
-    ["Grupo", `${grupo.materia} · ${grupo.nombre}`],
-    ["Actividad", actividad.titulo],
-    ["Temas", [...new Set(actividad.reactivos.map((r) => r.tema).filter(Boolean))].join(", ") || "-"],
-    ["Fecha de aplicación", actividad.fechaAplicacion],
-    ["Calificación", `${calTexto} / ${escala}  (${puntosObtenidos(entrega)} de ${puntosTotales(actividad)} puntos)`],
+    [tx.nombre, alumno.nombre],
+    [tx.matricula, alumno.matricula],
+    [tx.grupo, `${grupo.materia} · ${grupo.nombre}`],
+    [tx.actividad, actividad.titulo],
+    [tx.temas, [...new Set(actividad.reactivos.map((r) => r.tema).filter(Boolean))].join(", ") || "-"],
+    [tx.fechaAplicacion, actividad.fechaAplicacion],
+    [tx.calificacion, `${calTexto} / ${escala}  ${formato(tx.puntosDe, { p: puntosObtenidos(entrega), t: puntosTotales(actividad) })}`],
   ]) {
     texto(et, 48, 10, normal, GRIS);
     for (const [i, l] of envolver(normal, val, 10, 380).entries()) {
@@ -254,11 +270,11 @@ export async function pdfRetroalimentacion(datos: {
     nuevaLinea(15);
   }
   nuevaLinea(10);
-  texto("2. Retroalimentación con base en la rúbrica", 48, 11, negrita);
+  texto(tx.retroRubrica, 48, 11, negrita);
   nuevaLinea(18);
   for (const [titulo, lista, color] of [
-    ["Aspectos positivos", entrega.positivos, VERDE],
-    ["Aspectos de mejora", entrega.mejoras, ROJO],
+    [tx.positivos, entrega.positivos, VERDE],
+    [tx.mejoras, entrega.mejoras, ROJO],
   ] as const) {
     texto(titulo, 48, 10, negrita, color);
     nuevaLinea(14);
@@ -271,10 +287,10 @@ export async function pdfRetroalimentacion(datos: {
     nuevaLinea(6);
   }
   nuevaLinea(4);
-  texto("Reactivo", 48, 9, negrita, GRIS);
-  texto("Tema", 100, 9, negrita, GRIS);
-  texto("Comentario", 210, 9, negrita, GRIS);
-  texto("Puntos", 520, 9, negrita, GRIS);
+  texto(tx.reactivo, 48, 9, negrita, GRIS);
+  texto(tx.tema, 100, 9, negrita, GRIS);
+  texto(tx.comentario, 210, 9, negrita, GRIS);
+  texto(tx.puntos, 520, 9, negrita, GRIS);
   nuevaLinea(14);
   for (const r of actividad.reactivos) {
     const res = entrega.resultados.find((x) => x.numero === r.numero);
@@ -290,12 +306,18 @@ export async function pdfRetroalimentacion(datos: {
     nuevaLinea(4);
   }
   nuevaLinea(8);
-  texto("3. Tu actividad corregida (páginas siguientes)", 48, 11, negrita);
+  texto(tx.corregida, 48, 11, negrita);
   nuevaLinea(14);
-  texto("Paloma verde: respuesta correcta. Tache rojo: hay un error; la anotación dice qué revisar.", 48, 9, normal, GRIS);
+  for (const [i, l] of envolver(normal, tx.leyenda, 9, 500).entries()) {
+    if (i > 0) nuevaLinea(12);
+    texto(l, 48, 9, normal, GRIS);
+  }
   if (entrega.estudio) {
     nuevaLinea(18);
-    texto("4. Recomendaciones de estudio (al final): videos y ejercicios para practicar en casa", 48, 11, negrita);
+    for (const [i, l] of envolver(negrita, tx.recomendacionesFinal, 11, 500).entries()) {
+      if (i > 0) nuevaLinea(14);
+      texto(l, 48, 11, negrita);
+    }
   }
 
   // ---- 2. Hojas del alumno con marcas (guardadas en el PDF archivado o dibujadas sobre las fotos) ----
@@ -303,17 +325,17 @@ export async function pdfRetroalimentacion(datos: {
     const archivado = await PDFDocument.load(leerArchivo(entrega.pdf));
     for (const pag of await doc.copyPages(archivado, archivado.getPageIndices())) doc.addPage(pag);
   } else {
-    await dibujarHojas(doc, actividad, entrega, normal, negrita, calTexto);
+    await dibujarHojas(doc, actividad, entrega, normal, negrita, calTexto, tx);
   }
 
   // ---- 4. Recomendaciones de estudio (con fórmulas de KaTeX si hay Chromium; si no, en texto) ----
   if (entrega.estudio) {
-    const conFormulas = await pdfEstudio(actividad, entrega);
+    const conFormulas = await pdfEstudio(actividad, entrega, tx);
     if (conFormulas) {
       const estudio = await PDFDocument.load(conFormulas);
       for (const pag of await doc.copyPages(estudio, estudio.getPageIndices())) doc.addPage(pag);
     } else {
-      paginaEstudio(doc, actividad, entrega.estudio, normal, negrita);
+      paginaEstudio(doc, actividad, entrega.estudio, normal, negrita, tx);
     }
   }
 

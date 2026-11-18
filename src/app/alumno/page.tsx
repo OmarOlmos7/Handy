@@ -5,86 +5,89 @@ import { InstalarApp } from "@/components/instalar-app";
 import { Boton, Encabezado, Insignia, campo, colorCalificacion, fechaLarga } from "@/components/ui";
 import { leer } from "@/lib/almacen";
 import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
+import { errorAlumno } from "@/lib/i18n/alumno";
+import { textosInstalar } from "@/lib/i18n/cuenta";
+import { formato } from "@/lib/i18n/idiomas";
+import { textos } from "@/lib/i18n/servidor";
 import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 import { alumnoActual } from "@/lib/sesion";
 
-export const metadata: Metadata = { title: "Mis actividades" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return { title: t.alumno.panel.titulo };
+}
 
 export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">) {
   const alumno = await alumnoActual();
+  const { t, locale } = await textos();
+  const tp = t.alumno.panel;
+  const tc = t.alumno.campos;
   if (!alumno) {
     const { error, crear } = await searchParams;
     const creando = crear === "1";
     return (
       <div className="mx-auto max-w-md">
         <Encabezado
-          titulo="Mis actividades"
-          subtitulo={
-            creando
-              ? "Crea tu cuenta con tu correo y una clave de acceso. Solo tú podrás ver tus resultados."
-              : "Entra con tu correo y tu clave de acceso para ver tus resultados."
-          }
+          titulo={tp.titulo}
+          subtitulo={creando ? tp.subtituloCrear : tp.subtituloEntrar}
         />
         {creando ? (
           <form action={registrarAlumno} className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <label className="block text-sm font-medium text-slate-700">
-              Nombre completo
-              <input name="nombre" required autoComplete="name" className={campo} placeholder="Ej. Ana López Ruiz" />
+              {tc.nombre}
+              <input name="nombre" required autoComplete="name" className={campo} placeholder={tc.nombreEjemplo} />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Matrícula
-              <input name="matricula" required className={`${campo} font-mono uppercase`} placeholder="Ej. A0301" autoCapitalize="characters" />
+              {tc.matricula}
+              <input name="matricula" required className={`${campo} font-mono uppercase`} placeholder={tc.matriculaEjemplo} autoCapitalize="characters" />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Correo
-              <input name="correo" type="email" required autoComplete="email" className={campo} placeholder="tu@correo.com" />
+              {tc.correo}
+              <input name="correo" type="email" required autoComplete="email" className={campo} placeholder={tc.correoEjemplo} />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Clave de acceso (mínimo 6 caracteres)
+              {tc.claveNueva}
               <input name="clave" type="password" required minLength={6} autoComplete="new-password" className={campo} />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Repite tu clave de acceso
+              {tc.repiteClave}
               <input name="clave2" type="password" required minLength={6} autoComplete="new-password" className={campo} />
             </label>
-            {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{error}</p>}
+            {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{errorAlumno(t, error)}</p>}
             <Boton type="submit" className="w-full">
-              Crear mi cuenta
+              {tp.crearCuenta}
             </Boton>
             <p className="text-center text-sm text-slate-600">
-              ¿Ya tienes cuenta?{" "}
+              {tp.yaTienesCuenta}{" "}
               <Link href="/alumno" className="font-medium text-tinta-700 hover:underline">
-                Entra aquí
+                {tp.entraAqui}
               </Link>
             </p>
           </form>
         ) : (
           <form action={ingresarAlumno} className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
             <label className="block text-sm font-medium text-slate-700">
-              Correo
-              <input name="correo" type="email" required autoComplete="email" className={campo} placeholder="tu@correo.com" />
+              {tc.correo}
+              <input name="correo" type="email" required autoComplete="email" className={campo} placeholder={tc.correoEjemplo} />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Clave de acceso
+              {tc.clave}
               <input name="clave" type="password" required autoComplete="current-password" className={campo} />
             </label>
-            {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{error}</p>}
+            {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{errorAlumno(t, error)}</p>}
             <Boton type="submit" className="w-full">
-              Ver mis resultados
+              {tp.verResultados}
             </Boton>
             <p className="text-center text-sm text-slate-600">
-              ¿Primera vez?{" "}
+              {tp.primeraVez}{" "}
               <Link href="/alumno?crear=1" className="font-medium text-tinta-700 hover:underline">
-                Crea tu cuenta
+                {tp.creaTuCuenta}
               </Link>
             </p>
           </form>
         )}
-        <InstalarApp />
-        <p className="mt-4 text-sm text-slate-500">
-          Para entregar una actividad, escanea el código QR de tu hoja con el celular y toma fotos de tus páginas. Si aún no
-          tienes cuenta, la creas ahí mismo al entregar.
-        </p>
+        <InstalarApp textos={textosInstalar(t)} />
+        <p className="mt-4 text-sm text-slate-500">{tp.comoEntregar}</p>
       </div>
     );
   }
@@ -96,14 +99,14 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
   return (
     <>
       <Encabezado
-        titulo="Mis actividades"
-        subtitulo={`${alumno.nombre} · ${alumno.correo}. Aquí aparecen tus resultados en cuanto se evalúan, o desde la fecha de visualización que fije tu profesor.`}
+        titulo={tp.titulo}
+        subtitulo={`${alumno.nombre} · ${alumno.correo}. ${tp.subtituloSesion}`}
       />
       <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <ul className="divide-y divide-slate-100">
           {actividades.length === 0 && (
             <li className="px-5 py-4 text-sm text-slate-500">
-              Aún no tienes actividades. Aparecerán aquí después de tu primera entrega.
+              {tp.sinActividades}
             </li>
           )}
           {actividades.map(({ a, grupo, matricula }) => {
@@ -116,11 +119,11 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                 <div className="flex-1">
                   <p className="font-medium">{a.titulo}</p>
                   <p className="text-sm text-slate-500">
-                    {grupo.materia} · {fechaLarga(a.fechaAplicacion)}
+                    {grupo.materia} · {fechaLarga(a.fechaAplicacion, locale)}
                   </p>
                   {a.resultadosDesde && (
                     <p className="mt-1 inline-flex items-center gap-1.5 rounded-md bg-tinta-50 px-2 py-0.5 text-xs font-medium text-tinta-700">
-                      Fecha de visualización de resultados: {fechaHoraLarga(a.resultadosDesde)}
+                      {formato(tp.fechaVisualizacion, { fecha: fechaHoraLarga(a.resultadosDesde, locale) })}
                     </p>
                   )}
                 </div>
@@ -130,12 +133,12 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                     <span className="text-sm font-normal text-slate-400"> / {escalaDe(a)}</span>
                   </span>
                 ) : aprobada ? (
-                  <Insignia tono="ambar">Resultados listos a partir de la fecha indicada</Insignia>
+                  <Insignia tono="ambar">{tp.listosEnFecha}</Insignia>
                 ) : e && e.estado !== "sin_entregar" ? (
-                  <Insignia tono="azul">Evaluando</Insignia>
+                  <Insignia tono="azul">{tp.evaluando}</Insignia>
                 ) : (
                   <Link href={`/entregar/${a.id}`} className="text-sm font-medium text-tinta-700 hover:underline">
-                    Entregar fotos
+                    {tp.entregarFotos}
                   </Link>
                 )}
               </>

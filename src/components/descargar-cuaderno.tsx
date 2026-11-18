@@ -10,7 +10,8 @@ type Formato = "excel" | "pdf";
 
 /** Botón "Descargar" con menú para bajar el cuaderno en Excel o PDF, en el orden elegido. */
 export function DescargarCuaderno({ cuaderno, orden, info }: { cuaderno: Cuaderno; orden: Orden; info: InfoCuaderno }) {
-  const tq = useTextos().t.profesor.cuaderno;
+  const { t, locale } = useTextos();
+  const tq = t.profesor.cuaderno;
   const [abierto, setAbierto] = useState(false);
   const [generando, setGenerando] = useState<Formato | null>(null);
   const [error, setError] = useState("");
@@ -34,7 +35,7 @@ export function DescargarCuaderno({ cuaderno, orden, info }: { cuaderno: Cuadern
     setError("");
     setGenerando(formato);
     try {
-      const tabla = tablaExportable(cuaderno, orden);
+      const tabla = tablaExportable(cuaderno, orden, tq, locale);
       const nombre = nombreArchivoCuaderno(info);
       if (formato === "excel") descargar(await excelCuaderno(tabla, info), `${nombre}.xlsx`);
       else descargar(await pdfCuaderno(tabla, info), `${nombre}.pdf`);

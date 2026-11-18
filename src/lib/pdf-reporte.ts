@@ -3,6 +3,8 @@
 import type { PDFFont, PDFPage } from "pdf-lib";
 import { colorDesempeno } from "./escala-color";
 import { APROBATORIA } from "./analiticas";
+import { formato } from "./i18n/idiomas";
+import { fuenteCjkDelServidor, fuentesPdf, renglones, latino as soloLatino } from "./pdf-fuentes";
 import type { BloqueReporte, CeldaTabla, ReporteAnaliticas } from "./reporte-analiticas";
 
 const ANCHO = 612;
@@ -13,7 +15,7 @@ const SEP = 18;
 const PIE = 30;
 
 /** Las fuentes estándar del PDF solo traen caracteres latinos y algunos signos; el resto se cambia por "?". */
-export const latino = (t: string) => t.replace(/[^\x20-\x7e\xa0-\xff–—‘’“”•…]/g, "?");
+export const latino = soloLatino;
 
 const hex = (h: string) => {
   const n = parseInt(h.replace("#", ""), 16);
@@ -21,12 +23,12 @@ const hex = (h: string) => {
 };
 
 export async function pdfReporteAnaliticas(reporte: ReporteAnaliticas, logoPng?: ArrayBuffer): Promise<Blob> {
-  const { PDFDocument, StandardFonts, rgb } = await import("pdf-lib");
+  const { PDFDocument, rgb } = await import("pdf-lib");
   const doc = await PDFDocument.create();
-  doc.setTitle(latino(reporte.titulo));
+  doc.setTitle(reporte.titulo);
   doc.setCreator("iEureka-Grader");
-  const normal = await doc.embedFont(StandardFonts.Helvetica);
-  const negrita = await doc.embedFont(StandardFonts.HelveticaBold);
+  // Con japonés o chino se pide al servidor la fuente CJK; si no, Helvetica.
+  const { normal, negrita, limpiar: latino } = await fuentesPdf(doc, [JSON.stringify(reporte)], fuenteCjkDelServidor);
   const logo = logoPng ? await doc.embedPng(logoPng).catch(() => null) : null;
   const color = (h: string) => rgb(...hex(h));
   const TINTA = "#0f172a";
@@ -41,17 +43,7 @@ export async function pdfReporteAnaliticas(reporte: ReporteAnaliticas, logoPng?:
     return x.trimEnd() + "…";
   };
   const envolver = (t: string, f: PDFFont, s: number, max: number, maxLineas = 99) => {
-    const out: string[] = [];
-    let actual = "";
-    for (const p of latino(t).split(/\s+/)) {
-      const prueba = actual ? `${actual} ${p}` : p;
-      if (!actual || f.widthOfTextAtSize(prueba, s) <= max) actual = prueba;
-      else {
-        out.push(actual);
-        actual = p;
-      }
-    }
-    if (actual) out.push(actual);
+    const out = renglones(f, latino(t), s, max);
     if (out.length > maxLineas) {
       out.length = maxLineas;
       out[maxLineas - 1] += "…";
@@ -95,7 +87,7 @@ export async function pdfReporteAnaliticas(reporte: ReporteAnaliticas, logoPng?:
   };
   const encabezadoCorto = () => {
     const sub = reporte.datos
-      .filter((d) => ["Materia", "Grupo", "Actividad"].includes(d.etiqueta))
+      .filter((d) => d.corto)
       .map((d) => d.valor)
       .join(" · ");
     texto(reporte.titulo, M, ALTO - M - 4, 9, negrita);
@@ -223,7 +215,7 @@ export async function pdfReporteAnaliticas(reporte: ReporteAnaliticas, logoPng?:
       case "barras": {
         let yy = dibujarTitulo(b, x, top, w);
         if (!b.filas.length) {
-          texto("Sin datos.", x, yy - 10, 8, normal, GRIS);
+          texto(reporte.textos.sinDatos, x, yy - 10, 8, normal, GRIS);
           return;
         }
         const wNombre = Math.min(w * 0.38, 150);
@@ -297,7 +289,7 @@ export async function pdfReporteAnaliticas(reporte: ReporteAnaliticas, logoPng?:
     });
     yy -= FILA_TABLA + 4;
     if (!filas.length) {
-      texto(b.vacio ?? "Sin datos.", x + 4, yy - 10, 8, normal, GRIS);
+      texto(b.vacio ?? reporte.textos.sinDatos, x + 4, yy - 10, 8, normal, GRIS);
       return;
     }
     for (const fila of filas) {
@@ -314,7 +306,7 @@ export async function pdfReporteAnaliticas(reporte: ReporteAnaliticas, logoPng?:
 
   // ---------- Recorrido ----------
   nuevaPagina(true);
-  if (!reporte.bloques.length) texto("Aún no hay resultados evaluados para este reporte.", M, y - 10, 10, normal, GRIS);
+  if (!reporte.bloques.length) texto(reporte.textos.sinResultados, M, y - 10, 10, normal, GRIS);
   for (const b of reporte.bloques) {
     const h = alto(b, UTIL);
     // Una tabla se parte solo si no cabe ni en una página completa; si no, pasa entera a la siguiente.
@@ -343,11 +335,10 @@ export async function pdfReporteAnaliticas(reporte: ReporteAnaliticas, logoPng?:
 
   // Pie de página con número.
   const paginas = doc.getPages();
-  const hoy = new Date().toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
   paginas.forEach((p, i) => {
     p.drawLine({ start: { x: M, y: M + 6 }, end: { x: ANCHO - M, y: M + 6 }, thickness: 0.5, color: color(LINEA) });
-    p.drawText(latino(`Generado con iEureka-Grader · ${hoy}`), { x: M, y: M - 6, size: 7, font: normal, color: color(GRIS) });
-    const t = `Página ${i + 1} de ${paginas.length}`;
+    p.drawText(latino(reporte.textos.generado), { x: M, y: M - 6, size: 7, font: normal, color: color(GRIS) });
+    const t = formato(reporte.textos.pagina, { i: i + 1, n: paginas.length });
     p.drawText(latino(t), { x: ANCHO - M - normal.widthOfTextAtSize(latino(t), 7), y: M - 6, size: 7, font: normal, color: color(GRIS) });
   });
 

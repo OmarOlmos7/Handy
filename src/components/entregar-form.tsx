@@ -2,8 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { formato } from "@/lib/i18n/idiomas";
 import { MINUTOS_REENVIO } from "@/lib/reenvio";
 import { ZONA_HORARIA } from "@/lib/resultados";
+import { useTextos } from "./proveedor-textos";
 import { Boton } from "./ui";
 
 /** Entrega anterior del alumno en esta actividad (para ofrecer el reenvío). */
@@ -13,8 +15,8 @@ export interface EntregaPrevia {
   evaluada: boolean;
 }
 
-const hora = (ms: number) =>
-  new Date(ms).toLocaleTimeString("es-MX", { hour: "numeric", minute: "2-digit", timeZone: ZONA_HORARIA });
+const hora = (ms: number, locale: string) =>
+  new Date(ms).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit", timeZone: ZONA_HORARIA });
 
 /** Cuenta los milisegundos que faltan para una hora; null hasta montar (evita diferencias con el servidor). */
 function useFaltan(hasta: number | undefined) {
@@ -64,6 +66,9 @@ export function EntregarForm({
   /** Entrega que el alumno ya hizo (solo con sesión de alumno). */
   previa?: EntregaPrevia;
 }) {
+  const { t, locale } = useTextos();
+  const tf = t.alumno.formulario;
+  const tc = t.alumno.campos;
   const [matricula, setMatricula] = useState(matriculaInicial ?? "");
   const [nombre, setNombre] = useState(nombreInicial ?? "");
   const [cuenta, setCuenta] = useState<"crear" | "entrar">("crear");
@@ -120,18 +125,18 @@ export function EntregarForm({
     try {
       const r = await fetch(`/api/entregas/${actividadId}`, { method: "POST", body: datos });
       const j = await r.json();
-      if (!r.ok) throw new Error(j.error ?? "Error al enviar");
+      if (!r.ok) throw new Error(j.error ?? tf.errorEnviar);
       setMensaje(
-        `Listo. ${j.paginas > 1 ? `Se recibieron ${j.paginas} páginas` : "Se recibió 1 página"} con la matrícula ${j.matricula}.` +
-          (j.reemplazo ? " Este envío reemplazó al anterior." : "") +
-          (j.automatica ? " La IA ya está evaluando tu actividad." : ""),
+        `${tf.listo} ${j.paginas > 1 ? formato(tf.recibidas, { n: j.paginas }) : tf.recibida} ${formato(tf.conMatricula, { m: j.matricula })}` +
+          (j.reemplazo ? ` ${tf.reemplazo}` : "") +
+          (j.automatica ? ` ${tf.iaEvaluando}` : ""),
       );
       if (j.primeraEntregaEn) setPrimera(j.primeraEntregaEn);
       setReenviando(false);
       setEstado("enviado");
       if (modo === "nuevo") router.refresh();
     } catch (e) {
-      setMensaje(e instanceof Error ? e.message : "No se pudo enviar");
+      setMensaje(e instanceof Error ? e.message : tf.noSePudo);
       setEstado("error");
     }
   }
@@ -140,15 +145,15 @@ export function EntregarForm({
     return (
       <div className="rounded-xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
         <p className="text-4xl text-acierto">✓</p>
-        <h2 className="mt-2 text-lg font-semibold">Entrega recibida</h2>
+        <h2 className="mt-2 text-lg font-semibold">{tf.entregaRecibida}</h2>
         <p className="mt-1 text-sm text-slate-600">{mensaje}</p>
         {modo !== "profesor" && (
           <p className="mt-3 text-sm text-slate-500">
-            {automatica ? "La IA califica tu actividad." : "Tu profesor revisará tu actividad."} Consulta tu retroalimentación en{" "}
+            {automatica ? tf.iaCalifica : tf.profesorRevisara} {tf.consultaAntes}{" "}
             <a href="/alumno" className="text-tinta-700 underline">
-              Mis actividades
+              {tf.misActividades}
             </a>{" "}
-            con tu correo y tu clave de acceso.
+            {tf.consultaDespues}
           </p>
         )}
         {modo === "profesor" ? (
@@ -163,16 +168,17 @@ export function EntregarForm({
               setEstado("editando");
             }}
           >
-            Entregar otra hoja
+            {tf.entregarOtra}
           </Boton>
         ) : (
           plazoAbierto &&
           limite !== undefined && (
             <div className="mt-5 rounded-lg bg-aviso-suave p-4 text-left text-sm">
-              <p className="font-medium text-aviso">¿Enviaste fotos incompletas o el archivo equivocado?</p>
+              <p className="font-medium text-aviso">{tf.incompletas}</p>
               <p className="mt-1 text-slate-700">
-                Puedes hacer un nuevo envío hasta las {hora(limite)}
-                {faltan !== null && ` (quedan ${mmss(faltan)})`}. El nuevo envío reemplaza al anterior.
+                {formato(tf.puedesReenviar, { hora: hora(limite, locale) })}
+                {faltan !== null && formato(tf.quedan, { t: mmss(faltan) })}
+                {tf.reemplazaAnterior}
               </p>
               <Boton
                 variante="secundario"
@@ -184,7 +190,7 @@ export function EntregarForm({
                   setEstado("editando");
                 }}
               >
-                Hacer un nuevo envío
+                {tf.nuevoEnvio}
               </Boton>
             </div>
           )
@@ -198,14 +204,12 @@ export function EntregarForm({
     return (
       <div className="rounded-xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
         <p className="text-4xl text-acierto">✓</p>
-        <h2 className="mt-2 text-lg font-semibold">Ya entregaste esta actividad</h2>
+        <h2 className="mt-2 text-lg font-semibold">{tf.yaEntregaste}</h2>
         <p className="mt-1 text-sm text-slate-600">
-          {previa.paginas === 1 ? "Se recibió 1 página" : `Se recibieron ${previa.paginas} páginas`} y ya fue evaluada. Pasaron más de{" "}
-          {MINUTOS_REENVIO} minutos desde tu entrega, así que ya no se puede reenviar. Si necesitas cambiarla, pide a tu profesor
-          que la borre.
+          {previa.paginas === 1 ? tf.recibida : formato(tf.recibidas, { n: previa.paginas })} {formato(tf.yaEvaluada, { n: MINUTOS_REENVIO })}
         </p>
         <a href="/alumno" className="mt-4 inline-block text-sm font-medium text-tinta-700 underline">
-          Ver mis actividades
+          {tf.verMisActividades}
         </a>
       </div>
     );
@@ -215,21 +219,21 @@ export function EntregarForm({
     <div className="space-y-5">
       {yaEntrego && (
         <div className="rounded-xl bg-aviso-suave p-4 text-sm">
-          <p className="font-medium text-aviso">Nuevo envío</p>
+          <p className="font-medium text-aviso">{tf.nuevoEnvioTitulo}</p>
           <p className="mt-1 text-slate-700">
             {plazoAbierto && limite !== undefined
-              ? `Lo que envíes ahora reemplaza tu entrega anterior. Puedes reenviar hasta las ${hora(limite)}${faltan !== null ? ` (quedan ${mmss(faltan)})` : ""}.`
-              : "Ya entregaste esta actividad; si envías de nuevo, reemplaza tu entrega anterior."}
+              ? formato(tf.reemplazaHasta, { hora: hora(limite, locale), quedan: faltan !== null ? formato(tf.quedan, { t: mmss(faltan) }) : "" })
+              : tf.reemplazaSinPlazo}
           </p>
         </div>
       )}
       {modo !== "sesion" && (
         <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
           <p className="text-sm font-medium text-slate-700">
-            {modo === "profesor" ? "1. ¿De qué alumno son las hojas?" : "1. ¿Quién eres?"}
+            {modo === "profesor" ? tf.deQueAlumno : tf.quienEres}
           </p>
           {modo === "profesor" ? (
-            <p className="mt-1 text-xs text-slate-500">Estás subiendo las hojas como profesor.</p>
+            <p className="mt-1 text-xs text-slate-500">{tf.comoProfesor}</p>
           ) : (
             <div className="mt-3 flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
               {(["crear", "entrar"] as const).map((c) => (
@@ -240,7 +244,7 @@ export function EntregarForm({
                   aria-pressed={cuenta === c}
                   className={`flex-1 rounded-md px-3 py-1.5 font-medium ${cuenta === c ? "bg-white text-tinta-700 shadow-sm" : "text-slate-600"}`}
                 >
-                  {c === "crear" ? "Es mi primera entrega" : "Ya tengo cuenta"}
+                  {c === "crear" ? tf.primeraEntrega : tf.yaTengoCuenta}
                 </button>
               ))}
             </div>
@@ -248,23 +252,23 @@ export function EntregarForm({
           {pideDatos && (
             <>
               <label className="mt-3 block text-sm text-slate-700">
-                Nombre completo
+                {tc.nombre}
                 <input
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   autoComplete="name"
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base"
-                  placeholder="Ej. Ana López Ruiz"
+                  placeholder={tc.nombreEjemplo}
                 />
               </label>
               <label className="mt-3 block text-sm text-slate-700">
-                Matrícula
+                {tc.matricula}
                 <input
                   value={matricula}
                   onChange={(e) => setMatricula(e.target.value)}
                   autoCapitalize="characters"
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 font-mono text-base uppercase"
-                  placeholder="Ej. A0301"
+                  placeholder={tc.matriculaEjemplo}
                 />
               </label>
             </>
@@ -272,18 +276,18 @@ export function EntregarForm({
           {modo === "nuevo" && (
             <>
               <label className="mt-3 block text-sm text-slate-700">
-                Correo
+                {tc.correo}
                 <input
                   type="email"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
                   autoComplete="email"
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base"
-                  placeholder="tu@correo.com"
+                  placeholder={tc.correoEjemplo}
                 />
               </label>
               <label className="mt-3 block text-sm text-slate-700">
-                {cuenta === "crear" ? "Crea tu clave de acceso (mínimo 6 caracteres)" : "Clave de acceso"}
+                {cuenta === "crear" ? tf.creaClave : tc.clave}
                 <input
                   type="password"
                   value={clave}
@@ -293,9 +297,7 @@ export function EntregarForm({
                 />
               </label>
               <p className="mt-2 text-xs text-slate-500">
-                {cuenta === "crear"
-                  ? "Con tu correo y esta clave verás solo tus resultados. Guárdala bien."
-                  : "Usa el correo y la clave con que entregaste antes."}
+                {cuenta === "crear" ? tf.ayudaCrear : tf.ayudaEntrar}
               </p>
             </>
           )}
@@ -304,26 +306,26 @@ export function EntregarForm({
 
       <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <p className="text-sm font-medium text-slate-700">
-          {modo === "sesion" ? "1." : "2."} ¿Cómo entregas “{titulo}”?
+          {modo === "sesion" ? "1." : "2."} {formato(tf.comoEntregas, { titulo })}
         </p>
         <div
           className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1 text-sm"
           role="radiogroup"
-          aria-label="Tipo de envío"
+          aria-label={tf.tipoEnvio}
         >
           {(
             [
-              ["foto", "Tomar foto", "Hojas impresas"],
-              ["pdf", "Cargar PDF (tableta)", "Escrito en iPad o tableta"],
+              ["foto", tf.tomarFoto, tf.hojasImpresas],
+              ["pdf", tf.cargarPdf, tf.escritoTableta],
             ] as const
-          ).map(([t, texto, detalle]) => (
+          ).map(([clave, texto, detalle]) => (
             <button
-              key={t}
+              key={clave}
               type="button"
               role="radio"
-              aria-checked={tipo === t}
-              onClick={() => setTipo(t)}
-              className={`rounded-md px-2 py-2 text-center ${tipo === t ? "bg-white text-tinta-700 shadow-sm ring-1 ring-tinta-200" : "text-slate-600"}`}
+              aria-checked={tipo === clave}
+              onClick={() => setTipo(clave)}
+              className={`rounded-md px-2 py-2 text-center ${tipo === clave ? "bg-white text-tinta-700 shadow-sm ring-1 ring-tinta-200" : "text-slate-600"}`}
             >
               <span className="block font-medium">{texto}</span>
               <span className="block text-xs text-slate-500">{detalle}</span>
@@ -333,7 +335,7 @@ export function EntregarForm({
         {tipo === "pdf" ? (
           <>
             <p className="mt-3 text-xs text-slate-500">
-              Si resolviste la actividad a mano en tu iPad o tableta, expórtala como PDF (una página por hoja) y súbela aquí.
+              {tf.ayudaPdf}
             </p>
             {pdf ? (
               <div className="mt-3 flex items-center gap-3 rounded-lg bg-slate-50 p-3 ring-1 ring-slate-200">
@@ -345,16 +347,16 @@ export function EntregarForm({
                   <span className="block text-xs text-slate-500">
                     {pdf.size < 1024 * 1024
                       ? `${Math.max(1, Math.round(pdf.size / 1024))} KB`
-                      : `${(pdf.size / 1024 / 1024).toLocaleString("es-MX", { maximumFractionDigits: 1 })} MB`}
+                      : `${(pdf.size / 1024 / 1024).toLocaleString(locale, { maximumFractionDigits: 1 })} MB`}
                   </span>
                 </span>
                 <button type="button" onClick={() => setPdf(null)} className="rounded px-2 py-1 text-sm text-error">
-                  Quitar
+                  {tf.quitar}
                 </button>
               </div>
             ) : (
               <label className="mt-3 flex cursor-pointer items-center justify-center rounded-lg bg-tinta-600 px-3 py-3 text-sm font-medium text-white">
-                Elegir archivo PDF
+                {tf.elegirPdf}
                 <input
                   type="file"
                   accept="application/pdf,.pdf"
@@ -370,11 +372,11 @@ export function EntregarForm({
         ) : (
           <>
             <p className="mt-3 text-xs text-slate-500">
-              Toma una foto de cada hoja: sobre una mesa, con buena luz, que se vean las 4 esquinas negras y sin sombras.
+              {tf.ayudaFoto}
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
               <label className="flex cursor-pointer items-center justify-center rounded-lg bg-tinta-600 px-3 py-3 text-sm font-medium text-white">
-                Tomar foto
+                {tf.tomarFoto}
                 <input
                   type="file"
                   accept="image/*"
@@ -387,7 +389,7 @@ export function EntregarForm({
                 />
               </label>
               <label className="flex cursor-pointer items-center justify-center rounded-lg bg-white px-3 py-3 text-sm font-medium text-slate-800 ring-1 ring-slate-300">
-                Elegir de galería
+                {tf.elegirGaleria}
                 <input
                   type="file"
                   accept="image/*"
@@ -405,14 +407,14 @@ export function EntregarForm({
                 {paginas.map((p, i) => (
                   <li key={p.id} className="flex items-center gap-3 rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.url} alt={`Página ${i + 1}`} className="h-20 w-16 rounded object-cover ring-1 ring-slate-300" />
-                    <span className="flex-1 text-sm font-medium">Página {i + 1}</span>
+                    <img src={p.url} alt={formato(tf.pagina, { n: i + 1 })} className="h-20 w-16 rounded object-cover ring-1 ring-slate-300" />
+                    <span className="flex-1 text-sm font-medium">{formato(tf.pagina, { n: i + 1 })}</span>
                     <button
                       type="button"
                       onClick={() => mover(i, -1)}
                       disabled={i === 0}
                       className="rounded px-2 py-1 text-lg disabled:opacity-30"
-                      aria-label="Subir página"
+                      aria-label={tf.subirPagina}
                     >
                       ↑
                     </button>
@@ -421,7 +423,7 @@ export function EntregarForm({
                       onClick={() => mover(i, 1)}
                       disabled={i === paginas.length - 1}
                       className="rounded px-2 py-1 text-lg disabled:opacity-30"
-                      aria-label="Bajar página"
+                      aria-label={tf.bajarPagina}
                     >
                       ↓
                     </button>
@@ -429,9 +431,9 @@ export function EntregarForm({
                       type="button"
                       onClick={() => setPaginas((ps) => ps.filter((x) => x.id !== p.id))}
                       className="rounded px-2 py-1 text-sm text-error"
-                      aria-label="Quitar página"
+                      aria-label={tf.quitarPagina}
                     >
-                      Quitar
+                      {tf.quitar}
                     </button>
                   </li>
                 ))}
@@ -445,9 +447,11 @@ export function EntregarForm({
       <Boton className="w-full py-3 text-base" onClick={enviar} disabled={!datosListos || !listo || estado === "enviando"}>
         {estado === "enviando"
           ? tipo === "pdf"
-            ? "Enviando y leyendo el PDF…"
-            : "Enviando…"
-          : `${modo === "sesion" ? "2." : "3."} ${yaEntrego ? "Reenviar" : "Enviar"} ${tipo === "pdf" ? "PDF" : `${paginas.length || ""} página${paginas.length === 1 ? "" : "s"}`}`}
+            ? tf.enviandoPdf
+            : tf.enviando
+          : `${modo === "sesion" ? "2." : "3."} ${yaEntrego ? tf.reenviar : tf.enviar} ${
+              tipo === "pdf" ? tf.pdf : paginas.length === 0 ? tf.paginasSinNumero : paginas.length === 1 ? tf.unaPagina : formato(tf.paginas, { n: paginas.length })
+            }`}
       </Boton>
     </div>
   );

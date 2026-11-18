@@ -42,7 +42,7 @@ export default async function AnaliticasActividad({ params }: PageProps<"/profes
   const hay = Boolean(s);
 
   const hallazgos = hallazgosActividad(a, rep, t.profesor.calculo);
-  const reportePdf = reporteActividadPdf(grupo, actividad, a, rep);
+  const reportePdf = reporteActividadPdf(grupo, actividad, a, rep, { tx: t.profesor.reportePdf, locale, calculo: t.profesor.calculo, niveles });
 
   const sinEntregar = grupo.alumnos.filter((al) => !rep.filas.some((f) => f.alumno.matricula === al.matricula));
 
