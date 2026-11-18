@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Caveat, Geist, Geist_Mono, Inter } from "next/font/google";
+import { textos } from "@/lib/i18n/servidor";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -9,17 +10,16 @@ const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"] });
 // Letra de las hojas de actividad impresas (Inter con tamaño óptico para los títulos).
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"], axes: ["opsz"], style: ["normal", "italic"] });
 
-export const metadata: Metadata = {
-  title: {
-    default: "iEureka-Grader · Evaluación de actividades impresas con IA",
-    template: "%s · iEureka-Grader",
-  },
-  description:
-    "Tus alumnos fotografían su hoja, tú subes la solución y la IA sugiere calificación, correcciones en rojo y verde, reportes y el Excel para Canvas.",
-  applicationName: "iEureka-Grader",
-  // Al agregarla a la pantalla de inicio en iPhone o iPad abre como app, sin la barra de Safari.
-  appleWebApp: { capable: true, title: "iEureka-Grader", statusBarStyle: "default" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return {
+    title: { default: t.meta.titulo, template: "%s · iEureka-Grader" },
+    description: t.meta.descripcion,
+    applicationName: "iEureka-Grader",
+    // Al agregarla a la pantalla de inicio en iPhone o iPad abre como app, sin la barra de Safari.
+    appleWebApp: { capable: true, title: "iEureka-Grader", statusBarStyle: "default" },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#2554e8",
@@ -28,10 +28,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { idioma } = await textos();
   return (
     <html
-      lang="es"
+      lang={idioma}
       className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">{children}</body>

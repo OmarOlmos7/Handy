@@ -1,28 +1,46 @@
 import type { Metadata } from "next";
 import { guardarCuenta, guardarPrecision, guardarRangos } from "@/app/acciones-configuracion";
+import { cambiarIdioma } from "@/app/acciones-idioma";
 import { ConfigPrecision } from "@/components/precision-ia";
 import { Boton, Encabezado, Tarjeta, campo, fechaLarga } from "@/components/ui";
-import { NIVELES_REPORTE, configuracionDe, intervaloNivel } from "@/lib/configuracion";
+import { NIVELES_REPORTE, configuracionDe, type NivelReporte } from "@/lib/configuracion";
+import type { Diccionario } from "@/lib/i18n/diccionario";
+import { IDIOMAS, NOMBRE_IDIOMA, formato } from "@/lib/i18n/idiomas";
+import { textos } from "@/lib/i18n/servidor";
 import { DIAS_AVISO, DIAS_FOTOS, diasRestantes, fechaBorrado } from "@/lib/retencion";
 import { datosProfesor } from "@/lib/sesion";
+import type { RangosCalificacion } from "@/lib/tipos";
 
-export const metadata: Metadata = { title: "Configuración" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return { title: t.configuracion.titulo };
+}
 
-function Aviso({ seccion, actual, ok, error }: { seccion: string; actual?: string; ok?: string; error?: string }) {
+function Aviso({ seccion, actual, ok, error, t }: { seccion: string; actual?: string; ok?: string; error?: string; t: Diccionario }) {
   if (actual !== seccion) return null;
-  if (error) return <p className="mt-4 rounded-lg bg-error-suave p-3 text-sm text-error">{error}</p>;
+  // Los avisos llegan como clave del diccionario; si no lo es, se muestra el texto tal cual.
+  const avisos = t.configuracion.avisos as Record<string, string>;
+  if (error) return <p className="mt-4 rounded-lg bg-error-suave p-3 text-sm text-error">{avisos[error] ?? error}</p>;
   if (ok)
     return (
       <p className="mt-4 rounded-lg bg-acierto-suave p-3 text-sm text-acierto" role="status">
-        {ok}
+        {avisos[ok] ?? ok}
       </p>
     );
   return null;
 }
 
-/** Preferencias del profesor: cuenta, rangos de calificación para reportes y precisión de la IA. */
+/** "70 a 84" en el idioma elegido. */
+function intervalo(nivel: NivelReporte, r: RangosCalificacion, t: Diccionario) {
+  const [a, b] = { bajo: [0, r.medio - 1], medio: [r.medio, r.alto - 1], alto: [r.alto, r.superior - 1], superior: [r.superior, 100] }[nivel];
+  return formato(t.configuracion.intervalo, { a, b });
+}
+
+/** Preferencias del profesor: cuenta, idioma, rangos de calificación para reportes y precisión de la IA. */
 export default async function Configuracion({ searchParams }: PageProps<"/profesor/configuracion">) {
   const { profesor, db } = await datosProfesor();
+  const { idioma, t, locale } = await textos();
+  const c = t.configuracion;
   const ahora = new Date();
   const conservacion = db.actividades
     .filter((a) => !a.demo)
@@ -41,39 +59,68 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
   const conf = configuracionDe(profesor.config);
   const q = await searchParams;
   const texto = (k: string) => (typeof q[k] === "string" ? (q[k] as string) : undefined);
-  const aviso = { actual: texto("s"), ok: texto("ok"), error: texto("error") };
+  const aviso = { actual: texto("s"), ok: texto("ok"), error: texto("error"), t };
   const r = conf.rangos;
+  const [antesAnio, despuesAnio = ""] = c.conservacionAnio.split("{anio}");
 
   return (
     <>
-      <Encabezado titulo="Configuración" subtitulo="Personaliza tu cuenta, tus reportes y la forma en que la IA trabaja en tus actividades." />
+      <Encabezado titulo={c.titulo} subtitulo={c.subtitulo} />
       <div className="space-y-6">
         <Tarjeta>
-          <h2 id="cuenta" className="scroll-mt-6 text-lg font-semibold">
-            Nombre y contraseña
+          <h2 id="idioma" className="scroll-mt-6 text-lg font-semibold">
+            {c.idiomaTitulo}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">Tu correo de acceso es {profesor.correo}.</p>
+          <p className="mt-1 text-sm text-slate-500">{c.idiomaTexto}</p>
+          <form action={cambiarIdioma} className="mt-4">
+            <input type="hidden" name="volver" value="/profesor/configuracion?s=idioma&ok=idiomaGuardado#idioma" />
+            <fieldset className="grid gap-2 sm:grid-cols-4 lg:grid-cols-7">
+              <legend className="sr-only">{c.idiomaTitulo}</legend>
+              {IDIOMAS.map((i) => (
+                <label
+                  key={i}
+                  lang={i}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm ring-1 ring-slate-200 has-[:checked]:bg-tinta-50 has-[:checked]:font-medium has-[:checked]:text-tinta-700 has-[:checked]:ring-2 has-[:checked]:ring-tinta-500 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-tinta-400"
+                >
+                  <input type="radio" name="idioma" value={i} defaultChecked={i === idioma} className="h-4 w-4 accent-tinta-600" />
+                  {NOMBRE_IDIOMA[i]}
+                </label>
+              ))}
+            </fieldset>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Boton type="submit">{c.guardarIdioma}</Boton>
+              <span className="text-xs text-slate-500">{c.etapaIdioma}</span>
+            </div>
+          </form>
+          <Aviso seccion="idioma" {...aviso} />
+        </Tarjeta>
+
+        <Tarjeta>
+          <h2 id="cuenta" className="scroll-mt-6 text-lg font-semibold">
+            {c.cuentaTitulo}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">{formato(c.correoAcceso, { correo: profesor.correo })}</p>
           <form action={guardarCuenta} className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-slate-700 sm:col-span-2 sm:max-w-md">
-              Nombre
+              {c.nombre}
               <input name="nombre" required maxLength={80} defaultValue={profesor.nombre} autoComplete="name" className={campo} />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Contraseña actual
+              {c.contrasenaActual}
               <input name="actual" type="password" autoComplete="current-password" className={campo} />
             </label>
             <span className="hidden sm:block" />
             <label className="block text-sm font-medium text-slate-700">
-              Nueva contraseña
+              {c.nuevaContrasena}
               <input name="nueva" type="password" minLength={8} autoComplete="new-password" className={campo} />
             </label>
             <label className="block text-sm font-medium text-slate-700">
-              Confirma la nueva contraseña
+              {c.confirmarContrasena}
               <input name="confirmar" type="password" minLength={8} autoComplete="new-password" className={campo} />
             </label>
             <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
-              <Boton type="submit">Guardar</Boton>
-              <span className="text-xs text-slate-500">Deja las contraseñas vacías si solo cambias tu nombre.</span>
+              <Boton type="submit">{c.guardar}</Boton>
+              <span className="text-xs text-slate-500">{c.notaContrasena}</span>
             </div>
           </form>
           <Aviso seccion="cuenta" {...aviso} />
@@ -81,28 +128,25 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
 
         <Tarjeta>
           <h2 id="rangos" className="scroll-mt-6 text-lg font-semibold">
-            Rangos de calificación para reportes
+            {c.rangosTitulo}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Define dónde empieza cada nivel de desempeño (sobre 100). Se usan en las gráficas de niveles de las analíticas y en el
-            reporte PDF. Si una actividad se califica sobre 10, se convierte a 100 para compararla.
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{c.rangosTexto}</p>
           <form action={guardarRangos} className="mt-4">
             <div className="grid gap-3 sm:grid-cols-4">
               {[...NIVELES_REPORTE].reverse().map((n) => (
                 <div key={n.clave} className="rounded-lg p-3 ring-1 ring-slate-200">
                   <p className="flex items-center gap-2 text-sm font-medium">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ background: n.color }} aria-hidden />
-                    {n.nombre}
+                    {c.niveles[n.clave]}
                   </p>
                   {n.clave === "bajo" ? (
                     <p className="mt-2 text-sm text-slate-600">
-                      Desde 0
-                      <span className="mt-1 block text-xs text-slate-500">Actual: {intervaloNivel("bajo", r)}</span>
+                      {c.desde0}
+                      <span className="mt-1 block text-xs text-slate-500">{formato(c.actual, { r: intervalo("bajo", r, t) })}</span>
                     </p>
                   ) : (
                     <label className="mt-2 block text-xs text-slate-500">
-                      Desde
+                      {c.desde}
                       <input
                         name={n.clave}
                         type="number"
@@ -112,15 +156,15 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
                         defaultValue={r[n.clave]}
                         className={`${campo} mt-1 w-24`}
                       />
-                      <span className="mt-1 block">Actual: {intervaloNivel(n.clave, r)}</span>
+                      <span className="mt-1 block">{formato(c.actual, { r: intervalo(n.clave, r, t) })}</span>
                     </label>
                   )}
                 </div>
               ))}
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Boton type="submit">Guardar rangos</Boton>
-              <span className="text-xs text-slate-500">Predeterminados: Bajo 0 a 69, Medio 70 a 84, Alto 85 a 95, Superior 96 a 100.</span>
+              <Boton type="submit">{c.guardarRangos}</Boton>
+              <span className="text-xs text-slate-500">{c.rangosPredeterminados}</span>
             </div>
           </form>
           <Aviso seccion="rangos" {...aviso} />
@@ -128,73 +172,71 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
 
         <Tarjeta>
           <h2 id="precision" className="scroll-mt-6 text-lg font-semibold">
-            Precisión y consumo de la IA
+            {c.precisionTitulo}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Es el nivel predeterminado para tus actividades nuevas; en cada actividad puedes cambiarlo con el deslizador. Cada
-            nivel usa un motor distinto y tiene una eficiencia diferente: más precisión lee mejor los procedimientos largos, las
-            gráficas y la letra difícil, pero tarda más y consume más tokens. El esfuerzo indica cuánto razona el motor antes de
-            responder: con más esfuerzo revisa con más cuidado y consume más.
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{c.precisionTexto}</p>
           <form action={guardarPrecision} className="mt-4">
-            <ConfigPrecision motor={conf.motor} esfuerzos={conf.esfuerzos} />
-            <p className="mt-3 text-xs text-slate-500">
-              El consumo es relativo: 1× es el nivel Rápido con esfuerzo medio. Los créditos se cobran igual (1 crédito por página);
-              el consumo de tokens es el costo de la IA detrás de cada evaluación.
-            </p>
+            <ConfigPrecision
+              motor={conf.motor}
+              esfuerzos={conf.esfuerzos}
+              textos={{
+                motores: t.motores,
+                esfuerzos: t.esfuerzos,
+                esfuerzo: c.esfuerzo,
+                consumo: c.consumo,
+                consumoDe: c.consumoDe,
+                tokens: c.tokens,
+              }}
+            />
+            <p className="mt-3 text-xs text-slate-500">{c.consumoNota}</p>
             <Boton type="submit" className="mt-4">
-              Guardar precisión
+              {c.guardarPrecision}
             </Boton>
           </form>
           <Aviso seccion="precision" {...aviso} />
         </Tarjeta>
         <Tarjeta>
           <h2 id="conservacion" className="scroll-mt-6 text-lg font-semibold">
-            Conservación de la información en el servidor
+            {c.conservacionTitulo}
           </h2>
           <div className="mt-2 space-y-1 text-sm text-slate-600">
+            <p>{formato(c.conservacionFotos, { n: DIAS_FOTOS })}</p>
             <p>
-              Las fotos que envían tus alumnos se guardan {DIAS_FOTOS} días después de liberar los resultados, para que puedas
-              hacer ajustes. Después se archivan: queda solo el PDF corregido y las fotos se borran.
+              {antesAnio}
+              <strong className="font-semibold text-slate-800">{c.unAnio}</strong>
+              {despuesAnio}
             </p>
-            <p>
-              Cada actividad, con sus reportes y PDF, se conserva <strong className="font-semibold text-slate-800">1 año</strong> desde
-              que se generó su último reporte. En la fecha de borrado se elimina del servidor y no se puede recuperar.
-            </p>
-            <p className="rounded-lg bg-aviso-suave px-3 py-2 text-slate-800">
-              Si quieres conservar los reportes, descárgalos en tu computadora antes de esa fecha: aquí por grupo, o por alumno
-              desde la lista de entregas de cada actividad.
-            </p>
+            <p className="rounded-lg bg-aviso-suave px-3 py-2 text-slate-800">{c.conservacionAviso}</p>
           </div>
           {conservacion.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500">Aún no tienes actividades.</p>
+            <p className="mt-4 text-sm text-slate-500">{c.sinActividades}</p>
           ) : (
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[560px] text-left text-sm">
                 <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="py-2 pr-3 font-medium">Actividad</th>
-                    <th className="py-2 pr-3 font-medium">Curso</th>
-                    <th className="py-2 pr-3 font-medium">Fecha de borrado</th>
-                    <th className="py-2 text-right font-medium">Descargar</th>
+                    <th className="py-2 pr-3 font-medium">{c.colActividad}</th>
+                    <th className="py-2 pr-3 font-medium">{c.colCurso}</th>
+                    <th className="py-2 pr-3 font-medium">{c.colBorrado}</th>
+                    <th className="py-2 text-right font-medium">{c.colDescargar}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {conservacion.map((c) => (
-                    <tr key={c.actividad.id}>
-                      <td className="py-2 pr-3 font-medium">{c.actividad.titulo}</td>
-                      <td className="py-2 pr-3 text-slate-600">{c.grupo ? `${c.grupo.materia} · ${c.grupo.nombre}` : "—"}</td>
-                      <td className={`py-2 pr-3 ${c.dias <= DIAS_AVISO ? "font-medium text-error" : "text-slate-600"}`}>
-                        {fechaLarga(c.borrado.toISOString().slice(0, 10))}
-                        {c.dias <= DIAS_AVISO && ` · en ${Math.max(0, c.dias)} días`}
+                  {conservacion.map((x) => (
+                    <tr key={x.actividad.id}>
+                      <td className="py-2 pr-3 font-medium">{x.actividad.titulo}</td>
+                      <td className="py-2 pr-3 text-slate-600">{x.grupo ? `${x.grupo.materia} · ${x.grupo.nombre}` : "—"}</td>
+                      <td className={`py-2 pr-3 ${x.dias <= DIAS_AVISO ? "font-medium text-error" : "text-slate-600"}`}>
+                        {fechaLarga(x.borrado.toISOString().slice(0, 10), locale)}
+                        {x.dias <= DIAS_AVISO && formato(c.enDias, { n: Math.max(0, x.dias) })}
                       </td>
                       <td className="py-2 text-right">
-                        {c.evaluadas > 0 ? (
-                          <a href={`/api/pdf/${c.actividad.id}/grupo`} className="text-xs font-medium text-tinta-700 hover:underline">
-                            PDF del grupo ({c.evaluadas})
+                        {x.evaluadas > 0 ? (
+                          <a href={`/api/pdf/${x.actividad.id}/grupo`} className="text-xs font-medium text-tinta-700 hover:underline">
+                            {formato(c.pdfGrupo, { n: x.evaluadas })}
                           </a>
                         ) : (
-                          <span className="text-xs text-slate-400">Sin reportes</span>
+                          <span className="text-xs text-slate-400">{c.sinReportes}</span>
                         )}
                       </td>
                     </tr>

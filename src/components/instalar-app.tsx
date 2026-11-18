@@ -7,7 +7,18 @@ interface EventoInstalar extends Event {
 }
 
 /** Ofrece instalar la web como app: botón en Android y computadoras, instrucciones en iPhone/iPad. */
-export function InstalarApp() {
+export function InstalarApp({
+  textos = {
+    instalar: "Instalar iEureka-Grader como app",
+    antes: "Para usarla como app en tu iPhone o iPad: toca ",
+    compartir: "Compartir",
+    medio: " y luego ",
+    agregar: "Agregar a inicio",
+    despues: ".",
+  },
+}: {
+  textos?: { instalar: string; antes: string; compartir: string; medio: string; agregar: string; despues: string };
+}) {
   const [evento, setEvento] = useState<EventoInstalar | null>(null);
   const [ios, setIos] = useState(false);
   const [instalada, setInstalada] = useState(false);
@@ -36,14 +47,18 @@ export function InstalarApp() {
         }}
         className="mt-4 w-full rounded-lg bg-tinta-50 px-4 py-2 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200 hover:bg-tinta-100"
       >
-        Instalar iEureka-Grader como app
+        {textos.instalar}
       </button>
     );
   }
   if (ios) {
     return (
       <p className="mt-4 rounded-lg bg-tinta-50 p-3 text-xs text-tinta-700">
-        Para usarla como app en tu iPhone o iPad: toca <strong>Compartir</strong> y luego <strong>Agregar a inicio</strong>.
+        {textos.antes}
+        <strong>{textos.compartir}</strong>
+        {textos.medio}
+        <strong>{textos.agregar}</strong>
+        {textos.despues}
       </p>
     );
   }

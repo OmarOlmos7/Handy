@@ -256,6 +256,8 @@ export interface ConfiguracionProfesor {
   motor?: MotorIA;
   /** Esfuerzo elegido para cada motor. */
   esfuerzos?: Partial<Record<MotorIA, EsfuerzoIA>>;
+  /** Idioma de la interfaz ("es", "en", "fr", "de", "ja", "pt" o "zh"). */
+  idioma?: string;
 }
 
 /** Cuenta del alumno: entra con su correo y su clave de acceso para ver solo sus resultados. */

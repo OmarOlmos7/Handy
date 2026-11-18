@@ -1,6 +1,9 @@
 // Ejemplos ilustrativos (datos inventados) de lo que recibe el profesor al terminar,
 // para la sección "Qué recibes al terminar" de la página principal.
 import type { ReactNode } from "react";
+import type { Diccionario } from "@/lib/i18n/diccionario";
+
+type T = Diccionario["entregable"];
 
 export type TipoEntregable = "hoja" | "alumno" | "grupo" | "excel";
 
@@ -25,17 +28,17 @@ function Numero({ n, bien }: { n: number; bien: boolean }) {
   );
 }
 
-function HojaCorregida() {
+function HojaCorregida({ t }: { t: T }) {
   return (
     <Marco className="grid grid-cols-[1fr_38%] bg-papel">
       <div className="relative space-y-3 p-3 text-[11px] text-slate-700">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.png" alt="" className="absolute right-2 top-2 h-7 w-auto opacity-30" />
         <p>
-          <span className="font-semibold">Nombre:</span> <span className={mano}>Ana López</span>
+          <span className="font-semibold">{t.nombre}</span> <span className={mano}>Ana López</span>
         </p>
         <p className="flex items-center gap-2">
-          1. ¿Unidad de fuerza? <span className={mano}>Newton</span> <Numero n={1} bien />
+          {t.p1} <span className={mano}>{t.newton}</span> <Numero n={1} bien />
         </p>
         <p className="flex items-center gap-2">
           2. F = m·a, m = 5 kg, a = 2 m/s²
@@ -44,39 +47,34 @@ function HojaCorregida() {
           <span className={mano}>F = 5 · 2 = 10</span> <Numero n={2} bien={false} />
         </p>
         <p className="flex items-center gap-2">
-          3. ( <span className={mano}>V</span> ) La masa se mide en kg <Numero n={3} bien />
+          3. {t.p3} <Numero n={3} bien />
         </p>
         <p className="absolute bottom-2 right-3 rounded-md border-2 border-error px-2 font-mano text-xl text-error">8.5</p>
       </div>
       <div className="space-y-2 border-l border-dashed border-slate-300 bg-white p-2 text-[10px] leading-snug text-slate-600">
-        <p className="font-semibold uppercase tracking-wide text-slate-400">Comentarios</p>
+        <p className="font-semibold uppercase tracking-wide text-slate-400">{t.comentarios}</p>
         <p>
-          <b className="text-acierto">1.</b> Correcto.
+          <b className="text-acierto">1.</b> {t.c1}
         </p>
         <p>
-          <b className="text-error">2.</b> Faltan las unidades: F = 10 N.
+          <b className="text-error">2.</b> {t.c2}
         </p>
         <p>
-          <b className="text-acierto">3.</b> Bien identificado.
+          <b className="text-acierto">3.</b> {t.c3}
         </p>
       </div>
     </Marco>
   );
 }
 
-function ReporteAlumno() {
-  const elementos: [string, number][] = [
-    ["Datos", 100],
-    ["Ecuaciones", 90],
-    ["Desarrollo", 75],
-    ["Respuesta", 60],
-  ];
+function ReporteAlumno({ t }: { t: T }) {
+  const elementos: [string, number][] = [100, 90, 75, 60].map((v, i) => [t.elementos[i], v]);
   return (
     <Marco className="bg-white p-3 text-[11px]">
       <div className="flex items-start justify-between">
         <div>
           <p className="font-semibold text-slate-800">Ana López Ruiz</p>
-          <p className="text-slate-500">A0301 · Física 2° A · Leyes de Newton</p>
+          <p className="text-slate-500">{t.grupoAlumno}</p>
         </div>
         <p className="text-2xl font-bold text-acierto">8.5</p>
       </div>
@@ -93,42 +91,37 @@ function ReporteAlumno() {
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <div className="rounded-md bg-acierto-suave p-1.5 text-acierto">
-          <p className="font-semibold">Positivos</p>
-          <p>Planteas bien los datos.</p>
+          <p className="font-semibold">{t.positivos}</p>
+          <p>{t.positivo}</p>
         </div>
         <div className="rounded-md bg-aviso-suave p-1.5 text-aviso">
-          <p className="font-semibold">A mejorar</p>
-          <p>Escribe siempre las unidades.</p>
+          <p className="font-semibold">{t.aMejorar}</p>
+          <p>{t.mejora}</p>
         </div>
       </div>
     </Marco>
   );
 }
 
-function ReporteGrupo() {
-  const temas: [string, number][] = [
-    ["Primera ley", 92],
-    ["Segunda ley", 71],
-    ["Tercera ley", 84],
-    ["Unidades", 58],
-  ];
+function ReporteGrupo({ t }: { t: T }) {
+  const temas: [string, number][] = [92, 71, 84, 58].map((v, i) => [t.temas[i], v]);
   return (
     <Marco className="bg-white p-3 text-[11px]">
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-md bg-slate-50 p-1.5">
           <p className="text-lg font-bold text-slate-800">7.9</p>
-          <p className="text-slate-500">Promedio</p>
+          <p className="text-slate-500">{t.promedio}</p>
         </div>
         <div className="rounded-md bg-slate-50 p-1.5">
           <p className="text-lg font-bold text-slate-800">32</p>
-          <p className="text-slate-500">Alumnos</p>
+          <p className="text-slate-500">{t.alumnos}</p>
         </div>
         <div className="rounded-md bg-slate-50 p-1.5">
           <p className="text-lg font-bold text-error">#4</p>
-          <p className="text-slate-500">Menor acierto</p>
+          <p className="text-slate-500">{t.menorAcierto}</p>
         </div>
       </div>
-      <p className="mt-2 font-semibold text-slate-700">Acierto por tema</p>
+      <p className="mt-2 font-semibold text-slate-700">{t.aciertoTema}</p>
       <div className="mt-1 flex h-[70px] items-end gap-3 border-b border-slate-200 px-1">
         {temas.map(([t, v]) => (
           <div key={t} className="flex flex-1 flex-col items-center justify-end">
@@ -145,15 +138,15 @@ function ReporteGrupo() {
         ))}
       </div>
       <p className="mt-1.5 flex gap-1.5">
-        <span className="rounded-full bg-acierto-suave px-2 text-acierto">Alto 14</span>
-        <span className="rounded-full bg-aviso-suave px-2 text-aviso">Medio 12</span>
-        <span className="rounded-full bg-error-suave px-2 text-error">Bajo 6</span>
+        <span className="rounded-full bg-acierto-suave px-2 text-acierto">{t.alto} 14</span>
+        <span className="rounded-full bg-aviso-suave px-2 text-aviso">{t.medio} 12</span>
+        <span className="rounded-full bg-error-suave px-2 text-error">{t.bajo} 6</span>
       </p>
     </Marco>
   );
 }
 
-function Excel() {
+function Excel({ t }: { t: T }) {
   const filas: [string, string, string][] = [
     ["López Ruiz, Ana", "A0301", "8.5"],
     ["Díaz Soto, Bruno", "A0302", "9.2"],
@@ -165,7 +158,7 @@ function Excel() {
     <Marco className="bg-white text-[11px]">
       <div className="flex items-center gap-2 bg-[#107c41] px-3 py-1.5 text-white">
         <span className="rounded bg-white px-1 text-[10px] font-bold text-[#107c41]">X</span>
-        <span>calificaciones-leyes-de-newton.xlsx</span>
+        <span>{t.archivo}</span>
       </div>
       <div className="grid grid-cols-[22px_1fr_72px_84px] font-mono text-[10.5px]">
         {["", "A", "B", "C"].map((c, i) => (
@@ -173,7 +166,7 @@ function Excel() {
             {c}
           </span>
         ))}
-        {[["1", "Nombre", "Matrícula", "Calif."], ...filas.map((f, i) => [String(i + 2), ...f])].map((fila, i) =>
+        {[["1", ...t.columnas], ...filas.map((f, i) => [String(i + 2), ...f])].map((fila, i) =>
           fila.map((celda, j) => (
             <span
               key={`${i}-${j}`}
@@ -187,22 +180,22 @@ function Excel() {
         )}
       </div>
       <p className="flex items-center gap-2 px-3 py-2 text-slate-500">
-        <span className="rounded-full bg-tinta-50 px-2 font-semibold text-tinta-700">CSV para Canvas</span>
-        listo para importar
+        <span className="rounded-full bg-tinta-50 px-2 font-semibold text-tinta-700">{t.csv}</span>
+        {t.listo}
       </p>
     </Marco>
   );
 }
 
-export function EjemploEntregable({ tipo }: { tipo: TipoEntregable }) {
+export function EjemploEntregable({ tipo, t }: { tipo: TipoEntregable; t: T }) {
   switch (tipo) {
     case "hoja":
-      return <HojaCorregida />;
+      return <HojaCorregida t={t} />;
     case "alumno":
-      return <ReporteAlumno />;
+      return <ReporteAlumno t={t} />;
     case "grupo":
-      return <ReporteGrupo />;
+      return <ReporteGrupo t={t} />;
     case "excel":
-      return <Excel />;
+      return <Excel t={t} />;
   }
 }
