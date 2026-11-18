@@ -7,6 +7,8 @@ import path from "node:path";
 import { PDFDocument, type PDFFont, type PDFPage, StandardFonts, rgb } from "pdf-lib";
 import { calificacion, escalaDe, formatoCal, puntosObtenidos, puntosTotales } from "./estadisticas";
 import { leerArchivo } from "./almacen";
+import { pdfEstudio } from "./pdf-estudio";
+import { recursosParaTemas } from "./recursos";
 import { texAPlano } from "./tex-plano";
 import type { Actividad, Alumno, Entrega, Grupo, RecomendacionesEstudio } from "./tipos";
 
@@ -153,7 +155,8 @@ export async function pdfHojasCorregidas(actividad: Actividad, entrega: Entrega)
 }
 
 
-function paginaEstudio(doc: PDFDocument, estudio: RecomendacionesEstudio, normal: PDFFont, negrita: PDFFont) {
+function paginaEstudio(doc: PDFDocument, actividad: Actividad, estudio: RecomendacionesEstudio, normal: PDFFont, negrita: PDFFont) {
+  const { videos, lecturas } = recursosParaTemas(actividad, estudio.temas);
   let p = doc.addPage([CARTA.ancho, CARTA.alto]);
   let y = CARTA.alto - 56;
   const linea = (t: string, x: number, tam = 10, f = normal, color = TINTA, ancho = 500) => {
@@ -170,10 +173,25 @@ function paginaEstudio(doc: PDFDocument, estudio: RecomendacionesEstudio, normal
   y -= 4;
   if (estudio.temas.length) linea(`Temas a repasar: ${estudio.temas.join(", ")}`, 48, 10, normal, GRIS);
   y -= 8;
-  linea("Videos sugeridos (búscalos en YouTube)", 48, 11, negrita);
-  for (const v of estudio.videos) {
-    linea(`•  ${v.titulo}`, 56, 10);
-    linea(`Buscar: "${v.busqueda}"`, 68, 9, normal, GRIS);
+  linea("Videos con ejercicios resueltos", 48, 11, negrita);
+  if (videos.length) {
+    for (const v of videos) {
+      linea(`•  ${v.titulo} (${v.fuente})`, 56, 10);
+      linea(v.url, 68, 9, normal, GRIS);
+    }
+  } else {
+    for (const v of estudio.videos) {
+      linea(`•  ${v.titulo}`, 56, 10);
+      linea(`Buscar en YouTube: "${v.busqueda}"`, 68, 9, normal, GRIS);
+    }
+  }
+  if (lecturas.length) {
+    y -= 8;
+    linea("Lecturas de referencia (OpenStax)", 48, 11, negrita);
+    for (const l of lecturas) {
+      linea(`•  ${l.titulo} (${l.fuente})`, 56, 10);
+      linea(l.url, 68, 9, normal, GRIS);
+    }
   }
   y -= 8;
   linea("Ejercicios para practicar en casa", 48, 11, negrita);
@@ -288,8 +306,16 @@ export async function pdfRetroalimentacion(datos: {
     await dibujarHojas(doc, actividad, entrega, normal, negrita, calTexto);
   }
 
-  // ---- 3. Recomendaciones de estudio ----
-  if (entrega.estudio) paginaEstudio(doc, entrega.estudio, normal, negrita);
+  // ---- 4. Recomendaciones de estudio (con fórmulas de KaTeX si hay Chromium; si no, en texto) ----
+  if (entrega.estudio) {
+    const conFormulas = await pdfEstudio(actividad, entrega);
+    if (conFormulas) {
+      const estudio = await PDFDocument.load(conFormulas);
+      for (const pag of await doc.copyPages(estudio, estudio.getPageIndices())) doc.addPage(pag);
+    } else {
+      paginaEstudio(doc, actividad, entrega.estudio, normal, negrita);
+    }
+  }
 
   // ---- Marca de agua con el logo en la esquina superior derecha de cada página ----
   const logo = await doc.embedPng(leerLogo());

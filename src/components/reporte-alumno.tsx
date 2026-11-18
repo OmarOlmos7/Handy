@@ -3,6 +3,7 @@
 // la rúbrica (aspectos positivos y de mejora, puntos por reactivo), 3) la hoja corregida con
 // palomas verdes y marcas rojas con anotaciones, 4) recomendaciones de estudio (videos y ejercicios).
 import type { ReactNode } from "react";
+import { idYouTube, recursosParaTemas } from "@/lib/recursos";
 import { enlaceVideo } from "@/lib/videos";
 import type { Actividad, Alumno, Entrega, Grupo } from "@/lib/tipos";
 import { calificacion, escalaDe, formatoCal, puntosObtenidos, puntosTotales } from "@/lib/estadisticas";
@@ -34,6 +35,7 @@ export function ReporteAlumno({
   accionEstudio?: ReactNode;
 }) {
   const temas = [...new Set(actividad.reactivos.map((r) => r.tema).filter(Boolean))];
+  const recursos = recursosParaTemas(actividad, entrega.estudio?.temas ?? []);
   const cal = calificacion(actividad, entrega);
   const escala = escalaDe(actividad);
   const grupoTexto = `${grupo.materia} · ${grupo.nombre}`;
@@ -93,6 +95,20 @@ export function ReporteAlumno({
                 <li key={p}>{p}</li>
               ))}
             </ul>
+            {recursos.lecturas.length > 0 && (
+              <p className="mt-3 text-xs text-slate-600">
+                Para repasar el tema:{" "}
+                {recursos.lecturas.map((l, i) => (
+                  <span key={l.url}>
+                    {i > 0 && " · "}
+                    <a href={l.url} target="_blank" rel="noopener noreferrer" className="font-medium text-tinta-700 hover:underline">
+                      {l.fuente}
+                    </a>
+                  </span>
+                ))}{" "}
+                (OpenStax)
+              </p>
+            )}
           </div>
         </div>
         <div className="mt-5 overflow-x-auto">
@@ -176,26 +192,72 @@ export function ReporteAlumno({
               </p>
             )}
             <h3 className="mt-5 font-medium">Videos con ejercicios resueltos</h3>
-            <ul className="mt-2 grid gap-3 md:grid-cols-3">
-              {entrega.estudio.videos.map((v) => (
-                <li key={v.busqueda}>
-                  <a
-                    href={enlaceVideo(v.busqueda)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex h-full items-start gap-3 rounded-lg p-3 ring-1 ring-slate-200 hover:bg-slate-50"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error-suave text-error" aria-hidden>
-                      ▶
-                    </span>
-                    <span className="text-sm">
-                      <span className="block font-medium text-slate-900">{v.titulo}</span>
-                      <span className="mt-0.5 block text-xs text-tinta-700">Buscar en YouTube ↗</span>
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+            {recursos.videos.length > 0 ? (
+              <ul className="mt-2 grid gap-3 md:grid-cols-3">
+                {recursos.videos.map((v) => {
+                  const id = idYouTube(v.url);
+                  return (
+                    <li key={v.url}>
+                      <a
+                        href={v.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-full flex-col overflow-hidden rounded-lg ring-1 ring-slate-200 hover:bg-slate-50"
+                      >
+                        {id ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={`https://i.ytimg.com/vi/${id}/mqdefault.jpg`} alt="" className="aspect-video w-full bg-slate-100 object-cover" loading="lazy" />
+                        ) : (
+                          <span className="flex aspect-video w-full items-center justify-center bg-acierto-suave text-sm font-semibold text-acierto">
+                            Khan Academy
+                          </span>
+                        )}
+                        <span className="p-3 text-sm">
+                          <span className="block font-medium text-slate-900">{v.titulo}</span>
+                          <span className="mt-0.5 block text-xs text-slate-500">{v.fuente}</span>
+                        </span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <ul className="mt-2 grid gap-3 md:grid-cols-3">
+                {entrega.estudio.videos.map((v) => (
+                  <li key={v.busqueda}>
+                    <a
+                      href={enlaceVideo(v.busqueda)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-full items-start gap-3 rounded-lg p-3 ring-1 ring-slate-200 hover:bg-slate-50"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-error-suave text-error" aria-hidden>
+                        ▶
+                      </span>
+                      <span className="text-sm">
+                        <span className="block font-medium text-slate-900">{v.titulo}</span>
+                        <span className="mt-0.5 block text-xs text-tinta-700">Buscar en YouTube ↗</span>
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {recursos.lecturas.length > 0 && (
+              <>
+                <h3 className="mt-6 font-medium">Lecturas de referencia (OpenStax)</h3>
+                <ul className="mt-2 space-y-2 text-sm">
+                  {recursos.lecturas.map((l) => (
+                    <li key={l.url}>
+                      <a href={l.url} target="_blank" rel="noopener noreferrer" className="font-medium text-tinta-700 hover:underline">
+                        {l.titulo} ↗
+                      </a>
+                      <span className="text-xs text-slate-500"> · {l.fuente}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
             <h3 className="mt-6 font-medium">Ejercicios para practicar en casa</h3>
             <p className="text-xs text-slate-500">Resuélvelos y compara tu resultado con la respuesta. No incluye el procedimiento.</p>
             <ol className="mt-3 space-y-3">

@@ -114,6 +114,8 @@ export interface Actividad {
   /** Imágenes de la solución del profesor (rutas relativas a la carpeta de datos). */
   solucion?: string[];
   rubricaConfirmada?: boolean;
+  /** Videos y lecturas (Khan Academy, YouTube, OpenStax) por tema, compartidos por todo el grupo. */
+  recursos?: RecursosActividad;
   /** Motor y esfuerzo de la IA para esta actividad; sin valor, el predeterminado (Medio). */
   precision?: PrecisionIA;
   /** Criterios de evaluación con su porcentaje, tomados de las indicaciones del profesor. */
@@ -191,6 +193,21 @@ export interface EjercicioRepaso {
   respuesta: string;
 }
 
+/** Material de estudio con enlace real (lo encontró la búsqueda web; la IA no inventa enlaces). */
+export interface RecursoEstudio {
+  tipo: "khan" | "video" | "openstax";
+  titulo: string;
+  url: string;
+  /** Canal, libro o sitio, por ejemplo "Khan Academy en Español" o "Cálculo volumen 1 · 3.3". */
+  fuente: string;
+}
+
+export interface RecursosActividad {
+  generadoEn: string;
+  /** Por tema de la rúbrica. */
+  temas: Record<string, RecursoEstudio[]>;
+}
+
 export interface RecomendacionesEstudio {
   temas: string[];
   videos: VideoSugerido[];
@@ -263,7 +280,7 @@ export interface Sesion {
 }
 
 /** Para qué se llamó a la IA (para el panel de administración). */
-export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio";
+export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio" | "recursos";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {
