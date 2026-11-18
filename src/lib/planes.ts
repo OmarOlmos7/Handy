@@ -93,8 +93,8 @@ export const PLANES: Plan[] = [
   },
 ];
 
-export function pesos(n: number) {
-  return n.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+export function pesos(n: number, locale = "es-MX") {
+  return n.toLocaleString(locale, { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
 }
 
 /** Precio por página con dos decimales, o undefined si el plan es gratis o a la medida. */

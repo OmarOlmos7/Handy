@@ -3,29 +3,17 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { BotonLink, Logo } from "@/components/ui";
-import { INFO_MOTOR, MOTORES, PRECISION_PREDETERMINADA, nivelConsumo } from "@/lib/configuracion";
+import { SelectorIdioma } from "@/components/selector-idioma";
+import { MOTORES, PRECISION_PREDETERMINADA, nivelConsumo } from "@/lib/configuracion";
+import type { Diccionario } from "@/lib/i18n/diccionario";
+import { formato } from "@/lib/i18n/idiomas";
+import { textos } from "@/lib/i18n/servidor";
 import { PLANES, ahorroContra, pesos, planDe, precioPorPagina, type Plan } from "@/lib/planes";
 
-export const metadata: Metadata = {
-  title: "Planes y precios",
-  description: "Planes de iEureka-Grader: paga solo las páginas que calificas. Precios en pesos mexicanos, IVA incluido.",
-};
-
-const preguntas: [string, string][] = [
-  ["¿Qué es un crédito?", "1 crédito = 1 página de alumno evaluada. Si una entrega trae 3 páginas, usa 3 créditos."],
-  [
-    "¿Qué no consume créditos?",
-    "Crear tus cursos, generar la actividad con IA, imprimir la hoja con QR, subir tu solución y armar la rúbrica.",
-  ],
-  [
-    "¿Cómo pago?",
-    "Con tarjeta de crédito o débito, en efectivo en OXXO o por transferencia SPEI. Si necesitas factura (CFDI), la pides al pagar.",
-  ],
-  [
-    "¿Qué pasa si se me acaban los créditos?",
-    "Tus actividades y reportes siguen disponibles y las entregas se siguen recibiendo. Las evalúas en cuanto compres más créditos.",
-  ],
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return { title: t.precios.metaTitulo, description: t.precios.metaDescripcion };
+}
 
 function Paloma({ claro }: { claro?: boolean }) {
   return (
@@ -36,24 +24,25 @@ function Paloma({ claro }: { claro?: boolean }) {
 }
 
 /** Botón de contacto del plan Escuela: el correo se configura en el servidor (CONTACTO_CORREO). */
-async function BotonContacto({ texto, clase }: { texto: string; clase: string }) {
+async function BotonContacto({ texto, clase, t }: { texto: string; clase: string; t: Diccionario }) {
   await connection();
   const correo = process.env.CONTACTO_CORREO;
   if (!correo) {
     return (
       <Link href="/registro" className={clase}>
-        Crea tu cuenta y escríbenos
+        {t.precios.creaYEscribenos}
       </Link>
     );
   }
   return (
-    <a href={`mailto:${correo}?subject=${encodeURIComponent("Plan Escuela de iEureka-Grader")}`} className={clase}>
+    <a href={`mailto:${correo}?subject=${encodeURIComponent(t.precios.asuntoEscuela)}`} className={clase}>
       {texto}
     </a>
   );
 }
 
-function TarjetaPlan({ plan }: { plan: Plan }) {
+function TarjetaPlan({ plan, t, locale }: { plan: Plan; t: Diccionario; locale: string }) {
+  const texto = t.planes[plan.id];
   const porPagina = precioPorPagina(plan);
   const ahorro = ahorroContra(plan, planDe("basico"));
   const d = plan.destacado;
@@ -67,42 +56,42 @@ function TarjetaPlan({ plan }: { plan: Plan }) {
     >
       <div className="flex items-center justify-between gap-2">
         <h2 id={`plan-${plan.id}`} className="text-xl font-semibold">
-          {plan.nombre}
+          {texto.nombre}
         </h2>
-        {d && <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">Más popular</span>}
+        {d && <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">{t.precios.masPopular}</span>}
       </div>
-      <p className={`mt-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{plan.lema}</p>
+      <p className={`mt-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{texto.lema}</p>
 
       <div className="mt-6 flex items-end gap-1.5">
         {plan.precio === undefined ? (
-          <span className="text-3xl font-semibold tracking-tight">A la medida</span>
+          <span className="text-3xl font-semibold tracking-tight">{t.precios.aLaMedida}</span>
         ) : (
           <>
-            <span className="text-4xl font-semibold tracking-tight">{pesos(plan.precio)}</span>
+            <span className="text-4xl font-semibold tracking-tight">{pesos(plan.precio, locale)}</span>
             <span className={`pb-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>MXN</span>
           </>
         )}
       </div>
-      <p className={`mt-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{plan.periodo}</p>
+      <p className={`mt-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{texto.periodo}</p>
       <p className={`mt-1 h-5 text-xs font-medium ${d ? "text-white" : "text-tinta-700"}`}>
-        {porPagina !== undefined && `$${porPagina.toFixed(2)} por página`}
-        {ahorro !== undefined && ` · ahorra ${ahorro} %`}
+        {porPagina !== undefined && formato(t.precios.porPagina, { p: `$${porPagina.toLocaleString(locale, { minimumFractionDigits: 2 })}` })}
+        {ahorro !== undefined && ` · ${formato(t.precios.ahorra, { n: ahorro })}`}
       </p>
 
       {plan.boton.href ? (
         <Link href={plan.boton.href} className={claseBoton}>
-          {plan.boton.texto}
+          {texto.boton}
         </Link>
       ) : (
-        <Suspense fallback={<span className={claseBoton}>{plan.boton.texto}</span>}>
-          <BotonContacto texto={plan.boton.texto} clase={claseBoton} />
+        <Suspense fallback={<span className={claseBoton}>{texto.boton}</span>}>
+          <BotonContacto texto={texto.boton} clase={claseBoton} t={t} />
         </Suspense>
       )}
 
       <div className={`mt-6 border-t pt-5 ${d ? "border-white/20" : "border-slate-100"}`}>
-        <p className={`text-sm font-medium ${d ? "text-white" : "text-slate-800"}`}>{plan.incluye}</p>
+        <p className={`text-sm font-medium ${d ? "text-white" : "text-slate-800"}`}>{texto.incluye}</p>
         <ul className="mt-3 space-y-2.5 text-sm">
-          {plan.ventajas.map((v) => (
+          {texto.ventajas.map((v) => (
             <li key={v} className={`flex gap-2.5 ${d ? "text-white" : "text-slate-600"}`}>
               <Paloma claro={d} />
               {v}
@@ -115,7 +104,9 @@ function TarjetaPlan({ plan }: { plan: Plan }) {
 }
 
 /** Página pública de planes y precios (se abre en otra pestaña desde la de ingreso). */
-export default function Precios() {
+export default async function Precios() {
+  const { idioma, t, locale } = await textos();
+  const pr = t.precios;
   return (
     <div className="flex min-h-full flex-1 flex-col bg-[#f6f7f9]">
       <header className="border-b border-slate-200 bg-white">
@@ -123,12 +114,13 @@ export default function Precios() {
           <Link href="/">
             <Logo grande />
           </Link>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <SelectorIdioma actual={idioma} etiqueta={t.comun.idioma} />
             <BotonLink href="/ingresar" variante="fantasma">
-              Ingresar
+              {t.comun.ingresar}
             </BotonLink>
             <BotonLink href="/registro" className="hidden sm:inline-flex">
-              Probar gratis
+              {t.comun.probarGratis}
             </BotonLink>
           </div>
         </div>
@@ -136,31 +128,24 @@ export default function Precios() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Planes que se ajustan a tu salón</h1>
-          <p className="mt-3 text-slate-600">
-            Paga solo las páginas que calificas. 1 crédito = 1 página de alumno evaluada. Precios en pesos mexicanos, IVA
-            incluido, sin suscripción.
-          </p>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{pr.titulo}</h1>
+          <p className="mt-3 text-slate-600">{pr.texto}</p>
         </div>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {PLANES.map((p) => (
-            <TarjetaPlan key={p.id} plan={p} />
+            <TarjetaPlan key={p.id} plan={p} t={t} locale={locale} />
           ))}
         </div>
 
         <section className="mt-16" aria-labelledby="precision">
           <h2 id="precision" className="text-2xl font-semibold tracking-tight">
-            Elige la precisión de la IA en cada actividad
+            {pr.precisionTitulo}
           </h2>
-          <p className="mt-2 max-w-3xl text-slate-600">
-            Todos los planes incluyen los tres niveles. Cada nivel usa un motor distinto: más precisión lee mejor los
-            procedimientos largos y la letra difícil, pero consume más tokens de IA. Lo eliges en tu configuración y en cada
-            actividad nueva.
-          </p>
+          <p className="mt-2 max-w-3xl text-slate-600">{pr.precisionTexto}</p>
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             {MOTORES.map((m) => {
-              const info = INFO_MOTOR[m];
+              const info = t.motores[m];
               const consumo = nivelConsumo({ motor: m, esfuerzo: "medio" });
               return (
                 <div key={m} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
@@ -169,13 +154,13 @@ export default function Precios() {
                   </div>
                   <p className="mt-2 text-sm text-slate-600">{info.descripcion}</p>
                   <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
-                    Consumo
-                    <span className="flex gap-1" aria-label={`Consumo ${consumo} de 5`}>
+                    {pr.consumo}
+                    <span className="flex gap-1" aria-label={formato(pr.consumoDe, { n: consumo })}>
                       {[1, 2, 3, 4, 5].map((i) => (
                         <span key={i} className={`h-1.5 w-5 rounded-full ${i <= consumo ? "bg-tinta-500" : "bg-slate-200"}`} />
                       ))}
                     </span>
-                    {m === PRECISION_PREDETERMINADA.motor && <span className="ml-auto font-medium text-tinta-700">Predeterminado</span>}
+                    {m === PRECISION_PREDETERMINADA.motor && <span className="ml-auto font-medium text-tinta-700">{pr.predeterminado}</span>}
                   </div>
                 </div>
               );
@@ -185,10 +170,10 @@ export default function Precios() {
 
         <section className="mt-16" aria-labelledby="preguntas">
           <h2 id="preguntas" className="text-2xl font-semibold tracking-tight">
-            Preguntas frecuentes
+            {pr.preguntasTitulo}
           </h2>
           <dl className="mt-6 grid gap-4 md:grid-cols-2">
-            {preguntas.map(([p, r]) => (
+            {pr.preguntas.map(([p, r]) => (
               <div key={p} className="rounded-xl bg-white p-5 ring-1 ring-slate-200">
                 <dt className="font-medium">{p}</dt>
                 <dd className="mt-1 text-sm text-slate-600">{r}</dd>

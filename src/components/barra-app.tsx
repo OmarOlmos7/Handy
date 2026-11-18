@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Idioma } from "@/lib/i18n/idiomas";
+import { SelectorIdioma } from "./selector-idioma";
 import { Logo } from "./ui";
 
 export function BarraApp({
@@ -9,12 +11,17 @@ export function BarraApp({
   usuario,
   extra,
   configuracion,
+  idioma,
+  textoConfiguracion = "Configuración",
 }: {
   enlaces: { href: string; texto: string; exacto?: boolean }[];
   usuario: { nombre: string; rol: string };
   extra?: React.ReactNode;
   /** Ruta de la configuración; muestra un engrane a la izquierda del nombre. */
   configuracion?: string;
+  /** Selector de idioma (idioma actual y etiqueta). */
+  idioma?: { actual: Idioma; etiqueta: string };
+  textoConfiguracion?: string;
 }) {
   const ruta = usePathname();
   return (
@@ -38,13 +45,14 @@ export function BarraApp({
           })}
         </nav>
         <div className="ml-auto flex items-center gap-3">
+          {idioma && <SelectorIdioma actual={idioma.actual} etiqueta={idioma.etiqueta} />}
           {extra}
           <div className="flex items-center gap-2">
             {configuracion && (
               <Link
                 href={configuracion}
-                title="Configuración"
-                aria-label="Configuración"
+                title={textoConfiguracion}
+                aria-label={textoConfiguracion}
                 aria-current={ruta.startsWith(configuracion) ? "page" : undefined}
                 className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
                   ruta.startsWith(configuracion) ? "bg-tinta-50 text-tinta-700" : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"

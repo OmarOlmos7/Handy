@@ -5,10 +5,12 @@ import { redirect } from "next/navigation";
 import { leer, modificar } from "@/lib/almacen";
 import { adoptarSinDueno, hashContrasena, normalizarCorreo, verificarContrasena } from "@/lib/cuentas";
 import { crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
+import { recordarIdioma } from "@/app/acciones-idioma";
 import { cerrarSesionAlumno, cerrarSesionProfesor, iniciarSesionAlumno, iniciarSesionProfesor } from "@/lib/sesion";
 
 const CREDITOS_INICIALES = Number(process.env.CREDITOS_INICIALES ?? 50);
 
+/** Vuelve al formulario con el error. En /registro e /ingresar es una clave de cuenta.errores del diccionario. */
 function volver(ruta: string, error: string): never {
   redirect(`${ruta}${ruta.includes("?") ? "&" : "?"}error=${encodeURIComponent(error)}`);
 }
@@ -19,10 +21,10 @@ export async function registrarProfesor(form: FormData) {
   const contrasena = String(form.get("contrasena") ?? "");
   const invitacion = String(form.get("invitacion") ?? "").trim();
 
-  if (!nombre || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) volver("/registro", "Escribe tu nombre y un correo válido.");
-  if (contrasena.length < 8) volver("/registro", "La contraseña debe tener al menos 8 caracteres.");
+  if (!nombre || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) volver("/registro", "datosRegistro");
+  if (contrasena.length < 8) volver("/registro", "contrasenaCorta");
   const codigoRequerido = process.env.REGISTRO_CODIGO;
-  if (codigoRequerido && invitacion !== codigoRequerido) volver("/registro", "El código de invitación no es correcto.");
+  if (codigoRequerido && invitacion !== codigoRequerido) volver("/registro", "invitacion");
 
   const id = `p-${crypto.randomBytes(6).toString("hex")}`;
   const contrasenaHash = hashContrasena(contrasena);
@@ -41,7 +43,7 @@ export async function registrarProfesor(form: FormData) {
     }
     return true;
   });
-  if (!creado) volver("/registro", "Ya existe una cuenta con ese correo. Ingresa con tu contraseña.");
+  if (!creado) volver("/registro", "yaExiste");
   await iniciarSesionProfesor(id);
   redirect("/profesor");
 }
@@ -51,9 +53,10 @@ export async function ingresarProfesor(form: FormData) {
   const contrasena = String(form.get("contrasena") ?? "");
   const profesor = (await leer()).profesores.find((p) => p.correo === correo);
   if (!profesor || !verificarContrasena(contrasena, profesor.contrasena)) {
-    volver("/ingresar", "Correo o contraseña incorrectos.");
+    volver("/ingresar", "credenciales");
   }
   await iniciarSesionProfesor(profesor.id);
+  await recordarIdioma(profesor.config?.idioma);
   redirect("/profesor");
 }
 

@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { ESFUERZOS, INFO_ESFUERZO, INFO_MOTOR, MOTORES, consumoRelativo, nivelConsumo } from "@/lib/configuracion";
+import { formato } from "@/lib/i18n/idiomas";
 import type { EsfuerzoIA, MotorIA } from "@/lib/tipos";
 
 /** Cinco rayitas que se llenan según el consumo de tokens. */
-export function MedidorConsumo({ nivel, etiqueta = "Consumo" }: { nivel: number; etiqueta?: string }) {
+export function MedidorConsumo({ nivel, etiqueta = "Consumo", ariaLabel }: { nivel: number; etiqueta?: string; ariaLabel?: string }) {
   return (
     <span className="inline-flex items-center gap-2 text-xs text-slate-500">
       {etiqueta}
-      <span className="flex gap-1" role="img" aria-label={`${etiqueta}: ${nivel} de 5`}>
+      <span className="flex gap-1" role="img" aria-label={ariaLabel ?? `${etiqueta}: ${nivel} de 5`}>
         {[1, 2, 3, 4, 5].map((i) => (
           <span
             key={i}
@@ -25,14 +26,34 @@ export function MedidorConsumo({ nivel, etiqueta = "Consumo" }: { nivel: number;
  * Configuración: elige el motor predeterminado (Rápido, Medio o Preciso) y el esfuerzo
  * de cada uno con una barra de tres posiciones (bajo, medio, alto).
  */
-export function ConfigPrecision({ motor, esfuerzos }: { motor: MotorIA; esfuerzos: Record<MotorIA, EsfuerzoIA> }) {
+/** Textos de la tarjeta de precisión (vienen del diccionario del idioma elegido). */
+export interface TextosPrecision {
+  motores: Record<MotorIA, { nombre: string; descripcion: string }>;
+  esfuerzos: Record<EsfuerzoIA, string>;
+  esfuerzo: string;
+  consumo: string;
+  /** "{e}: {n} de 5" */
+  consumoDe: string;
+  /** "≈ {n}× tokens" */
+  tokens: string;
+}
+
+export function ConfigPrecision({
+  motor,
+  esfuerzos,
+  textos,
+}: {
+  motor: MotorIA;
+  esfuerzos: Record<MotorIA, EsfuerzoIA>;
+  textos?: TextosPrecision;
+}) {
   const [elegido, setElegido] = useState(motor);
   const [nivel, setNivel] = useState(esfuerzos);
 
   return (
     <div className="grid gap-3 lg:grid-cols-3">
       {MOTORES.map((m) => {
-        const info = INFO_MOTOR[m];
+        const info = textos?.motores[m] ?? INFO_MOTOR[m];
         const activo = elegido === m;
         const p = { motor: m, esfuerzo: nivel[m] };
         return (
@@ -58,7 +79,7 @@ export function ConfigPrecision({ motor, esfuerzos }: { motor: MotorIA; esfuerzo
             </label>
 
             <fieldset className="mt-4">
-              <legend className="text-xs font-medium text-slate-600">Esfuerzo</legend>
+              <legend className="text-xs font-medium text-slate-600">{textos?.esfuerzo ?? "Esfuerzo"}</legend>
               <div className="mt-1 grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1">
                 {ESFUERZOS.map((e) => (
                   <label
@@ -73,14 +94,20 @@ export function ConfigPrecision({ motor, esfuerzos }: { motor: MotorIA; esfuerzo
                       onChange={() => setNivel({ ...nivel, [m]: e })}
                       className="sr-only"
                     />
-                    {INFO_ESFUERZO[e].nombre}
+                    {textos?.esfuerzos[e] ?? INFO_ESFUERZO[e].nombre}
                   </label>
                 ))}
               </div>
             </fieldset>
             <div className="mt-3 flex items-center justify-between gap-2">
-              <MedidorConsumo nivel={nivelConsumo(p)} />
-              <span className="text-xs text-slate-500">≈ {consumoRelativo(p)}× tokens</span>
+              <MedidorConsumo
+                nivel={nivelConsumo(p)}
+                etiqueta={textos?.consumo}
+                ariaLabel={textos && formato(textos.consumoDe, { e: textos.consumo, n: nivelConsumo(p) })}
+              />
+              <span className="text-xs text-slate-500">
+                {textos ? formato(textos.tokens, { n: consumoRelativo(p) }) : `≈ ${consumoRelativo(p)}× tokens`}
+              </span>
             </div>
           </div>
         );

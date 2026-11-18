@@ -2,70 +2,36 @@ import Link from "next/link";
 import { EjemploEntregable, type TipoEntregable } from "@/components/ejemplo-entregable";
 import { EjemploReactivo, type TipoEjemplo } from "@/components/ejemplo-reactivo";
 import { BotonLink, Logo } from "@/components/ui";
+import { SelectorIdioma } from "@/components/selector-idioma";
+import type { Diccionario } from "@/lib/i18n/diccionario";
+import { formato } from "@/lib/i18n/idiomas";
+import { textos } from "@/lib/i18n/servidor";
 import { PLANES, pesos } from "@/lib/planes";
 
-const pasos = [
-  {
-    titulo: "Aplica la actividad en papel",
-    texto: "Genera la actividad con IA (tipos de reactivos, ponderaciones y temas) o carga la tuya escaneada. Imprime la hoja con espacio para nombre, matrícula y calificación, y el código QR.",
-    imagen: "/inicio/paso-1-hoja.webp",
-    alt: "Hoja impresa de la actividad con su código QR",
-  },
-  {
-    titulo: "Los alumnos toman una foto con su teléfono",
-    texto: "Escanean el QR, toman una foto de cada página y la envían. La primera vez se registran con su correo y una clave de acceso para ver solo sus resultados.",
-    imagen: "/inicio/paso-2-celular.webp",
-    alt: "Pantalla del celular del alumno con su nombre, matrícula y la foto de su hoja",
-  },
-  {
-    titulo: "Tú subes la solución",
-    texto: "Escanea tu solución hecha a mano o pide a la IA que resuelva la actividad con tus condiciones. Con tus criterios y porcentajes se arma la rúbrica.",
-    imagen: "/inicio/paso-3-rubrica.webp",
-    alt: "Propuesta de evaluación con elementos, puntos, criterios y recomendaciones",
-  },
-  {
-    titulo: "La IA sugiere, tú apruebas",
-    texto: "Cada entrega se evalúa sola en cuanto llega. Recibes la calificación sugerida con la hoja corregida; revisas, ajustas y publicas.",
-    imagen: "/inicio/paso-4-revision.webp",
-    alt: "Hoja del alumno corregida con marcas numeradas, palomas, taches y comentarios",
-  },
+const IMAGENES_PASOS = ["/inicio/paso-1-hoja.webp", "/inicio/paso-2-celular.webp", "/inicio/paso-3-rubrica.webp", "/inicio/paso-4-revision.webp"];
+
+const ENTREGABLES: TipoEntregable[] = ["hoja", "alumno", "grupo", "excel"];
+
+const reactivos: { ejemplo: TipoEjemplo; proximamente?: boolean }[] = [
+  { ejemplo: "vf" },
+  { ejemplo: "opcion" },
+  { ejemplo: "alveolos" },
+  { ejemplo: "columnas" },
+  { ejemplo: "parentesis" },
+  { ejemplo: "desarrollo" },
+  { ejemplo: "algoritmo" },
+  { ejemplo: "ensayo" },
+  { ejemplo: "dibujo" },
+  { ejemplo: "audio", proximamente: true },
 ];
 
-const entregables: [string, string, TipoEntregable][] = [
-  ["Hoja corregida", "Palomas verdes, taches rojos y comentarios breves sobre la hoja del alumno.", "hoja"],
-  ["Reporte del alumno", "Datos de identificación, puntos positivos, puntos de mejora y calificación por elemento.", "alumno"],
-  ["Reporte del grupo", "Promedios, temas fuertes y débiles, reactivos con menor acierto y alumnos por nivel.", "grupo"],
-  ["Excel para Canvas", "Nombre, matrícula y calificación, más un CSV listo para importar al libro de calificaciones.", "excel"],
-];
-
-const reactivos: { tipo: string; ejemplo: TipoEjemplo; proximamente?: boolean }[] = [
-  { tipo: "Verdadero o falso", ejemplo: "vf" },
-  { tipo: "Opción múltiple", ejemplo: "opcion" },
-  { tipo: "Hoja de respuestas (alvéolos)", ejemplo: "alveolos" },
-  { tipo: "Relación de columnas", ejemplo: "columnas" },
-  { tipo: "Paréntesis", ejemplo: "parentesis" },
-  { tipo: "Desarrollos matemáticos", ejemplo: "desarrollo" },
-  { tipo: "Algoritmos y procedimientos", ejemplo: "algoritmo" },
-  { tipo: "Ensayos y producciones escritas", ejemplo: "ensayo" },
-  { tipo: "Dibujos y bocetos", ejemplo: "dibujo" },
-  { tipo: "Audios · producción oral", ejemplo: "audio", proximamente: true },
-];
-
-const paquetes = PLANES.map((p) => ({
-  nombre: p.nombre,
-  creditos: p.creditos,
-  precio: p.precio === undefined ? "Contáctanos" : p.precio === 0 ? "Gratis" : pesos(p.precio),
-  detalle: p.lema,
-  destacado: p.destacado,
-}));
-
-function HojaDemo() {
+function HojaDemo({ t }: { t: Diccionario["demo"] }) {
   return (
     <div className="relative mx-auto w-full max-w-sm rotate-1 rounded-lg bg-papel p-6 shadow-xl ring-1 ring-slate-200">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold text-slate-500">FÍSICA · 3° B</p>
-          <p className="text-sm font-semibold text-slate-800">Cinemática: MRU y MRUA</p>
+          <p className="text-xs font-semibold text-slate-500">{t.materia}</p>
+          <p className="text-sm font-semibold text-slate-800">{t.titulo}</p>
         </div>
         <div className="grid h-10 w-10 grid-cols-4 gap-px bg-white p-0.5 ring-1 ring-slate-300" aria-hidden>
           {[1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1].map((n, i) => (
@@ -74,29 +40,29 @@ function HojaDemo() {
         </div>
       </div>
       <p className="mt-3 text-sm text-slate-700">
-        Nombre: <span className="font-mano text-xl text-slate-700">Sofía Hernández</span>
+        {t.nombre} <span className="font-mano text-xl text-slate-700">Sofía Hernández</span>
       </p>
       <div className="mt-4 space-y-3 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-slate-700">
-            1. V o F: velocidad constante ⇒ a = 0 <span className="font-mano text-xl text-slate-600">V</span>
+            {t.r1} <span className="font-mano text-xl text-slate-600">{t.v}</span>
           </span>
           <span className="text-xl font-bold text-acierto">✓</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-slate-700">
-            2. Unidad de aceleración <span className="font-mano text-xl text-slate-600">a) m/s</span>
+            {t.r2} <span className="font-mano text-xl text-slate-600">a) m/s</span>
           </span>
           <span className="text-xl font-bold text-error">✗</span>
         </div>
-        <p className="font-mano -mt-2 text-lg leading-tight text-error">Es m/s², revisa las unidades</p>
+        <p className="font-mano -mt-2 text-lg leading-tight text-error">{t.c2}</p>
         <div className="rounded border border-dashed border-slate-300 p-2">
-          <p className="text-slate-700">5. 150 km en 2 h, calcula v</p>
+          <p className="text-slate-700">{t.r5}</p>
           <p className="font-mano text-xl leading-snug text-slate-600">v = d / t = 150 / 2</p>
           <p className="font-mano text-xl leading-snug text-slate-600">
             v = 75 <span className="text-error underline decoration-error decoration-wavy">  </span>
           </p>
-          <p className="font-mano text-lg leading-tight text-error">Faltan unidades: km/h · 1.5 / 2</p>
+          <p className="font-mano text-lg leading-tight text-error">{t.c5}</p>
         </div>
       </div>
       <div className="absolute -right-4 -top-4 rounded-full bg-tinta-600 px-3 py-1.5 text-sm font-semibold text-white shadow">
@@ -106,21 +72,32 @@ function HojaDemo() {
   );
 }
 
-export default function Inicio() {
+export default async function Inicio() {
+  const { idioma, t, locale } = await textos();
+  const i = t.inicio;
+  const paquetes = PLANES.map((p) => ({
+    id: p.id,
+    nombre: t.planes[p.id].nombre,
+    creditos: p.creditos,
+    precio: p.precio === undefined ? i.contactanos : p.precio === 0 ? i.gratisPrecio : pesos(p.precio, locale),
+    detalle: t.planes[p.id].lema,
+    destacado: p.destacado,
+  }));
   return (
     <div className="flex flex-col">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4">
           <Logo grande />
           <nav className="hidden gap-6 text-sm text-slate-600 lg:flex">
-            <a href="#como-funciona" className="hover:text-slate-900">Cómo funciona</a>
-            <a href="#entregables" className="hover:text-slate-900">Qué recibes</a>
-            <a href="#precios" className="hover:text-slate-900">Precios</a>
-            <a href="#privacidad" className="hover:text-slate-900">Privacidad</a>
+            <a href="#como-funciona" className="hover:text-slate-900">{i.nav.comoFunciona}</a>
+            <a href="#entregables" className="hover:text-slate-900">{i.nav.queRecibes}</a>
+            <a href="#precios" className="hover:text-slate-900">{i.nav.precios}</a>
+            <a href="#privacidad" className="hover:text-slate-900">{i.nav.privacidad}</a>
           </nav>
-          <div className="flex gap-2">
-            <BotonLink href="/ingresar" variante="fantasma">Ingresar</BotonLink>
-            <BotonLink href="/registro" className="hidden sm:inline-flex">Probar gratis</BotonLink>
+          <div className="flex flex-wrap items-center gap-2">
+            <SelectorIdioma actual={idioma} etiqueta={t.comun.idioma} />
+            <BotonLink href="/ingresar" variante="fantasma">{t.comun.ingresar}</BotonLink>
+            <BotonLink href="/registro" className="hidden sm:inline-flex">{t.comun.probarGratis}</BotonLink>
           </div>
         </div>
       </header>
@@ -130,100 +107,89 @@ export default function Inicio() {
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 md:grid-cols-2 md:py-24">
             <div>
               <p className="mb-3 inline-block rounded-full bg-white px-3 py-1 text-xs font-medium text-tinta-700 ring-1 ring-tinta-200">
-                Para profesores que siguen calificando en papel
+                {i.etiqueta}
               </p>
-              <h1 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-                Califica las actividades impresas en minutos, no en fines de semana.
-              </h1>
-              <p className="mt-5 text-lg text-slate-600">
-                Tus alumnos fotografían su hoja, tú subes tu solución y la IA sugiere la calificación, marca
-                aciertos y errores sobre la hoja y arma los reportes. Tú revisas y apruebas antes de que
-                llegue al alumno.
-              </p>
+              <h1 className="text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">{i.titulo}</h1>
+              <p className="mt-5 text-lg text-slate-600">{i.texto}</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <BotonLink href="/registro">Crear cuenta de profesor</BotonLink>
+                <BotonLink href="/registro">{i.crearCuenta}</BotonLink>
                 <BotonLink href="/alumno" variante="secundario">
-                  Soy alumno: ver mis reportes
+                  {i.soyAlumno}
                 </BotonLink>
               </div>
-              <p className="mt-4 text-sm text-slate-500">50 páginas gratis para probar. Sin tarjeta.</p>
+              <p className="mt-4 text-sm text-slate-500">{i.gratis}</p>
             </div>
-            <HojaDemo />
+            <HojaDemo t={t.demo} />
           </div>
         </section>
 
         <section id="como-funciona" className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-3xl font-semibold tracking-tight">Cómo funciona</h2>
-          <p className="mt-2 max-w-2xl text-slate-600">
-            La actividad se hace en papel, como siempre. La tecnología entra después, para revisar.
-          </p>
+          <h2 className="text-3xl font-semibold tracking-tight">{i.comoFunciona}</h2>
+          <p className="mt-2 max-w-2xl text-slate-600">{i.comoFuncionaTexto}</p>
           <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {pasos.map((p, i) => (
-              <li key={p.titulo} className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+            {i.pasos.map((p, n) => (
+              <li key={n} className="flex flex-col overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
                 <div className="flex h-56 items-center justify-center border-b border-slate-100 bg-slate-50 p-3">
-                  <a href={p.imagen} target="_blank" className="flex h-full w-full items-center justify-center" title="Ver imagen completa">
+                  <a href={IMAGENES_PASOS[n]} target="_blank" className="flex h-full w-full items-center justify-center" title={i.verImagen}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={p.imagen} alt={p.alt} loading="lazy" className="max-h-full w-auto max-w-full rounded-md object-contain shadow-sm" />
+                    <img src={IMAGENES_PASOS[n]} alt={p.alt} loading="lazy" className="max-h-full w-auto max-w-full rounded-md object-contain shadow-sm" />
                   </a>
                 </div>
                 <div className="p-5">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-tinta-600 text-sm font-semibold text-white">
-                  {i + 1}
-                </span>
-                <h3 className="mt-4 font-semibold">{p.titulo}</h3>
-                <p className="mt-2 text-sm text-slate-600">{p.texto}</p>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-tinta-600 text-sm font-semibold text-white">
+                    {n + 1}
+                  </span>
+                  <h3 className="mt-4 font-semibold">{p.titulo}</h3>
+                  <p className="mt-2 text-sm text-slate-600">{p.texto}</p>
                 </div>
               </li>
             ))}
           </ol>
-          <p className="mt-3 text-xs text-slate-500">Imágenes de ejemplo con datos inventados. Toca una imagen para verla completa.</p>
+          <p className="mt-3 text-xs text-slate-500">{i.notaImagenes}</p>
         </section>
 
         <section className="border-y border-slate-200 bg-white">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <h2 className="text-3xl font-semibold tracking-tight">Evalúa todo tipo de reactivos</h2>
-            <p className="mt-2 max-w-2xl text-slate-600">
-              Los cerrados se califican contra tu clave. En los desarrollos, la IA compara paso a paso con tu
-              solución: datos, ecuación, sustitución, desarrollo y resultado con unidades.
-            </p>
+            <h2 className="text-3xl font-semibold tracking-tight">{i.reactivosTitulo}</h2>
+            <p className="mt-2 max-w-2xl text-slate-600">{i.reactivosTexto}</p>
             <div className="mt-8 overflow-x-auto rounded-xl ring-1 ring-slate-200">
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
-                    <th className="w-2/5 px-4 py-3 font-medium">Tipo de reactivo</th>
-                    <th className="px-4 py-3 font-medium">Ejemplo</th>
+                    <th className="w-2/5 px-4 py-3 font-medium">{i.colTipo}</th>
+                    <th className="px-4 py-3 font-medium">{i.colEjemplo}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {reactivos.map((r) => (
-                    <tr key={r.tipo} className="align-middle">
+                    <tr key={r.ejemplo} className="align-middle">
                       <td className="px-4 py-4 font-medium text-slate-800">
-                        {r.tipo}
+                        {i.tipos[r.ejemplo]}
                         {r.proximamente && (
-                          <span className="ml-2 rounded-full bg-aviso-suave px-2 py-0.5 text-xs font-medium text-aviso">Próximamente</span>
+                          <span className="ml-2 rounded-full bg-aviso-suave px-2 py-0.5 text-xs font-medium text-aviso">{i.proximamente}</span>
                         )}
                       </td>
                       <td className="px-4 py-4">
-                        <EjemploReactivo tipo={r.ejemplo} />
+                        <EjemploReactivo tipo={r.ejemplo} t={t.ejemplos} />
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="mt-3 text-xs text-slate-500">Ejemplos ilustrativos con datos inventados.</p>
+            <p className="mt-3 text-xs text-slate-500">{i.notaEjemplos}</p>
           </div>
         </section>
 
         <section id="entregables" className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-3xl font-semibold tracking-tight">Qué recibes al terminar</h2>
-          <p className="mt-2 text-slate-600">Ejemplos ilustrativos con datos inventados.</p>
+          <h2 className="text-3xl font-semibold tracking-tight">{i.entregablesTitulo}</h2>
+          <p className="mt-2 text-slate-600">{i.notaEjemplos}</p>
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
-            {entregables.map(([t, d, ejemplo]) => (
-              <div key={t} className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-                <h3 className="font-semibold">{t}</h3>
-                <p className="mt-2 text-sm text-slate-600">{d}</p>
-                <EjemploEntregable tipo={ejemplo} />
+            {ENTREGABLES.map((e) => (
+              <div key={e} className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+                <h3 className="font-semibold">{i.entregables[e][0]}</h3>
+                <p className="mt-2 text-sm text-slate-600">{i.entregables[e][1]}</p>
+                <EjemploEntregable tipo={e} t={t.entregable} />
               </div>
             ))}
           </div>
@@ -231,57 +197,56 @@ export default function Inicio() {
 
         <section id="precios" className="border-y border-slate-200 bg-white">
           <div className="mx-auto max-w-6xl px-4 py-16">
-            <h2 className="text-3xl font-semibold tracking-tight">Paga solo lo que calificas</h2>
-            <p className="mt-2 max-w-2xl text-slate-600">
-              1 crédito = 1 página de alumno evaluada. Subir tu solución y generar la rúbrica no cuesta.
-              Precios en pesos mexicanos, IVA incluido.
-            </p>
+            <h2 className="text-3xl font-semibold tracking-tight">{i.preciosTitulo}</h2>
+            <p className="mt-2 max-w-2xl text-slate-600">{i.preciosTexto}</p>
             <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {paquetes.map((p) => (
                 <div
-                  key={p.nombre}
+                  key={p.id}
                   className={`rounded-xl p-6 ring-1 ${p.destacado ? "bg-tinta-600 text-white ring-tinta-600" : "bg-white ring-slate-200"}`}
                 >
                   <h3 className="font-semibold">{p.nombre}</h3>
                   <p className="mt-3 text-3xl font-semibold">{p.precio}</p>
                   <p className={`mt-1 text-sm ${p.destacado ? "text-tinta-100" : "text-slate-500"}`}>
-                    {p.creditos.toLocaleString("es-MX")} créditos
+                    {formato(t.comun.creditos, { n: p.creditos.toLocaleString(locale) })}
                   </p>
                   <p className={`mt-4 text-sm ${p.destacado ? "text-white" : "text-slate-600"}`}>{p.detalle}</p>
                 </div>
               ))}
             </div>
             <Link href="/precios" className="mt-6 inline-block text-sm font-medium text-tinta-700 hover:underline">
-              Ver qué incluye cada plan →
+              {i.verPlanes}
             </Link>
           </div>
         </section>
 
         <section id="privacidad" className="mx-auto max-w-6xl px-4 py-16">
-          <h2 className="text-3xl font-semibold tracking-tight">Datos de tus alumnos, protegidos</h2>
+          <h2 className="text-3xl font-semibold tracking-tight">{i.privacidadTitulo}</h2>
           <ul className="mt-6 grid gap-4 text-sm text-slate-700 md:grid-cols-3">
-            <li className="rounded-xl bg-white p-5 ring-1 ring-slate-200">
-              Las hojas se guardan en servidores privados y solo se comparten con enlaces que expiran.
-            </li>
-            <li className="rounded-xl bg-white p-5 ring-1 ring-slate-200">
-              A la IA no se envían nombres ni matrículas, solo la imagen de las respuestas.
-            </li>
-            <li className="rounded-xl bg-white p-5 ring-1 ring-slate-200">
-              Tú decides cuándo borrar las hojas al terminar el ciclo escolar.
-            </li>
+            {i.privacidad.map((texto) => (
+              <li key={texto} className="rounded-xl bg-white p-5 ring-1 ring-slate-200">
+                {texto}
+              </li>
+            ))}
           </ul>
         </section>
       </main>
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <Logo />
-          <div className="flex gap-4">
-            <Link href="#privacidad">Aviso de privacidad</Link>
-            <Link href="/precios">Precios</Link>
-            <Link href="/ingresar">Ingresar</Link>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link href="#privacidad">{i.avisoPrivacidad}</Link>
+            <Link href="/precios">{t.comun.precios}</Link>
+            <Link href="/ingresar">{t.comun.ingresar}</Link>
+            <SelectorIdioma actual={idioma} etiqueta={t.comun.idioma} />
           </div>
         </div>
+        <p className="mx-auto max-w-6xl px-4 pb-6 text-xs text-slate-400">
+          <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
+            {t.comun.ubicacionIp}
+          </a>
+        </p>
       </footer>
     </div>
   );

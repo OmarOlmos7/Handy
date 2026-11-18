@@ -177,8 +177,11 @@ export function Logo({ claro = false, grande = false }: { claro?: boolean; grand
   );
 }
 
-export function fechaLarga(iso: string) {
+export function fechaLarga(iso: string, locale?: string) {
   const [a, m, d] = iso.split("-").map(Number);
+  if (locale && !locale.startsWith("es")) {
+    return new Date(Date.UTC(a, m - 1, d)).toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  }
   const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
   return `${d} ${meses[m - 1]} ${a}`;
 }

@@ -16,12 +16,17 @@ export const NIVELES_REPORTE: { clave: NivelReporte; nombre: string; color: stri
   { clave: "bajo", nombre: "Bajo", color: "#dc2626" },
 ];
 
-/** Valida los límites: enteros, 1 ≤ medio < alto < superior ≤ 100. Devuelve un error o los rangos. */
-export function validarRangos(r: { medio: number; alto: number; superior: number }): RangosCalificacion | string {
+/**
+ * Valida los límites: enteros, 1 ≤ medio < alto < superior ≤ 100. Devuelve los rangos o la
+ * clave del error (se traduce con el diccionario, en configuracion.avisos).
+ */
+export function validarRangos(
+  r: { medio: number; alto: number; superior: number },
+): RangosCalificacion | "rangosEnteros" | "rangosLimites" | "rangosOrden" {
   const { medio, alto, superior } = r;
-  if (![medio, alto, superior].every((n) => Number.isInteger(n))) return "Los límites deben ser números enteros.";
-  if (medio < 1 || superior > 100) return "Los límites deben estar entre 1 y 100.";
-  if (!(medio < alto && alto < superior)) return "Cada nivel debe empezar después del anterior (Medio < Alto < Superior).";
+  if (![medio, alto, superior].every((n) => Number.isInteger(n))) return "rangosEnteros";
+  if (medio < 1 || superior > 100) return "rangosLimites";
+  if (!(medio < alto && alto < superior)) return "rangosOrden";
   return { medio, alto, superior };
 }
 
