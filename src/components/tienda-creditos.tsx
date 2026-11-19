@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { PLANES, pesos, type Plan } from "@/lib/planes";
+import { type Divisa, formatoPorPagina, formatoPrecio } from "@/lib/divisas";
+import { PLANES, type Plan } from "@/lib/planes";
 import { Boton } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
@@ -10,7 +11,7 @@ const paquetes = PLANES.filter((p) => p.enTienda).map((p) => ({ id: p.id, credit
 
 /** Demostración del flujo de compra. En producción redirige al checkout de Mercado Pago o Stripe
  * y los créditos se acreditan solo cuando llega el webhook de pago confirmado. */
-export function TiendaCreditos() {
+export function TiendaCreditos({ divisa }: { divisa: Divisa }) {
   const { t, locale } = useTextos();
   const tc = t.profesor.creditos;
   const nombre = (id: Plan["id"]) => t.planes[id].nombre;
@@ -36,10 +37,10 @@ export function TiendaCreditos() {
               <span className="font-semibold">{nombre(x.id)}</span>
               {x.destacado && <span className="rounded-full bg-tinta-50 px-2 py-0.5 text-xs text-tinta-700">{tc.popular}</span>}
             </span>
-            <span className="mt-2 block text-2xl font-semibold">{pesos(x.precio, locale)}</span>
+            <span className="mt-2 block text-2xl font-semibold">{formatoPrecio(x.precio, divisa, locale)}</span>
             <span className="block text-sm text-slate-500">{formato(t.comun.creditos, { n: x.creditos.toLocaleString(locale) })}</span>
             <span className="mt-2 block text-xs text-slate-500">
-              {formato(tc.porPagina, { p: `$${(x.precio / x.creditos).toFixed(2)}` })}
+              {formato(tc.porPagina, { p: formatoPorPagina(x.precio, x.creditos, divisa, locale) })}
             </span>
           </button>
         ))}
@@ -62,9 +63,10 @@ export function TiendaCreditos() {
           </div>
           <div className="flex justify-between border-t border-slate-100 pt-2 font-semibold">
             <dt>{tc.total}</dt>
-            <dd>{pesos(p.precio, locale)}</dd>
+            <dd>{formatoPrecio(p.precio, divisa, locale)}</dd>
           </div>
         </dl>
+        {divisa.codigo !== "MXN" && <p className="mt-2 text-xs text-slate-500">{tc.cobroEnMxn}</p>}
         <fieldset className="mt-4 space-y-2 text-sm">
           <legend className="mb-1 font-medium">{tc.metodo}</legend>
           {(["tarjeta", "oxxo", "spei"] as const).map((v) => (
@@ -83,7 +85,7 @@ export function TiendaCreditos() {
           </p>
         ) : (
           <Boton className="mt-4 w-full" onClick={() => setEnviado(true)}>
-            {formato(tc.pagar, { p: pesos(p.precio, locale) })}
+            {formato(tc.pagar, { p: formatoPrecio(p.precio, divisa, locale) })}
           </Boton>
         )}
       </div>

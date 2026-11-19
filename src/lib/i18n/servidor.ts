@@ -8,6 +8,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { diccionarioDe } from "./diccionario";
+import { divisaDePais, type Divisa } from "../divisas";
 import { paisDeIp } from "./geoip";
 import { IDIOMA_PROFESOR_INICIAL, LOCALE, elegirIdioma, esIdioma, vistaDeRuta, type Idioma } from "./idiomas";
 
@@ -28,6 +29,9 @@ export const idiomaPublico = cache(async (): Promise<Idioma> => {
   const h = await headers();
   return elegirIdioma({ pais: paisDeIp(ipDeCabeceras(h)), acceptLanguage: h.get("accept-language") });
 });
+
+/** Divisa de los precios según el país de la IP del visitante (dólares si no se sabe). */
+export const divisaActual = cache(async (): Promise<Divisa> => divisaDePais(paisDeIp(ipDeCabeceras(await headers()))));
 
 /** Idioma guardado del profesor con sesión (undefined si no hay sesión). */
 const idiomaDelProfesor = cache(async (): Promise<Idioma | undefined> => {

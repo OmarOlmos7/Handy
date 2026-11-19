@@ -6,7 +6,7 @@ import { QuitarEjemplo } from "@/components/quitar-ejemplo";
 import { saldo } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
-import { textos } from "@/lib/i18n/servidor";
+import { divisaActual, textos } from "@/lib/i18n/servidor";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
@@ -34,7 +34,7 @@ export default async function Creditos() {
         </Tarjeta>
       </div>
       <h2 className="mb-3 text-lg font-semibold">{tc.comprar}</h2>
-      <TiendaCreditos />
+      <TiendaCreditos divisa={await divisaActual()} />
       <h2 className="mb-3 mt-10 text-lg font-semibold">{tc.movimientos}</h2>
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <table className="w-full text-left text-sm">
