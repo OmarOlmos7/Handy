@@ -4,6 +4,7 @@ import {
   configuracionDe,
   consumoRelativo,
   contarNiveles,
+  porcentajeAltasBajas,
   creditosPorPagina,
   intervaloNivel,
   nivelConsumo,
@@ -36,6 +37,14 @@ describe("rangos de calificación", () => {
     expect(typeof validarRangos({ medio: 0, alto: 70, superior: 96 })).toBe("string");
     expect(typeof validarRangos({ medio: 70, alto: 85, superior: 101 })).toBe("string");
     expect(typeof validarRangos({ medio: 70.5, alto: 85, superior: 96 })).toBe("string");
+  });
+});
+
+describe("notas altas y bajas", () => {
+  it("cuenta Alto y Superior como altas y Bajo como bajas", () => {
+    expect(porcentajeAltasBajas([50, 69, 70, 84, 85, 96, 100, 90])).toEqual({ altas: 50, bajas: 25, total: 8 });
+    expect(porcentajeAltasBajas([60, 80], { medio: 60, alto: 80, superior: 90 })).toEqual({ altas: 50, bajas: 0, total: 2 });
+    expect(porcentajeAltasBajas([])).toBeUndefined();
   });
 });
 

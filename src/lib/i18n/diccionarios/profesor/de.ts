@@ -176,6 +176,12 @@ const profesor: Diccionario["profesor"] = {
     ],
   },
   actividad: {
+    notasAltas: "% gute Noten",
+    notasAltasTexto: "Note ab {r} (von {e}).",
+    notasBajas: "% schwache Noten",
+    notasBajasTexto: "Note unter {r} (von {e}).",
+    sinCalificaciones: "Noch keine bewerteten Abgaben.",
+    sinPuntajeDesempeno: "Aufgabe ohne Punkte.",
     resultadosVisibles: "Ergebnisse sichtbar ab {f}",
     analiticas: "Analysen der Aufgabe",
     evaluandoN: "Die KI bewertet {n} Abgaben. Diese Seite aktualisiert sich selbst.",

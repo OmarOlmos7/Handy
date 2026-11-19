@@ -176,6 +176,12 @@ const profesor: Diccionario["profesor"] = {
     ],
   },
   actividad: {
+    notasAltas: "% high grades",
+    notasAltasTexto: "Grade of {r} or more (out of {e}).",
+    notasBajas: "% low grades",
+    notasBajasTexto: "Grade below {r} (out of {e}).",
+    sinCalificaciones: "No graded submissions yet.",
+    sinPuntajeDesempeno: "Activity without scores.",
     resultadosVisibles: "Results visible from {f}",
     analiticas: "Activity analytics",
     evaluandoN: "The AI is grading {n} submissions. This page refreshes on its own.",
