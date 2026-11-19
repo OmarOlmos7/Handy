@@ -247,6 +247,11 @@ export interface CambiosActividad {
   reactivos: { numero: number; enunciado: string; tema: string; puntos: number; opciones?: string[] }[];
 }
 
+/** Lo que se imprime de cada reactivo (texto, opciones y puntos), para saber si la hoja cambió. */
+function textoImpreso(reactivos: Reactivo[]): string {
+  return JSON.stringify(reactivos.map((r) => [r.numero, r.enunciado, r.opciones ?? [], r.puntos]));
+}
+
 /**
  * Modifica una actividad ya creada: datos generales, si requiere solución, las instrucciones
  * impresas y el texto, tema y puntos de cada reactivo (no agrega ni quita reactivos).
@@ -256,8 +261,10 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
   if (!titulo) throw new Error("Escribe el título");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(c.fecha)) throw new Error("Fecha no válida");
   const desde = deCampoFechaHora(c.resultadosDesde);
+  let carpetaVieja: string | undefined;
   await enActividadPropia(actividadId, (db) => {
     const a = actividadDe(db, actividadId)!;
+    const textoAntes = textoImpreso(a.reactivos);
     a.titulo = titulo;
     a.fechaAplicacion = c.fecha;
     a.resultadosDesde = desde;
@@ -276,7 +283,18 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
       if (Number.isFinite(n.puntos) && n.puntos > 0) r.puntos = Math.min(1000, n.puntos);
       if (n.opciones && r.tipo === "opcion_multiple") r.opciones = n.opciones.map((x) => x.trim()).filter(Boolean).slice(0, 8);
     }
+    // Actividad escaneada cuyo texto cambió: el PDF anterior ya no coincide. Se borra y la hoja se
+    // vuelve a generar con los textos nuevos (hoja de la app con QR, editable también con IA).
+    if (a.origen === "escaneada" && a.reactivos.length > 0 && textoImpreso(a.reactivos) !== textoAntes) {
+      const carpeta = `actividades/${actividadId}/hoja`;
+      if ((a.archivos ?? []).every((r) => r.startsWith(`${carpeta}/`))) carpetaVieja = carpeta;
+      a.origen = "ia";
+      a.archivos = undefined;
+      a.instruccionesAlumno = a.instruccionesAlumno ?? [];
+      a.hojaAnterior = undefined;
+    }
   });
+  if (carpetaVieja) borrarCarpeta(carpetaVieja);
   revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
   revalidatePath("/profesor", "layout");
 }

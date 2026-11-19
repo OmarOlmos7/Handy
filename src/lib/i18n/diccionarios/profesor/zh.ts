@@ -526,6 +526,7 @@ const profesor: Diccionario["profesor"] = {
     guardando: "正在保存…",
   },
   editarActividad: {
+    avisoEscaneada: "此作业使用你扫描的文档。如果修改题目的文字、选项或分值，保存时会删除该 PDF，并根据这里的文字生成带二维码的新作业纸。",
     titulo: "修改作业",
     subtitulo: "修改基本信息、是否需要解答、批改方式，以及每道题的题目、知识点和分数。",
     avisoEntregas: "已经收到 {n} 份提交。如果修改题目文字，学生手中的作业纸将不再一致；已收到的提交不会自动重新批改。",

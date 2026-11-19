@@ -533,6 +533,7 @@ const profesor = {
     guardando: "Guardando…",
   },
   editarActividad: {
+    avisoEscaneada: "Esta actividad usa tu documento escaneado. Si cambias el texto, las opciones o los puntos de los reactivos, al guardar se borra ese PDF y se genera una hoja nueva con QR a partir de los textos de aquí.",
     titulo: "Modificar actividad",
     subtitulo: "Cambia los datos, si requiere solución, cómo se corrige y el texto, tema y puntos de cada reactivo.",
     avisoEntregas: "Ya llegaron {n} entregas. Si cambias el texto de los reactivos, la hoja que tienen los alumnos ya no coincidirá; las entregas que ya llegaron no se vuelven a evaluar solas.",

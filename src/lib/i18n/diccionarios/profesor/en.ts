@@ -535,6 +535,7 @@ const profesor: Diccionario["profesor"] = {
     guardando: "Saving…",
   },
   editarActividad: {
+    avisoEscaneada: "This activity uses your scanned document. If you change the text, options or points of the items, saving deletes that PDF and generates a new sheet with a QR code from the text here.",
     titulo: "Edit assignment",
     subtitulo: "Change the details, whether it needs a solution, how it is corrected, and each question's text, topic and points.",
     avisoEntregas: "{n} submissions have already arrived. If you change the question text, the sheet students have won't match; submissions already received aren't re-graded automatically.",

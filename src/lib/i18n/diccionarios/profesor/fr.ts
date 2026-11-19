@@ -535,6 +535,7 @@ const profesor: Diccionario["profesor"] = {
     guardando: "Enregistrement…",
   },
   editarActividad: {
+    avisoEscaneada: "Cette activité utilise votre document numérisé. Si vous modifiez le texte, les options ou les points des questions, l'enregistrement supprime ce PDF et génère une nouvelle feuille avec QR à partir des textes ci-dessous.",
     titulo: "Modifier l'activité",
     subtitulo: "Modifie les informations, si une solution est nécessaire, le mode de correction et le texte, le thème et les points de chaque question.",
     avisoEntregas: "{n} rendus sont déjà arrivés. Si tu modifies le texte des questions, la feuille des élèves ne correspondra plus ; les rendus déjà reçus ne sont pas réévalués automatiquement.",

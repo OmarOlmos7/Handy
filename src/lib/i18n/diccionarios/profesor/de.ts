@@ -535,6 +535,7 @@ const profesor: Diccionario["profesor"] = {
     guardando: "Wird gespeichert…",
   },
   editarActividad: {
+    avisoEscaneada: "Diese Aufgabe nutzt dein eingescanntes Dokument. Wenn du Text, Optionen oder Punkte der Aufgaben änderst, wird beim Speichern dieses PDF gelöscht und ein neues Blatt mit QR-Code aus den Texten hier erstellt.",
     titulo: "Aufgabe bearbeiten",
     subtitulo: "Ändere die Angaben, ob eine Lösung nötig ist, wie korrigiert wird, sowie Text, Thema und Punkte jeder Aufgabe.",
     avisoEntregas: "Es sind bereits {n} Abgaben eingegangen. Wenn du den Aufgabentext änderst, passt das Blatt der Schüler/innen nicht mehr; bereits eingegangene Abgaben werden nicht automatisch neu bewertet.",

@@ -535,6 +535,7 @@ const profesor: Diccionario["profesor"] = {
     guardando: "Salvando…",
   },
   editarActividad: {
+    avisoEscaneada: "Esta atividade usa o seu documento digitalizado. Se você mudar o texto, as opções ou os pontos das questões, ao salvar esse PDF é apagado e uma nova folha com QR é gerada a partir dos textos daqui.",
     titulo: "Editar atividade",
     subtitulo: "Altere os dados, se precisa de solução, como é corrigida e o texto, tema e pontos de cada questão.",
     avisoEntregas: "Já chegaram {n} entregas. Se mudar o texto das questões, a folha dos alunos não vai coincidir; as entregas recebidas não são reavaliadas automaticamente.",
