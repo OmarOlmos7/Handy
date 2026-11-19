@@ -95,8 +95,8 @@ const de: Diccionario = {
     },
     preciosTitulo: "Zahlen Sie nur, was Sie korrigieren",
     preciosTexto:
-      "1 Credit = 1 bewertete Schülerseite. Lösung hochladen und Bewertungsraster erstellen ist kostenlos. Preise in mexikanischen Pesos, inkl. MwSt.",
-    contactanos: "Kontakt",
+      "Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Lösung hochladen und Bewertungsraster erstellen ist kostenlos. Preise in mexikanischen Pesos, inkl. MwSt.",
+    contactanos: "Kontakt für einen institutionellen Plan",
     gratisPrecio: "Kostenlos",
     verPlanes: "Leistungen der einzelnen Tarife ansehen →",
     privacidadTitulo: "Die Daten Ihrer Schüler, geschützt",
@@ -211,7 +211,7 @@ const de: Diccionario = {
       boton: "Kostenloses Konto erstellen",
       incluye: "Zum Ausprobieren:",
       ventajas: [
-        "50 bewertete Schülerseiten",
+        "50 Credits: 50 Seiten auf Schnell oder 12 auf Mittel",
         "Unbegrenzt Kurse und Schüler/innen",
         "KI-generierte Aufgaben und druckbare Blätter mit QR",
         "Abgabe per Handy als Foto oder PDF",
@@ -225,7 +225,7 @@ const de: Diccionario = {
       boton: "Basis wählen",
       incluye: "Alles aus Kostenlos, plus:",
       ventajas: [
-        "300 bewertete Seiten",
+        "300 Credits: 300 Seiten auf Schnell oder 75 auf Mittel",
         "Ein bis zwei Aufgaben pro Monat mit einer Klasse",
         "Alle drei Präzisionsstufen: Schnell, Mittel und Präzise",
         "Klassenanalysen und Berichte als PDF und Excel",
@@ -239,7 +239,7 @@ const de: Diccionario = {
       boton: "Pro wählen",
       incluye: "Alles aus Basis, plus:",
       ventajas: [
-        "600 bewertete Seiten",
+        "600 Credits: 600 Seiten auf Schnell oder 150 auf Mittel",
         "Zwei oder drei Klassen für einen Bewertungszeitraum",
         "Lernempfehlungen mit Videos und Texten für jede/n Schüler/in",
         "Notenbuch des Kurses",
@@ -252,7 +252,7 @@ const de: Diccionario = {
       boton: "Akademie wählen",
       incluye: "Alles aus Pro, plus:",
       ventajas: [
-        "1.500 bewertete Seiten",
+        "1.500 Credits: 1.500 Seiten auf Schnell oder 375 auf Mittel",
         "Mehrere Klassen für das ganze Semester",
         "Spielraum für die Stufe Präzise bei Prüfungen",
         "Berichte pro Schüler/in und Klasse über den ganzen Kurs",
@@ -261,11 +261,11 @@ const de: Diccionario = {
     escuela: {
       nombre: "Schule",
       lema: "Für Einrichtungen mit mehreren Lehrkräften",
-      periodo: "Einmalzahlung für 10.000 Credits",
-      boton: "Kontakt aufnehmen",
+      periodo: "10.000 Credits oder mehr, passend für Ihre Institution",
+      boton: "Kontakt für einen institutionellen Plan",
       incluye: "Alles aus Akademie, plus:",
       ventajas: [
-        "10.000 bewertete Seiten",
+        "10.000 Credits: 10.000 Seiten auf Schnell oder 2.500 auf Mittel",
         "Credits für die Lehrkräfte der Einrichtung",
         "Begleitung beim Start mit euren Fachkollegien",
         "Rechnung für die Einrichtung",
@@ -277,7 +277,7 @@ const de: Diccionario = {
     metaDescripcion: "iEureka-Grader-Tarife: Zahlen Sie nur die Seiten, die Sie korrigieren. Preise in mexikanischen Pesos, inkl. MwSt.",
     titulo: "Tarife, die zu Ihrer Klasse passen",
     texto:
-      "Zahlen Sie nur die Seiten, die Sie korrigieren. 1 Credit = 1 bewertete Schülerseite. Preise in mexikanischen Pesos, inkl. MwSt., ohne Abo.",
+      "Zahlen Sie nur die Seiten, die Sie korrigieren. Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Preise in mexikanischen Pesos, inkl. MwSt., ohne Abo.",
     masPopular: "Am beliebtesten",
     aLaMedida: "Individuell",
     porPagina: "{p} pro Seite",
@@ -292,7 +292,7 @@ const de: Diccionario = {
     predeterminado: "Standard",
     preguntasTitulo: "Häufige Fragen",
     preguntas: [
-      ["Was ist ein Credit?", "1 Credit = 1 bewertete Schülerseite. Hat eine Abgabe 3 Seiten, verbraucht sie 3 Credits."],
+      ["Was ist ein Credit?", "Jede bewertete Seite verbraucht Credits je nach Präzisionsstufe: 1 bei Schnell, 4 bei Mittel und 12 bei Präzise. Eine Abgabe mit 3 Seiten auf Mittel verbraucht 12 Credits."],
       [
         "Was verbraucht keine Credits?",
         "Kurse anlegen, die Aufgabe mit KI erstellen, das Blatt mit QR drucken, Ihre Lösung hochladen und das Bewertungsraster erstellen.",
@@ -357,7 +357,7 @@ const de: Diccionario = {
     consumoDe: "{e}: {n} von 5",
     tokens: "≈ {n}× Tokens",
     consumoNota:
-      "Der Verbrauch ist relativ: 1× ist die Stufe Schnell mit mittlerem Aufwand. Credits werden gleich berechnet (1 Credit pro Seite); der Token-Verbrauch sind die KI-Kosten hinter jeder Bewertung.",
+      "Der Verbrauch ist relativ: 1× ist die Stufe Schnell mit mittlerem Aufwand. Jede Seite kostet 1 Credit bei Schnell, 4 bei Mittel und 12 bei Präzise.",
     guardarPrecision: "Präzision speichern",
     conservacionTitulo: "Aufbewahrung der Daten auf dem Server",
     conservacionFotos:

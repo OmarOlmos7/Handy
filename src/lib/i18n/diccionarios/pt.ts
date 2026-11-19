@@ -95,8 +95,8 @@ const pt: Diccionario = {
     },
     preciosTitulo: "Pague só o que você corrige",
     preciosTexto:
-      "1 crédito = 1 página de aluno avaliada. Enviar sua solução e gerar a rubrica não custa nada. Preços em pesos mexicanos, impostos incluídos.",
-    contactanos: "Fale conosco",
+      "Rápido usa 1 crédito por página, Médio 4 e Preciso 12. Enviar sua solução e gerar a rubrica não custa nada. Preços em pesos mexicanos, impostos incluídos.",
+    contactanos: "Fale conosco para um plano institucional",
     gratisPrecio: "Grátis",
     verPlanes: "Ver o que cada plano inclui →",
     privacidadTitulo: "Dados dos seus alunos, protegidos",
@@ -211,7 +211,7 @@ const pt: Diccionario = {
       boton: "Criar conta grátis",
       incluye: "Para testar:",
       ventajas: [
-        "50 páginas de alunos corrigidas",
+        "50 créditos: 50 páginas no Rápido ou 12 no Médio",
         "Cursos e alunos sem limite",
         "Atividades geradas com IA e folhas para imprimir com QR",
         "Entregas pelo celular com foto ou PDF",
@@ -225,7 +225,7 @@ const pt: Diccionario = {
       boton: "Escolher Básico",
       incluye: "Tudo do Gratuito, mais:",
       ventajas: [
-        "300 páginas corrigidas",
+        "300 créditos: 300 páginas no Rápido ou 75 no Médio",
         "Uma ou duas atividades por mês com uma turma",
         "Os três níveis de precisão: Rápido, Médio e Preciso",
         "Análises da turma e relatórios em PDF e Excel",
@@ -239,7 +239,7 @@ const pt: Diccionario = {
       boton: "Escolher Pro",
       incluye: "Tudo do Básico, mais:",
       ventajas: [
-        "600 páginas corrigidas",
+        "600 créditos: 600 páginas no Rápido ou 150 no Médio",
         "Duas ou três turmas durante um bimestre",
         "Recomendações de estudo com vídeos e leituras para cada aluno",
         "Diário de notas do curso",
@@ -252,7 +252,7 @@ const pt: Diccionario = {
       boton: "Escolher Academia",
       incluye: "Tudo do Pro, mais:",
       ventajas: [
-        "1.500 páginas corrigidas",
+        "1.500 créditos: 1.500 páginas no Rápido ou 375 no Médio",
         "Várias turmas durante todo o semestre",
         "Margem para usar o nível Preciso nas provas",
         "Relatórios por aluno e por turma durante todo o curso",
@@ -261,11 +261,11 @@ const pt: Diccionario = {
     escuela: {
       nombre: "Escola",
       lema: "Para instituições com vários professores",
-      periodo: "pagamento único por 10.000 créditos",
-      boton: "Fale conosco",
+      periodo: "10.000 créditos ou mais, sob medida para sua instituição",
+      boton: "Fale conosco para um plano institucional",
       incluye: "Tudo do Academia, mais:",
       ventajas: [
-        "10.000 páginas corrigidas",
+        "10.000 créditos: 10.000 páginas no Rápido ou 2.500 no Médio",
         "Créditos para os professores da instituição",
         "Acompanhamento para começar com suas equipes",
         "Faturamento institucional",
@@ -277,7 +277,7 @@ const pt: Diccionario = {
     metaDescripcion: "Planos do iEureka-Grader: pague só as páginas que você corrige. Preços em pesos mexicanos, impostos incluídos.",
     titulo: "Planos que se ajustam à sua sala",
     texto:
-      "Pague só as páginas que você corrige. 1 crédito = 1 página de aluno avaliada. Preços em pesos mexicanos, impostos incluídos, sem assinatura.",
+      "Pague só as páginas que você corrige. Rápido usa 1 crédito por página, Médio 4 e Preciso 12. Preços em pesos mexicanos, impostos incluídos, sem assinatura.",
     masPopular: "Mais popular",
     aLaMedida: "Sob medida",
     porPagina: "{p} por página",
@@ -292,7 +292,7 @@ const pt: Diccionario = {
     predeterminado: "Padrão",
     preguntasTitulo: "Perguntas frequentes",
     preguntas: [
-      ["O que é um crédito?", "1 crédito = 1 página de aluno avaliada. Se uma entrega tem 3 páginas, usa 3 créditos."],
+      ["O que é um crédito?", "Cada página avaliada usa créditos conforme o nível de precisão: 1 no Rápido, 4 no Médio e 12 no Preciso. Uma entrega de 3 páginas no Médio usa 12 créditos."],
       [
         "O que não consome créditos?",
         "Criar seus cursos, gerar a atividade com IA, imprimir a folha com QR, enviar sua solução e montar a rubrica.",
@@ -357,7 +357,7 @@ const pt: Diccionario = {
     consumoDe: "{e}: {n} de 5",
     tokens: "≈ {n}× tokens",
     consumoNota:
-      "O consumo é relativo: 1× é o nível Rápido com esforço médio. Os créditos são cobrados igual (1 crédito por página); o consumo de tokens é o custo da IA por trás de cada avaliação.",
+      "O consumo é relativo: 1× é o nível Rápido com esforço médio. Cada página custa 1 crédito no Rápido, 4 no Médio e 12 no Preciso.",
     guardarPrecision: "Salvar precisão",
     conservacionTitulo: "Conservação das informações no servidor",
     conservacionFotos:

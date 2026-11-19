@@ -1,8 +1,9 @@
 // Evaluación con IA de la entrega de un alumno. Se dispara sola al recibir las fotos
 // (y al confirmar la rúbrica); el profesor también puede reintentarla a mano.
-// Cobra 1 crédito por página al profesor dueño del curso.
+// Cobra al profesor dueño del curso los créditos por página del nivel de precisión de la actividad.
 import "server-only";
 import { actividadDe, grupoDe, leerAhora, modificar } from "./almacen";
+import { creditosPorPagina } from "./configuracion";
 import { saldoDe } from "./cuentas";
 import { ErrorIA, buscarRecursos, evaluarEntrega, recomendarEstudio, temasDe } from "./ia";
 import { imagenesParaIA } from "./imagenes";
@@ -38,7 +39,8 @@ async function evaluarAhora(actividadId: string, matricula: string): Promise<Res
   if (!entrega?.imagenes?.length) return { ok: false, error: "Esta entrega no tiene fotos", status: 400 };
   if (entrega.estado !== "entregada") return { ok: true };
   const paginas = entrega.imagenes.length;
-  if (!grupo.profesorId || saldoDe(db, grupo.profesorId) < paginas) {
+  const costo = paginas * creditosPorPagina(actividad.precision);
+  if (!grupo.profesorId || saldoDe(db, grupo.profesorId) < costo) {
     const error = "No hay créditos suficientes para evaluar. Compra créditos y vuelve a intentar.";
     marcar(actividadId, matricula, { evaluandoDesde: undefined, error });
     return { ok: false, error, status: 402 };
@@ -61,7 +63,7 @@ async function evaluarAhora(actividadId: string, matricula: string): Promise<Res
         profesorId: grupo.profesorId,
         fecha: new Date().toISOString().slice(0, 10),
         concepto: `Evaluación · ${actividad.titulo} · ${nombre}`,
-        cantidad: -paginas,
+        cantidad: -costo,
       });
     });
     await generarEstudio(actividadId, matricula);

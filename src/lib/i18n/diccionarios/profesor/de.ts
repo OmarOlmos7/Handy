@@ -138,9 +138,9 @@ const profesor: Diccionario["profesor"] = {
   },
   creditos: {
     titulo: "Credits",
-    subtitulo: "1 Credit = 1 bewertete Schülerseite. Deine Lösung hochladen und das Bewertungsraster erstellen ist kostenlos.",
+    subtitulo: "Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Deine Lösung hochladen und das Bewertungsraster erstellen ist kostenlos.",
     saldo: "Verfügbares Guthaben",
-    aproximado: "≈ {n} Schüler/innen mit dreiseitigen Aufgaben",
+    aproximado: "≈ {n} Schüler/innen mit dreiseitigen Aufgaben auf Mittel",
     comprar: "Credits kaufen",
     movimientos: "Buchungen",
     concepto: "Beschreibung",

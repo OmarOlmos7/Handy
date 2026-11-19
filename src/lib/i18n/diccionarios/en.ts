@@ -95,8 +95,8 @@ const en: Diccionario = {
     },
     preciosTitulo: "Pay only for what you grade",
     preciosTexto:
-      "1 credit = 1 graded student page. Uploading your solution and generating the rubric is free. Prices in Mexican pesos, VAT included.",
-    contactanos: "Contact us",
+      "Fast uses 1 credit per page, Medium 4 and Precise 12. Uploading your solution and generating the rubric is free. Prices in Mexican pesos, VAT included.",
+    contactanos: "Contact us to set up an institutional plan",
     gratisPrecio: "Free",
     verPlanes: "See what each plan includes →",
     privacidadTitulo: "Your students' data, protected",
@@ -211,7 +211,7 @@ const en: Diccionario = {
       boton: "Create a free account",
       incluye: "To try it out:",
       ventajas: [
-        "50 student pages graded",
+        "50 credits: 50 pages on Fast or 12 on Medium",
         "Unlimited courses and students",
         "AI-generated assignments and printable sheets with QR",
         "Submissions from the phone with a photo or PDF",
@@ -225,7 +225,7 @@ const en: Diccionario = {
       boton: "Choose Basic",
       incluye: "Everything in Free, plus:",
       ventajas: [
-        "300 pages graded",
+        "300 credits: 300 pages on Fast or 75 on Medium",
         "One or two assignments a month with one class",
         "All three precision levels: Fast, Balanced and Precise",
         "Class analytics and PDF and Excel reports",
@@ -239,7 +239,7 @@ const en: Diccionario = {
       boton: "Choose Pro",
       incluye: "Everything in Basic, plus:",
       ventajas: [
-        "600 pages graded",
+        "600 credits: 600 pages on Fast or 150 on Medium",
         "Two or three classes for a grading period",
         "Study recommendations with videos and readings for each student",
         "Course gradebook",
@@ -252,7 +252,7 @@ const en: Diccionario = {
       boton: "Choose Academy",
       incluye: "Everything in Pro, plus:",
       ventajas: [
-        "1,500 pages graded",
+        "1,500 credits: 1,500 pages on Fast or 375 on Medium",
         "Several classes for the whole term",
         "Room to use the Precise level on exams",
         "Student and class reports all term long",
@@ -261,11 +261,11 @@ const en: Diccionario = {
     escuela: {
       nombre: "School",
       lema: "For institutions with several teachers",
-      periodo: "one-time payment for 10,000 credits",
-      boton: "Contact us",
+      periodo: "10,000 credits or more, tailored to your institution",
+      boton: "Contact us to set up an institutional plan",
       incluye: "Everything in Academy, plus:",
       ventajas: [
-        "10,000 pages graded",
+        "10,000 credits: 10,000 pages on Fast or 2,500 on Medium",
         "Credits for the institution's teachers",
         "Onboarding support for your departments",
         "Institutional invoicing",
@@ -277,7 +277,7 @@ const en: Diccionario = {
     metaDescripcion: "iEureka-Grader plans: pay only for the pages you grade. Prices in Mexican pesos, VAT included.",
     titulo: "Plans that fit your classroom",
     texto:
-      "Pay only for the pages you grade. 1 credit = 1 graded student page. Prices in Mexican pesos, VAT included, no subscription.",
+      "Pay only for the pages you grade. Fast uses 1 credit per page, Medium 4 and Precise 12. Prices in Mexican pesos, VAT included, no subscription.",
     masPopular: "Most popular",
     aLaMedida: "Custom",
     porPagina: "{p} per page",
@@ -292,7 +292,7 @@ const en: Diccionario = {
     predeterminado: "Default",
     preguntasTitulo: "Frequently asked questions",
     preguntas: [
-      ["What is a credit?", "1 credit = 1 graded student page. If a submission has 3 pages, it uses 3 credits."],
+      ["What is a credit?", "Each graded page uses credits by precision level: 1 on Fast, 4 on Medium and 12 on Precise. A 3-page submission on Medium uses 12 credits."],
       [
         "What doesn't use credits?",
         "Creating your courses, generating the assignment with AI, printing the sheet with QR, uploading your solution and building the rubric.",
@@ -357,7 +357,7 @@ const en: Diccionario = {
     consumoDe: "{e}: {n} of 5",
     tokens: "≈ {n}× tokens",
     consumoNota:
-      "Usage is relative: 1× is the Fast level with medium effort. Credits are charged the same way (1 credit per page); token usage is the AI cost behind each grading.",
+      "Usage is relative: 1× is the Fast level with medium effort. Each page costs 1 credit on Fast, 4 on Medium and 12 on Precise.",
     guardarPrecision: "Save precision",
     conservacionTitulo: "How long data is kept on the server",
     conservacionFotos:

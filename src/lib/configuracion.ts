@@ -101,6 +101,14 @@ export const INFO_ESFUERZO: Record<EsfuerzoIA, { nombre: string; api: "low" | "m
   alto: { nombre: "Alto", api: "high", factor: 1.6 },
 };
 
+/** Créditos que cuesta cada página evaluada según el nivel de precisión (el precio se fija con Rápido). */
+export const CREDITOS_POR_PAGINA: Record<MotorIA, number> = { rapido: 1, medio: 4, preciso: 12 };
+
+/** Créditos por página de una actividad; sin precisión guardada se usa la predeterminada. */
+export function creditosPorPagina(p: PrecisionIA | undefined): number {
+  return CREDITOS_POR_PAGINA[p && esMotor(p.motor) ? p.motor : PRECISION_PREDETERMINADA.motor];
+}
+
 export const PRECISION_PREDETERMINADA: PrecisionIA = { motor: "medio", esfuerzo: "medio" };
 
 /** Esfuerzo elegido para cada motor si el profesor no lo ha cambiado. */

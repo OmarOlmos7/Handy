@@ -1,4 +1,6 @@
-// Planes de iEureka-Grader. 1 crédito = 1 página de alumno evaluada. Precios en MXN con IVA.
+// Planes de iEureka-Grader. Cada página evaluada usa créditos según el nivel de precisión
+// (Rápido 1, Medio 4, Preciso 12; ver CREDITOS_POR_PAGINA). Precios en MXN con IVA.
+import { CREDITOS_POR_PAGINA } from "./configuracion";
 // Los precios y lo que incluye cada plan viven aquí para que la página de precios, el
 // inicio y la tienda de créditos muestren siempre lo mismo.
 
@@ -26,21 +28,22 @@ export interface Plan {
 // tokens de entrada con la foto y de 2,000 a 6,000 de salida según el nivel), más lo que cuesta
 // por página la rúbrica, las recomendaciones de estudio y la búsqueda de videos y lecturas.
 export const COSTO_PAGINA_USD = { rapido: 0.013, medio: 0.05, preciso: 0.15 } as const;
-/** Mezcla supuesta de uso de los niveles de precisión. */
-export const MEZCLA_NIVELES = { rapido: 0.2, medio: 0.65, preciso: 0.15 } as const;
 /** Tipo de cambio supuesto (MXN por dólar). */
 export const TIPO_CAMBIO = 18.5;
 /** Comisión del cobro (Mercado Pago, con IVA de la comisión) y cargo fijo por pago en MXN. */
 export const COMISION_COBRO = { porcentaje: 0.0406, fijo: 4 };
 export const IVA = 0.16;
 /** Utilidad mínima sobre el ingreso neto (sin IVA ni comisiones). */
-export const UTILIDAD_OBJETIVO = 0.4;
+export const UTILIDAD_OBJETIVO = 0.3;
 
-/** Costo promedio de un crédito en MXN con la mezcla de niveles. */
+/**
+ * Costo de IA de un crédito en MXN. Los precios se calculan con el nivel Rápido (1 crédito por
+ * página); Medio y Preciso cobran más créditos por página, así que se toma el nivel más caro por
+ * crédito para que ningún uso baje del margen.
+ */
 export function costoCreditoMXN(): number {
-  const usd = (Object.keys(MEZCLA_NIVELES) as (keyof typeof MEZCLA_NIVELES)[]).reduce(
-    (s, k) => s + MEZCLA_NIVELES[k] * COSTO_PAGINA_USD[k],
-    0,
+  const usd = Math.max(
+    ...(Object.keys(COSTO_PAGINA_USD) as (keyof typeof COSTO_PAGINA_USD)[]).map((k) => COSTO_PAGINA_USD[k] / CREDITOS_POR_PAGINA[k]),
   );
   return usd * TIPO_CAMBIO;
 }
@@ -74,7 +77,7 @@ export const PLANES: Plan[] = [
     id: "basico",
     nombre: "Básico",
     lema: "Para un profesor con un grupo",
-    precio: 659,
+    precio: 139,
     creditos: 300,
     periodo: "pago único por 300 créditos",
     boton: { texto: "Elegir Básico", href: "/profesor/creditos" },
@@ -92,7 +95,7 @@ export const PLANES: Plan[] = [
     id: "pro",
     nombre: "Pro",
     lema: "Para un profesor con varios grupos",
-    precio: 1299,
+    precio: 269,
     creditos: 600,
     periodo: "pago único por 600 créditos",
     boton: { texto: "Elegir Pro", href: "/profesor/creditos" },
@@ -110,7 +113,7 @@ export const PLANES: Plan[] = [
     id: "academia",
     nombre: "Academia",
     lema: "Para todo un semestre o una academia de profesores",
-    precio: 3249,
+    precio: 659,
     creditos: 1500,
     periodo: "pago único por 1,500 créditos",
     boton: { texto: "Elegir Academia", href: "/profesor/creditos" },
@@ -127,10 +130,9 @@ export const PLANES: Plan[] = [
     id: "escuela",
     nombre: "Escuela",
     lema: "Para instituciones con varios profesores",
-    precio: 21499,
     creditos: 10000,
     periodo: "pago único por 10,000 créditos",
-    boton: { texto: "Contáctanos" },
+    boton: { texto: "Contactar para gestionar plan institucional" },
     incluye: "Todo lo de Academia, más:",
     ventajas: [
       "10,000 páginas evaluadas",

@@ -30,7 +30,7 @@ async function BotonContacto({ texto, clase, t }: { texto: string; clase: string
   if (!correo) {
     return (
       <Link href="/registro" className={clase}>
-        {t.precios.creaYEscribenos}
+        {texto}
       </Link>
     );
   }

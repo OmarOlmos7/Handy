@@ -96,8 +96,8 @@ const es = {
     },
     preciosTitulo: "Paga solo lo que calificas",
     preciosTexto:
-      "1 crédito = 1 página de alumno evaluada. Subir tu solución y generar la rúbrica no cuesta. Precios en pesos mexicanos, IVA incluido.",
-    contactanos: "Contáctanos",
+      "Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Subir tu solución y generar la rúbrica no cuesta. Precios en pesos mexicanos, IVA incluido.",
+    contactanos: "Contactar para gestionar plan institucional",
     gratisPrecio: "Gratis",
     verPlanes: "Ver qué incluye cada plan →",
     privacidadTitulo: "Datos de tus alumnos, protegidos",
@@ -212,7 +212,7 @@ const es = {
       boton: "Crear cuenta gratis",
       incluye: "Para probar:",
       ventajas: [
-        "50 páginas de alumno evaluadas",
+        "50 créditos: 50 páginas en Rápido o 12 en Medio",
         "Cursos y alumnos sin límite",
         "Actividades generadas con IA y hojas imprimibles con QR",
         "Entregas desde el celular con foto o PDF",
@@ -226,7 +226,7 @@ const es = {
       boton: "Elegir Básico",
       incluye: "Todo lo de Gratuito, más:",
       ventajas: [
-        "300 páginas evaluadas",
+        "300 créditos: 300 páginas en Rápido o 75 en Medio",
         "Una o dos actividades al mes con un grupo",
         "Los tres niveles de precisión: Rápido, Medio y Preciso",
         "Analíticas del grupo y reporte en PDF y Excel",
@@ -240,7 +240,7 @@ const es = {
       boton: "Elegir Pro",
       incluye: "Todo lo de Básico, más:",
       ventajas: [
-        "600 páginas evaluadas",
+        "600 créditos: 600 páginas en Rápido o 150 en Medio",
         "Dos o tres grupos durante un parcial",
         "Recomendaciones de estudio con videos y lecturas para cada alumno",
         "Cuaderno de calificaciones del curso",
@@ -253,7 +253,7 @@ const es = {
       boton: "Elegir Academia",
       incluye: "Todo lo de Pro, más:",
       ventajas: [
-        "1,500 páginas evaluadas",
+        "1,500 créditos: 1,500 páginas en Rápido o 375 en Medio",
         "Varios grupos durante todo el semestre o tetramestre",
         "Margen para usar el nivel Preciso en exámenes",
         "Reportes por alumno y por grupo durante todo el curso",
@@ -262,11 +262,11 @@ const es = {
     escuela: {
       nombre: "Escuela",
       lema: "Para instituciones con varios profesores",
-      periodo: "pago único por 10,000 créditos",
-      boton: "Contáctanos",
+      periodo: "10,000 créditos o más, a la medida de tu institución",
+      boton: "Contactar para gestionar plan institucional",
       incluye: "Todo lo de Academia, más:",
       ventajas: [
-        "10,000 páginas evaluadas",
+        "10,000 créditos: 10,000 páginas en Rápido o 2,500 en Medio",
         "Créditos para los profesores de la institución",
         "Acompañamiento para arrancar con tus academias",
         "Facturación institucional",
@@ -278,7 +278,7 @@ const es = {
     metaDescripcion: "Planes de iEureka-Grader: paga solo las páginas que calificas. Precios en pesos mexicanos, IVA incluido.",
     titulo: "Planes que se ajustan a tu salón",
     texto:
-      "Paga solo las páginas que calificas. 1 crédito = 1 página de alumno evaluada. Precios en pesos mexicanos, IVA incluido, sin suscripción.",
+      "Paga solo las páginas que calificas. Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Precios en pesos mexicanos, IVA incluido, sin suscripción.",
     masPopular: "Más popular",
     aLaMedida: "A la medida",
     porPagina: "{p} por página",
@@ -293,7 +293,7 @@ const es = {
     predeterminado: "Predeterminado",
     preguntasTitulo: "Preguntas frecuentes",
     preguntas: [
-      ["¿Qué es un crédito?", "1 crédito = 1 página de alumno evaluada. Si una entrega trae 3 páginas, usa 3 créditos."],
+      ["¿Qué es un crédito?", "Cada página evaluada usa créditos según el nivel de precisión: 1 en Rápido, 4 en Medio y 12 en Preciso. Una entrega de 3 páginas en Medio usa 12 créditos."],
       [
         "¿Qué no consume créditos?",
         "Crear tus cursos, generar la actividad con IA, imprimir la hoja con QR, subir tu solución y armar la rúbrica.",
@@ -358,7 +358,7 @@ const es = {
     consumoDe: "{e}: {n} de 5",
     tokens: "≈ {n}× tokens",
     consumoNota:
-      "El consumo es relativo: 1× es el nivel Rápido con esfuerzo medio. Los créditos se cobran igual (1 crédito por página); el consumo de tokens es el costo de la IA detrás de cada evaluación.",
+      "El consumo es relativo: 1× es el nivel Rápido con esfuerzo medio. Cada página cuesta 1 crédito en Rápido, 4 en Medio y 12 en Preciso.",
     guardarPrecision: "Guardar precisión",
     conservacionTitulo: "Conservación de la información en el servidor",
     conservacionFotos:

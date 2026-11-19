@@ -95,8 +95,8 @@ const fr: Diccionario = {
     },
     preciosTitulo: "Ne payez que ce que vous corrigez",
     preciosTexto:
-      "1 crédit = 1 page d'élève corrigée. Téléverser votre solution et générer la grille est gratuit. Prix en pesos mexicains, TVA incluse.",
-    contactanos: "Contactez-nous",
+      "Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Téléverser votre solution et générer la grille est gratuit. Prix en pesos mexicains, TVA incluse.",
+    contactanos: "Nous contacter pour un plan institutionnel",
     gratisPrecio: "Gratuit",
     verPlanes: "Voir ce que comprend chaque offre →",
     privacidadTitulo: "Les données de vos élèves, protégées",
@@ -211,7 +211,7 @@ const fr: Diccionario = {
       boton: "Créer un compte gratuit",
       incluye: "Pour essayer :",
       ventajas: [
-        "50 pages d'élèves corrigées",
+        "50 crédits : 50 pages en Rapide ou 12 en Moyen",
         "Cours et élèves illimités",
         "Activités générées par IA et feuilles imprimables avec QR",
         "Rendus depuis le téléphone en photo ou PDF",
@@ -225,7 +225,7 @@ const fr: Diccionario = {
       boton: "Choisir Basique",
       incluye: "Tout Gratuit, plus :",
       ventajas: [
-        "300 pages corrigées",
+        "300 crédits : 300 pages en Rapide ou 75 en Moyen",
         "Une ou deux activités par mois avec une classe",
         "Les trois niveaux de précision : Rapide, Moyen et Précis",
         "Analyses de la classe et rapports PDF et Excel",
@@ -239,7 +239,7 @@ const fr: Diccionario = {
       boton: "Choisir Pro",
       incluye: "Tout Basique, plus :",
       ventajas: [
-        "600 pages corrigées",
+        "600 crédits : 600 pages en Rapide ou 150 en Moyen",
         "Deux ou trois classes pendant une période",
         "Conseils de révision avec vidéos et lectures pour chaque élève",
         "Carnet de notes du cours",
@@ -252,7 +252,7 @@ const fr: Diccionario = {
       boton: "Choisir Académie",
       incluye: "Tout Pro, plus :",
       ventajas: [
-        "1 500 pages corrigées",
+        "1 500 crédits : 1 500 pages en Rapide ou 375 en Moyen",
         "Plusieurs classes pendant tout le semestre",
         "De la marge pour utiliser le niveau Précis aux examens",
         "Rapports par élève et par classe toute l'année",
@@ -261,11 +261,11 @@ const fr: Diccionario = {
     escuela: {
       nombre: "École",
       lema: "Pour les établissements avec plusieurs enseignants",
-      periodo: "paiement unique pour 10 000 crédits",
-      boton: "Nous contacter",
+      periodo: "10 000 crédits ou plus, sur mesure pour votre établissement",
+      boton: "Nous contacter pour un plan institutionnel",
       incluye: "Tout Académie, plus :",
       ventajas: [
-        "10 000 pages corrigées",
+        "10 000 crédits : 10 000 pages en Rapide ou 2 500 en Moyen",
         "Des crédits pour les enseignants de l'établissement",
         "Accompagnement pour démarrer avec vos équipes",
         "Facturation pour l'établissement",
@@ -277,7 +277,7 @@ const fr: Diccionario = {
     metaDescripcion: "Offres iEureka-Grader : ne payez que les pages que vous corrigez. Prix en pesos mexicains, TVA incluse.",
     titulo: "Des offres adaptées à votre classe",
     texto:
-      "Ne payez que les pages que vous corrigez. 1 crédit = 1 page d'élève corrigée. Prix en pesos mexicains, TVA incluse, sans abonnement.",
+      "Ne payez que les pages que vous corrigez. Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Prix en pesos mexicains, TVA incluse, sans abonnement.",
     masPopular: "La plus choisie",
     aLaMedida: "Sur mesure",
     porPagina: "{p} par page",
@@ -292,7 +292,7 @@ const fr: Diccionario = {
     predeterminado: "Par défaut",
     preguntasTitulo: "Questions fréquentes",
     preguntas: [
-      ["Qu'est-ce qu'un crédit ?", "1 crédit = 1 page d'élève corrigée. Si un rendu contient 3 pages, il utilise 3 crédits."],
+      ["Qu'est-ce qu'un crédit ?", "Chaque page corrigée utilise des crédits selon le niveau de précision : 1 en Rapide, 4 en Moyen et 12 en Précis. Un rendu de 3 pages en Moyen utilise 12 crédits."],
       [
         "Qu'est-ce qui ne consomme pas de crédits ?",
         "Créer vos cours, générer le devoir avec l'IA, imprimer la feuille avec QR, téléverser votre solution et préparer la grille.",
@@ -357,7 +357,7 @@ const fr: Diccionario = {
     consumoDe: "{e} : {n} sur 5",
     tokens: "≈ {n}× jetons",
     consumoNota:
-      "La consommation est relative : 1× correspond au niveau Rapide avec un effort moyen. Les crédits sont facturés de la même façon (1 crédit par page) ; la consommation de jetons est le coût de l'IA derrière chaque correction.",
+      "La consommation est relative : 1× correspond au niveau Rapide avec un effort moyen. Chaque page coûte 1 crédit en Rapide, 4 en Moyen et 12 en Précis.",
     guardarPrecision: "Enregistrer la précision",
     conservacionTitulo: "Conservation des informations sur le serveur",
     conservacionFotos:
