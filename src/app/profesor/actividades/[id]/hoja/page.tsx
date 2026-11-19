@@ -1,5 +1,7 @@
 import { ConFlujo } from "@/components/flujo-actividad";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { IconoLapiz } from "@/components/iconos";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { EditarHoja } from "@/components/editar-hoja";
 import { Hoja } from "@/components/hoja";
@@ -20,10 +22,24 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
   const th = t.profesor.hoja;
   const curso = `${grupo.materia} · ${grupo.nombre}`;
   const qr = await qrDataUrl(`${await urlBase()}/entregar/${id}`);
-  const siguiente = actividad.reactivos.some((r) => r.respuesta.trim()) ? null : (
+  const siguiente = actividad.sinSolucion ? (
+    <BotonLink href={`/profesor/actividades/${id}/rubrica`} variante="secundario">
+      {th.irRubrica}
+    </BotonLink>
+  ) : actividad.reactivos.some((r) => r.respuesta.trim()) ? null : (
     <BotonLink href={`/profesor/actividades/${id}/solucion`} variante="secundario">
       {th.siguiente}
     </BotonLink>
+  );
+  const editar = (
+    <Link
+      href={`/profesor/actividades/${id}/editar`}
+      title={th.modificar}
+      aria-label={th.modificar}
+      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 ring-1 ring-slate-300 transition hover:bg-tinta-50 hover:text-tinta-700"
+    >
+      <IconoLapiz />
+    </Link>
   );
   const migas = [
     { texto: t.profesor.comun.panel, href: "/profesor" },
@@ -43,6 +59,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
               <BotonLink href={`/api/hoja/${id}`} target="_blank">
                 {th.descargar}
               </BotonLink>
+              {editar}
               {siguiente}
             </>
           }
@@ -66,6 +83,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
         acciones={
           <>
             <BotonImprimir texto={th.imprimir} />
+            {editar}
             {siguiente}
           </>
         }

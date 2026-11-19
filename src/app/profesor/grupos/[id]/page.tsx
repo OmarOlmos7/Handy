@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { conPuntaje } from "@/lib/modalidad";
 import { notFound } from "next/navigation";
 import { FilaActividad } from "@/components/fila-actividad";
 import { IconoCuaderno, IconoGrafica } from "@/components/iconos";
@@ -78,7 +79,7 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
                         resultadosDesde={a.resultadosDesde}
                         paginas={a.paginas}
                         entregas={formato(tc.entregas, { n: rep.entregadas, total: grupo.alumnos.length })}
-                        promedio={rep.entregadas > 0 ? `${rep.promedio} / ${rep.escala}` : undefined}
+                        promedio={rep.entregadas > 0 && conPuntaje(a) ? `${rep.promedio} / ${rep.escala}` : undefined}
                         colorPromedio={colorCalificacion(rep.promedio, rep.escala)}
                         estado={estadoActividad(db, a)}
                         recibidas={entregas.filter((e) => e.estado !== "sin_entregar").length}

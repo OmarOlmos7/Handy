@@ -19,6 +19,7 @@ const alumno: Diccionario["alumno"] = {
     listosEnFecha: "成绩将在所示时间后公布",
     evaluando: "批改中",
     entregarFotos: "提交照片",
+    revisada: "已批改",
   },
   campos: {
     nombre: "姓名",
@@ -138,6 +139,13 @@ const alumno: Diccionario["alumno"] = {
     entregada: "提交时间",
     solucion: "5. 解答",
     procedimiento: "解题过程：",
+    reactivoSolo: "第 {n} 题",
+    sinPuntaje: "已批改（不计分）",
+  },
+  correccion: {
+    correcta: "正确答案是 {r}。",
+    correcto: "正确。",
+    noEncontrado: "在作业纸上没有找到这道题，请核对。",
   },
   errores: {
     nombre: "请填写你的姓名。",

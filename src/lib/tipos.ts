@@ -114,6 +114,22 @@ export interface Actividad {
   /** Imágenes de la solución del profesor (rutas relativas a la carpeta de datos). */
   solucion?: string[];
   rubricaConfirmada?: boolean;
+  /**
+   * true si la actividad no requiere solución (ensayos, producciones escritas, análisis): se valora
+   * la composición escrita (contenido, coherencia y elementos lingüísticos) con los criterios.
+   */
+  sinSolucion?: boolean;
+  /**
+   * true si la rúbrica es sin puntaje: solo se marcan aciertos y elementos a corregir, sin
+   * calificación ni puntos (adecuado para producciones escritas).
+   */
+  sinPuntaje?: boolean;
+  /**
+   * Cómo se corrige sobre la hoja: "margen" (marca en el procedimiento y comentario al costado
+   * derecho, lo predeterminado) o "subrayado" (subraya lo que hay que corregir y comenta encima,
+   * ideal para producciones escritas).
+   */
+  estiloCorreccion?: EstiloCorreccion;
   /** Videos y lecturas (Khan Academy, YouTube, OpenStax) por tema, compartidos por todo el grupo. */
   recursos?: RecursosActividad;
   /** Motor y esfuerzo de la IA para esta actividad; sin valor, el predeterminado (Medio). */
@@ -133,6 +149,19 @@ export interface Actividad {
   reactivos: Reactivo[];
 }
 
+export type EstiloCorreccion = "margen" | "subrayado";
+
+/** Fragmento subrayado en la hoja del alumno con su comentario (estilo "subrayado"). */
+export interface Subrayado {
+  pagina: number;
+  /** Altura de la línea de texto (0 arriba, 1 abajo). */
+  y: number;
+  /** Inicio y fin del fragmento (0 izquierda, 1 derecha). */
+  x0: number;
+  x1: number;
+  comentario: string;
+}
+
 export interface ResultadoReactivo {
   numero: number;
   puntosObtenidos: number;
@@ -145,6 +174,10 @@ export interface ResultadoReactivo {
   ubicacion?: { pagina: number; y: number; x?: number };
   /** Para desarrollos: fracción lograda de cada paso (0 a 1), en el orden de la rúbrica. */
   pasos?: number[];
+  /** Para abiertos con criterios de la actividad: fracción lograda de cada criterio (0 a 1). */
+  criterios?: number[];
+  /** Fragmentos a corregir, subrayados sobre la hoja (estilo "subrayado"). */
+  subrayados?: Subrayado[];
 }
 
 export type EstadoEntrega = "sin_entregar" | "entregada" | "evaluada" | "aprobada";

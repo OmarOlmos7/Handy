@@ -1,11 +1,13 @@
 import { notFound } from "next/navigation";
 import { ConFlujo } from "@/components/flujo-actividad";
+import { ElegirPuntaje } from "@/components/elegir-puntaje";
 import { PropuestaEvaluacion } from "@/components/propuesta-evaluacion";
 import { RubricaEditor } from "@/components/rubrica-editor";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { actividadDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 import { textos } from "@/lib/i18n/servidor";
+import { listaParaRubrica } from "@/lib/modalidad";
 
 /** Paso 3 del flujo: la propuesta de evaluación y la rúbrica, para revisarla y confirmarla. */
 export default async function Rubrica({ params }: PageProps<"/profesor/actividades/[id]/rubrica">) {
@@ -16,8 +18,9 @@ export default async function Rubrica({ params }: PageProps<"/profesor/actividad
   const grupo = grupoDe(db, actividad.grupoId)!;
   const { t } = await textos();
   const tr = t.profesor.rubrica;
-  // La rúbrica existe cuando los reactivos ya tienen respuesta (los generados en el paso 1 llegan sin ella).
-  const conSolucion = actividad.reactivos.some((r) => r.respuesta.trim());
+  // La rúbrica existe cuando los reactivos ya tienen respuesta (los generados en el paso 1 llegan sin
+  // ella) o cuando la actividad no requiere solución.
+  const conSolucion = listaParaRubrica(actividad);
 
   return (
     <>
@@ -29,9 +32,11 @@ export default async function Rubrica({ params }: PageProps<"/profesor/actividad
         titulo={actividad.titulo}
         acciones={
           <>
-            <BotonLink href={`/profesor/actividades/${id}/solucion`} variante="secundario">
-              {tr.verSolucion}
-            </BotonLink>
+            {!actividad.sinSolucion && (
+              <BotonLink href={`/profesor/actividades/${id}/solucion`} variante="secundario">
+                {tr.verSolucion}
+              </BotonLink>
+            )}
             {actividad.rubricaConfirmada && <BotonLink href={`/profesor/actividades/${id}/entregas`}>{tr.siguiente}</BotonLink>}
           </>
         }
@@ -49,6 +54,7 @@ export default async function Rubrica({ params }: PageProps<"/profesor/actividad
           </Tarjeta>
         ) : (
           <div className="space-y-6">
+            <ElegirPuntaje actividadId={id} sinPuntajeInicial={!!actividad.sinPuntaje} />
             <PropuestaEvaluacion actividad={actividad} />
             <RubricaEditor actividadId={id} reactivosIniciales={actividad.reactivos} confirmadaInicial={!!actividad.rubricaConfirmada} />
           </div>

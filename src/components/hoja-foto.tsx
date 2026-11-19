@@ -7,6 +7,8 @@ import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 import { useLayoutEffect, useRef } from "react";
 import type { Actividad, Entrega } from "@/lib/tipos";
+import { puntosPorElemento, puntosTexto } from "@/lib/elementos";
+import { conPuntaje } from "@/lib/modalidad";
 
 export function HojaFoto({
   actividad,
@@ -25,6 +27,9 @@ export function HojaFoto({
   const margen = useRef<HTMLDivElement>(null);
   const foto = useRef<HTMLImageElement>(null);
   const ruta = entrega.imagenes?.[pagina - 1];
+  const puntaje = conPuntaje(actividad);
+  // Estilo "subrayado": fragmentos a corregir subrayados con su comentario encima.
+  const subrayados = anotada ? entrega.resultados.flatMap((res) => (res.subrayados ?? []).filter((s) => s.pagina === pagina)) : [];
   const marcas = anotada
     ? numerarMarcas(entrega).filter(
         (m) => (m.res.ubicacion?.pagina ?? 1) === pagina,
@@ -86,6 +91,18 @@ export function HojaFoto({
             </span>
           );
         })}
+        {subrayados.map((s, i) => (
+          <span
+            key={`s${i}`}
+            className="pointer-events-none absolute"
+            style={{ left: `${s.x0 * 100}%`, width: `${Math.max(0.02, s.x1 - s.x0) * 100}%`, top: `${s.y * 100}%` }}
+          >
+            <span className="block h-0 border-b-2 border-error/80" />
+            <span className="font-mano absolute bottom-full left-0 mb-3 whitespace-nowrap rounded bg-white/85 px-1 text-[11px] leading-tight text-error sm:text-xs">
+              {s.comentario}
+            </span>
+          </span>
+        ))}
       </div>
       {marcas.length > 0 && (
         <div
@@ -110,7 +127,8 @@ export function HojaFoto({
                     {completo ? "✓" : "✗"}
                   </span>
                   <span className="text-xs font-semibold leading-none sm:text-sm">
-                    {formato(th.reactivo, { n: res.numero })} · {res.puntosObtenidos}/{r.puntos}
+                    {formato(th.reactivo, { n: res.numero })}
+                    {puntaje && ` · ${puntosTexto(res.puntosObtenidos)}/${puntosTexto(r.puntos)}`}
                   </span>
                   {modoProfesor && res.confianza === "baja" && (
                     <span className="rounded bg-aviso px-1 text-[10px] font-semibold text-white">
@@ -124,6 +142,16 @@ export function HojaFoto({
                   >
                     {res.comentario}
                   </p>
+                )}
+                {puntosPorElemento(actividad, r, res).length > 0 && (
+                  <ul className="mt-0.5 text-[10px] leading-tight text-slate-600 sm:text-[11px]">
+                    {puntosPorElemento(actividad, r, res).map((el) => (
+                      <li key={el.nombre} className={el.obtenidos >= el.total ? "text-acierto" : "text-error"}>
+                        {el.obtenidos >= el.total ? "✓" : "✗"} {el.nombre}
+                        {puntaje && ` ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}`}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
             );

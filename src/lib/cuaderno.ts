@@ -1,6 +1,7 @@
 // Cuaderno de calificaciones del curso: una fila por alumno y una columna por actividad,
 // agrupadas por tipo. Los promedios los calcula este código. Un trabajo no entregado
 // cuenta como 0 en las actividades que ya tienen calificaciones.
+import { conPuntaje } from "./modalidad";
 import { agruparPorEtiqueta } from "./colores";
 import { calificacion, calificacionCalculada, calificada, escalaDe } from "./estadisticas";
 import type { Actividad, Entrega, Escala, Grupo } from "./tipos";
@@ -54,7 +55,8 @@ const r1 = (n: number) => Math.round(n * 10) / 10;
 const prom = (xs: number[]) => (xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null);
 
 export function cuadernoCurso(grupo: Grupo, actividades: Actividad[], entregas: Entrega[], sinEtiqueta = "Sin etiqueta"): Cuaderno {
-  const porFecha = [...actividades].sort((a, b) => a.fechaAplicacion.localeCompare(b.fechaAplicacion));
+  // Las actividades sin puntaje no llevan calificación al cuaderno.
+  const porFecha = actividades.filter(conPuntaje).sort((a, b) => a.fechaAplicacion.localeCompare(b.fechaAplicacion));
   const escala: Escala = porFecha.some((a) => escalaDe(a) === 100) ? 100 : 10;
   const entregaDe = (actividadId: string, matricula: string) =>
     entregas.find((e) => e.actividadId === actividadId && e.matricula === matricula);

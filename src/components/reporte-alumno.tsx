@@ -14,6 +14,7 @@ import { TextoMat } from "./texto-mat";
 import { colorCalificacion, fechaLarga } from "./ui";
 import { textos } from "@/lib/i18n/servidor";
 import { formato } from "@/lib/i18n/idiomas";
+import { conPuntaje } from "@/lib/modalidad";
 
 const titulo = "text-xs font-semibold uppercase tracking-wide text-slate-500";
 const tarjeta = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200";
@@ -41,6 +42,7 @@ export async function ReporteAlumno({
   const escala = escalaDe(actividad);
   const grupoTexto = `${grupo.materia} · ${grupo.nombre}`;
   const entregadaEn = entrega.entregadaEn ? fechaHoraLarga(entrega.entregadaEn, locale) : null;
+  const puntaje = conPuntaje(actividad);
   const conSolucion = actividad.reactivos.some((r) => r.respuesta.trim() || r.solucionPasos?.length);
 
   return (
@@ -79,12 +81,16 @@ export async function ReporteAlumno({
           </div>
           <div>
             <dt className="text-slate-500">{tr.calificacion}</dt>
-            <dd className={`text-2xl font-semibold ${colorCalificacion(cal, escala)}`}>
-              {formatoCal(cal, escala)} <span className="text-sm font-normal text-slate-500">/ {escala}</span>
-              <span className="ml-2 text-sm font-normal text-slate-500">
-                ({puntosObtenidos(entrega)}/{puntosTotales(actividad)} {tr.puntos.toLowerCase()})
-              </span>
-            </dd>
+            {puntaje ? (
+              <dd className={`text-2xl font-semibold ${colorCalificacion(cal, escala)}`}>
+                {formatoCal(cal, escala)} <span className="text-sm font-normal text-slate-500">/ {escala}</span>
+                <span className="ml-2 text-sm font-normal text-slate-500">
+                  ({puntosObtenidos(entrega)}/{puntosTotales(actividad)} {tr.puntos.toLowerCase()})
+                </span>
+              </dd>
+            ) : (
+              <dd className="font-medium text-slate-700">{tr.sinPuntaje}</dd>
+            )}
           </div>
         </dl>
       </section>
@@ -113,7 +119,7 @@ export async function ReporteAlumno({
           ))}
         </div>
         <div className="mt-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-          <h3 className="text-xs font-medium text-slate-500">{tr.puntosReactivo}</h3>
+          <h3 className="text-xs font-medium text-slate-500">{puntaje ? tr.puntosReactivo : tr.aciertosReactivo}</h3>
           <ul className="mt-2 flex flex-wrap gap-2 text-sm">
             {actividad.reactivos.map((r) => {
               const res = entrega.resultados.find((x) => x.numero === r.numero);
@@ -126,13 +132,16 @@ export async function ReporteAlumno({
                     completo ? "bg-acierto-suave/60 text-acierto ring-acierto/30" : "bg-error-suave/60 text-error ring-error/30"
                   }`}
                 >
-                  {completo ? "✓" : "✗"} {tr.reactivo} {r.numero} · {obtenidos}/{r.puntos}
+                  {completo ? "✓" : "✗"} {tr.reactivo} {r.numero}
+                  {puntaje && ` · ${obtenidos}/${r.puntos}`}
                 </li>
               );
             })}
-            <li className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-800">
-              {tr.total} · {puntosObtenidos(entrega)}/{puntosTotales(actividad)}
-            </li>
+            {puntaje && (
+              <li className="rounded-full bg-slate-100 px-3 py-1 font-semibold text-slate-800">
+                {tr.total} · {puntosObtenidos(entrega)}/{puntosTotales(actividad)}
+              </li>
+            )}
           </ul>
         </div>
       </section>

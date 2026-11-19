@@ -20,6 +20,7 @@ const alumno: Diccionario["alumno"] = {
     listosEnFecha: "表示の日時から結果を確認できます",
     evaluando: "採点中",
     entregarFotos: "写真を提出",
+    revisada: "添削済み",
   },
   campos: {
     nombre: "氏名",
@@ -140,6 +141,13 @@ const alumno: Diccionario["alumno"] = {
     entregada: "提出日時",
     solucion: "5. 解答",
     procedimiento: "解き方：",
+    reactivoSolo: "問題 {n}",
+    sinPuntaje: "点数なしで添削済み",
+  },
+  correccion: {
+    correcta: "正しい答えは {r} です。",
+    correcto: "正解。",
+    noEncontrado: "この問題が用紙に見つかりませんでした。確認してください。",
   },
   errores: {
     nombre: "氏名を入力してください。",

@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import type { EsfuerzoIA, Grupo, MotorIA } from "@/lib/tipos";
+import type { EsfuerzoIA, EstiloCorreccion, Grupo, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
+import { OpcionEstilo, OpcionSolucion } from "./opcion-solucion";
 import { Boton, BotonLink, campo } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
@@ -29,6 +30,8 @@ export function NuevaActividad({
   const tn = useTextos().t.profesor.nuevaActividad;
   const [modo, setModo] = useState<Modo>("ia");
   const [archivos, setArchivos] = useState<File[]>([]);
+  const [sinSolucion, setSinSolucion] = useState(false);
+  const [estilo, setEstilo] = useState<EstiloCorreccion>("margen");
   const [estado, setEstado] = useState<"listo" | "enviando" | "error">("listo");
   const [mensaje, setMensaje] = useState("");
 
@@ -47,6 +50,9 @@ export function NuevaActividad({
     e.preventDefault();
     const datos = new FormData(e.currentTarget);
     datos.set("modo", modo);
+    datos.set("sinSolucion", sinSolucion ? "1" : "");
+    datos.delete("solucion");
+    datos.set("estiloCorreccion", estilo);
     datos.delete("archivos");
     if (modo === "escaneada") archivos.forEach((f) => datos.append("archivos", f));
     setEstado("enviando");
@@ -147,6 +153,16 @@ export function NuevaActividad({
             />
           </label>
         )}
+
+        <OpcionSolucion
+          sinSolucion={sinSolucion}
+          onCambio={(v) => {
+            setSinSolucion(v);
+            // Las producciones escritas se corrigen mejor subrayando sobre el texto.
+            setEstilo(v ? "subrayado" : "margen");
+          }}
+        />
+        <OpcionEstilo estilo={estilo} onCambio={setEstilo} />
 
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">{tn.calificarSobre}</legend>

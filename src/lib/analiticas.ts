@@ -1,6 +1,7 @@
 // Analíticas de aprendizaje de un curso. Todos los números los calcula este código;
 // la IA no participa. Para comparar actividades con escalas distintas, todo se
 // expresa en puntaje sobre 100. Un trabajo no entregado cuenta como 0.
+import { conPuntaje } from "./modalidad";
 import { calificada, escalaDe, puntosObtenidos, puntosTotales } from "./estadisticas";
 import { RANGOS_PREDETERMINADOS, contarNiveles, type NivelReporte } from "./configuracion";
 import type { Actividad, Alumno, Entrega, Grupo, RangosCalificacion } from "./tipos";
@@ -152,7 +153,8 @@ export function analiticasCurso(
   tx: TextosCalculo = profesorEs.calculo,
 ): Analiticas {
   const alumnos = grupo.alumnos;
-  const ordenadas = [...actividades].sort((a, b) => a.fechaAplicacion.localeCompare(b.fechaAplicacion));
+  // Las actividades sin puntaje no tienen calificación: no entran en las métricas.
+  const ordenadas = actividades.filter(conPuntaje).sort((a, b) => a.fechaAplicacion.localeCompare(b.fechaAplicacion));
   // Solo cuentan las actividades que ya tienen al menos una entrega evaluada.
   const conResultados = ordenadas.filter((a) =>
     entregas.some((e) => e.actividadId === a.id && calificada(e)),
