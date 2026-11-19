@@ -477,6 +477,7 @@ const profesor: Diccionario["profesor"] = {
     unoPorLinea: "Ein Punkt pro Zeile.",
   },
   modalidad: {
+    modalidadPregunta: "Wie wird die Aufgabe korrigiert?",
     solucionPregunta: "Braucht die Aufgabe eine Lösung?",
     incluirSolucion: "Lösung einbeziehen",
     incluirSolucionTexto: "Du oder die KI löst die Aufgabe, und aus der Lösung entsteht das Bewertungsraster.",

@@ -477,6 +477,7 @@ const profesor: Diccionario["profesor"] = {
     unoPorLinea: "1行に1項目。",
   },
   modalidad: {
+    modalidadPregunta: "この課題はどのように採点しますか？",
     solucionPregunta: "この課題に解答は必要ですか？",
     incluirSolucion: "解答を含める",
     incluirSolucionTexto: "あなたか AI が課題を解き、その解答からルーブリックを作ります。",

@@ -68,6 +68,53 @@ export function OpcionSolucion({ sinSolucion, onCambio }: { sinSolucion: boolean
   );
 }
 
+/**
+ * Un solo botón por modalidad: "Incluir solución" + "Marcar el procedimiento y comentar al margen",
+ * o "No requiere solución" + "Subrayar y comentar sobre el texto" (producciones escritas).
+ */
+export function OpcionModalidad({ sinSolucion, onCambio }: { sinSolucion: boolean; onCambio: (sinSolucion: boolean) => void }) {
+  const tm = useTextos().t.profesor.modalidad;
+  const opciones = [
+    { valor: false, partes: [[tm.incluirSolucion, tm.incluirSolucionTexto], [tm.estiloMargen, tm.estiloMargenTexto]] },
+    { valor: true, partes: [[tm.sinSolucion, tm.sinSolucionTexto], [tm.estiloSubrayado, tm.estiloSubrayadoTexto]] },
+  ];
+  return (
+    <fieldset>
+      <legend className="text-sm font-medium text-slate-700">{tm.modalidadPregunta}</legend>
+      <div className="mt-2 grid gap-3 sm:grid-cols-2">
+        {opciones.map((o) => (
+          <label
+            key={String(o.valor)}
+            className={`flex cursor-pointer items-start gap-3 rounded-xl p-4 ring-2 transition ${
+              sinSolucion === o.valor ? "bg-tinta-50 ring-tinta-500" : "bg-white ring-slate-200 hover:ring-slate-300"
+            }`}
+          >
+            <input
+              type="radio"
+              name="modalidad"
+              value={String(o.valor)}
+              checked={sinSolucion === o.valor}
+              onChange={() => onCambio(o.valor)}
+              className="mt-1 accent-tinta-600"
+            />
+            <span className="space-y-3">
+              {o.partes.map(([titulo, texto], i) => (
+                <span key={titulo} className={`block ${i > 0 ? "border-t border-slate-200 pt-3" : ""}`}>
+                  <span className="block font-semibold text-slate-900">
+                    {i > 0 && "+ "}
+                    {titulo}
+                  </span>
+                  <span className="mt-1 block text-sm text-slate-600">{texto}</span>
+                </span>
+              ))}
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 /** Cómo se corrige sobre la hoja: subrayar y comentar encima, o marcar y comentar al margen. */
 export function OpcionEstilo({ estilo, onCambio }: { estilo: EstiloCorreccion; onCambio: (estilo: EstiloCorreccion) => void }) {
   const tm = useTextos().t.profesor.modalidad;

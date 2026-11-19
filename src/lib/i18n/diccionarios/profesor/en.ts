@@ -477,6 +477,7 @@ const profesor: Diccionario["profesor"] = {
     unoPorLinea: "One point per line.",
   },
   modalidad: {
+    modalidadPregunta: "How is the assignment reviewed?",
     solucionPregunta: "Does the assignment need a solution?",
     incluirSolucion: "Include solution",
     incluirSolucionTexto: "You or the AI solve the assignment, and the rubric is built from the solution.",
