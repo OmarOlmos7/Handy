@@ -118,11 +118,24 @@ export function ConfigPrecision({
 }
 
 /** Deslizador de precisión y consumo para una actividad nueva (Rápido · Medio · Preciso). */
-export function DeslizadorPrecision({ inicial, esfuerzos }: { inicial: MotorIA; esfuerzos: Record<MotorIA, EsfuerzoIA> }) {
+export function DeslizadorPrecision({
+  inicial,
+  esfuerzos,
+  onCambio,
+}: {
+  inicial: MotorIA;
+  esfuerzos: Record<MotorIA, EsfuerzoIA>;
+  /** Avisa el motor elegido (por ejemplo, para recalcular los créditos). */
+  onCambio?: (m: MotorIA) => void;
+}) {
   const { t } = useTextos();
   const td = t.profesor.deslizador;
   const tconf = t.configuracion;
-  const [indice, setIndice] = useState(MOTORES.indexOf(inicial));
+  const [indice, setIndiceInterno] = useState(MOTORES.indexOf(inicial));
+  const setIndice = (i: number) => {
+    setIndiceInterno(i);
+    if (MOTORES[i]) onCambio?.(MOTORES[i]);
+  };
   const motor = MOTORES[indice] ?? "medio";
   const info = t.motores[motor];
   const esfuerzo = (e: EsfuerzoIA) => t.esfuerzos[e].toLocaleLowerCase();
