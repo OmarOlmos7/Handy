@@ -49,6 +49,20 @@ export function intervaloNivel(nivel: NivelReporte, r: RangosCalificacion = RANG
 }
 
 /** Cuántos valores (sobre 100) caen en cada nivel. */
+/**
+ * Porcentaje de notas altas (nivel Alto o Superior) y bajas (nivel Bajo) entre calificaciones
+ * sobre 100, con los rangos del profesor. Sin calificaciones, undefined.
+ */
+export function porcentajeAltasBajas(
+  valores: number[],
+  r: RangosCalificacion = RANGOS_PREDETERMINADOS,
+): { altas: number; bajas: number; total: number } | undefined {
+  if (valores.length === 0) return undefined;
+  const n = contarNiveles(valores, r);
+  const pct = (x: number) => Math.round((x / valores.length) * 100);
+  return { altas: pct(n.alto + n.superior), bajas: pct(n.bajo), total: valores.length };
+}
+
 export function contarNiveles(valores: number[], r: RangosCalificacion = RANGOS_PREDETERMINADOS): Record<NivelReporte, number> {
   const conteo: Record<NivelReporte, number> = { bajo: 0, medio: 0, alto: 0, superior: 0 };
   for (const v of valores) conteo[nivelReporte(v, r)]++;

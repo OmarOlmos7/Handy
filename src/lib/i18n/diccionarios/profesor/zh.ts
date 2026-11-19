@@ -173,6 +173,12 @@ const profesor: Diccionario["profesor"] = {
     ],
   },
   actividad: {
+    notasAltas: "高分比例",
+    notasAltasTexto: "{r} 分及以上（满分 {e}）。",
+    notasBajas: "低分比例",
+    notasBajasTexto: "低于 {r} 分（满分 {e}）。",
+    sinCalificaciones: "还没有已批改的提交。",
+    sinPuntajeDesempeno: "本作业不计分。",
     resultadosVisibles: "结果可见于 {f}",
     analiticas: "作业分析",
     evaluandoN: "AI 正在批改 {n} 份提交。本页会自动刷新。",

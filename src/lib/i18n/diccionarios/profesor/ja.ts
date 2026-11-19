@@ -176,6 +176,12 @@ const profesor: Diccionario["profesor"] = {
     ],
   },
   actividad: {
+    notasAltas: "高得点の割合",
+    notasAltasTexto: "{r}点以上（{e}点満点）。",
+    notasBajas: "低得点の割合",
+    notasBajasTexto: "{r}点未満（{e}点満点）。",
+    sinCalificaciones: "まだ採点済みの提出はありません。",
+    sinPuntajeDesempeno: "点数なしの課題です。",
     resultadosVisibles: "結果の公開 {f}",
     analiticas: "課題の分析",
     evaluandoN: "AIが {n} 件の提出を採点中です。このページは自動で更新されます。",

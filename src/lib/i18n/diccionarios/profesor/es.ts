@@ -174,6 +174,12 @@ const profesor = {
     ],
   },
   actividad: {
+    notasAltas: "% notas altas",
+    notasAltasTexto: "Calificación de {r} o más (sobre {e}).",
+    notasBajas: "% notas bajas",
+    notasBajasTexto: "Calificación menor a {r} (sobre {e}).",
+    sinCalificaciones: "Aún no hay entregas calificadas.",
+    sinPuntajeDesempeno: "Actividad sin puntaje.",
     resultadosVisibles: "Resultados visibles desde {f}",
     analiticas: "Analíticas Actividad",
     evaluandoN: "La IA está evaluando {n} entregas. Esta página se actualiza sola.",

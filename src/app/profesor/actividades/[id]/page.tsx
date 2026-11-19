@@ -5,7 +5,6 @@ import Link from "next/link";
 import { AutoActualizar } from "@/components/auto-actualizar";
 import { BorrarEntrega } from "@/components/borrar-entrega";
 import { EvaluarTodo } from "@/components/evaluar-todo";
-import { QrEntregas } from "@/components/qr-entregas";
 import {
   BotonLink,
   Encabezado,
@@ -20,7 +19,7 @@ import { actividadDe, entregasDe, estadoActividad, grupoDe } from "@/lib/almacen
 import { evaluandoAhora } from "@/lib/evaluacion";
 import { datosProfesor } from "@/lib/sesion";
 import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadisticas";
-import { qrDataUrl, urlBase } from "@/lib/qr";
+import { configuracionDe, porcentajeAltasBajas } from "@/lib/configuracion";
 import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 import { textos } from "@/lib/i18n/servidor";
 import { listaParaRubrica } from "@/lib/modalidad";
@@ -29,7 +28,7 @@ import { formato } from "@/lib/i18n/idiomas";
 
 export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
-  const { db } = await datosProfesor();
+  const { db, profesor } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
@@ -40,8 +39,15 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
   // Las entregas se evalúan solas; el botón queda para reintentar las que fallaron.
   const porEvaluar = entregas.filter((e) => e.estado === "entregada" && e.imagenes?.length && !evaluandoAhora(e.evaluandoDesde));
   const bajaConfianza = entregas.reduce((s, e) => s + e.resultados.filter((r) => r.confianza === "baja").length, 0);
-  const enlace = `${await urlBase()}/entregar/${id}`;
-  const qr = await qrDataUrl(enlace);
+  // % de notas altas y bajas con los rangos del profesor (calificaciones llevadas a 100).
+  const rangos = configuracionDe(profesor.config).rangos;
+  const escala = escalaDe(actividad);
+  const desempeno = conPuntaje(actividad)
+    ? porcentajeAltasBajas(
+        recibidas.filter((e) => calificada(e)).map((e) => (calificacion(actividad, e) * 100) / escala),
+        rangos,
+      )
+    : undefined;
   const { t, locale } = await textos();
   const tc = t.profesor.comun;
   const ta = t.profesor.actividad;
@@ -118,7 +124,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         </Tarjeta>
       )}
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)]">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Tarjeta>
           <p className="text-sm text-slate-500">{ta.evaluadas}</p>
           <p className="mt-1 text-2xl font-semibold">
@@ -140,7 +146,24 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           <p className={`mt-1 text-2xl font-semibold ${bajaConfianza ? "text-aviso" : ""}`}>{bajaConfianza}</p>
           {bajaConfianza > 0 && <p className="text-xs text-slate-500">{ta.bajaTexto}</p>}
         </Tarjeta>
-        <QrEntregas qr={qr} enlace={enlace} titulo={actividad.titulo} />
+        <Tarjeta className="ring-1 ring-tinta-200">
+          <p className="text-sm text-slate-500">{ta.notasAltas}</p>
+          <p className="mt-1 text-2xl font-semibold text-tinta-600">{desempeno ? `${desempeno.altas} %` : "—"}</p>
+          <p className="text-xs text-slate-500">
+            {desempeno
+              ? formato(ta.notasAltasTexto, { r: formatoCal((rangos.alto * escala) / 100, escala), e: escala })
+              : conPuntaje(actividad)
+                ? ta.sinCalificaciones
+                : ta.sinPuntajeDesempeno}
+          </p>
+        </Tarjeta>
+        <Tarjeta className="ring-1 ring-error/30">
+          <p className="text-sm text-slate-500">{ta.notasBajas}</p>
+          <p className="mt-1 text-2xl font-semibold text-error">{desempeno ? `${desempeno.bajas} %` : "—"}</p>
+          <p className="text-xs text-slate-500">
+            {desempeno ? formato(ta.notasBajasTexto, { r: formatoCal((rangos.medio * escala) / 100, escala), e: escala }) : conPuntaje(actividad) ? ta.sinCalificaciones : ta.sinPuntajeDesempeno}
+          </p>
+        </Tarjeta>
       </div>
 
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
