@@ -250,12 +250,12 @@ const fr: Diccionario = {
     academia: {
       nombre: "Académie",
       lema: "Pour tout le semestre ou une équipe : le meilleur prix par page",
-      periodo: "paiement unique pour 1 500 crédits",
+      periodo: "paiement unique pour 1 200 crédits",
       boton: "Choisir Académie",
       incluye: "Tout Pro, plus :",
       ventajas: [
-        "1 500 crédits : 10 activités d'une page pour 5 classes de 30",
-        "≈ 75 heures de correction économisées",
+        "1 200 crédits : 10 activités d'une page pour 4 classes de 30",
+        "≈ 60 heures de correction économisées",
         "De la marge pour le niveau Précis aux examens",
         "Rapports par élève et par classe tout au long du cours",
       ],

@@ -250,12 +250,12 @@ const pt: Diccionario = {
     academia: {
       nombre: "Academia",
       lema: "Para o semestre inteiro ou uma coordenação: o melhor preço por página",
-      periodo: "pagamento único por 1.500 créditos",
+      periodo: "pagamento único por 1.200 créditos",
       boton: "Escolher Academia",
       incluye: "Tudo do Pro, mais:",
       ventajas: [
-        "1.500 créditos: 10 atividades de 1 página para 5 turmas de 30",
-        "≈ 75 horas de correção economizadas",
+        "1.200 créditos: 10 atividades de 1 página para 4 turmas de 30",
+        "≈ 60 horas de correção economizadas",
         "Folga para usar o nível Preciso nas provas",
         "Relatórios por aluno e por turma durante todo o curso",
       ],
