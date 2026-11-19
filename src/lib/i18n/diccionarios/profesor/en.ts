@@ -285,6 +285,8 @@ const profesor: Diccionario["profesor"] = {
     abierto: "Open-ended",
   },
   nuevaActividad: {
+    idiomaActividad: "Activity language",
+    idiomaActividadTexto: "The sheet, rubric, feedback and recommendations are written in this language. The screen language is changed in the settings gear.",
     ejemploPrompt:
       "Example:\nTopic: Newton's laws and net force.\nQuestions: 4 multiple choice (10 points each), 3 true or false (10 points each) and 1 worked problem showing the procedure (30 points).\nIllustrations: in the worked problem, a free-body diagram of the block to the right of the text; in multiple choice 2, a velocity vs. time graph below the question.\nLevel: 8th grade, with everyday examples.",
     primeroCurso: "Create a course first.",

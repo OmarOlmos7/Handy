@@ -10,7 +10,8 @@ import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { actividadDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 import { qrDataUrl, urlBase } from "@/lib/qr";
-import { textos } from "@/lib/i18n/servidor";
+import { textos, textosDeActividad } from "@/lib/i18n/servidor";
+import { ProveedorTextos } from "@/components/proveedor-textos";
 
 export default async function HojaImprimible({ params }: PageProps<"/profesor/actividades/[id]/hoja">) {
   const { id } = await params;
@@ -19,6 +20,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
   const { t } = await textos();
+  const impreso = await textosDeActividad(actividad);
   const th = t.profesor.hoja;
   const curso = `${grupo.materia} · ${grupo.nombre}`;
   const qr = await qrDataUrl(`${await urlBase()}/entregar/${id}`);
@@ -90,6 +92,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
       />
       </div>
       <ConFlujo vista={1} db={db} actividad={actividad}>
+      <ProveedorTextos valor={impreso}>
       {actividad.origen === "ia" ? (
         <>
           <EditarHoja
@@ -108,6 +111,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
           ))}
         </div>
       )}
+      </ProveedorTextos>
       </ConFlujo>
     </>
   );

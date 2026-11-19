@@ -1,6 +1,6 @@
 // Idioma en que está escrito un texto (la actividad), para que la IA redacte la retroalimentación
 // en ese idioma. Es un cálculo sencillo y local: escritura (japonés o chino) y palabras frecuentes.
-import type { Idioma } from "./idiomas";
+import { esIdioma, type Idioma } from "./idiomas";
 
 const FRECUENTES: Record<Exclude<Idioma, "ja" | "zh">, string[]> = {
   es: ["el", "la", "los", "las", "de", "del", "que", "y", "en", "un", "una", "es", "con", "por", "para", "su", "cuál", "qué", "calcula", "explica", "describe", "se", "al", "como"],
@@ -39,6 +39,15 @@ export function detectarIdioma(texto: string | undefined | null): Idioma | undef
     } else if (n > segundo) segundo = n;
   }
   return max >= 2 && max > segundo ? mejor : undefined;
+}
+
+/**
+ * Idioma de una actividad: el elegido al darla de alta; en actividades anteriores, el del texto.
+ * No depende del idioma de las pantallas del profesor.
+ */
+export function idiomaDeActividad(act: Parameters<typeof textoDeActividad>[0] & { idioma?: string }): Idioma | undefined {
+  if (esIdioma(act.idioma)) return act.idioma;
+  return detectarIdioma(textoDeActividad(act));
 }
 
 /** Texto de la actividad para detectar su idioma: título, instrucciones y enunciados. */

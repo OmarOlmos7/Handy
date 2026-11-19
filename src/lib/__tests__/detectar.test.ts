@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectarIdioma, textoDeActividad } from "../i18n/detectar";
+import { detectarIdioma, idiomaDeActividad, textoDeActividad } from "../i18n/detectar";
 
 describe("detectarIdioma", () => {
   it("reconoce cada idioma por sus palabras frecuentes y su escritura", () => {
@@ -19,5 +19,14 @@ describe("detectarIdioma", () => {
   it("usa el título y los enunciados de la actividad", () => {
     const texto = textoDeActividad({ titulo: "Essay", reactivos: [{ enunciado: "Write an essay about the causes of the French Revolution and explain its effects." }] });
     expect(detectarIdioma(texto)).toBe("en");
+  });
+});
+
+describe("idioma de la actividad", () => {
+  it("usa el idioma elegido al darla de alta, aunque el texto esté en otro", () => {
+    expect(idiomaDeActividad({ titulo: "Leyes de Newton", prompt: "Resuelve los problemas", reactivos: [], idioma: "en" })).toBe("en");
+  });
+  it("sin idioma elegido, lo detecta del texto", () => {
+    expect(idiomaDeActividad({ titulo: "Leyes de Newton", prompt: "Resuelve los problemas de la hoja con el procedimiento", reactivos: [] })).toBe("es");
   });
 });

@@ -285,6 +285,8 @@ const profesor: Diccionario["profesor"] = {
     abierto: "Aberta",
   },
   nuevaActividad: {
+    idiomaActividad: "Idioma da atividade",
+    idiomaActividadTexto: "A folha, a rubrica, o feedback e as recomendações são escritos neste idioma. O idioma das telas é alterado na engrenagem de configurações.",
     ejemploPrompt:
       "Exemplo:\nTema: Leis de Newton e força resultante.\nQuestões: 4 de múltipla escolha (10 pontos cada), 3 de verdadeiro ou falso (10 pontos cada) e 1 problema com desenvolvimento (30 pontos).\nIlustrações: no problema, um diagrama de corpo livre do bloco à direita do texto; na múltipla escolha 2, um gráfico de velocidade por tempo abaixo do enunciado.\nNível: 8º ano, com exemplos do dia a dia.",
     primeroCurso: "Primeiro cadastre um curso.",

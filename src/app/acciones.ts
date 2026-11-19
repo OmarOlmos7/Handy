@@ -1,5 +1,6 @@
 "use server";
 
+import { esIdioma } from "@/lib/i18n/idiomas";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
@@ -239,6 +240,8 @@ export interface CambiosActividad {
   escala: 10 | 100;
   sinSolucion: boolean;
   estiloCorreccion: EstiloCorreccion;
+  /** Idioma de la actividad; vacío deja el que tenía. */
+  idioma?: string;
   instruccionesAlumno?: string[];
   reactivos: { numero: number; enunciado: string; tema: string; puntos: number; opciones?: string[] }[];
 }
@@ -260,6 +263,7 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
     a.escala = c.escala === 10 ? 10 : 100;
     a.sinSolucion = c.sinSolucion || undefined;
     a.estiloCorreccion = c.estiloCorreccion === "subrayado" ? "subrayado" : "margen";
+    if (esIdioma(c.idioma)) a.idioma = c.idioma;
     if (c.instruccionesAlumno && a.origen === "ia") {
       a.instruccionesAlumno = c.instruccionesAlumno.map((x) => x.trim()).filter(Boolean).slice(0, 6);
     }
