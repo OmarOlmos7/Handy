@@ -202,6 +202,12 @@ const profesor: Diccionario["profesor"] = {
     pdfDe: "Feedback-PDF von {nombre} herunterladen",
   },
   entregas: {
+    recepcion: "Abgaben",
+    recibir: "Abgaben annehmen",
+    suspender: "Abgaben pausieren",
+    activasTexto: "Der QR-Code ist aktiv: Schüler/innen können abgeben.",
+    suspendidasTexto: "Abgaben pausiert: Der QR-Code nimmt keine Aufgaben an. Sie können weiterhin Blätter eines Schülers hochladen.",
+    suspendidasInsignia: "Pausiert",
     siguiente: "Weiter: Bewertung",
     yaPuedenAntes: "Die Schüler/innen können schon abgeben. Die Abgaben werden automatisch bewertet, sobald du das ",
     rubrica: "Bewertungsraster bestätigst",

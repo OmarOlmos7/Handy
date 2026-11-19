@@ -124,6 +124,8 @@ export interface Actividad {
    * calificación ni puntos (adecuado para producciones escritas).
    */
   sinPuntaje?: boolean;
+  /** true si el profesor suspendió las entregas: el QR no recibe actividades hasta que las reanude. */
+  entregasSuspendidas?: boolean;
   /**
    * Cómo se corrige sobre la hoja: "margen" (marca en el procedimiento y comentario al costado
    * derecho, lo predeterminado) o "subrayado" (subraya lo que hay que corregir y comenta encima,

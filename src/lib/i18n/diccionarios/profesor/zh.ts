@@ -199,6 +199,12 @@ const profesor: Diccionario["profesor"] = {
     pdfDe: "下载 {nombre} 的反馈 PDF",
   },
   entregas: {
+    recepcion: "提交接收",
+    recibir: "接收提交",
+    suspender: "暂停提交",
+    activasTexto: "二维码已启用：学生可以提交。",
+    suspendidasTexto: "已暂停提交：二维码不再接收作业。你仍可上传学生的作业纸。",
+    suspendidasInsignia: "已暂停",
     siguiente: "下一步：批改",
     yaPuedenAntes: "学生已经可以提交。你确认",
     rubrica: "评分标准",

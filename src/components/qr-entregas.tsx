@@ -9,9 +9,10 @@ import { useTextos } from "./proveedor-textos";
  * Tarjeta con el QR de entrega. El botón "Proyectar" lo muestra en pantalla completa
  * (título, QR grande e instrucción) para el proyector del salón; cualquier tecla o clic regresa.
  */
-export function QrEntregas({ qr, enlace, titulo }: { qr: string; enlace: string; titulo: string }) {
+export function QrEntregas({ qr, enlace, titulo, suspendidas = false }: { qr: string; enlace: string; titulo: string; suspendidas?: boolean }) {
   const [abierto, setAbierto] = useState(false);
-  const tq = useTextos().t.profesor.qr;
+  const { t } = useTextos();
+  const tq = t.profesor.qr;
 
   const cerrar = useCallback(() => {
     setAbierto(false);
@@ -47,14 +48,21 @@ export function QrEntregas({ qr, enlace, titulo }: { qr: string; enlace: string;
         <button
           type="button"
           onClick={proyectar}
-          title={tq.pantallaCompletaTitulo}
-          className="group relative shrink-0 rounded-lg ring-tinta-200 transition hover:ring-4"
+          disabled={suspendidas}
+          title={suspendidas ? t.profesor.entregas.suspendidasTexto : tq.pantallaCompletaTitulo}
+          className="group relative shrink-0 rounded-lg ring-tinta-200 transition enabled:hover:ring-4"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qr} alt={tq.alt} className="h-24 w-24" />
-          <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-900/70 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100">
-            {tq.proyectar}
-          </span>
+          <img src={qr} alt={tq.alt} className={`h-24 w-24 ${suspendidas ? "opacity-20 grayscale" : ""}`} />
+          {suspendidas ? (
+            <span className="absolute inset-0 flex items-center justify-center text-center text-xs font-bold uppercase text-error">
+              {t.profesor.entregas.suspendidasInsignia}
+            </span>
+          ) : (
+            <span className="absolute inset-0 flex items-center justify-center rounded-lg bg-slate-900/70 text-xs font-semibold text-white opacity-0 transition group-hover:opacity-100">
+              {tq.proyectar}
+            </span>
+          )}
         </button>
         <div className="min-w-0 text-sm">
           <p className="font-medium">{tq.titulo}</p>
@@ -65,7 +73,8 @@ export function QrEntregas({ qr, enlace, titulo }: { qr: string; enlace: string;
           <button
             type="button"
             onClick={proyectar}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-tinta-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-tinta-700"
+            disabled={suspendidas}
+            className="mt-2 inline-flex disabled:cursor-not-allowed disabled:opacity-40 items-center gap-1.5 rounded-lg bg-tinta-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-tinta-700"
           >
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
               <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />

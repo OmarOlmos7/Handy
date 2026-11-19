@@ -202,6 +202,12 @@ const profesor: Diccionario["profesor"] = {
     pdfDe: "Baixar o PDF de devolutiva de {nombre}",
   },
   entregas: {
+    recepcion: "Recebimento de entregas",
+    recibir: "Receber entregas",
+    suspender: "Suspender entregas",
+    activasTexto: "O QR está ativo: os alunos podem entregar.",
+    suspendidasTexto: "Entregas suspensas: o QR não recebe atividades. Você ainda pode enviar as folhas de um aluno.",
+    suspendidasInsignia: "Suspensas",
     siguiente: "Próximo: correção",
     yaPuedenAntes: "Os alunos já podem entregar. As entregas serão corrigidas sozinhas assim que você confirmar a ",
     rubrica: "rubrica",

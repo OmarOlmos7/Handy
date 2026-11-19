@@ -200,6 +200,12 @@ const profesor = {
     pdfDe: "Descargar el PDF de retroalimentación de {nombre}",
   },
   entregas: {
+    recepcion: "Recepción de entregas",
+    recibir: "Recibir entregas",
+    suspender: "Suspender entregas",
+    activasTexto: "El QR está activo: los alumnos pueden entregar.",
+    suspendidasTexto: "Entregas suspendidas: el QR no recibe actividades. Tú sí puedes subir hojas de un alumno.",
+    suspendidasInsignia: "Suspendidas",
     siguiente: "Siguiente: evaluación",
     yaPuedenAntes: "Los alumnos ya pueden entregar. Las entregas se evaluarán solas en cuanto confirmes la ",
     rubrica: "rúbrica",

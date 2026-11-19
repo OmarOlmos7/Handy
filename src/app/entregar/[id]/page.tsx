@@ -46,21 +46,25 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
           </form>
         </div>
       )}
-      <div className="mt-5">
-        <EntregarForm
-          actividadId={id}
-          titulo={actividad.titulo}
-          modo={comoProfesor ? "profesor" : alumno ? "sesion" : "nuevo"}
-          automatica={Boolean(actividad.rubricaConfirmada)}
-          matriculaInicial={typeof m === "string" ? m : undefined}
-          nombreInicial={typeof n === "string" ? n : undefined}
-          previa={
-            entrega && primera
-              ? { primeraEntregaEn: primera, paginas: entrega.paginasRecibidas, evaluada: entrega.estado === "evaluada" || entrega.estado === "aprobada" }
-              : undefined
-          }
-        />
-      </div>
+      {actividad.entregasSuspendidas && !comoProfesor ? (
+        <p className="mt-5 rounded-xl bg-error-suave px-4 py-4 text-sm font-medium text-error">{t.alumno.entregar.suspendidas}</p>
+      ) : (
+        <div className="mt-5">
+          <EntregarForm
+            actividadId={id}
+            titulo={actividad.titulo}
+            modo={comoProfesor ? "profesor" : alumno ? "sesion" : "nuevo"}
+            automatica={Boolean(actividad.rubricaConfirmada)}
+            matriculaInicial={typeof m === "string" ? m : undefined}
+            nombreInicial={typeof n === "string" ? n : undefined}
+            previa={
+              entrega && primera
+                ? { primeraEntregaEn: primera, paginas: entrega.paginasRecibidas, evaluada: entrega.estado === "evaluada" || entrega.estado === "aprobada" }
+                : undefined
+            }
+          />
+        </div>
+      )}
     </main>
   );
 }

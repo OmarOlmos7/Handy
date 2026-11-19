@@ -202,6 +202,12 @@ const profesor: Diccionario["profesor"] = {
     pdfDe: "Download the feedback PDF for {nombre}",
   },
   entregas: {
+    recepcion: "Submissions",
+    recibir: "Accept submissions",
+    suspender: "Pause submissions",
+    activasTexto: "The QR code is active: students can submit.",
+    suspendidasTexto: "Submissions paused: the QR code does not accept activities. You can still upload a student’s sheets.",
+    suspendidasInsignia: "Paused",
     siguiente: "Next: grading",
     yaPuedenAntes: "Students can already submit. Submissions will be graded automatically as soon as you confirm the ",
     rubrica: "rubric",
