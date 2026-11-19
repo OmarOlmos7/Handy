@@ -40,6 +40,7 @@ const alumno: Diccionario["alumno"] = {
     descargarPdf: "PDF をダウンロード",
   },
   entregar: {
+    suspendidas: "先生がこの課題の提出を停止しています。再開の時期は先生に確認してください。",
     entregasComo: "提出者：",
     noEresTu: "本人ではありませんか？ログアウト",
   },
@@ -158,6 +159,7 @@ const alumno: Diccionario["alumno"] = {
     credenciales: "メールアドレスまたはアクセスキーが正しくありません。",
     clavesDistintas: "2 つのアクセスキーが一致しません。",
     actividadNoEncontrada: "課題が見つかりません",
+    entregasSuspendidas: "先生がこの課題の提出を停止しています。再開の時期は先生に確認してください。",
     sinArchivos: "写真か PDF を 1 つ以上追加してください",
     maxPaginas: "最大 {n} ページまでです",
     pdfPesado: "PDF が 40 MB を超えています",

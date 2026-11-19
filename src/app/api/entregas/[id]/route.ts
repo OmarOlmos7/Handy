@@ -50,6 +50,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
     if (!existente && nombre.length < 3) return error("nombreAlumno");
     alumno = existente ?? { matricula, nombre, correo: "" };
   } else {
+    // Con las entregas suspendidas solo el profesor puede subir hojas.
+    if (actividad.entregasSuspendidas) return error("entregasSuspendidas", 423);
     let cuenta = (await alumnoActual()) ?? undefined;
     let abrirSesion = false;
     if (!cuenta) {

@@ -40,6 +40,7 @@ const alumno = {
     descargarPdf: "Descargar PDF",
   },
   entregar: {
+    suspendidas: "El profesor suspendió las entregas de esta actividad. Pregúntale cuándo se vuelven a abrir.",
     entregasComo: "Entregas como",
     noEresTu: "¿No eres tú? Salir",
   },
@@ -158,6 +159,7 @@ const alumno = {
     credenciales: "Correo o clave de acceso incorrectos.",
     clavesDistintas: "Las dos claves de acceso no coinciden.",
     actividadNoEncontrada: "Actividad no encontrada",
+    entregasSuspendidas: "El profesor suspendió las entregas de esta actividad. Pregúntale cuándo se vuelven a abrir.",
     sinArchivos: "Agrega al menos una foto o un PDF",
     maxPaginas: "Máximo {n} páginas",
     pdfPesado: "El PDF pesa más de 40 MB",

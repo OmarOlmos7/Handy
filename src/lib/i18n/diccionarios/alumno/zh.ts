@@ -39,6 +39,7 @@ const alumno: Diccionario["alumno"] = {
     descargarPdf: "下载 PDF",
   },
   entregar: {
+    suspendidas: "老师已暂停本作业的提交。请向老师询问何时重新开放。",
     entregasComo: "提交人：",
     noEresTu: "不是你？退出",
   },
@@ -156,6 +157,7 @@ const alumno: Diccionario["alumno"] = {
     credenciales: "邮箱或访问密钥不正确。",
     clavesDistintas: "两次输入的访问密钥不一致。",
     actividadNoEncontrada: "找不到该作业",
+    entregasSuspendidas: "老师已暂停本作业的提交。请向老师询问何时重新开放。",
     sinArchivos: "请至少添加一张照片或一个 PDF",
     maxPaginas: "最多 {n} 页",
     pdfPesado: "PDF 超过 40 MB",

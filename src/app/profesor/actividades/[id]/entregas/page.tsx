@@ -4,6 +4,7 @@ import { AutoActualizar } from "@/components/auto-actualizar";
 import { BorrarEntrega } from "@/components/borrar-entrega";
 import { ConFlujo } from "@/components/flujo-actividad";
 import { QrEntregas } from "@/components/qr-entregas";
+import { RecepcionEntregas } from "@/components/recepcion-entregas";
 import { BotonLink, Encabezado, Insignia, Tarjeta, fechaLarga } from "@/components/ui";
 import { actividadDe, entregasDe, grupoDe } from "@/lib/almacen";
 import { evaluandoAhora } from "@/lib/evaluacion";
@@ -69,6 +70,8 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
           </p>
         )}
 
+        <RecepcionEntregas actividadId={id} suspendidas={Boolean(actividad.entregasSuspendidas)} />
+
         <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.8fr)]">
           <Tarjeta>
             <p className="text-sm text-slate-500">{te.recibidas}</p>
@@ -83,7 +86,7 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
               {entregas.length - recibidas.length}
             </p>
           </Tarjeta>
-          <QrEntregas qr={qr} enlace={enlace} titulo={actividad.titulo} />
+          <QrEntregas qr={qr} enlace={enlace} titulo={actividad.titulo} suspendidas={Boolean(actividad.entregasSuspendidas)} />
         </div>
 
         <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">

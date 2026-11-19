@@ -276,6 +276,15 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
   revalidatePath("/profesor", "layout");
 }
 
+/** Suspende o reanuda la recepción de entregas por QR de una actividad. */
+export async function cambiarRecepcion(actividadId: string, suspender: boolean) {
+  await enActividadPropia(actividadId, (db) => {
+    actividadDe(db, actividadId)!.entregasSuspendidas = suspender || undefined;
+  });
+  revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
+  revalidatePath(`/entregar/${actividadId}`);
+}
+
 /** Rúbrica con puntaje (calificación) o sin puntaje (solo aciertos y elementos a corregir). */
 export async function cambiarPuntaje(actividadId: string, sinPuntaje: boolean) {
   await enActividadPropia(actividadId, (db) => {

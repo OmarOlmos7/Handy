@@ -40,6 +40,7 @@ const alumno: Diccionario["alumno"] = {
     descargarPdf: "Télécharger le PDF",
   },
   entregar: {
+    suspendidas: "Votre enseignant a suspendu les rendus de cette activité. Demandez-lui quand ils rouvriront.",
     entregasComo: "Tu rends en tant que",
     noEresTu: "Ce n’est pas toi ? Se déconnecter",
   },
@@ -158,6 +159,7 @@ const alumno: Diccionario["alumno"] = {
     credenciales: "E-mail ou clé d’accès incorrects.",
     clavesDistintas: "Les deux clés d’accès ne correspondent pas.",
     actividadNoEncontrada: "Activité introuvable",
+    entregasSuspendidas: "Votre enseignant a suspendu les rendus de cette activité. Demandez-lui quand ils rouvriront.",
     sinArchivos: "Ajoute au moins une photo ou un PDF",
     maxPaginas: "{n} pages maximum",
     pdfPesado: "Le PDF dépasse 40 Mo",

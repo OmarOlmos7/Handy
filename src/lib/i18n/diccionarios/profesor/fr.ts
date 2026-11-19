@@ -202,6 +202,12 @@ const profesor: Diccionario["profesor"] = {
     pdfDe: "Télécharger le PDF de retour de {nombre}",
   },
   entregas: {
+    recepcion: "Réception des rendus",
+    recibir: "Recevoir les rendus",
+    suspender: "Suspendre les rendus",
+    activasTexto: "Le QR est actif : les élèves peuvent rendre leur travail.",
+    suspendidasTexto: "Rendus suspendus : le QR n’accepte plus d’activités. Vous pouvez toujours téléverser les feuilles d’un élève.",
+    suspendidasInsignia: "Suspendus",
     siguiente: "Suivant : correction",
     yaPuedenAntes: "Les élèves peuvent déjà rendre. Les rendus seront corrigés automatiquement dès que vous confirmerez la ",
     rubrica: "grille",

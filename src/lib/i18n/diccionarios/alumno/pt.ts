@@ -40,6 +40,7 @@ const alumno: Diccionario["alumno"] = {
     descargarPdf: "Baixar PDF",
   },
   entregar: {
+    suspendidas: "O professor suspendeu as entregas desta atividade. Pergunte quando elas serão reabertas.",
     entregasComo: "Você está entregando como",
     noEresTu: "Não é você? Sair",
   },
@@ -158,6 +159,7 @@ const alumno: Diccionario["alumno"] = {
     credenciales: "E-mail ou chave de acesso incorretos.",
     clavesDistintas: "As duas chaves de acesso não coincidem.",
     actividadNoEncontrada: "Atividade não encontrada",
+    entregasSuspendidas: "O professor suspendeu as entregas desta atividade. Pergunte quando elas serão reabertas.",
     sinArchivos: "Adicione pelo menos uma foto ou um PDF",
     maxPaginas: "Máximo de {n} páginas",
     pdfPesado: "O PDF tem mais de 40 MB",

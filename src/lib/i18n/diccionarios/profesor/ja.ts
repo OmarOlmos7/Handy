@@ -202,6 +202,12 @@ const profesor: Diccionario["profesor"] = {
     pdfDe: "{nombre} さんのフィードバックPDFをダウンロード",
   },
   entregas: {
+    recepcion: "提出の受付",
+    recibir: "提出を受け付ける",
+    suspender: "提出を停止する",
+    activasTexto: "QRコードは有効です。生徒は提出できます。",
+    suspendidasTexto: "提出は停止中です。QRコードでは課題を受け付けません。先生は生徒の答案をアップロードできます。",
+    suspendidasInsignia: "停止中",
     siguiente: "次へ：採点",
     yaPuedenAntes: "生徒はすでに提出できます。提出は、",
     rubrica: "ルーブリック",
