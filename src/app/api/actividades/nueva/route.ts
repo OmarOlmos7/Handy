@@ -47,8 +47,10 @@ export async function POST(req: Request) {
     reactivos: [],
     rubricaConfirmada: false,
     escala: form.get("escala") === "10" ? 10 : 100,
+    // "Sin puntos": rúbrica sin puntaje (solo aciertos y elementos a corregir).
+    sinPuntaje: form.get("escala") === "sin" || undefined,
     resultadosDesde,
-    precision: precisionPara(form.get("motor"), profesor.config),
+    precision: precisionPara(form.get("motor"), profesor.config, form.get("esfuerzo")),
     // Ensayos, producciones escritas o análisis: no requieren solución.
     sinSolucion: form.get("sinSolucion") === "1" || undefined,
     estiloCorreccion: form.get("estiloCorreccion") === "subrayado" ? "subrayado" : "margen",

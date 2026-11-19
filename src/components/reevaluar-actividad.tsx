@@ -20,6 +20,7 @@ export function ReevaluarActividad({
   actividadId,
   motor,
   esfuerzos,
+  esfuerzoActual,
   instrucciones,
   entregas,
   evaluadas,
@@ -28,6 +29,8 @@ export function ReevaluarActividad({
   actividadId: string;
   motor: MotorIA;
   esfuerzos: Record<MotorIA, EsfuerzoIA>;
+  /** Esfuerzo guardado en la actividad (para su motor). */
+  esfuerzoActual?: EsfuerzoIA;
   instrucciones: string;
   /** Entregas ya evaluadas que conservan sus fotos. */
   entregas: { matricula: string; nombre: string; paginas: number }[];
@@ -55,7 +58,7 @@ export function ReevaluarActividad({
     setHechas(0);
     setTerminado(false);
     try {
-      await prepararReevaluacion(actividadId, String(form.get("motor") ?? ""), String(form.get("indicaciones") ?? ""));
+      await prepararReevaluacion(actividadId, String(form.get("motor") ?? ""), String(form.get("indicaciones") ?? ""), String(form.get("esfuerzo") ?? ""));
     } catch {
       setErrores([tr.noSeGuardo]);
       return;
@@ -101,7 +104,7 @@ export function ReevaluarActividad({
         <form action={reevaluar} className="grid gap-5 border-t border-slate-100 px-5 py-5 lg:grid-cols-3">
           <div>
             <p className="mb-2 text-sm font-semibold text-slate-900">1. {tr.paso1}</p>
-            <DeslizadorPrecision inicial={motor} esfuerzos={esfuerzos} onCambio={setElegido} />
+            <DeslizadorPrecision inicial={motor} esfuerzos={esfuerzos} esfuerzoInicial={esfuerzoActual} onCambio={setElegido} />
           </div>
 
           <div>

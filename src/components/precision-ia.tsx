@@ -121,10 +121,14 @@ export function ConfigPrecision({
 export function DeslizadorPrecision({
   inicial,
   esfuerzos,
+  esfuerzoInicial,
   onCambio,
 }: {
   inicial: MotorIA;
+  /** Esfuerzo con el que arranca cada motor (el de Configuración). */
   esfuerzos: Record<MotorIA, EsfuerzoIA>;
+  /** Esfuerzo ya guardado para el motor inicial (por ejemplo, al re-evaluar). */
+  esfuerzoInicial?: EsfuerzoIA;
   /** Avisa el motor elegido (por ejemplo, para recalcular los créditos). */
   onCambio?: (m: MotorIA) => void;
 }) {
@@ -136,14 +140,19 @@ export function DeslizadorPrecision({
     setIndiceInterno(i);
     if (MOTORES[i]) onCambio?.(MOTORES[i]);
   };
+  // El esfuerzo se elige aquí para esta actividad; cada motor recuerda el suyo.
+  const [elegidos, setElegidos] = useState<Record<MotorIA, EsfuerzoIA>>(() =>
+    esfuerzoInicial ? { ...esfuerzos, [inicial]: esfuerzoInicial } : { ...esfuerzos },
+  );
   const motor = MOTORES[indice] ?? "medio";
   const info = t.motores[motor];
   const esfuerzo = (e: EsfuerzoIA) => t.esfuerzos[e].toLocaleLowerCase();
-  const p = { motor, esfuerzo: esfuerzos[motor] };
+  const p = { motor, esfuerzo: elegidos[motor] };
   return (
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">{td.leyenda}</legend>
       <input type="hidden" name="motor" value={motor} />
+      <input type="hidden" name="esfuerzo" value={p.esfuerzo} />
       <input
         type="range"
         min={0}
@@ -181,7 +190,27 @@ export function DeslizadorPrecision({
           />
         </div>
         <p className="mt-1 text-xs text-slate-600">{info.descripcion}</p>
-        <p className="mt-1 text-xs text-slate-500">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-slate-600">{tconf.esfuerzo}</span>
+          <div role="radiogroup" aria-label={tconf.esfuerzo} className="inline-flex gap-1 rounded-lg bg-white p-0.5 ring-1 ring-slate-200">
+            {ESFUERZOS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                role="radio"
+                aria-checked={p.esfuerzo === e}
+                onClick={() => setElegidos({ ...elegidos, [motor]: e })}
+                className={`rounded-md px-3 py-1 text-xs font-medium ${
+                  p.esfuerzo === e ? "bg-tinta-600 text-white" : "text-slate-600 hover:bg-slate-100"
+                }`}
+              >
+                {t.esfuerzos[e]}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-slate-500">{formato(tconf.tokens, { n: consumoRelativo(p) })}</span>
+        </div>
+        <p className="mt-2 text-xs text-slate-500">
           {td.ayuda}
         </p>
       </div>

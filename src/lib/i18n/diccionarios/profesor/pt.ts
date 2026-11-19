@@ -319,6 +319,7 @@ const profesor: Diccionario["profesor"] = {
     abierto: "Aberta",
   },
   nuevaActividad: {
+    sinPuntos: "Sem pontos",
     idiomaActividad: "Idioma da atividade",
     idiomaActividadTexto: "A folha, a rubrica, o feedback e as recomendações são escritos neste idioma. O idioma das telas é alterado na engrenagem de configurações.",
     ejemploPrompt:
@@ -362,6 +363,7 @@ const profesor: Diccionario["profesor"] = {
     cargar: "Enviar atividade",
   },
   rubricaEditor: {
+    resumenSinPuntos: "{n} questões. Revise respostas e passos esperados.",
     noSeGuardo: "Não foi possível salvar a rubrica.",
     titulo: "Rubrica proposta pela IA",
     resumen: "{n} questões · {p} pontos no total. Revise respostas, pontos e passos esperados.",
@@ -379,6 +381,7 @@ const profesor: Diccionario["profesor"] = {
     puntos: "Pontos",
   },
   propuesta: {
+    resumenSinPuntos: "{n} itens",
     titulo: "Proposta de avaliação",
     resumen: "{n} itens · {p} pontos no total",
     elementos: "Itens avaliados",
@@ -438,6 +441,7 @@ const profesor: Diccionario["profesor"] = {
     deshacer: "Desfazer última mudança",
   },
   hojaImpresa: {
+    resumenSinPuntos: "{n} questões",
     paginaDe: "Página {i} de {n}",
     escribeNombre: "Escreva seu nome e sua matrícula em cada folha.",
     alTerminar: "Ao terminar, escaneie o QR e envie uma foto de cada folha inteira.",
@@ -909,7 +913,7 @@ const profesor: Diccionario["profesor"] = {
     leyenda: "Precisão e consumo da IA",
     esfuerzo: "{m}, esforço {e}",
     resumen: "{m} · esforço {e}",
-    ayuda: "Usado para gerar, resolver e corrigir esta atividade. O esforço de cada nível é ajustado em Configurações.",
+    ayuda: "Usado para gerar, resolver e corrigir esta atividade. Mais esforço revisa com mais cuidado e consome mais tokens.",
   },
 };
 

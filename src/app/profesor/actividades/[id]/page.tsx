@@ -21,7 +21,7 @@ import { actividadDe, entregasDe, estadoActividad, grupoDe } from "@/lib/almacen
 import { evaluandoAhora } from "@/lib/evaluacion";
 import { datosProfesor } from "@/lib/sesion";
 import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadisticas";
-import { PRECISION_PREDETERMINADA, configuracionDe, esMotor, porcentajeAltasBajas } from "@/lib/configuracion";
+import { PRECISION_PREDETERMINADA, configuracionDe, esEsfuerzo, esMotor, porcentajeAltasBajas } from "@/lib/configuracion";
 import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 import { textos } from "@/lib/i18n/servidor";
 import { listaParaRubrica } from "@/lib/modalidad";
@@ -120,6 +120,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           actividadId={id}
           motor={esMotor(actividad.precision?.motor) ? actividad.precision.motor : PRECISION_PREDETERMINADA.motor}
           esfuerzos={conf.esfuerzos}
+          esfuerzoActual={esEsfuerzo(actividad.precision?.esfuerzo) ? actividad.precision.esfuerzo : undefined}
           instrucciones={actividad.instrucciones ?? ""}
           evaluadas={entregas.filter((e) => e.estado !== "sin_entregar" && e.resultados.length > 0).length}
           entregas={reevaluables.map((e) => ({ matricula: e.matricula, nombre: nombre(e.matricula), paginas: e.imagenes?.length ?? 0 }))}

@@ -319,6 +319,7 @@ const profesor: Diccionario["profesor"] = {
     abierto: "Offen",
   },
   nuevaActividad: {
+    sinPuntos: "Ohne Punkte",
     idiomaActividad: "Sprache der Aufgabe",
     idiomaActividadTexto: "Blatt, Bewertungsraster, Feedback und Empfehlungen werden in dieser Sprache verfasst. Die Sprache der Oberfläche änderst du im Zahnrad der Einstellungen.",
     ejemploPrompt:
@@ -362,6 +363,7 @@ const profesor: Diccionario["profesor"] = {
     cargar: "Aufgabe hochladen",
   },
   rubricaEditor: {
+    resumenSinPuntos: "{n} Fragen. Prüfe Antworten und erwartete Schritte.",
     noSeGuardo: "Das Bewertungsraster konnte nicht gespeichert werden.",
     titulo: "Von der KI vorgeschlagenes Bewertungsraster",
     resumen: "{n} Fragen · {p} Punkte insgesamt. Prüfe Antworten, Punkte und erwartete Schritte.",
@@ -379,6 +381,7 @@ const profesor: Diccionario["profesor"] = {
     puntos: "Punkte",
   },
   propuesta: {
+    resumenSinPuntos: "{n} Elemente",
     titulo: "Bewertungsvorschlag",
     resumen: "{n} Elemente · {p} Punkte insgesamt",
     elementos: "Bewertete Elemente",
@@ -438,6 +441,7 @@ const profesor: Diccionario["profesor"] = {
     deshacer: "Letzte Änderung rückgängig machen",
   },
   hojaImpresa: {
+    resumenSinPuntos: "{n} Fragen",
     paginaDe: "Seite {i} von {n}",
     escribeNombre: "Schreibe deinen Namen und deine Schülernummer auf jedes Blatt.",
     alTerminar: "Wenn du fertig bist, scanne den QR und sende ein Foto jedes vollständigen Blatts.",
@@ -909,7 +913,7 @@ const profesor: Diccionario["profesor"] = {
     leyenda: "Präzision und Verbrauch der KI",
     esfuerzo: "{m}, Aufwand {e}",
     resumen: "{m} · Aufwand {e}",
-    ayuda: "Wird zum Erstellen, Lösen und Bewerten dieser Aufgabe verwendet. Den Aufwand jeder Stufe stellst du in den Einstellungen ein.",
+    ayuda: "Wird zum Erstellen, Lösen und Bewerten dieser Aufgabe verwendet. Mehr Aufwand prüft gründlicher und verbraucht mehr Tokens.",
   },
 };
 

@@ -319,6 +319,7 @@ const profesor: Diccionario["profesor"] = {
     abierto: "Ouverte",
   },
   nuevaActividad: {
+    sinPuntos: "Sans points",
     idiomaActividad: "Langue de l'activité",
     idiomaActividadTexto: "La feuille, la grille, les commentaires et les recommandations sont rédigés dans cette langue. La langue des écrans se change dans l'engrenage des paramètres.",
     ejemploPrompt:
@@ -362,6 +363,7 @@ const profesor: Diccionario["profesor"] = {
     cargar: "Importer l'activité",
   },
   rubricaEditor: {
+    resumenSinPuntos: "{n} questions. Vérifiez les réponses et les étapes attendues.",
     noSeGuardo: "Impossible d'enregistrer la grille.",
     titulo: "Grille proposée par l'IA",
     resumen: "{n} questions · {p} points au total. Vérifiez les réponses, les points et les étapes attendues.",
@@ -379,6 +381,7 @@ const profesor: Diccionario["profesor"] = {
     puntos: "Points",
   },
   propuesta: {
+    resumenSinPuntos: "{n} éléments",
     titulo: "Proposition d'évaluation",
     resumen: "{n} éléments · {p} points au total",
     elementos: "Éléments évalués",
@@ -438,6 +441,7 @@ const profesor: Diccionario["profesor"] = {
     deshacer: "Annuler la dernière modification",
   },
   hojaImpresa: {
+    resumenSinPuntos: "{n} questions",
     paginaDe: "Page {i} sur {n}",
     escribeNombre: "Écris ton nom et ton numéro d’élève sur chaque feuille.",
     alTerminar: "Une fois terminé, scanne le QR et envoie une photo de chaque feuille entière.",
@@ -909,7 +913,7 @@ const profesor: Diccionario["profesor"] = {
     leyenda: "Précision et consommation de l'IA",
     esfuerzo: "{m}, effort {e}",
     resumen: "{m} · effort {e}",
-    ayuda: "Sert à générer, résoudre et corriger cette activité. L'effort de chaque niveau se règle dans Paramètres.",
+    ayuda: "Sert à générer, résoudre et corriger cette activité. Plus d'effort vérifie plus soigneusement et consomme plus de jetons.",
   },
 };
 

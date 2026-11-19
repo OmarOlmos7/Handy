@@ -63,6 +63,9 @@ describe("precisión de la IA", () => {
     const config = { motor: "preciso" as const, esfuerzos: { rapido: "alto" as const } };
     expect(precisionPara("rapido", config)).toEqual({ motor: "rapido", esfuerzo: "alto" });
     expect(precisionPara("otro", config)).toEqual({ motor: "preciso", esfuerzo: "medio" });
+    // El esfuerzo elegido en la actividad manda; uno no válido usa el de Configuración.
+    expect(precisionPara("rapido", config, "bajo")).toEqual({ motor: "rapido", esfuerzo: "bajo" });
+    expect(precisionPara("rapido", config, "x")).toEqual({ motor: "rapido", esfuerzo: "alto" });
     expect(precisionPara(null, undefined)).toEqual({ motor: "medio", esfuerzo: "medio" });
   });
 

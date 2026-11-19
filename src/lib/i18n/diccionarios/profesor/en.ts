@@ -319,6 +319,7 @@ const profesor: Diccionario["profesor"] = {
     abierto: "Open-ended",
   },
   nuevaActividad: {
+    sinPuntos: "No points",
     idiomaActividad: "Activity language",
     idiomaActividadTexto: "The sheet, rubric, feedback and recommendations are written in this language. The screen language is changed in the settings gear.",
     ejemploPrompt:
@@ -362,6 +363,7 @@ const profesor: Diccionario["profesor"] = {
     cargar: "Upload activity",
   },
   rubricaEditor: {
+    resumenSinPuntos: "{n} questions. Review answers and expected steps.",
     noSeGuardo: "Could not save the rubric.",
     titulo: "Rubric proposed by the AI",
     resumen: "{n} questions · {p} points in total. Review answers, points and expected steps.",
@@ -379,6 +381,7 @@ const profesor: Diccionario["profesor"] = {
     puntos: "Points",
   },
   propuesta: {
+    resumenSinPuntos: "{n} items",
     titulo: "Grading proposal",
     resumen: "{n} items · {p} points in total",
     elementos: "Items being graded",
@@ -438,6 +441,7 @@ const profesor: Diccionario["profesor"] = {
     deshacer: "Undo last change",
   },
   hojaImpresa: {
+    resumenSinPuntos: "{n} questions",
     paginaDe: "Page {i} of {n}",
     escribeNombre: "Write your name and student ID on every sheet.",
     alTerminar: "When you finish, scan the QR and send a photo of each full sheet.",
@@ -909,7 +913,7 @@ const profesor: Diccionario["profesor"] = {
     leyenda: "AI precision and usage",
     esfuerzo: "{m}, {e} effort",
     resumen: "{m} · {e} effort",
-    ayuda: "Used to generate, solve and grade this activity. The effort of each level is set in Settings.",
+    ayuda: "Used to generate, solve and grade this activity. More effort checks more carefully and uses more tokens.",
   },
 };
 
