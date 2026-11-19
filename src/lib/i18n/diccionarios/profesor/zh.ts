@@ -235,6 +235,7 @@ const profesor: Diccionario["profesor"] = {
     regresar: "按任意键返回",
   },
   reevaluar: {
+    sinFotos: "{n} 份作业没有照片（示例作业或仅保留 PDF 的已归档作业），无法重新评分。",
     titulo: "重新评分",
     subtitulo: "调整精度、评分细则或条件，然后重新评分，以改进反馈。",
     abrir: "调整并重新评分",

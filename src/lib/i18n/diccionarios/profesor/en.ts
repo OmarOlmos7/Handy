@@ -238,6 +238,7 @@ const profesor: Diccionario["profesor"] = {
     regresar: "Press any key to go back",
   },
   reevaluar: {
+    sinFotos: "{n} submissions don't have their photos (sample activity or archived submissions with only the PDF) and can't be re-graded.",
     titulo: "Re-grade activity",
     subtitulo: "Adjust the precision level, rubric or conditions and grade the submissions again to improve their feedback.",
     abrir: "Adjust and re-grade",
