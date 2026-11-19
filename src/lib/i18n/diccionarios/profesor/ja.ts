@@ -535,6 +535,7 @@ const profesor: Diccionario["profesor"] = {
     guardando: "保存中…",
   },
   editarActividad: {
+    avisoEscaneada: "この課題はスキャンした文書を使っています。設問の文、選択肢、配点を変更すると、保存時にそのPDFは削除され、ここの文からQR付きの新しい用紙が作成されます。",
     titulo: "課題を編集",
     subtitulo: "基本情報、解答の要否、添削方法、各問題の文・単元・点数を変更できます。",
     avisoEntregas: "すでに {n} 件の提出があります。問題文を変えると、生徒が持っている用紙と一致しなくなります。受け取った提出は自動では再採点されません。",

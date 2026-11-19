@@ -31,6 +31,7 @@ export default async function Editar({ params }: PageProps<"/profesor/actividade
       <EditarActividad
         id={id}
         recibidas={recibidas}
+        escaneada={actividad.origen === "escaneada" && actividad.reactivos.length > 0}
         inicial={{
           titulo: actividad.titulo,
           fecha: actividad.fechaAplicacion,

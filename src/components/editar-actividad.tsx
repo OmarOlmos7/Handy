@@ -22,11 +22,14 @@ interface ReactivoEditable {
 export function EditarActividad({
   id,
   recibidas,
+  escaneada = false,
   inicial,
 }: {
   id: string;
   /** Entregas que ya llegaron: se avisa que la hoja impresa ya está en manos de los alumnos. */
   recibidas: number;
+  /** Actividad hecha con un escaneo: al cambiar el texto, el PDF se reemplaza por una hoja nueva. */
+  escaneada?: boolean;
   inicial: {
     titulo: string;
     fecha: string;
@@ -80,6 +83,9 @@ export function EditarActividad({
 
   return (
     <form onSubmit={guardar} className="mx-auto max-w-3xl space-y-5">
+      {escaneada && (
+        <p className="rounded-lg bg-tinta-50 p-3 text-sm text-tinta-900 ring-1 ring-tinta-200">{te.avisoEscaneada}</p>
+      )}
       {recibidas > 0 && (
         <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
           {formato(te.avisoEntregas, { n: recibidas })}
