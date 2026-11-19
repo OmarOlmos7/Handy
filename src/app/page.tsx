@@ -199,7 +199,7 @@ export default async function Inicio() {
           <div className="mx-auto max-w-6xl px-4 py-16">
             <h2 className="text-3xl font-semibold tracking-tight">{i.preciosTitulo}</h2>
             <p className="mt-2 max-w-2xl text-slate-600">{i.preciosTexto}</p>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {paquetes.map((p) => (
                 <div
                   key={p.id}
