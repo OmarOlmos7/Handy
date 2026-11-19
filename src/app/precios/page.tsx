@@ -30,7 +30,7 @@ async function BotonContacto({ texto, clase, t }: { texto: string; clase: string
   if (!correo) {
     return (
       <Link href="/registro" className={clase}>
-        {t.precios.creaYEscribenos}
+        {texto}
       </Link>
     );
   }
@@ -132,7 +132,7 @@ export default async function Precios() {
           <p className="mt-3 text-slate-600">{pr.texto}</p>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {PLANES.map((p) => (
             <TarjetaPlan key={p.id} plan={p} t={t} locale={locale} />
           ))}

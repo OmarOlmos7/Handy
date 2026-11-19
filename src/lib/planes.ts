@@ -1,12 +1,14 @@
-// Planes de iEureka-Grader. 1 crédito = 1 página de alumno evaluada. Precios en MXN con IVA.
+// Planes de iEureka-Grader. Cada página evaluada usa créditos según el nivel de precisión
+// (Rápido 1, Medio 4, Preciso 12; ver CREDITOS_POR_PAGINA). Precios en MXN con IVA.
+import { CREDITOS_POR_PAGINA } from "./configuracion";
 // Los precios y lo que incluye cada plan viven aquí para que la página de precios, el
 // inicio y la tienda de créditos muestren siempre lo mismo.
 
 export interface Plan {
-  id: "gratis" | "basico" | "pro" | "escuela";
+  id: "gratis" | "basico" | "pro" | "academia" | "escuela";
   nombre: string;
   lema: string;
-  /** Precio en MXN; undefined = a la medida. */
+  /** Precio en MXN con IVA; undefined = a la medida. */
   precio?: number;
   creditos: number;
   /** Texto bajo el precio. */
@@ -21,57 +23,105 @@ export interface Plan {
   enTienda?: boolean;
 }
 
+// ---------- Costo por crédito y utilidad ----------
+// Costo de la IA por página evaluada, en dólares, medido en evaluaciones reales (unos 4,000
+// tokens de entrada con la foto y de 2,000 a 6,000 de salida según el nivel), más lo que cuesta
+// por página la rúbrica, las recomendaciones de estudio y la búsqueda de videos y lecturas.
+export const COSTO_PAGINA_USD = { rapido: 0.013, medio: 0.05, preciso: 0.15 } as const;
+/** Tipo de cambio supuesto (MXN por dólar). */
+export const TIPO_CAMBIO = 18.5;
+/** Comisión del cobro (Mercado Pago, con IVA de la comisión) y cargo fijo por pago en MXN. */
+export const COMISION_COBRO = { porcentaje: 0.0406, fijo: 4 };
+export const IVA = 0.16;
+/** Utilidad mínima sobre el ingreso neto (sin IVA ni comisiones). */
+export const UTILIDAD_OBJETIVO = 0.3;
+
+/**
+ * Costo de IA de un crédito en MXN. Los precios se calculan con el nivel Rápido (1 crédito por
+ * página); Medio y Preciso cobran más créditos por página, así que se toma el nivel más caro por
+ * crédito para que ningún uso baje del margen.
+ */
+export function costoCreditoMXN(): number {
+  const usd = Math.max(
+    ...(Object.keys(COSTO_PAGINA_USD) as (keyof typeof COSTO_PAGINA_USD)[]).map((k) => COSTO_PAGINA_USD[k] / CREDITOS_POR_PAGINA[k]),
+  );
+  return usd * TIPO_CAMBIO;
+}
+
+/** Utilidad del plan sobre su ingreso neto (0.4 = 40 %); undefined si es gratis o a la medida. */
+export function utilidad(p: Pick<Plan, "precio" | "creditos">): number | undefined {
+  if (!p.precio) return undefined;
+  const neto = (p.precio / (1 + IVA)) * (1 - COMISION_COBRO.porcentaje) - COMISION_COBRO.fijo;
+  return (neto - p.creditos * costoCreditoMXN()) / neto;
+}
+
 export const PLANES: Plan[] = [
   {
     id: "gratis",
-    nombre: "Gratis",
-    lema: "Prueba la evaluación con todo tu grupo",
+    nombre: "Gratuito",
+    lema: "Prueba de un uso con tu grupo",
     precio: 0,
     creditos: 50,
     periodo: "créditos de bienvenida, una sola vez",
     boton: { texto: "Crear cuenta gratis", href: "/registro" },
-    incluye: "Para empezar:",
+    incluye: "Para probar:",
     ventajas: [
       "50 páginas de alumno evaluadas",
       "Cursos y alumnos sin límite",
       "Actividades generadas con IA y hojas imprimibles con QR",
       "Entregas desde el celular con foto o PDF",
       "Solución y rúbrica con IA sin costo",
-      "Analíticas del grupo y reporte en PDF y Excel",
     ],
   },
   {
     id: "basico",
     nombre: "Básico",
-    lema: "Para un profesor con uno o dos grupos",
-    precio: 249,
+    lema: "Para un profesor con un grupo",
+    precio: 139,
     creditos: 300,
     periodo: "pago único por 300 créditos",
     boton: { texto: "Elegir Básico", href: "/profesor/creditos" },
-    incluye: "Todo lo de Gratis, más:",
+    incluye: "Todo lo de Gratuito, más:",
     ventajas: [
       "300 páginas evaluadas",
-      "2 o 3 actividades al mes por grupo",
+      "Una o dos actividades al mes con un grupo",
       "Los tres niveles de precisión: Rápido, Medio y Preciso",
-      "Pago con tarjeta, efectivo en OXXO o SPEI",
-      "Factura (CFDI)",
+      "Analíticas del grupo y reporte en PDF y Excel",
+      "Pago con tarjeta, efectivo en OXXO o SPEI y factura (CFDI)",
     ],
     enTienda: true,
   },
   {
     id: "pro",
     nombre: "Pro",
-    lema: "Para todo un curso semestral o tetramestral",
-    precio: 850,
-    creditos: 1500,
-    periodo: "pago único por 1,500 créditos",
+    lema: "Para un profesor con varios grupos",
+    precio: 269,
+    creditos: 600,
+    periodo: "pago único por 600 créditos",
     boton: { texto: "Elegir Pro", href: "/profesor/creditos" },
     destacado: true,
     incluye: "Todo lo de Básico, más:",
     ventajas: [
+      "600 páginas evaluadas",
+      "Dos o tres grupos durante un parcial",
+      "Recomendaciones de estudio con videos y lecturas para cada alumno",
+      "Cuaderno de calificaciones del curso",
+    ],
+    enTienda: true,
+  },
+  {
+    id: "academia",
+    nombre: "Academia",
+    lema: "Para todo un semestre o una academia de profesores",
+    precio: 659,
+    creditos: 1500,
+    periodo: "pago único por 1,500 créditos",
+    boton: { texto: "Elegir Academia", href: "/profesor/creditos" },
+    incluye: "Todo lo de Pro, más:",
+    ventajas: [
       "1,500 páginas evaluadas",
-      "El menor precio por página para un profesor",
-      "Ideal para varios grupos o para usar el nivel Preciso",
+      "Varios grupos durante todo el semestre o tetramestre",
+      "Margen para usar el nivel Preciso en exámenes",
       "Reportes por alumno y por grupo durante todo el curso",
     ],
     enTienda: true,
@@ -79,14 +129,14 @@ export const PLANES: Plan[] = [
   {
     id: "escuela",
     nombre: "Escuela",
-    lema: "Para academias e instituciones",
+    lema: "Para instituciones con varios profesores",
     creditos: 10000,
-    periodo: "desde 10,000 créditos",
-    boton: { texto: "Contáctanos" },
-    incluye: "Todo lo de Pro, más:",
+    periodo: "pago único por 10,000 créditos",
+    boton: { texto: "Contactar para gestionar plan institucional" },
+    incluye: "Todo lo de Academia, más:",
     ventajas: [
-      "Créditos para varios profesores de la institución",
-      "Precio por página a la medida",
+      "10,000 páginas evaluadas",
+      "Créditos para los profesores de la institución",
       "Acompañamiento para arrancar con tus academias",
       "Facturación institucional",
     ],
@@ -108,7 +158,9 @@ export function ahorroContra(p: Plan, base: Plan): number | undefined {
   const a = precioPorPagina(p);
   const b = precioPorPagina(base);
   if (a === undefined || b === undefined || a >= b) return undefined;
-  return Math.round((1 - a / b) * 100);
+  const ahorro = Math.round((1 - a / b) * 100);
+  // Diferencias de uno o dos por ciento no se anuncian.
+  return ahorro >= 5 ? ahorro : undefined;
 }
 
 export const planDe = (id: Plan["id"]) => PLANES.find((p) => p.id === id)!;

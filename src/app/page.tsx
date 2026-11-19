@@ -79,9 +79,10 @@ export default async function Inicio() {
     id: p.id,
     nombre: t.planes[p.id].nombre,
     creditos: p.creditos,
-    precio: p.precio === undefined ? i.contactanos : p.precio === 0 ? i.gratisPrecio : pesos(p.precio, locale),
+    precio: p.precio === undefined ? t.precios.aLaMedida : p.precio === 0 ? i.gratisPrecio : pesos(p.precio, locale),
     detalle: t.planes[p.id].lema,
     destacado: p.destacado,
+    aLaMedida: p.precio === undefined,
   }));
   return (
     <div className="flex flex-col">
@@ -199,7 +200,7 @@ export default async function Inicio() {
           <div className="mx-auto max-w-6xl px-4 py-16">
             <h2 className="text-3xl font-semibold tracking-tight">{i.preciosTitulo}</h2>
             <p className="mt-2 max-w-2xl text-slate-600">{i.preciosTexto}</p>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {paquetes.map((p) => (
                 <div
                   key={p.id}
@@ -211,6 +212,11 @@ export default async function Inicio() {
                     {formato(t.comun.creditos, { n: p.creditos.toLocaleString(locale) })}
                   </p>
                   <p className={`mt-4 text-sm ${p.destacado ? "text-white" : "text-slate-600"}`}>{p.detalle}</p>
+                  {p.aLaMedida && (
+                    <Link href="/precios#plan-escuela" className="mt-3 inline-block text-sm font-medium text-tinta-700 hover:underline">
+                      {i.contactanos}
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>

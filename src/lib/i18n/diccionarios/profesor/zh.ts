@@ -135,9 +135,9 @@ const profesor: Diccionario["profesor"] = {
   },
   creditos: {
     titulo: "额度",
-    subtitulo: "1 个额度 = 批改 1 页学生作业。上传你的答案和生成评分标准免费。",
+    subtitulo: "每页在“快速”用 1 点数，“标准”用 4，“精准”用 12。上传你的答案和生成评分标准免费。",
     saldo: "可用余额",
-    aproximado: "≈ {n} 名学生（每项作业 3 页）",
+    aproximado: "≈ {n} 名学生（“标准”等级，每项作业 3 页）",
     comprar: "购买额度",
     movimientos: "记录",
     concepto: "说明",

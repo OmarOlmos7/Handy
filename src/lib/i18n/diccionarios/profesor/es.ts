@@ -136,9 +136,9 @@ const profesor = {
   },
   creditos: {
     titulo: "Créditos",
-    subtitulo: "1 crédito = 1 página de alumno evaluada. Subir tu solución y generar la rúbrica es gratis.",
+    subtitulo: "Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Subir tu solución y generar la rúbrica es gratis.",
     saldo: "Saldo disponible",
-    aproximado: "≈ {n} alumnos con actividades de 3 páginas",
+    aproximado: "≈ {n} alumnos con actividades de 3 páginas en nivel Medio",
     comprar: "Comprar créditos",
     movimientos: "Movimientos",
     concepto: "Concepto",

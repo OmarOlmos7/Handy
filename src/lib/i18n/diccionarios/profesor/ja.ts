@@ -138,9 +138,9 @@ const profesor: Diccionario["profesor"] = {
   },
   creditos: {
     titulo: "クレジット",
-    subtitulo: "1クレジット＝採点する生徒の答案1ページ。解答のアップロードとルーブリックの作成は無料です。",
+    subtitulo: "1ページあたり、高速は1クレジット、標準は4、高精度は12を使います。解答のアップロードとルーブリックの作成は無料です。",
     saldo: "利用可能な残高",
-    aproximado: "≈ 3ページの課題で生徒 {n} 人分",
+    aproximado: "≈ 標準・3ページの課題で生徒 {n} 人分",
     comprar: "クレジットを購入",
     movimientos: "履歴",
     concepto: "内容",

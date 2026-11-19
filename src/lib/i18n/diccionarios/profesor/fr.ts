@@ -138,9 +138,9 @@ const profesor: Diccionario["profesor"] = {
   },
   creditos: {
     titulo: "Crédits",
-    subtitulo: "1 crédit = 1 page d'élève corrigée. Envoyer votre solution et générer la grille est gratuit.",
+    subtitulo: "Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Envoyer votre solution et générer la grille est gratuit.",
     saldo: "Solde disponible",
-    aproximado: "≈ {n} élèves avec des activités de 3 pages",
+    aproximado: "≈ {n} élèves avec des activités de 3 pages en Moyen",
     comprar: "Acheter des crédits",
     movimientos: "Mouvements",
     concepto: "Libellé",
