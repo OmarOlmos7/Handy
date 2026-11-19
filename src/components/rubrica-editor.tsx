@@ -13,10 +13,13 @@ export function RubricaEditor({
   actividadId,
   reactivosIniciales,
   confirmadaInicial,
+  sinPuntaje = false,
 }: {
   actividadId: string;
   reactivosIniciales: Reactivo[];
   confirmadaInicial: boolean;
+  /** Rúbrica sin puntaje: no se muestran puntos ni porcentajes. */
+  sinPuntaje?: boolean;
 }) {
   const { t } = useTextos();
   const tr = t.profesor.rubricaEditor;
@@ -50,7 +53,7 @@ export function RubricaEditor({
         <div className="flex-1">
           <h2 className="font-semibold">{tr.titulo}</h2>
           <p className="text-sm text-slate-500">
-            {formato(tr.resumen, { n: reactivos.length, p: total })}
+            {formato(sinPuntaje ? tr.resumenSinPuntos : tr.resumen, { n: reactivos.length, p: total })}
           </p>
         </div>
         {error && <p className="w-full text-sm text-error">{error}</p>}
@@ -108,7 +111,7 @@ export function RubricaEditor({
                     {r.pasos.map((p, i) => (
                       <li key={p.nombre} className="rounded-md bg-slate-50 px-2 py-1 text-xs ring-1 ring-slate-200">
                         <span className="block font-medium text-slate-700">{p.nombre}</span>
-                        <span className="text-slate-500">{Math.round(p.peso * 100)}%</span>
+                        {!sinPuntaje && <span className="text-slate-500">{Math.round(p.peso * 100)}%</span>}
                         {r.solucionPasos?.[i] && (
                           <span className="mt-0.5 block truncate font-mono text-[11px] text-tinta-700" title={r.solucionPasos[i]}>
                             {r.solucionPasos[i]}
@@ -120,6 +123,7 @@ export function RubricaEditor({
                 </div>
               )}
             </div>
+            {!sinPuntaje && (
             <label className="text-xs font-medium text-slate-500">
               {tr.puntos}
               <input
@@ -131,6 +135,7 @@ export function RubricaEditor({
                 className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1 text-right text-sm text-slate-800"
               />
             </label>
+            )}
           </li>
         ))}
       </ul>

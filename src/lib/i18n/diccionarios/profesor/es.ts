@@ -317,6 +317,7 @@ const profesor = {
     abierto: "Abierto",
   },
   nuevaActividad: {
+    sinPuntos: "Sin puntos",
     idiomaActividad: "Idioma de la actividad",
     idiomaActividadTexto: "En este idioma se escriben la hoja, la rúbrica, la retroalimentación y las recomendaciones. El idioma de las pantallas se cambia en el engrane de configuración.",
     ejemploPrompt:
@@ -360,6 +361,7 @@ const profesor = {
     cargar: "Cargar actividad",
   },
   rubricaEditor: {
+    resumenSinPuntos: "{n} reactivos. Revisa respuestas y pasos esperados.",
     noSeGuardo: "No se pudo guardar la rúbrica.",
     titulo: "Rúbrica propuesta por la IA",
     resumen: "{n} reactivos · {p} puntos en total. Revisa respuestas, puntos y pasos esperados.",
@@ -377,6 +379,7 @@ const profesor = {
     puntos: "Puntos",
   },
   propuesta: {
+    resumenSinPuntos: "{n} elementos",
     titulo: "Propuesta de evaluación",
     resumen: "{n} elementos · {p} puntos en total",
     elementos: "Elementos que se evalúan",
@@ -436,6 +439,7 @@ const profesor = {
     deshacer: "Deshacer último cambio",
   },
   hojaImpresa: {
+    resumenSinPuntos: "{n} reactivos",
     paginaDe: "Página {i} de {n}",
     escribeNombre: "Escribe tu nombre y tu matrícula en cada hoja.",
     alTerminar: "Al terminar, escanea el QR y envía una foto de cada hoja completa.",
@@ -907,7 +911,7 @@ const profesor = {
     leyenda: "Precisión y consumo de la IA",
     esfuerzo: "{m}, esfuerzo {e}",
     resumen: "{m} · esfuerzo {e}",
-    ayuda: "Se usa para generar, resolver y evaluar esta actividad. El esfuerzo de cada nivel se ajusta en Configuración.",
+    ayuda: "Se usa para generar, resolver y evaluar esta actividad. Más esfuerzo revisa con más cuidado y consume más tokens.",
   },
 };
 

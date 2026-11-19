@@ -56,7 +56,7 @@ export default async function Rubrica({ params }: PageProps<"/profesor/actividad
           <div className="space-y-6">
             <ElegirPuntaje actividadId={id} sinPuntajeInicial={!!actividad.sinPuntaje} />
             <PropuestaEvaluacion actividad={actividad} />
-            <RubricaEditor actividadId={id} reactivosIniciales={actividad.reactivos} confirmadaInicial={!!actividad.rubricaConfirmada} />
+            <RubricaEditor actividadId={id} reactivosIniciales={actividad.reactivos} confirmadaInicial={!!actividad.rubricaConfirmada} sinPuntaje={!!actividad.sinPuntaje} />
           </div>
         )}
       </ConFlujo>

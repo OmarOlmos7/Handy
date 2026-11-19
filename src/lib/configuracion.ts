@@ -145,11 +145,14 @@ export function configuracionDe(c: ConfiguracionProfesor | undefined) {
   };
 }
 
-/** Precisión para una actividad nueva con el motor elegido; el esfuerzo sale de la configuración del profesor. */
-export function precisionPara(motor: unknown, c: ConfiguracionProfesor | undefined): PrecisionIA {
+/**
+ * Precisión para una actividad con el motor y el esfuerzo elegidos; si no se eligió esfuerzo,
+ * sale de la configuración del profesor.
+ */
+export function precisionPara(motor: unknown, c: ConfiguracionProfesor | undefined, esfuerzo?: unknown): PrecisionIA {
   const conf = configuracionDe(c);
   const m = esMotor(motor) ? motor : conf.motor;
-  return { motor: m, esfuerzo: conf.esfuerzos[m] };
+  return { motor: m, esfuerzo: esEsfuerzo(esfuerzo) ? esfuerzo : conf.esfuerzos[m] };
 }
 
 /** Modelo y esfuerzo que se mandan a la API para una precisión. */

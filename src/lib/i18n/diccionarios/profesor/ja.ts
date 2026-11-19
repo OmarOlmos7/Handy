@@ -319,6 +319,7 @@ const profesor: Diccionario["profesor"] = {
     abierto: "自由記述",
   },
   nuevaActividad: {
+    sinPuntos: "配点なし",
     idiomaActividad: "課題の言語",
     idiomaActividadTexto: "答案用紙、ルーブリック、フィードバック、改善のアドバイスはこの言語で作成されます。画面の言語は設定（歯車）で変更します。",
     ejemploPrompt:
@@ -362,6 +363,7 @@ const profesor: Diccionario["profesor"] = {
     cargar: "課題をアップロード",
   },
   rubricaEditor: {
+    resumenSinPuntos: "{n} 問。解答と期待される手順を確認してください。",
     noSeGuardo: "ルーブリックを保存できませんでした。",
     titulo: "AIが提案したルーブリック",
     resumen: "{n} 問 · 合計 {p} 点。解答、配点、期待される手順を確認してください。",
@@ -379,6 +381,7 @@ const profesor: Diccionario["profesor"] = {
     puntos: "配点",
   },
   propuesta: {
+    resumenSinPuntos: "{n} 項目",
     titulo: "評価案",
     resumen: "{n} 項目 · 合計 {p} 点",
     elementos: "評価する項目",
@@ -438,6 +441,7 @@ const profesor: Diccionario["profesor"] = {
     deshacer: "直前の変更を元に戻す",
   },
   hojaImpresa: {
+    resumenSinPuntos: "{n} 問",
     paginaDe: "{n} ページ中 {i} ページ",
     escribeNombre: "すべての用紙に氏名と生徒番号を書いてください。",
     alTerminar: "終わったらQRを読み取り、各シート全体の写真を送ってください。",
@@ -909,7 +913,7 @@ const profesor: Diccionario["profesor"] = {
     leyenda: "AIの精度と消費量",
     esfuerzo: "{m}、推論 {e}",
     resumen: "{m} · 推論 {e}",
-    ayuda: "この課題の作成、解答、採点に使います。各レベルの推論の深さは設定で調整できます。",
+    ayuda: "この課題の作成、解答、採点に使います。推論を深くするほど丁寧に確認し、トークンを多く消費します。",
   },
 };
 

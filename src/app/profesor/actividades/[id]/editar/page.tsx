@@ -37,6 +37,7 @@ export default async function Editar({ params }: PageProps<"/profesor/actividade
           fecha: actividad.fechaAplicacion,
           resultadosDesde: aCampoFechaHora(actividad.resultadosDesde),
           escala: actividad.escala === 10 ? 10 : 100,
+          sinPuntaje: !!actividad.sinPuntaje,
           sinSolucion: !!actividad.sinSolucion,
           idioma: idiomaDeActividad(actividad),
           estiloCorreccion: actividad.estiloCorreccion === "subrayado" ? "subrayado" : "margen",

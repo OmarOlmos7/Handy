@@ -180,13 +180,13 @@ export function NuevaActividad({
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">{tn.calificarSobre}</legend>
           <div className="mt-1 inline-flex gap-1 rounded-xl bg-slate-100 p-1">
-            {[100, 10].map((n) => (
+            {([100, 10, "sin"] as const).map((n) => (
               <label
                 key={n}
                 className="cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium text-slate-600 has-[:checked]:bg-white has-[:checked]:text-tinta-700 has-[:checked]:shadow-sm has-[:checked]:ring-1 has-[:checked]:ring-slate-200"
               >
                 <input type="radio" name="escala" value={n} defaultChecked={n === 100} className="sr-only" />
-                {formato(tn.puntos, { n })}
+                {n === "sin" ? tn.sinPuntos : formato(tn.puntos, { n })}
               </label>
             ))}
           </div>

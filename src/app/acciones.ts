@@ -239,6 +239,8 @@ export interface CambiosActividad {
   fecha: string;
   resultadosDesde: string;
   escala: 10 | 100;
+  /** Rúbrica sin puntaje ("Sin puntos" en la escala). */
+  sinPuntaje?: boolean;
   sinSolucion: boolean;
   estiloCorreccion: EstiloCorreccion;
   /** Idioma de la actividad; vacío deja el que tenía. */
@@ -269,6 +271,7 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
     a.fechaAplicacion = c.fecha;
     a.resultadosDesde = desde;
     a.escala = c.escala === 10 ? 10 : 100;
+    if (c.sinPuntaje !== undefined) a.sinPuntaje = c.sinPuntaje || undefined;
     a.sinSolucion = c.sinSolucion || undefined;
     a.estiloCorreccion = c.estiloCorreccion === "subrayado" ? "subrayado" : "margen";
     if (esIdioma(c.idioma)) a.idioma = c.idioma;
@@ -300,11 +303,11 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
 }
 
 /** Antes de re-evaluar: guarda el nivel de precisión y las indicaciones para la IA de la actividad. */
-export async function prepararReevaluacion(actividadId: string, motor: string, indicaciones: string) {
+export async function prepararReevaluacion(actividadId: string, motor: string, indicaciones: string, esfuerzo = "") {
   const profesor = await requerirProfesor();
   await enActividadPropia(actividadId, (db) => {
     const a = actividadDe(db, actividadId)!;
-    if (esMotor(motor)) a.precision = precisionPara(motor, profesor.config);
+    if (esMotor(motor)) a.precision = precisionPara(motor, profesor.config, esfuerzo);
     a.instrucciones = indicaciones.trim().slice(0, 2000) || undefined;
   });
   revalidatePath(`/profesor/actividades/${actividadId}`, "layout");

@@ -3,6 +3,7 @@
 // criterios de evaluación en etiquetas; cada problema con número y puntaje en un renglón,
 // el texto debajo, el dibujo a la derecha, un cuadro de desarrollo en blanco y, al pie,
 // un recuadro de RESPUESTA por inciso.
+import { conPuntaje } from "@/lib/modalidad";
 import type { ReactNode } from "react";
 import type { Actividad, Reactivo } from "@/lib/tipos";
 import { TextoMat } from "./texto-mat";
@@ -224,7 +225,7 @@ export async function HojaActividad({
               <p className="text-xs font-bold uppercase tracking-[0.3em] text-tinta-600">{curso}</p>
               <h1 className="mt-0.5 text-[28px] font-bold leading-[1.1] tracking-tight text-slate-900">{actividad.titulo}</h1>
               <p className="mt-1 text-sm text-slate-500">
-                {fecha} · {formato(th.resumen, { n: actividad.reactivos.length, p: total })}
+                {fecha} · {formato(conPuntaje(actividad) ? th.resumen : th.resumenSinPuntos, { n: actividad.reactivos.length, p: total })}
               </p>
             </div>
           </div>
@@ -238,10 +239,12 @@ export async function HojaActividad({
             </span>
           </div>
         </div>
-        <div className="flex w-[130px] shrink-0 flex-col justify-between rounded-xl border-[1.5px] border-slate-800 px-3 py-2">
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{th.calificacion}</span>
-          <span className="text-right text-lg text-slate-500">/ {escalaDe(actividad)}</span>
-        </div>
+        {conPuntaje(actividad) && (
+          <div className="flex w-[130px] shrink-0 flex-col justify-between rounded-xl border-[1.5px] border-slate-800 px-3 py-2">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">{th.calificacion}</span>
+            <span className="text-right text-lg text-slate-500">/ {escalaDe(actividad)}</span>
+          </div>
+        )}
         {qrSrc && (
           <div className="flex w-[130px] shrink-0 flex-col items-center justify-center rounded-xl border border-slate-200 p-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -287,9 +290,11 @@ export async function HojaActividad({
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-tinta-600 text-[15px] font-bold text-white">
                     {r.numero}
                   </span>
-                  <span className="rounded-full border border-slate-300 px-3 py-0.5 text-[13px] font-bold text-slate-800">
-                    {r.puntos} {r.puntos === 1 ? th.pt : th.pts}
-                  </span>
+                  {conPuntaje(actividad) && (
+                    <span className="rounded-full border border-slate-300 px-3 py-0.5 text-[13px] font-bold text-slate-800">
+                      {r.puntos} {r.puntos === 1 ? th.pt : th.pts}
+                    </span>
+                  )}
                 </div>
                 <div className="mt-2">
                   <Enunciado texto={r.enunciado} />

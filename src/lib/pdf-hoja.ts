@@ -1,11 +1,12 @@
-// Hoja imprimible de una actividad cargada escaneada: a cada página del profesor se le
-// agrega un encabezado con logo, título, nombre, matrícula, calificación y el QR de entrega.
+// Hoja imprimible de una actividad cargada escaneada: cada página del profesor ocupa la hoja
+// completa y lleva encima el QR de entrega (esquina) y una franja con nombre, matrícula y calificación.
 import "server-only";
 import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { leerArchivo } from "./almacen";
 import { leerLogo } from "./pdf";
 import { escalaDe } from "./estadisticas";
+import { conPuntaje } from "./modalidad";
 import profesorEs from "./i18n/diccionarios/profesor/es";
 import { formato } from "./i18n/idiomas";
 import { leerFuenteCjk } from "./pdf-fuente-cjk";
@@ -13,8 +14,8 @@ import { fuentesPdf } from "./pdf-fuentes";
 import type { Actividad } from "./tipos";
 
 const CARTA = { ancho: 612, alto: 792 };
-const MARGEN = 28;
-const ALTO_ENCABEZADO = 134;
+/** Separación de los recuadros de entrega respecto al borde de la hoja. */
+const MARGEN_ESQUINA = 14;
 const AZUL = rgb(0.145, 0.329, 0.91);
 const GRIS = rgb(0.4, 0.45, 0.52);
 
@@ -45,49 +46,46 @@ export async function pdfHojaEscaneada(
 
   originales.forEach((o, i) => {
     const p = doc.addPage([CARTA.ancho, CARTA.alto]);
-    const arriba = CARTA.alto - MARGEN;
 
-    // Encabezado: franja azul con logo y título.
-    p.drawRectangle({ x: MARGEN, y: arriba - 40, width: CARTA.ancho - 2 * MARGEN, height: 40, color: AZUL });
-    const altoLogo = 30;
-    const anchoLogo = (logo.width / logo.height) * altoLogo;
-    p.drawRectangle({ x: MARGEN + 6, y: arriba - 36, width: anchoLogo + 6, height: 32, color: rgb(1, 1, 1) });
-    p.drawImage(logo, { x: MARGEN + 9, y: arriba - 35, width: anchoLogo, height: altoLogo });
-    let titulo = limpiar(actividad.titulo);
-    while (negrita.widthOfTextAtSize(titulo, 17) > 330 && titulo.length > 4) titulo = `${titulo.slice(0, -2)}…`;
-    p.drawText(titulo, { x: MARGEN + anchoLogo + 22, y: arriba - 22, size: 17, font: negrita, color: rgb(1, 1, 1) });
-    p.drawText(limpiar(`${datos.curso} · ${formato(tx.paginaDe, { i: i + 1, n: originales.length })}`), { x: MARGEN + anchoLogo + 22, y: arriba - 35, size: 8.5, font: normal, color: rgb(0.86, 0.9, 1) });
-
-    // QR de entrega a la derecha.
-    const lado = 64;
-    const xQr = CARTA.ancho - MARGEN - lado;
-    p.drawRectangle({ x: xQr - 4, y: arriba - 126, width: lado + 8, height: 82, color: rgb(1, 1, 1), borderColor: AZUL, borderWidth: 1.2 });
-    p.drawImage(qr, { x: xQr, y: arriba - 48 - lado, width: lado, height: lado });
-    const escanea = limpiar(tx.escanea);
-    p.drawText(escanea, { x: xQr + (lado - negrita.widthOfTextAtSize(escanea, 6)) / 2, y: arriba - 121, size: 6, font: negrita, color: AZUL });
-
-    // Nombre, matrícula y calificación.
-    const yDatos = arriba - 68;
-    const etiqueta = (bruto: string, x: number, ancho: number) => {
-      const texto = limpiar(bruto);
-      p.drawText(texto, { x, y: yDatos, size: 9, font: negrita, color: GRIS });
-      const w = negrita.widthOfTextAtSize(texto, 9);
-      p.drawLine({ start: { x: x + w + 4, y: yDatos - 2 }, end: { x: x + ancho, y: yDatos - 2 }, thickness: 0.8, color: GRIS });
-    };
-    etiqueta(`${tx.nombre}:`, MARGEN, 250);
-    etiqueta(`${tx.matricula}:`, MARGEN + 262, 130);
-    const xCal = xQr - 92;
-    p.drawRectangle({ x: xCal, y: yDatos - 30, width: 80, height: 46, borderColor: rgb(0.86, 0.15, 0.15), borderWidth: 1.5 });
-    p.drawText(limpiar(tx.calificacion), { x: xCal + 14, y: yDatos + 6, size: 8, font: negrita, color: rgb(0.86, 0.15, 0.15) });
-    p.drawText(`/ ${escalaDe(actividad)}`, { x: xCal + (escalaDe(actividad) === 100 ? 46 : 52), y: yDatos - 24, size: 9, font: normal, color: GRIS });
-    p.drawText(limpiar(tx.escribeNombre), { x: MARGEN, y: yDatos - 22, size: 7.5, font: normal, color: GRIS });
-
-    // Página original, ajustada al espacio restante.
-    const disponible = { ancho: CARTA.ancho - 2 * MARGEN, alto: CARTA.alto - 2 * MARGEN - ALTO_ENCABEZADO };
-    const escala = Math.min(disponible.ancho / o.ancho, disponible.alto / o.alto);
+    // La página del profesor ocupa la hoja completa (100 %), centrada y sin reducirla para el
+    // encabezado: los datos de entrega van encima, en las esquinas, sobre recuadros blancos.
+    const escala = Math.min(CARTA.ancho / o.ancho, CARTA.alto / o.alto);
     const w = o.ancho * escala;
     const h = o.alto * escala;
-    o.dibujar(p, (CARTA.ancho - w) / 2, MARGEN + (disponible.alto - h), w, h);
+    o.dibujar(p, (CARTA.ancho - w) / 2, (CARTA.alto - h) / 2, w, h);
+
+    // QR de entrega en la esquina superior derecha.
+    const lado = 54;
+    const xQr = CARTA.ancho - MARGEN_ESQUINA - lado;
+    const yQr = CARTA.alto - MARGEN_ESQUINA - lado;
+    p.drawRectangle({ x: xQr - 4, y: yQr - 12, width: lado + 8, height: lado + 16, color: rgb(1, 1, 1), borderColor: AZUL, borderWidth: 1 });
+    p.drawImage(qr, { x: xQr, y: yQr, width: lado, height: lado });
+    const escanea = limpiar(tx.escanea);
+    const tamEscanea = Math.min(5.5, (5.5 * (lado + 4)) / Math.max(1, negrita.widthOfTextAtSize(escanea, 5.5)));
+    p.drawText(escanea, { x: xQr + (lado - negrita.widthOfTextAtSize(escanea, tamEscanea)) / 2, y: yQr - 8, size: tamEscanea, font: negrita, color: AZUL });
+
+    // Franja inferior: nombre, matrícula, calificación (si la rúbrica lleva puntaje) y página.
+    const alto = 22;
+    const y = MARGEN_ESQUINA;
+    p.drawRectangle({ x: MARGEN_ESQUINA, y, width: CARTA.ancho - 2 * MARGEN_ESQUINA, height: alto, color: rgb(1, 1, 1), borderColor: AZUL, borderWidth: 0.8 });
+    const altoLogo = 14;
+    const anchoLogo = (logo.width / logo.height) * altoLogo;
+    p.drawImage(logo, { x: MARGEN_ESQUINA + 5, y: y + 4, width: anchoLogo, height: altoLogo });
+    let x = MARGEN_ESQUINA + anchoLogo + 12;
+    const campo = (bruto: string, ancho: number, despues = "") => {
+      const texto = limpiar(bruto);
+      p.drawText(texto, { x, y: y + 8, size: 8, font: negrita, color: GRIS });
+      const t = negrita.widthOfTextAtSize(texto, 8);
+      const d = despues ? normal.widthOfTextAtSize(despues, 8) + 3 : 0;
+      p.drawLine({ start: { x: x + t + 3, y: y + 7 }, end: { x: x + ancho - d, y: y + 7 }, thickness: 0.7, color: GRIS });
+      if (despues) p.drawText(despues, { x: x + ancho - d + 3, y: y + 8, size: 8, font: normal, color: GRIS });
+      x += ancho + 12;
+    };
+    campo(`${tx.nombre}:`, 190);
+    campo(`${tx.matricula}:`, 110);
+    if (conPuntaje(actividad)) campo(`${tx.calificacion}:`, 110, `/ ${escalaDe(actividad)}`);
+    const pie = limpiar(formato(tx.paginaDe, { i: i + 1, n: originales.length }));
+    p.drawText(pie, { x: CARTA.ancho - MARGEN_ESQUINA - 6 - normal.widthOfTextAtSize(pie, 7), y: y + 8, size: 7, font: normal, color: GRIS });
   });
 
   return doc.save();

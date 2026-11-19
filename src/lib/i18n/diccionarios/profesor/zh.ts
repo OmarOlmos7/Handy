@@ -314,6 +314,7 @@ const profesor: Diccionario["profesor"] = {
     abierto: "开放题",
   },
   nuevaActividad: {
+    sinPuntos: "不计分",
     idiomaActividad: "作业语言",
     idiomaActividadTexto: "作业纸、评分细则、反馈和改进建议都会用这种语言撰写。界面语言请在设置（齿轮）中更改。",
     ejemploPrompt:
@@ -356,6 +357,7 @@ const profesor: Diccionario["profesor"] = {
     cargar: "上传作业",
   },
   rubricaEditor: {
+    resumenSinPuntos: "{n} 道题。请检查答案和预期步骤。",
     noSeGuardo: "无法保存评分标准。",
     titulo: "AI 提出的评分标准",
     resumen: "{n} 道题 · 共 {p} 分。请检查答案、分值和预期步骤。",
@@ -373,6 +375,7 @@ const profesor: Diccionario["profesor"] = {
     puntos: "分值",
   },
   propuesta: {
+    resumenSinPuntos: "{n} 项",
     titulo: "评分方案",
     resumen: "{n} 项 · 共 {p} 分",
     elementos: "评分项",
@@ -430,6 +433,7 @@ const profesor: Diccionario["profesor"] = {
     deshacer: "撤销上一次修改",
   },
   hojaImpresa: {
+    resumenSinPuntos: "{n} 道题",
     paginaDe: "第 {i} 页，共 {n} 页",
     escribeNombre: "请在每一页写上姓名和学号。",
     alTerminar: "完成后，扫描二维码并发送每一整页的照片。",
@@ -898,7 +902,7 @@ const profesor: Diccionario["profesor"] = {
     leyenda: "AI 精度与消耗",
     esfuerzo: "{m}，推理强度{e}",
     resumen: "{m} · 推理强度{e}",
-    ayuda: "用于生成、解答和批改本作业。各级别的推理强度可在设置中调整。",
+    ayuda: "用于生成、解答和批改本作业。推理强度越高，检查越仔细，消耗的令牌也越多。",
   },
 };
 
