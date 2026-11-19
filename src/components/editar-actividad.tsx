@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { modificarActividad } from "@/app/acciones";
 import type { EstiloCorreccion, TipoReactivo } from "@/lib/tipos";
-import { formato } from "@/lib/i18n/idiomas";
+import { IDIOMAS, NOMBRE_IDIOMA, formato, type Idioma } from "@/lib/i18n/idiomas";
 import { OpcionModalidad } from "./opcion-solucion";
 import { useTextos } from "./proveedor-textos";
 import { Boton, BotonLink, campo } from "./ui";
@@ -34,6 +34,7 @@ export function EditarActividad({
     escala: 10 | 100;
     sinSolucion: boolean;
     estiloCorreccion: EstiloCorreccion;
+    idioma?: Idioma;
     instruccionesAlumno?: string[];
     reactivos: ReactivoEditable[];
   };
@@ -65,6 +66,7 @@ export function EditarActividad({
           escala: d.get("escala") === "10" ? 10 : 100,
           sinSolucion,
           estiloCorreccion: estilo,
+          idioma: String(d.get("idioma") ?? ""),
           instruccionesAlumno: inicial.instruccionesAlumno ? String(d.get("instrucciones") ?? "").split("\n") : undefined,
           reactivos,
         });
@@ -87,6 +89,18 @@ export function EditarActividad({
         <label className="block text-sm font-medium text-slate-700">
           {tn.tituloActividad}
           <input name="titulo" required defaultValue={inicial.titulo} className={campo} />
+        </label>
+        <label className="block text-sm font-medium text-slate-700">
+          {tn.idiomaActividad}
+          <select name="idioma" className={campo} defaultValue={inicial.idioma ?? ""}>
+            {!inicial.idioma && <option value="">—</option>}
+            {IDIOMAS.map((i) => (
+              <option key={i} value={i}>
+                {NOMBRE_IDIOMA[i]}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs font-normal text-slate-500">{tn.idiomaActividadTexto}</span>
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-slate-700">

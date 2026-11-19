@@ -9,6 +9,7 @@ import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { diccionarioDe } from "./diccionario";
 import { divisaDePais, type Divisa } from "../divisas";
+import { idiomaDeActividad } from "./detectar";
 import { paisDeIp } from "./geoip";
 import { IDIOMA_PROFESOR_INICIAL, LOCALE, elegirIdioma, esIdioma, vistaDeRuta, type Idioma } from "./idiomas";
 
@@ -49,6 +50,15 @@ export const idiomaActual = cache(async (): Promise<Idioma> => {
   if (vista === "api") return (await idiomaDelProfesor()) ?? (await idiomaPublico());
   return idiomaPublico();
 });
+
+/**
+ * Textos de lo que se imprime o entrega de una actividad (hoja, PDF de retroalimentación): en el
+ * idioma de la actividad; sin idioma conocido, el de la petición.
+ */
+export async function textosDeActividad(act: Parameters<typeof idiomaDeActividad>[0]) {
+  const idioma = idiomaDeActividad(act);
+  return idioma ? paquete(idioma) : textos();
+}
 
 function paquete(idioma: Idioma) {
   return { idioma, t: diccionarioDe(idioma), locale: LOCALE[idioma] };

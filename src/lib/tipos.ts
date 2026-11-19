@@ -124,6 +124,11 @@ export interface Actividad {
    * calificación ni puntos (adecuado para producciones escritas).
    */
   sinPuntaje?: boolean;
+  /**
+   * Idioma de la actividad (código de la app: es, en, fr...): en él van la hoja, la rúbrica, la
+   * retroalimentación y las recomendaciones. Sin valor (actividades anteriores), se detecta del texto.
+   */
+  idioma?: string;
   /** true si el profesor suspendió las entregas: el QR no recibe actividades hasta que las reanude. */
   entregasSuspendidas?: boolean;
   /**

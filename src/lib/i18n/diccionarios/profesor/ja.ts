@@ -291,6 +291,8 @@ const profesor: Diccionario["profesor"] = {
     abierto: "自由記述",
   },
   nuevaActividad: {
+    idiomaActividad: "課題の言語",
+    idiomaActividadTexto: "答案用紙、ルーブリック、フィードバック、改善のアドバイスはこの言語で作成されます。画面の言語は設定（歯車）で変更します。",
     ejemploPrompt:
       "例：\nテーマ：ニュートンの法則と合力。\n問題：選択式4問（各10点）、正誤問題3問（各10点）、途中式を書く記述式1問（30点）。\n図：記述式の問題では、ブロックの力の図を本文の右に。選択式2では、速度と時間のグラフを問題文の下に。\nレベル：中学2年、身近な例を使って。",
     primeroCurso: "先にコースを登録してください。",

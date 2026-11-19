@@ -11,8 +11,8 @@ import { esCerrado, puntosReactivoCerrado } from "./calificar";
 import { parametrosIA } from "./configuracion";
 import { DOMINIOS_RECURSOS, extraerJson, limpiarRecursos } from "./recursos";
 import { svgSeguro } from "./svg";
-import { IDIOMA_PROFESOR_INICIAL, esIdioma, formato, type Idioma } from "./i18n/idiomas";
-import { detectarIdioma, textoDeActividad } from "./i18n/detectar";
+import { formato, type Idioma } from "./i18n/idiomas";
+import { idiomaDeActividad } from "./i18n/detectar";
 import { fraccionCriterios } from "./elementos";
 import { diccionarioDe } from "./i18n/diccionario";
 import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, RecursoEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
@@ -57,32 +57,21 @@ export interface UsoIA {
   actividadId?: string;
   /** Motor y esfuerzo; si falta, se toma de la actividad guardada (o el predeterminado, Medio). */
   precision?: PrecisionIA;
-  /** Idioma en que la IA redacta (el del profesor; inglés si nunca eligió otro). */
+  /** Idioma en que la IA redacta; si falta, el de la actividad. */
   idioma?: Idioma;
 }
 
 /**
- * Idioma de la llamada: el indicado; si no, el idioma en que está escrita la actividad (la
- * retroalimentación va en ese idioma); si no se distingue, el de la configuración del profesor.
+ * Idioma de la llamada: el indicado; si no, el de la actividad (el elegido al darla de alta o, en
+ * actividades anteriores, el de su texto). El idioma de las pantallas del profesor no cuenta aquí:
+ * solo cambia los textos de la interfaz. Sin nada, las indicaciones base (español).
  */
 function idiomaDe(uso: UsoIA): Idioma | undefined {
   if (uso.idioma) return uso.idioma;
-  if (uso.actividadId) {
-    try {
-      const act = leerAhora().actividades.find((a) => a.id === uso.actividadId);
-      const escrita = act && detectarIdioma(textoDeActividad(act));
-      if (escrita) return escrita;
-    } catch {
-      // Sin datos: se sigue con el idioma del profesor.
-    }
-  }
-  if (!uso.profesorId) return undefined;
+  if (!uso.actividadId) return undefined;
   try {
-    const profesor = leerAhora().profesores.find((p) => p.id === uso.profesorId);
-    if (!profesor) return undefined;
-    // Igual que sus vistas de trabajo: si nunca eligió idioma, inglés.
-    const guardado = profesor.config?.idioma;
-    return esIdioma(guardado) ? guardado : IDIOMA_PROFESOR_INICIAL;
+    const act = leerAhora().actividades.find((a) => a.id === uso.actividadId);
+    return act && idiomaDeActividad(act);
   } catch {
     return undefined;
   }

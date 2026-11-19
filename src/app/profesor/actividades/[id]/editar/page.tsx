@@ -1,3 +1,4 @@
+import { idiomaDeActividad } from "@/lib/i18n/detectar";
 import { notFound } from "next/navigation";
 import { EditarActividad } from "@/components/editar-actividad";
 import { Encabezado } from "@/components/ui";
@@ -36,6 +37,7 @@ export default async function Editar({ params }: PageProps<"/profesor/actividade
           resultadosDesde: aCampoFechaHora(actividad.resultadosDesde),
           escala: actividad.escala === 10 ? 10 : 100,
           sinSolucion: !!actividad.sinSolucion,
+          idioma: idiomaDeActividad(actividad),
           estiloCorreccion: actividad.estiloCorreccion === "subrayado" ? "subrayado" : "margen",
           instruccionesAlumno: actividad.origen === "ia" ? (actividad.instruccionesAlumno ?? []) : undefined,
           reactivos: actividad.reactivos.map((r) => ({

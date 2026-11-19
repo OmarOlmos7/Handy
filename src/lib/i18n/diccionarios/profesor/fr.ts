@@ -291,6 +291,8 @@ const profesor: Diccionario["profesor"] = {
     abierto: "Ouverte",
   },
   nuevaActividad: {
+    idiomaActividad: "Langue de l'activité",
+    idiomaActividadTexto: "La feuille, la grille, les commentaires et les recommandations sont rédigés dans cette langue. La langue des écrans se change dans l'engrenage des paramètres.",
     ejemploPrompt:
       "Exemple :\nThème : lois de Newton et force résultante.\nQuestions : 4 QCM (10 points chacune), 3 vrai ou faux (10 points chacune) et 1 problème rédigé avec démarche (30 points).\nIllustrations : dans le problème rédigé, un diagramme des forces du bloc à droite du texte ; dans le QCM 2, un graphique vitesse-temps sous l'énoncé.\nNiveau : 4e, avec des exemples de la vie quotidienne.",
     primeroCurso: "Créez d'abord un cours.",

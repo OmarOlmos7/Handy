@@ -291,6 +291,8 @@ const profesor: Diccionario["profesor"] = {
     abierto: "Offen",
   },
   nuevaActividad: {
+    idiomaActividad: "Sprache der Aufgabe",
+    idiomaActividadTexto: "Blatt, Bewertungsraster, Feedback und Empfehlungen werden in dieser Sprache verfasst. Die Sprache der Oberfläche änderst du im Zahnrad der Einstellungen.",
     ejemploPrompt:
       "Beispiel:\nThema: Newtonsche Gesetze und resultierende Kraft.\nFragen: 4 Multiple Choice (je 10 Punkte), 3 wahr oder falsch (je 10 Punkte) und 1 Rechenaufgabe mit Lösungsweg (30 Punkte).\nAbbildungen: bei der Rechenaufgabe ein Kräftediagramm des Blocks rechts neben dem Text; bei Multiple Choice 2 ein Geschwindigkeit-Zeit-Diagramm unter der Frage.\nNiveau: 8. Klasse, mit Beispielen aus dem Alltag.",
     primeroCurso: "Lege zuerst einen Kurs an.",

@@ -6,7 +6,7 @@ import type { EsfuerzoIA, EstiloCorreccion, Grupo, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
 import { OpcionModalidad } from "./opcion-solucion";
 import { Boton, BotonLink, campo } from "./ui";
-import { formato } from "@/lib/i18n/idiomas";
+import { IDIOMAS, NOMBRE_IDIOMA, formato, type Idioma } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 
 type Modo = "ia" | "escaneada";
@@ -18,6 +18,7 @@ export function NuevaActividad({
   grupoInicial,
   motorInicial = "medio",
   esfuerzos = { rapido: "medio", medio: "medio", preciso: "medio" },
+  idiomaInicial = "es",
 }: {
   grupos: Pick<Grupo, "id" | "materia" | "nombre">[];
   hoy: string;
@@ -25,6 +26,8 @@ export function NuevaActividad({
   /** Nivel de precisión con el que arranca el deslizador (el de la configuración; Medio si no hay). */
   motorInicial?: MotorIA;
   esfuerzos?: Record<MotorIA, EsfuerzoIA>;
+  /** Idioma con el que arranca "Idioma de la actividad" (el oficial del país del profesor). */
+  idiomaInicial?: Idioma;
 }) {
   const router = useRouter();
   const tn = useTextos().t.profesor.nuevaActividad;
@@ -111,6 +114,17 @@ export function NuevaActividad({
             <input name="fecha" type="date" className={campo} defaultValue={hoy} />
           </label>
         </div>
+        <label className="block text-sm font-medium text-slate-700">
+          {tn.idiomaActividad}
+          <select name="idioma" className={campo} defaultValue={idiomaInicial}>
+            {IDIOMAS.map((i) => (
+              <option key={i} value={i}>
+                {NOMBRE_IDIOMA[i]}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs font-normal text-slate-500">{tn.idiomaActividadTexto}</span>
+        </label>
         <label className="block text-sm font-medium text-slate-700">
           {tn.tituloActividad}
           <input name="titulo" required className={campo} placeholder={tn.ejemploTitulo} />

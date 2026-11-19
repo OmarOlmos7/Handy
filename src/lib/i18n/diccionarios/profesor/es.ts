@@ -289,6 +289,8 @@ const profesor = {
     abierto: "Abierto",
   },
   nuevaActividad: {
+    idiomaActividad: "Idioma de la actividad",
+    idiomaActividadTexto: "En este idioma se escriben la hoja, la rúbrica, la retroalimentación y las recomendaciones. El idioma de las pantallas se cambia en el engrane de configuración.",
     ejemploPrompt:
       "Ejemplo:\nTema: Leyes de Newton y fuerza neta.\nReactivos: 4 de opción múltiple (10 puntos cada uno), 3 de verdadero o falso (10 puntos c/u) y 1 problema de desarrollo con procedimiento (30 puntos).\nIlustraciones: en el problema de desarrollo, un diagrama de cuerpo libre del bloque a la derecha del texto; en la opción múltiple 2, una gráfica de velocidad contra tiempo abajo del enunciado.\nNivel: 2.º de secundaria, con datos de la vida diaria.",
     primeroCurso: "Primero registra un curso.",

@@ -286,6 +286,8 @@ const profesor: Diccionario["profesor"] = {
     abierto: "开放题",
   },
   nuevaActividad: {
+    idiomaActividad: "作业语言",
+    idiomaActividadTexto: "作业纸、评分细则、反馈和改进建议都会用这种语言撰写。界面语言请在设置（齿轮）中更改。",
     ejemploPrompt:
       "示例：\n主题：牛顿定律与合力。\n题目：4 道选择题（每题 10 分）、3 道判断题（每题 10 分）和 1 道写出过程的解答题（30 分）。\n插图：解答题中，在文字右侧画出木块的受力分析图；选择题 2 中，在题干下方画出速度-时间图像。\n难度：初二，使用生活中的例子。",
     primeroCurso: "请先创建课程。",

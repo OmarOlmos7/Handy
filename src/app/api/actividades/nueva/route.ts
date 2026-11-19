@@ -7,6 +7,7 @@ import { profesorActual } from "@/lib/sesion";
 import type { Actividad } from "@/lib/tipos";
 import { deCampoFechaHora } from "@/lib/resultados";
 import { detectarIdioma } from "@/lib/i18n/detectar";
+import { esIdioma } from "@/lib/i18n/idiomas";
 
 export const maxDuration = 300;
 
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
   }
   if (!titulo || !grupo) return Response.json({ error: "Escribe el título y elige el grupo" }, { status: 400 });
 
+  const idiomaElegido = form.get("idioma");
   const id = slug(titulo);
   const base: Actividad = {
     id,
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
     // Ensayos, producciones escritas o análisis: no requieren solución.
     sinSolucion: form.get("sinSolucion") === "1" || undefined,
     estiloCorreccion: form.get("estiloCorreccion") === "subrayado" ? "subrayado" : "margen",
+    idioma: esIdioma(idiomaElegido) ? idiomaElegido : undefined,
   };
 
   if (modo === "ia") {
@@ -58,7 +61,7 @@ export async function POST(req: Request) {
     try {
       const generada = await generarActividad(
         { titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala, sinSolucion: base.sinSolucion },
-        { profesorId: profesor.id, actividadId: id, precision: base.precision, idioma: detectarIdioma(`${titulo}\n${prompt}`) },
+        { profesorId: profesor.id, actividadId: id, precision: base.precision, idioma: esIdioma(idiomaElegido) ? idiomaElegido : detectarIdioma(`${titulo}\n${prompt}`) },
       );
       Object.assign(base, {
         origen: "ia",
@@ -86,7 +89,7 @@ export async function POST(req: Request) {
           const { reactivos, criterios, recomendaciones } = await proponerRubrica(
             paraIA,
             { titulo, instrucciones, sinSolucion: true },
-            { profesorId: profesor.id, actividadId: id, precision: base.precision },
+            { profesorId: profesor.id, actividadId: id, precision: base.precision, idioma: esIdioma(idiomaElegido) ? idiomaElegido : undefined },
           );
           Object.assign(base, { reactivos, criterios, recomendaciones });
         } catch (e) {
