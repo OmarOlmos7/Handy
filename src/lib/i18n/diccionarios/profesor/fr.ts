@@ -154,6 +154,7 @@ const profesor: Diccionario["profesor"] = {
     escuela: "Établissement",
     contactanos: "Contactez-nous",
     escuelaTexto: "Idéal pour les équipes pédagogiques d'un établissement.",
+    cobroEnMxn: "Le paiement est traité en pesos mexicains ; votre banque le convertit dans votre devise.",
     resumen: "Récapitulatif",
     paquete: "Pack",
     total: "Total (TVA incluse)",

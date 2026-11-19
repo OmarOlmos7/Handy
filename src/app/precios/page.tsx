@@ -7,12 +7,14 @@ import { SelectorIdioma } from "@/components/selector-idioma";
 import { MOTORES, PRECISION_PREDETERMINADA, nivelConsumo } from "@/lib/configuracion";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { formato } from "@/lib/i18n/idiomas";
-import { textos } from "@/lib/i18n/servidor";
-import { PLANES, ahorroContra, pesos, planDe, precioPorPagina, type Plan } from "@/lib/planes";
+import { divisaActual, textos } from "@/lib/i18n/servidor";
+import { type Divisa, formatoPorPagina, formatoPrecio, textoDivisa } from "@/lib/divisas";
+import { PLANES, ahorroContra, planDe, type Plan } from "@/lib/planes";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await textos();
-  return { title: t.precios.metaTitulo, description: t.precios.metaDescripcion };
+  const { t, locale } = await textos();
+  const divisa = textoDivisa(await divisaActual(), locale, t.comun.ivaIncluido);
+  return { title: t.precios.metaTitulo, description: formato(t.precios.metaDescripcion, { divisa }) };
 }
 
 function Paloma({ claro }: { claro?: boolean }) {
@@ -41,9 +43,9 @@ async function BotonContacto({ texto, clase, t }: { texto: string; clase: string
   );
 }
 
-function TarjetaPlan({ plan, t, locale }: { plan: Plan; t: Diccionario; locale: string }) {
+function TarjetaPlan({ plan, t, locale, divisa }: { plan: Plan; t: Diccionario; locale: string; divisa: Divisa }) {
   const texto = t.planes[plan.id];
-  const porPagina = precioPorPagina(plan);
+  const porPagina = plan.precio ? formatoPorPagina(plan.precio, plan.creditos, divisa, locale) : undefined;
   const ahorro = ahorroContra(plan, planDe("basico"));
   const d = plan.destacado;
   const claseBoton = `mt-6 flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition ${
@@ -67,14 +69,13 @@ function TarjetaPlan({ plan, t, locale }: { plan: Plan; t: Diccionario; locale: 
           <span className="text-3xl font-semibold tracking-tight">{t.precios.aLaMedida}</span>
         ) : (
           <>
-            <span className="text-4xl font-semibold tracking-tight">{pesos(plan.precio, locale)}</span>
-            <span className={`pb-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>MXN</span>
+            <span className="text-4xl font-semibold tracking-tight">{formatoPrecio(plan.precio, divisa, locale)}</span>
           </>
         )}
       </div>
       <p className={`mt-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{texto.periodo}</p>
       <p className={`mt-1 h-5 text-xs font-medium ${d ? "text-white" : "text-tinta-700"}`}>
-        {porPagina !== undefined && formato(t.precios.porPagina, { p: `$${porPagina.toLocaleString(locale, { minimumFractionDigits: 2 })}` })}
+        {porPagina !== undefined && formato(t.precios.porPagina, { p: porPagina })}
         {ahorro !== undefined && ` · ${formato(t.precios.ahorra, { n: ahorro })}`}
       </p>
 
@@ -107,6 +108,7 @@ function TarjetaPlan({ plan, t, locale }: { plan: Plan; t: Diccionario; locale: 
 export default async function Precios() {
   const { idioma, t, locale } = await textos();
   const pr = t.precios;
+  const divisa = await divisaActual();
   return (
     <div className="flex min-h-full flex-1 flex-col bg-[#f6f7f9]">
       <header className="border-b border-slate-200 bg-white">
@@ -129,12 +131,12 @@ export default async function Precios() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{pr.titulo}</h1>
-          <p className="mt-3 text-slate-600">{pr.texto}</p>
+          <p className="mt-3 text-slate-600">{formato(pr.texto, { divisa: textoDivisa(divisa, locale, t.comun.ivaIncluido) })}</p>
         </div>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {PLANES.map((p) => (
-            <TarjetaPlan key={p.id} plan={p} t={t} locale={locale} />
+            <TarjetaPlan key={p.id} plan={p} t={t} locale={locale} divisa={divisa} />
           ))}
         </div>
 

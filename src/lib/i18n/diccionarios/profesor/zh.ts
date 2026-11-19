@@ -151,6 +151,7 @@ const profesor: Diccionario["profesor"] = {
     escuela: "学校",
     contactanos: "联系我们",
     escuelaTexto: "适合学校的教研组或教师团队。",
+    cobroEnMxn: "付款以墨西哥比索处理，由你的银行换算成你的货币。",
     resumen: "摘要",
     paquete: "套餐",
     total: "合计（含税）",

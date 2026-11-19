@@ -5,8 +5,9 @@ import { BotonLink, Logo } from "@/components/ui";
 import { SelectorIdioma } from "@/components/selector-idioma";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { formato } from "@/lib/i18n/idiomas";
-import { textos } from "@/lib/i18n/servidor";
-import { PLANES, pesos } from "@/lib/planes";
+import { divisaActual, textos } from "@/lib/i18n/servidor";
+import { formatoPrecio, textoDivisa } from "@/lib/divisas";
+import { PLANES } from "@/lib/planes";
 
 const IMAGENES_PASOS = ["/inicio/paso-1-hoja.webp", "/inicio/paso-2-celular.webp", "/inicio/paso-3-rubrica.webp", "/inicio/paso-4-revision.webp"];
 
@@ -75,11 +76,12 @@ function HojaDemo({ t }: { t: Diccionario["demo"] }) {
 export default async function Inicio() {
   const { idioma, t, locale } = await textos();
   const i = t.inicio;
+  const divisa = await divisaActual();
   const paquetes = PLANES.map((p) => ({
     id: p.id,
     nombre: t.planes[p.id].nombre,
     creditos: p.creditos,
-    precio: p.precio === undefined ? t.precios.aLaMedida : p.precio === 0 ? i.gratisPrecio : pesos(p.precio, locale),
+    precio: p.precio === undefined ? t.precios.aLaMedida : p.precio === 0 ? i.gratisPrecio : formatoPrecio(p.precio, divisa, locale),
     detalle: t.planes[p.id].lema,
     destacado: p.destacado,
     aLaMedida: p.precio === undefined,
@@ -199,7 +201,7 @@ export default async function Inicio() {
         <section id="precios" className="border-y border-slate-200 bg-white">
           <div className="mx-auto max-w-6xl px-4 py-16">
             <h2 className="text-3xl font-semibold tracking-tight">{i.preciosTitulo}</h2>
-            <p className="mt-2 max-w-2xl text-slate-600">{i.preciosTexto}</p>
+            <p className="mt-2 max-w-2xl text-slate-600">{formato(i.preciosTexto, { divisa: textoDivisa(divisa, locale, t.comun.ivaIncluido) })}</p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {paquetes.map((p) => (
                 <div

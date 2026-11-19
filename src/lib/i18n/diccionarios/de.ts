@@ -11,6 +11,7 @@ const de: Diccionario = {
     precios: "Preise",
     probarGratis: "Kostenlos testen",
     creditos: "{n} Credits",
+    ivaIncluido: "inkl. MwSt.",
     ubicacionIp: "IP-Standort: DB-IP",
   },
   meta: {
@@ -95,7 +96,7 @@ const de: Diccionario = {
     },
     preciosTitulo: "Zahlen Sie nur, was Sie korrigieren",
     preciosTexto:
-      "Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Lösung hochladen und Bewertungsraster erstellen ist kostenlos. Preise in mexikanischen Pesos, inkl. MwSt.",
+      "Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Lösung hochladen und Bewertungsraster erstellen ist kostenlos. Preise in {divisa}.",
     contactanos: "Kontakt für einen institutionellen Plan",
     gratisPrecio: "Kostenlos",
     verPlanes: "Leistungen der einzelnen Tarife ansehen →",
@@ -274,10 +275,10 @@ const de: Diccionario = {
   },
   precios: {
     metaTitulo: "Tarife und Preise",
-    metaDescripcion: "iEureka-Grader-Tarife: Zahlen Sie nur die Seiten, die Sie korrigieren. Preise in mexikanischen Pesos, inkl. MwSt.",
+    metaDescripcion: "iEureka-Grader-Tarife: Zahlen Sie nur die Seiten, die Sie korrigieren. Preise in {divisa}.",
     titulo: "Tarife, die zu Ihrer Klasse passen",
     texto:
-      "Zahlen Sie nur die Seiten, die Sie korrigieren. Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Preise in mexikanischen Pesos, inkl. MwSt., ohne Abo.",
+      "Zahlen Sie nur die Seiten, die Sie korrigieren. Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Preise in {divisa}, ohne Abo.",
     masPopular: "Am beliebtesten",
     aLaMedida: "Individuell",
     porPagina: "{p} pro Seite",
