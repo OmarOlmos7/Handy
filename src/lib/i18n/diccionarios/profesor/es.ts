@@ -236,6 +236,7 @@ const profesor = {
     regresar: "Presiona cualquier tecla para regresar",
   },
   reevaluar: {
+    sinFotos: "{n} entregas no tienen sus fotos (actividad de ejemplo o entregas archivadas con solo el PDF) y no se pueden re-evaluar.",
     titulo: "Re-evaluar actividad",
     subtitulo: "Ajusta el nivel de precisión, la rúbrica o las condiciones y vuelve a evaluar las entregas para mejorar su retroalimentación.",
     abrir: "Ajustar y re-evaluar",

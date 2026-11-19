@@ -238,6 +238,7 @@ const profesor: Diccionario["profesor"] = {
     regresar: "いずれかのキーを押すと戻ります",
   },
   reevaluar: {
+    sinFotos: "{n} 件は写真がないため（サンプル課題、またはPDFのみ保存された提出物）、再採点できません。",
     titulo: "課題を再採点",
     subtitulo: "精度、ルーブリック、条件を調整して提出物をもう一度採点し、フィードバックを改善します。",
     abrir: "調整して再採点",

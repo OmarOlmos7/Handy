@@ -22,6 +22,7 @@ export function ReevaluarActividad({
   esfuerzos,
   instrucciones,
   entregas,
+  evaluadas,
   saldo,
 }: {
   actividadId: string;
@@ -30,6 +31,8 @@ export function ReevaluarActividad({
   instrucciones: string;
   /** Entregas ya evaluadas que conservan sus fotos. */
   entregas: { matricula: string; nombre: string; paginas: number }[];
+  /** Entregas ya evaluadas, tengan o no sus fotos (las de ejemplo y las archivadas no las tienen). */
+  evaluadas: number;
   saldo: number;
 }) {
   const router = useRouter();
@@ -76,7 +79,8 @@ export function ReevaluarActividad({
     setTerminado(true);
   }
 
-  if (entregas.length === 0) return null;
+  if (evaluadas === 0) return null;
+  const sinFotos = evaluadas - entregas.length;
 
   return (
     <section className="mb-6 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
@@ -133,9 +137,10 @@ export function ReevaluarActividad({
                 {alcanza ? formato(tr.saldo, { s: saldo }) : formato(tr.sinSaldo, { s: saldo })}
               </p>
               <p className="mt-2 text-xs text-slate-500">{tr.aviso}</p>
+              {sinFotos > 0 && <p className="mt-2 text-xs text-aviso">{formato(tr.sinFotos, { n: sinFotos })}</p>}
             </div>
             {alcanza ? (
-              <Boton type="submit" className="mt-3 w-full" disabled={actual !== null}>
+              <Boton type="submit" className="mt-3 w-full" disabled={actual !== null || entregas.length === 0}>
                 {actual ? formato(tr.evaluando, { i: hechas + 1, n: entregas.length }) : formato(tr.boton, { n: entregas.length })}
               </Boton>
             ) : (

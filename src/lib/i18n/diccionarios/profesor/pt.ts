@@ -238,6 +238,7 @@ const profesor: Diccionario["profesor"] = {
     regresar: "Pressione qualquer tecla para voltar",
   },
   reevaluar: {
+    sinFotos: "{n} entregas não têm as fotos (atividade de exemplo ou entregas arquivadas só com o PDF) e não podem ser reavaliadas.",
     titulo: "Reavaliar atividade",
     subtitulo: "Ajuste o nível de precisão, a rubrica ou as condições e avalie as entregas de novo para melhorar o feedback.",
     abrir: "Ajustar e reavaliar",

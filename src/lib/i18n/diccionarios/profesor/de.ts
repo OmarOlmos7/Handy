@@ -238,6 +238,7 @@ const profesor: Diccionario["profesor"] = {
     regresar: "Beliebige Taste drücken, um zurückzukehren",
   },
   reevaluar: {
+    sinFotos: "{n} Abgaben haben keine Fotos (Beispielaufgabe oder archivierte Abgaben mit nur dem PDF) und können nicht neu bewertet werden.",
     titulo: "Aufgabe neu bewerten",
     subtitulo: "Passe Genauigkeit, Bewertungsraster oder Bedingungen an und bewerte die Abgaben erneut, um das Feedback zu verbessern.",
     abrir: "Anpassen und neu bewerten",
