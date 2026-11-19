@@ -8,6 +8,7 @@ import { actividadDe, borrarCarpeta, modificar, slug } from "@/lib/almacen";
 import { esDelProfesor, normalizarMatricula, nuevoCodigoCurso } from "@/lib/cuentas";
 import { entregasPorEvaluar, evaluarVarias, marcarEnFila } from "@/lib/evaluacion";
 import { COLORES } from "@/lib/colores";
+import { esMotor, precisionPara } from "@/lib/configuracion";
 import { requerirProfesor } from "@/lib/sesion";
 import type { BaseDeDatos, EstiloCorreccion, Reactivo, ResultadoReactivo } from "@/lib/tipos";
 import { deCampoFechaHora } from "@/lib/resultados";
@@ -278,6 +279,17 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
   });
   revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
   revalidatePath("/profesor", "layout");
+}
+
+/** Antes de re-evaluar: guarda el nivel de precisión y las indicaciones para la IA de la actividad. */
+export async function prepararReevaluacion(actividadId: string, motor: string, indicaciones: string) {
+  const profesor = await requerirProfesor();
+  await enActividadPropia(actividadId, (db) => {
+    const a = actividadDe(db, actividadId)!;
+    if (esMotor(motor)) a.precision = precisionPara(motor, profesor.config);
+    a.instrucciones = indicaciones.trim().slice(0, 2000) || undefined;
+  });
+  revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
 }
 
 /** Suspende o reanuda la recepción de entregas por QR de una actividad. */

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { AutoActualizar } from "@/components/auto-actualizar";
 import { BorrarEntrega } from "@/components/borrar-entrega";
 import { EvaluarTodo } from "@/components/evaluar-todo";
+import { ReevaluarActividad } from "@/components/reevaluar-actividad";
+import { saldoDe } from "@/lib/cuentas";
 import {
   BotonLink,
   Encabezado,
@@ -19,7 +21,7 @@ import { actividadDe, entregasDe, estadoActividad, grupoDe } from "@/lib/almacen
 import { evaluandoAhora } from "@/lib/evaluacion";
 import { datosProfesor } from "@/lib/sesion";
 import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadisticas";
-import { configuracionDe, porcentajeAltasBajas } from "@/lib/configuracion";
+import { PRECISION_PREDETERMINADA, configuracionDe, esMotor, porcentajeAltasBajas } from "@/lib/configuracion";
 import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 import { textos } from "@/lib/i18n/servidor";
 import { listaParaRubrica } from "@/lib/modalidad";
@@ -48,6 +50,9 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         rangos,
       )
     : undefined;
+  // Entregas que se pueden re-evaluar: ya evaluadas y con sus fotos (las archivadas solo tienen el PDF).
+  const reevaluables = entregas.filter((e) => e.estado !== "sin_entregar" && e.resultados.length > 0 && e.imagenes?.length && !evaluandoAhora(e.evaluandoDesde));
+  const conf = configuracionDe(profesor.config);
   const { t, locale } = await textos();
   const tc = t.profesor.comun;
   const ta = t.profesor.actividad;
@@ -108,6 +113,17 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
               : ta.evaluando1
             : ta.automatica}
         </p>
+      )}
+
+      {actividad.rubricaConfirmada && (
+        <ReevaluarActividad
+          actividadId={id}
+          motor={esMotor(actividad.precision?.motor) ? actividad.precision.motor : PRECISION_PREDETERMINADA.motor}
+          esfuerzos={conf.esfuerzos}
+          instrucciones={actividad.instrucciones ?? ""}
+          entregas={reevaluables.map((e) => ({ matricula: e.matricula, nombre: nombre(e.matricula), paginas: e.imagenes?.length ?? 0 }))}
+          saldo={saldoDe(db, profesor.id)}
+        />
       )}
 
       {!actividad.rubricaConfirmada && (

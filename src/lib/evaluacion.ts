@@ -27,7 +27,11 @@ function marcar(actividadId: string, matricula: string, cambios: { evaluandoDesd
   });
 }
 
-async function evaluarAhora(actividadId: string, matricula: string): Promise<ResultadoEvaluacion> {
+/**
+ * Evalúa una entrega. Con `reevaluar`, vuelve a evaluar una ya calificada (con la rúbrica, las
+ * condiciones y el nivel actuales de la actividad) y reemplaza su resultado.
+ */
+async function evaluarAhora(actividadId: string, matricula: string, reevaluar = false): Promise<ResultadoEvaluacion> {
   const db = leerAhora();
   const actividad = actividadDe(db, actividadId);
   const grupo = actividad && grupoDe(db, actividad.grupoId);
@@ -37,7 +41,7 @@ async function evaluarAhora(actividadId: string, matricula: string): Promise<Res
   }
   const entrega = db.entregas.find((e) => e.actividadId === actividadId && e.matricula === matricula);
   if (!entrega?.imagenes?.length) return { ok: false, error: "Esta entrega no tiene fotos", status: 400 };
-  if (entrega.estado !== "entregada") return { ok: true };
+  if (reevaluar ? entrega.estado === "sin_entregar" : entrega.estado !== "entregada") return { ok: true };
   const paginas = entrega.imagenes.length;
   const costo = paginas * creditosPorPagina(actividad.precision);
   if (!grupo.profesorId || saldoDe(db, grupo.profesorId) < costo) {
@@ -55,14 +59,16 @@ async function evaluarAhora(actividadId: string, matricula: string): Promise<Res
     modificar((d) => {
       const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
       // Si el alumno volvió a entregar mientras se evaluaba, no se pisa su entrega nueva.
-      if (!e || e.estado !== "entregada" || e.imagenes?.join() !== imagenes.join()) return;
+      if (!e || (!reevaluar && e.estado !== "entregada") || e.imagenes?.join() !== imagenes.join()) return;
       // Se libera al alumno en cuanto se evalúa (respetando la fecha de visualización de la actividad);
       // el profesor puede corregirla después y el reporte del alumno se actualiza.
       Object.assign(e, evaluacion, { estado: "aprobada", evaluadaEn: new Date().toISOString(), error: undefined, evaluandoDesde: undefined });
+      // Al re-evaluar, la calificación escrita a mano deja paso a la nueva evaluación.
+      if (reevaluar) e.calificacionManual = undefined;
       d.movimientos.unshift({
         profesorId: grupo.profesorId,
         fecha: new Date().toISOString().slice(0, 10),
-        concepto: `Evaluación · ${actividad.titulo} · ${nombre}`,
+        concepto: `${reevaluar ? "Re-evaluación" : "Evaluación"} · ${actividad.titulo} · ${nombre}`,
         cantidad: -costo,
       });
     });
@@ -129,8 +135,8 @@ export async function generarEstudio(actividadId: string, matricula: string): Pr
 }
 
 /** Evalúa una entrega. Las evaluaciones se forman en fila y corren una a la vez. */
-export function evaluarYGuardar(actividadId: string, matricula: string): Promise<ResultadoEvaluacion> {
-  const turno = cola.then(() => evaluarAhora(actividadId, matricula));
+export function evaluarYGuardar(actividadId: string, matricula: string, reevaluar = false): Promise<ResultadoEvaluacion> {
+  const turno = cola.then(() => evaluarAhora(actividadId, matricula, reevaluar));
   cola = turno.catch(() => undefined);
   return turno;
 }
