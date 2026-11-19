@@ -33,7 +33,9 @@ export const TIPO_CAMBIO = 18.5;
 /** Comisión del cobro (Mercado Pago, con IVA de la comisión) y cargo fijo por pago en MXN. */
 export const COMISION_COBRO = { porcentaje: 0.0406, fijo: 4 };
 export const IVA = 0.16;
-/** Utilidad mínima sobre el ingreso neto (sin IVA ni comisiones). */
+/** ISR del ejercicio fiscal, sobre la utilidad (ingreso sin IVA menos comisiones y costo de IA). */
+export const ISR = 0.28;
+/** Utilidad mínima después de ISR, sobre el ingreso sin IVA. */
 export const UTILIDAD_OBJETIVO = 0.3;
 
 /**
@@ -48,11 +50,16 @@ export function costoCreditoMXN(): number {
   return usd * TIPO_CAMBIO;
 }
 
-/** Utilidad del plan sobre su ingreso neto (0.4 = 40 %); undefined si es gratis o a la medida. */
+/**
+ * Utilidad del plan después de ISR, sobre su ingreso sin IVA (0.3 = 30 %); undefined si es gratis o
+ * a la medida. Se quita el IVA del precio, la comisión del cobro y el costo de IA, y al resto el ISR.
+ */
 export function utilidad(p: Pick<Plan, "precio" | "creditos">): number | undefined {
   if (!p.precio) return undefined;
-  const neto = (p.precio / (1 + IVA)) * (1 - COMISION_COBRO.porcentaje) - COMISION_COBRO.fijo;
-  return (neto - p.creditos * costoCreditoMXN()) / neto;
+  const sinIva = p.precio / (1 + IVA);
+  const neto = sinIva * (1 - COMISION_COBRO.porcentaje) - COMISION_COBRO.fijo;
+  const antesDeIsr = neto - p.creditos * costoCreditoMXN();
+  return (antesDeIsr * (1 - ISR)) / sinIva;
 }
 
 export const PLANES: Plan[] = [
@@ -114,7 +121,7 @@ export const PLANES: Plan[] = [
     nombre: "Academia",
     lema: "Para todo el semestre o una academia: el mejor precio por página",
     precio: 635,
-    creditos: 1500,
+    creditos: 1200,
     periodo: "pago único por 1,500 créditos",
     boton: { texto: "Elegir Academia", href: "/profesor/creditos" },
     incluye: "Todo lo de Pro, más:",

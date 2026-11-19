@@ -250,12 +250,12 @@ const de: Diccionario = {
     academia: {
       nombre: "Akademie",
       lema: "Für ein ganzes Semester oder eine Fachschaft: der beste Preis pro Seite",
-      periodo: "Einmalzahlung für 1.500 Credits",
+      periodo: "Einmalzahlung für 1.200 Credits",
       boton: "Akademie wählen",
       incluye: "Alles aus Pro, plus:",
       ventajas: [
-        "1.500 Credits: 10 einseitige Aufgaben für 5 Klassen mit 30",
-        "≈ 75 Stunden Korrekturzeit gespart",
+        "1.200 Credits: 10 einseitige Aufgaben für 4 Klassen mit 30",
+        "≈ 60 Stunden Korrekturzeit gespart",
         "Spielraum für die Stufe Präzise bei Prüfungen",
         "Berichte pro Schüler/in und Klasse das ganze Semester",
       ],

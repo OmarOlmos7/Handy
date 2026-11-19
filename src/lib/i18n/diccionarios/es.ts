@@ -251,12 +251,12 @@ const es = {
     academia: {
       nombre: "Academia",
       lema: "Para todo el semestre o una academia: el mejor precio por página",
-      periodo: "pago único por 1,500 créditos",
+      periodo: "pago único por 1,200 créditos",
       boton: "Elegir Academia",
       incluye: "Todo lo de Pro, más:",
       ventajas: [
-        "1,500 créditos: 10 actividades de 1 página para 5 grupos de 30",
-        "≈ 75 horas de calificación que te ahorras",
+        "1,200 créditos: 10 actividades de 1 página para 4 grupos de 30",
+        "≈ 60 horas de calificación que te ahorras",
         "Margen para usar el nivel Preciso en exámenes",
         "Reportes por alumno y por grupo durante todo el curso",
       ],

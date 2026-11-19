@@ -250,12 +250,12 @@ const en: Diccionario = {
     academia: {
       nombre: "Academy",
       lema: "For a whole semester or a department: the best price per page",
-      periodo: "one-time payment for 1,500 credits",
+      periodo: "one-time payment for 1,200 credits",
       boton: "Choose Academy",
       incluye: "Everything in Pro, plus:",
       ventajas: [
-        "1,500 credits: 10 one-page activities for 5 classes of 30",
-        "≈ 75 hours of grading saved",
+        "1,200 credits: 10 one-page activities for 4 classes of 30",
+        "≈ 60 hours of grading saved",
         "Room to use the Precise level on exams",
         "Student and class reports all term long",
       ],

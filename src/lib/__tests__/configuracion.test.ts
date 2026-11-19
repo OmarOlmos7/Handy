@@ -89,12 +89,12 @@ describe("planes", () => {
       ["gratis", 50, 0],
       ["basico", 300, 215],
       ["pro", 600, 345],
-      ["academia", 1500, 635],
+      ["academia", 1200, 635],
       ["escuela", 10000, undefined],
     ]);
   });
 
-  it("cada plan de pago deja al menos 30 % de utilidad en cualquier nivel", () => {
+  it("cada plan de pago deja al menos 30 % de utilidad después de ISR en cualquier nivel", () => {
     expect(costoCreditoMXN()).toBeCloseTo(0.24, 2);
     for (const p of PLANES.filter((p) => (p.precio ?? 0) > 0)) {
       expect(utilidad(p)!).toBeGreaterThanOrEqual(UTILIDAD_OBJETIVO);
@@ -103,10 +103,10 @@ describe("planes", () => {
 
   it("calcula el precio por página y el ahorro contra Básico", () => {
     expect(precioPorPagina(planDe("basico"))).toBe(0.72);
-    expect(precioPorPagina(planDe("academia"))).toBe(0.42);
+    expect(precioPorPagina(planDe("academia"))).toBe(0.53);
     expect(precioPorPagina(planDe("escuela"))).toBeUndefined();
     expect(ahorroContra(planDe("pro"), planDe("basico"))).toBe(21);
-    expect(ahorroContra(planDe("academia"), planDe("basico"))).toBe(42);
+    expect(ahorroContra(planDe("academia"), planDe("basico"))).toBe(26);
     expect(ahorroContra(planDe("basico"), planDe("basico"))).toBeUndefined();
     expect(precioPorPagina(planDe("gratis"))).toBeUndefined();
   });
