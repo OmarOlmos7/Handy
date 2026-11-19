@@ -11,6 +11,7 @@ const zh: Diccionario = {
     precios: "价格",
     probarGratis: "免费试用",
     creditos: "{n} 点数",
+    ivaIncluido: "含税",
     ubicacionIp: "IP 定位：DB-IP",
   },
   meta: {
@@ -89,7 +90,7 @@ const zh: Diccionario = {
     },
     preciosTitulo: "只为批改的内容付费",
     preciosTexto:
-      "每页在“快速”用 1 点数，“标准”用 4，“精准”用 12。上传答案和生成评分细则免费。价格以墨西哥比索计，含税。",
+      "每页在“快速”用 1 点数，“标准”用 4，“精准”用 12。上传答案和生成评分细则免费。价格以{divisa}计。",
     contactanos: "联系我们办理机构方案",
     gratisPrecio: "免费",
     verPlanes: "查看各套餐包含的内容 →",
@@ -268,10 +269,10 @@ const zh: Diccionario = {
   },
   precios: {
     metaTitulo: "套餐与价格",
-    metaDescripcion: "iEureka-Grader 套餐：只为批改的页数付费。价格以墨西哥比索计，含税。",
+    metaDescripcion: "iEureka-Grader 套餐：只为批改的页数付费。价格以{divisa}计。",
     titulo: "适合你课堂的套餐",
     texto:
-      "只为批改的页数付费。每页在“快速”用 1 点数，“标准”用 4，“精准”用 12。价格以墨西哥比索计，含税，无需订阅。",
+      "只为批改的页数付费。每页在“快速”用 1 点数，“标准”用 4，“精准”用 12。价格以{divisa}计，无需订阅。",
     masPopular: "最受欢迎",
     aLaMedida: "定制",
     porPagina: "每页 {p}",

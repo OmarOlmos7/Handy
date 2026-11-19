@@ -11,6 +11,7 @@ const pt: Diccionario = {
     precios: "Preços",
     probarGratis: "Testar grátis",
     creditos: "{n} créditos",
+    ivaIncluido: "impostos incluídos",
     ubicacionIp: "Localização por IP: DB-IP",
   },
   meta: {
@@ -95,7 +96,7 @@ const pt: Diccionario = {
     },
     preciosTitulo: "Pague só o que você corrige",
     preciosTexto:
-      "Rápido usa 1 crédito por página, Médio 4 e Preciso 12. Enviar sua solução e gerar a rubrica não custa nada. Preços em pesos mexicanos, impostos incluídos.",
+      "Rápido usa 1 crédito por página, Médio 4 e Preciso 12. Enviar sua solução e gerar a rubrica não custa nada. Preços em {divisa}.",
     contactanos: "Fale conosco para um plano institucional",
     gratisPrecio: "Grátis",
     verPlanes: "Ver o que cada plano inclui →",
@@ -274,10 +275,10 @@ const pt: Diccionario = {
   },
   precios: {
     metaTitulo: "Planos e preços",
-    metaDescripcion: "Planos do iEureka-Grader: pague só as páginas que você corrige. Preços em pesos mexicanos, impostos incluídos.",
+    metaDescripcion: "Planos do iEureka-Grader: pague só as páginas que você corrige. Preços em {divisa}.",
     titulo: "Planos que se ajustam à sua sala",
     texto:
-      "Pague só as páginas que você corrige. Rápido usa 1 crédito por página, Médio 4 e Preciso 12. Preços em pesos mexicanos, impostos incluídos, sem assinatura.",
+      "Pague só as páginas que você corrige. Rápido usa 1 crédito por página, Médio 4 e Preciso 12. Preços em {divisa}, sem assinatura.",
     masPopular: "Mais popular",
     aLaMedida: "Sob medida",
     porPagina: "{p} por página",

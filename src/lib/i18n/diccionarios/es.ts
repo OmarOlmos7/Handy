@@ -12,6 +12,7 @@ const es = {
     precios: "Precios",
     probarGratis: "Probar gratis",
     creditos: "{n} créditos",
+    ivaIncluido: "IVA incluido",
     ubicacionIp: "Ubicación por IP: DB-IP",
   },
   meta: {
@@ -96,7 +97,7 @@ const es = {
     },
     preciosTitulo: "Paga solo lo que calificas",
     preciosTexto:
-      "Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Subir tu solución y generar la rúbrica no cuesta. Precios en pesos mexicanos, IVA incluido.",
+      "Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Subir tu solución y generar la rúbrica no cuesta. Precios en {divisa}.",
     contactanos: "Contactar para gestionar plan institucional",
     gratisPrecio: "Gratis",
     verPlanes: "Ver qué incluye cada plan →",
@@ -275,10 +276,10 @@ const es = {
   },
   precios: {
     metaTitulo: "Planes y precios",
-    metaDescripcion: "Planes de iEureka-Grader: paga solo las páginas que calificas. Precios en pesos mexicanos, IVA incluido.",
+    metaDescripcion: "Planes de iEureka-Grader: paga solo las páginas que calificas. Precios en {divisa}.",
     titulo: "Planes que se ajustan a tu salón",
     texto:
-      "Paga solo las páginas que calificas. Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Precios en pesos mexicanos, IVA incluido, sin suscripción.",
+      "Paga solo las páginas que calificas. Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Precios en {divisa}, sin suscripción.",
     masPopular: "Más popular",
     aLaMedida: "A la medida",
     porPagina: "{p} por página",

@@ -11,6 +11,7 @@ const ja: Diccionario = {
     precios: "料金",
     probarGratis: "無料で試す",
     creditos: "{n} クレジット",
+    ivaIncluido: "税込",
     ubicacionIp: "IP位置情報：DB-IP",
   },
   meta: {
@@ -95,7 +96,7 @@ const ja: Diccionario = {
     },
     preciosTitulo: "採点した分だけお支払い",
     preciosTexto:
-      "1ページあたり、高速は1クレジット、標準は4、高精度は12を使います。解答のアップロードとルーブリック作成は無料です。価格はメキシコペソ（税込）。",
+      "1ページあたり、高速は1クレジット、標準は4、高精度は12を使います。解答のアップロードとルーブリック作成は無料です。価格は{divisa}。",
     contactanos: "機関向けプランのお問い合わせ",
     gratisPrecio: "無料",
     verPlanes: "各プランの内容を見る →",
@@ -274,10 +275,10 @@ const ja: Diccionario = {
   },
   precios: {
     metaTitulo: "プランと料金",
-    metaDescripcion: "iEureka-Graderのプラン：採点したページ分だけお支払い。価格はメキシコペソ（税込）。",
+    metaDescripcion: "iEureka-Graderのプラン：採点したページ分だけお支払い。価格は{divisa}。",
     titulo: "教室に合わせて選べるプラン",
     texto:
-      "採点したページ分だけお支払い。1ページあたり、高速は1クレジット、標準は4、高精度は12を使います。価格はメキシコペソ（税込）、定額制ではありません。",
+      "採点したページ分だけお支払い。1ページあたり、高速は1クレジット、標準は4、高精度は12を使います。価格は{divisa}、定額制ではありません。",
     masPopular: "人気No.1",
     aLaMedida: "個別見積もり",
     porPagina: "1ページ {p}",

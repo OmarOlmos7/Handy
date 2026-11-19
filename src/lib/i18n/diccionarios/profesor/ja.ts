@@ -154,6 +154,7 @@ const profesor: Diccionario["profesor"] = {
     escuela: "学校",
     contactanos: "お問い合わせ",
     escuelaTexto: "学校内の教科グループや教員チームに最適です。",
+    cobroEnMxn: "お支払いはメキシコペソで処理され、銀行がお客様の通貨に換算します。",
     resumen: "概要",
     paquete: "パック",
     total: "合計（税込）",

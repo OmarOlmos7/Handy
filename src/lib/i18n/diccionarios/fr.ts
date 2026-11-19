@@ -11,6 +11,7 @@ const fr: Diccionario = {
     precios: "Tarifs",
     probarGratis: "Essai gratuit",
     creditos: "{n} crédits",
+    ivaIncluido: "TVA incluse",
     ubicacionIp: "Localisation IP : DB-IP",
   },
   meta: {
@@ -95,7 +96,7 @@ const fr: Diccionario = {
     },
     preciosTitulo: "Ne payez que ce que vous corrigez",
     preciosTexto:
-      "Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Téléverser votre solution et générer la grille est gratuit. Prix en pesos mexicains, TVA incluse.",
+      "Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Téléverser votre solution et générer la grille est gratuit. Prix en {divisa}.",
     contactanos: "Nous contacter pour un plan institutionnel",
     gratisPrecio: "Gratuit",
     verPlanes: "Voir ce que comprend chaque offre →",
@@ -274,10 +275,10 @@ const fr: Diccionario = {
   },
   precios: {
     metaTitulo: "Offres et tarifs",
-    metaDescripcion: "Offres iEureka-Grader : ne payez que les pages que vous corrigez. Prix en pesos mexicains, TVA incluse.",
+    metaDescripcion: "Offres iEureka-Grader : ne payez que les pages que vous corrigez. Prix en {divisa}.",
     titulo: "Des offres adaptées à votre classe",
     texto:
-      "Ne payez que les pages que vous corrigez. Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Prix en pesos mexicains, TVA incluse, sans abonnement.",
+      "Ne payez que les pages que vous corrigez. Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Prix en {divisa}, sans abonnement.",
     masPopular: "La plus choisie",
     aLaMedida: "Sur mesure",
     porPagina: "{p} par page",

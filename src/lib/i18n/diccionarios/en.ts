@@ -11,6 +11,7 @@ const en: Diccionario = {
     precios: "Pricing",
     probarGratis: "Try it free",
     creditos: "{n} credits",
+    ivaIncluido: "VAT included",
     ubicacionIp: "IP location: DB-IP",
   },
   meta: {
@@ -95,7 +96,7 @@ const en: Diccionario = {
     },
     preciosTitulo: "Pay only for what you grade",
     preciosTexto:
-      "Fast uses 1 credit per page, Medium 4 and Precise 12. Uploading your solution and generating the rubric is free. Prices in Mexican pesos, VAT included.",
+      "Fast uses 1 credit per page, Medium 4 and Precise 12. Uploading your solution and generating the rubric is free. Prices in {divisa}.",
     contactanos: "Contact us to set up an institutional plan",
     gratisPrecio: "Free",
     verPlanes: "See what each plan includes →",
@@ -274,10 +275,10 @@ const en: Diccionario = {
   },
   precios: {
     metaTitulo: "Plans and pricing",
-    metaDescripcion: "iEureka-Grader plans: pay only for the pages you grade. Prices in Mexican pesos, VAT included.",
+    metaDescripcion: "iEureka-Grader plans: pay only for the pages you grade. Prices in {divisa}.",
     titulo: "Plans that fit your classroom",
     texto:
-      "Pay only for the pages you grade. Fast uses 1 credit per page, Medium 4 and Precise 12. Prices in Mexican pesos, VAT included, no subscription.",
+      "Pay only for the pages you grade. Fast uses 1 credit per page, Medium 4 and Precise 12. Prices in {divisa}, no subscription.",
     masPopular: "Most popular",
     aLaMedida: "Custom",
     porPagina: "{p} per page",

@@ -152,6 +152,7 @@ const profesor = {
     escuela: "Escuela",
     contactanos: "Contáctanos",
     escuelaTexto: "Ideal para academias o grupos de profesores en una institución.",
+    cobroEnMxn: "El pago se procesa en pesos mexicanos; tu banco hace la conversión a tu moneda.",
     resumen: "Resumen",
     paquete: "Paquete",
     total: "Total (IVA incluido)",
