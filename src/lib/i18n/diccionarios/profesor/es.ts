@@ -475,6 +475,7 @@ const profesor = {
     unoPorLinea: "Un punto por línea.",
   },
   modalidad: {
+    modalidadPregunta: "¿Cómo se revisa la actividad?",
     solucionPregunta: "¿La actividad requiere solución?",
     incluirSolucion: "Incluir solución",
     incluirSolucionTexto: "Tú o la IA resuelven la actividad y con la solución se arma la rúbrica.",

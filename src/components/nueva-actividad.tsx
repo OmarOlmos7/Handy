@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { EsfuerzoIA, EstiloCorreccion, Grupo, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
-import { OpcionEstilo, OpcionSolucion } from "./opcion-solucion";
+import { OpcionModalidad } from "./opcion-solucion";
 import { Boton, BotonLink, campo } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
@@ -154,15 +154,14 @@ export function NuevaActividad({
           </label>
         )}
 
-        <OpcionSolucion
+        <OpcionModalidad
           sinSolucion={sinSolucion}
           onCambio={(v) => {
             setSinSolucion(v);
-            // Las producciones escritas se corrigen mejor subrayando sobre el texto.
+            // Sin solución (producciones escritas) se corrige subrayando sobre el texto.
             setEstilo(v ? "subrayado" : "margen");
           }}
         />
-        <OpcionEstilo estilo={estilo} onCambio={setEstilo} />
 
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">{tn.calificarSobre}</legend>

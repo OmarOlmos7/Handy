@@ -5,7 +5,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { modificarActividad } from "@/app/acciones";
 import type { EstiloCorreccion, TipoReactivo } from "@/lib/tipos";
 import { formato } from "@/lib/i18n/idiomas";
-import { OpcionEstilo, OpcionSolucion } from "./opcion-solucion";
+import { OpcionModalidad } from "./opcion-solucion";
 import { useTextos } from "./proveedor-textos";
 import { Boton, BotonLink, campo } from "./ui";
 
@@ -112,8 +112,13 @@ export function EditarActividad({
             ))}
           </div>
         </fieldset>
-        <OpcionSolucion sinSolucion={sinSolucion} onCambio={setSinSolucion} />
-        <OpcionEstilo estilo={estilo} onCambio={setEstilo} />
+        <OpcionModalidad
+          sinSolucion={sinSolucion}
+          onCambio={(v) => {
+            setSinSolucion(v);
+            setEstilo(v ? "subrayado" : "margen");
+          }}
+        />
         {inicial.instruccionesAlumno && (
           <label className="block text-sm font-medium text-slate-700">
             {te.instrucciones}

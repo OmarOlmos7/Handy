@@ -468,6 +468,7 @@ const profesor: Diccionario["profesor"] = {
     unoPorLinea: "每行一条。",
   },
   modalidad: {
+    modalidadPregunta: "这份作业如何批改？",
     solucionPregunta: "这份作业需要解答吗？",
     incluirSolucion: "包含解答",
     incluirSolucionTexto: "由你或 AI 完成作业，并根据解答生成评分标准。",

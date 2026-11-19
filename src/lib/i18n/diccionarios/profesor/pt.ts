@@ -477,6 +477,7 @@ const profesor: Diccionario["profesor"] = {
     unoPorLinea: "Um ponto por linha.",
   },
   modalidad: {
+    modalidadPregunta: "Como a atividade é corrigida?",
     solucionPregunta: "A atividade precisa de solução?",
     incluirSolucion: "Incluir solução",
     incluirSolucionTexto: "Você ou a IA resolvem a atividade, e a rubrica é montada com a solução.",
