@@ -14,6 +14,8 @@ import { fuentesPdf, renglones } from "./pdf-fuentes";
 import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
 import { fechaHoraLarga } from "./resultados";
+import { puntosPorElemento, puntosTexto } from "./elementos";
+import { conPuntaje } from "./modalidad";
 import { texAPlano } from "./tex-plano";
 import type { Actividad, Alumno, Entrega, Grupo, RecomendacionesEstudio } from "./tipos";
 
@@ -70,11 +72,21 @@ function tache(p: PDFPage, x: number, y: number, s = 1) {
 }
 
 /** Dibuja las fotos del alumno con los círculos numerados, palomas, taches y comentarios. */
+/** Textos que se escriben sobre las hojas (para elegir la fuente CJK si hace falta). */
+function textosDeHojas(actividad: Actividad, entrega: Entrega) {
+  return [
+    ...entrega.resultados.flatMap((r) => [r.comentario, ...(r.subrayados ?? []).map((s) => s.comentario)]),
+    ...(actividad.criterios ?? []).map((c) => c.nombre),
+    ...actividad.reactivos.flatMap((r) => (r.pasos ?? []).map((p) => p.nombre)),
+  ];
+}
+
 async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Entrega, normal: PDFFont, negrita: PDFFont, calTexto: string, tx: TextosPdf) {
   // Cada reactivo lleva sobre la hoja un círculo relleno con su número de comentario y,
   // a un lado, la paloma (verde) o el tache (rojo). Los comentarios van numerados en
   // orden en el margen derecho, a la misma altura que su marca.
   let numero = 0;
+  const puntaje = conPuntaje(actividad);
   for (const [i, ruta] of (entrega.imagenes ?? []).entries()) {
     const img = await doc.embedJpg(leerArchivo(ruta));
     const MARGEN = 170;
@@ -90,10 +102,23 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
     hoja.drawLine({ start: { x: xMargen - 4, y: 12 }, end: { x: xMargen - 4, y: CARTA.alto - 12 }, thickness: 0.6, color: GRIS, opacity: 0.4 });
 
     let limite = CARTA.alto - 70; // deja libre la marca de agua
-    if (i === 0) {
+    if (i === 0 && puntaje) {
       const xc = xMargen + 30;
       hoja.drawCircle({ x: xc, y: CARTA.alto - 42, size: 26, borderColor: ROJO, borderWidth: 2 });
       hoja.drawText(calTexto, { x: xc - negrita.widthOfTextAtSize(calTexto, 17) / 2, y: CARTA.alto - 48, size: 17, font: negrita, color: ROJO });
+    }
+
+    // Estilo "subrayado": línea roja bajo el fragmento a corregir y el comentario encima.
+    for (const s of entrega.resultados.flatMap((r) => (r.subrayados ?? []).filter((x) => x.pagina === i + 1))) {
+      const ys = y0 + alto * (1 - s.y) - 2;
+      const xa = x0 + ancho * s.x0;
+      const xb = x0 + ancho * Math.max(s.x1, s.x0 + 0.02);
+      hoja.drawLine({ start: { x: xa, y: ys }, end: { x: xb, y: ys }, thickness: 1.4, color: ROJO, opacity: 0.85 });
+      const nota = seguro(normal, s.comentario);
+      const anchoNota = Math.min(normal.widthOfTextAtSize(nota, 7.5), ancho - 4);
+      const xn = Math.min(xa, x0 + ancho - anchoNota - 2);
+      hoja.drawRectangle({ x: xn - 1, y: ys + 9, width: anchoNota + 2, height: 9, color: rgb(1, 1, 1), opacity: 0.8 });
+      hoja.drawText(nota, { x: xn, y: ys + 11, size: 7.5, font: normal, color: ROJO, maxWidth: ancho - 4 });
     }
 
     const marcas = entrega.resultados
@@ -127,7 +152,7 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       circuloNumero(hoja, negrita, numero, xMargen + 10, yEntrada, color);
       if (completo) paloma(hoja, xMargen + 22, yEntrada - 4, 0.6);
       else tache(hoja, xMargen + 28, yEntrada, 0.6);
-      hoja.drawText(seguro(negrita, formato(tx.reactivoPuntos, { n: r.numero, p: res.puntosObtenidos, t: r.puntos })), {
+      hoja.drawText(seguro(negrita, puntaje ? formato(tx.reactivoPuntos, { n: r.numero, p: puntosTexto(res.puntosObtenidos), t: puntosTexto(r.puntos) }) : formato(tx.reactivoSolo, { n: r.numero })), {
         x: xMargen + 40,
         y: yEntrada - 3.5,
         size: 9,
@@ -139,6 +164,17 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
         hoja.drawText(l, { x: xMargen + 4, y: yTexto, size: 8.5, font: normal, color });
         yTexto -= 10.5;
       }
+      // Puntos por elemento de la rúbrica (pasos o criterios).
+      for (const el of puntosPorElemento(actividad, r, res)) {
+        const ok = el.obtenidos >= el.total;
+        const linea = `${el.nombre}${puntaje ? `  ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}` : ""}`;
+        for (const l of envolver(normal, linea, 7.5, anchoTexto - 14)) {
+          if (ok) paloma(hoja, xMargen + 4, yTexto - 1, 0.35);
+          else tache(hoja, xMargen + 8, yTexto + 2, 0.35);
+          hoja.drawText(l, { x: xMargen + 14, y: yTexto, size: 7.5, font: normal, color: ok ? VERDE : ROJO });
+          yTexto -= 9.5;
+        }
+      }
       limite = yTexto + 2;
     }
   }
@@ -148,7 +184,7 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
 /** Hojas corregidas solas (sin portada ni marca de agua): es lo que se guarda al archivar la entrega. */
 export async function pdfHojasCorregidas(actividad: Actividad, entrega: Entrega, tx: TextosPdf = alumnoEs.pdf): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  const { normal, negrita } = await fuentesPdf(doc, [tx.reactivoPuntos, tx.correcto, ...entrega.resultados.map((r) => r.comentario)], leerFuenteCjk);
+  const { normal, negrita } = await fuentesPdf(doc, [tx.reactivoPuntos, tx.correcto, ...textosDeHojas(actividad, entrega)], leerFuenteCjk);
   await dibujarHojas(doc, actividad, entrega, normal, negrita, formatoCal(calificacion(actividad, entrega), escalaDe(actividad)), tx);
   return doc.save({ useObjectStreams: true });
 }
@@ -226,7 +262,7 @@ export async function pdfRetroalimentacion(
       ...actividad.reactivos.map((r) => r.tema),
       ...entrega.positivos,
       ...entrega.mejoras,
-      ...entrega.resultados.map((r) => r.comentario),
+      ...textosDeHojas(actividad, entrega),
       ...actividad.reactivos.flatMap((r) => [r.enunciado, r.respuesta, ...(r.solucionPasos ?? [])]),
       ...(e ? [...e.temas, ...e.videos.flatMap((v) => [v.titulo, v.busqueda]), ...e.ejercicios.flatMap((x) => [x.tema, x.enunciado, x.respuesta])] : []),
     ],
@@ -251,8 +287,11 @@ export async function pdfRetroalimentacion(
   texto(tx.encabezado.toLocaleUpperCase(), 48, 9, negrita, GRIS);
   nuevaLinea(22);
   texto(actividad.titulo, 48, 18, negrita);
-  p.drawCircle({ x: CARTA.ancho - 130, y: y - 2, size: 34, borderColor: ROJO, borderWidth: 2 });
-  p.drawText(calTexto, { x: CARTA.ancho - 130 - negrita.widthOfTextAtSize(calTexto, 22) / 2, y: y - 9, size: 22, font: negrita, color: ROJO });
+  const puntaje = conPuntaje(actividad);
+  if (puntaje) {
+    p.drawCircle({ x: CARTA.ancho - 130, y: y - 2, size: 34, borderColor: ROJO, borderWidth: 2 });
+    p.drawText(calTexto, { x: CARTA.ancho - 130 - negrita.widthOfTextAtSize(calTexto, 22) / 2, y: y - 9, size: 22, font: negrita, color: ROJO });
+  }
   nuevaLinea(30);
   texto(tx.identificacion, 48, 11, negrita);
   nuevaLinea(18);
@@ -264,7 +303,7 @@ export async function pdfRetroalimentacion(
     [tx.temas, [...new Set(actividad.reactivos.map((r) => r.tema).filter(Boolean))].join(", ") || "-"],
     [tx.fechaAplicacion, actividad.fechaAplicacion],
     [tx.entregada, entrega.entregadaEn ? fechaHoraLarga(entrega.entregadaEn, locale) : "-"],
-    [tx.calificacion, `${calTexto} / ${escala}  ${formato(tx.puntosDe, { p: puntosObtenidos(entrega), t: puntosTotales(actividad) })}`],
+    [tx.calificacion, puntaje ? `${calTexto} / ${escala}  ${formato(tx.puntosDe, { p: puntosObtenidos(entrega), t: puntosTotales(actividad) })}` : tx.sinPuntaje],
   ]) {
     texto(et, 48, 10, normal, GRIS);
     for (const [i, l] of envolver(normal, val, 10, 380).entries()) {
@@ -312,7 +351,7 @@ export async function pdfRetroalimentacion(
   texto(tx.reactivo, 48, 9, negrita, GRIS);
   texto(tx.tema, 100, 9, negrita, GRIS);
   texto(tx.comentario, 210, 9, negrita, GRIS);
-  texto(tx.puntos, 520, 9, negrita, GRIS);
+  if (puntaje) texto(tx.puntos, 520, 9, negrita, GRIS);
   nuevaLinea(14);
   for (const r of actividad.reactivos) {
     const res = entrega.resultados.find((x) => x.numero === r.numero);
@@ -320,7 +359,7 @@ export async function pdfRetroalimentacion(
     const lineas = envolver(normal, texAPlano(res.comentario), 9, 300);
     texto(String(r.numero), 48, 9);
     texto(envolver(normal, r.tema, 9, 100)[0] ?? "", 100, 9);
-    texto(`${res.puntosObtenidos}/${r.puntos}`, 520, 9, negrita, res.puntosObtenidos === r.puntos ? VERDE : ROJO);
+    texto(puntaje ? `${res.puntosObtenidos}/${r.puntos}` : res.puntosObtenidos >= r.puntos ? "OK" : "X", 520, 9, negrita, res.puntosObtenidos >= r.puntos ? VERDE : ROJO);
     for (const l of lineas) {
       texto(l, 210, 9);
       nuevaLinea(12);

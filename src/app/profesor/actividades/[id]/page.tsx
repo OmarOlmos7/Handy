@@ -23,6 +23,8 @@ import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadistic
 import { qrDataUrl, urlBase } from "@/lib/qr";
 import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
 import { textos } from "@/lib/i18n/servidor";
+import { listaParaRubrica } from "@/lib/modalidad";
+import { conPuntaje } from "@/lib/modalidad";
 import { formato } from "@/lib/i18n/idiomas";
 
 export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
@@ -104,14 +106,14 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
 
       {!actividad.rubricaConfirmada && (
         <Tarjeta className="mb-6 border-l-4 border-aviso">
-          <p className="font-medium">{actividad.reactivos.some((r) => r.respuesta.trim()) ? ta.confirmaRubrica : ta.faltaSolucion}</p>
+          <p className="font-medium">{listaParaRubrica(actividad) ? ta.confirmaRubrica : ta.faltaSolucion}</p>
           <p className="mt-1 text-sm text-slate-600">
-            {actividad.reactivos.some((r) => r.respuesta.trim())
+            {listaParaRubrica(actividad)
               ? ta.confirmaTexto
               : ta.faltaTexto}
           </p>
-          <BotonLink href={`/profesor/actividades/${id}/${actividad.reactivos.some((r) => r.respuesta.trim()) ? "rubrica" : "solucion"}`} className="mt-3">
-            {actividad.reactivos.some((r) => r.respuesta.trim()) ? ta.revisarRubrica : ta.prepararSolucion}
+          <BotonLink href={`/profesor/actividades/${id}/${listaParaRubrica(actividad) ? "rubrica" : "solucion"}`} className="mt-3">
+            {listaParaRubrica(actividad) ? ta.revisarRubrica : ta.prepararSolucion}
           </BotonLink>
         </Tarjeta>
       )}
@@ -176,7 +178,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
                   </td>
                   <td className="px-4 py-3 text-slate-600">{e.paginasRecibidas || "—"}</td>
                   <td className={`px-4 py-3 font-semibold ${evaluada ? colorCalificacion(cal, escalaDe(actividad)) : "text-slate-400"}`}>
-                    {evaluada ? `${formatoCal(cal, escalaDe(actividad))} / ${escalaDe(actividad)}` : "—"}
+                    {!evaluada ? "—" : conPuntaje(actividad) ? `${formatoCal(cal, escalaDe(actividad))} / ${escalaDe(actividad)}` : t.profesor.modalidad.sinPuntaje}
                   </td>
                   <td className="px-4 py-3">
                     {baja > 0 ? <Insignia tono="ambar">{formato(ta.conBaja, { n: baja })}</Insignia> : evaluada ? <span className="text-slate-400">—</span> : null}

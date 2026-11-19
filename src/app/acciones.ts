@@ -8,7 +8,7 @@ import { esDelProfesor, normalizarMatricula, nuevoCodigoCurso } from "@/lib/cuen
 import { entregasPorEvaluar, evaluarVarias, marcarEnFila } from "@/lib/evaluacion";
 import { COLORES } from "@/lib/colores";
 import { requerirProfesor } from "@/lib/sesion";
-import type { BaseDeDatos, Reactivo, ResultadoReactivo } from "@/lib/tipos";
+import type { BaseDeDatos, EstiloCorreccion, Reactivo, ResultadoReactivo } from "@/lib/tipos";
 import { deCampoFechaHora } from "@/lib/resultados";
 
 /** Corre el cambio solo si la actividad es de un curso del profesor con sesión. */
@@ -229,5 +229,58 @@ export async function cambiarCalificacion(actividadId: string, matricula: string
     }
     e.calificacionManual = Math.round(valor * 10) / 10;
   });
+  revalidatePath("/profesor", "layout");
+}
+
+export interface CambiosActividad {
+  titulo: string;
+  fecha: string;
+  resultadosDesde: string;
+  escala: 10 | 100;
+  sinSolucion: boolean;
+  estiloCorreccion: EstiloCorreccion;
+  instruccionesAlumno?: string[];
+  reactivos: { numero: number; enunciado: string; tema: string; puntos: number; opciones?: string[] }[];
+}
+
+/**
+ * Modifica una actividad ya creada: datos generales, si requiere solución, las instrucciones
+ * impresas y el texto, tema y puntos de cada reactivo (no agrega ni quita reactivos).
+ */
+export async function modificarActividad(actividadId: string, c: CambiosActividad) {
+  const titulo = c.titulo.trim().slice(0, 120);
+  if (!titulo) throw new Error("Escribe el título");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(c.fecha)) throw new Error("Fecha no válida");
+  const desde = deCampoFechaHora(c.resultadosDesde);
+  await enActividadPropia(actividadId, (db) => {
+    const a = actividadDe(db, actividadId)!;
+    a.titulo = titulo;
+    a.fechaAplicacion = c.fecha;
+    a.resultadosDesde = desde;
+    a.escala = c.escala === 10 ? 10 : 100;
+    a.sinSolucion = c.sinSolucion || undefined;
+    a.estiloCorreccion = c.estiloCorreccion === "subrayado" ? "subrayado" : "margen";
+    if (c.instruccionesAlumno && a.origen === "ia") {
+      a.instruccionesAlumno = c.instruccionesAlumno.map((x) => x.trim()).filter(Boolean).slice(0, 6);
+    }
+    for (const r of a.reactivos) {
+      const n = c.reactivos.find((x) => x.numero === r.numero);
+      if (!n) continue;
+      if (n.enunciado.trim()) r.enunciado = n.enunciado.trim().slice(0, 2000);
+      r.tema = n.tema.trim().slice(0, 80);
+      if (Number.isFinite(n.puntos) && n.puntos > 0) r.puntos = Math.min(1000, n.puntos);
+      if (n.opciones && r.tipo === "opcion_multiple") r.opciones = n.opciones.map((x) => x.trim()).filter(Boolean).slice(0, 8);
+    }
+  });
+  revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
+  revalidatePath("/profesor", "layout");
+}
+
+/** Rúbrica con puntaje (calificación) o sin puntaje (solo aciertos y elementos a corregir). */
+export async function cambiarPuntaje(actividadId: string, sinPuntaje: boolean) {
+  await enActividadPropia(actividadId, (db) => {
+    actividadDe(db, actividadId)!.sinPuntaje = sinPuntaje || undefined;
+  });
+  revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
   revalidatePath("/profesor", "layout");
 }

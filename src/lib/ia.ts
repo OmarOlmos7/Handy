@@ -11,7 +11,10 @@ import { esCerrado, puntosReactivoCerrado } from "./calificar";
 import { parametrosIA } from "./configuracion";
 import { DOMINIOS_RECURSOS, extraerJson, limpiarRecursos } from "./recursos";
 import { svgSeguro } from "./svg";
-import { IDIOMA_PROFESOR_INICIAL, esIdioma, type Idioma } from "./i18n/idiomas";
+import { IDIOMA_PROFESOR_INICIAL, esIdioma, formato, type Idioma } from "./i18n/idiomas";
+import { detectarIdioma, textoDeActividad } from "./i18n/detectar";
+import { fraccionCriterios } from "./elementos";
+import { diccionarioDe } from "./i18n/diccionario";
 import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, RecursoEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
 export class ErrorIA extends Error {}
@@ -58,9 +61,21 @@ export interface UsoIA {
   idioma?: Idioma;
 }
 
-/** Idioma de la llamada: el indicado o el que el profesor guardó en su configuración. */
+/**
+ * Idioma de la llamada: el indicado; si no, el idioma en que está escrita la actividad (la
+ * retroalimentación va en ese idioma); si no se distingue, el de la configuración del profesor.
+ */
 function idiomaDe(uso: UsoIA): Idioma | undefined {
   if (uso.idioma) return uso.idioma;
+  if (uso.actividadId) {
+    try {
+      const act = leerAhora().actividades.find((a) => a.id === uso.actividadId);
+      const escrita = act && detectarIdioma(textoDeActividad(act));
+      if (escrita) return escrita;
+    } catch {
+      // Sin datos: se sigue con el idioma del profesor.
+    }
+  }
   if (!uso.profesorId) return undefined;
   try {
     const profesor = leerAhora().profesores.find((p) => p.id === uso.profesorId);
@@ -206,18 +221,25 @@ export interface PropuestaRubrica {
   recomendaciones: string[];
 }
 
+const NOTA_SIN_SOLUCION = `
+
+ACTIVIDAD SIN SOLUCIÓN: es una producción escrita, un ensayo o un análisis. Se valora la composición escrita y sus elementos de contenido, coherencia y lingüísticos (ortografía, gramática, vocabulario, puntuación), no una respuesta única.`;
+
+const NOTA_RUBRICA_SIN_SOLUCION = `${NOTA_SIN_SOLUCION}
+Las páginas que recibes son la actividad en blanco, sin resolver. Para cada reactivo usa tipo "abierto" (salvo los cerrados que sí tengan respuesta única) y en respuesta escribe los criterios que debe cumplir la producción del alumno. Si el profesor no dio criterios, propón tres con porcentajes: Contenido, Coherencia y Elementos lingüísticos.`;
+
 export async function proponerRubrica(
   imagenes: ImagenParaIA[],
-  datos: { titulo: string; instrucciones?: string },
+  datos: { titulo: string; instrucciones?: string; sinSolucion?: boolean },
   uso: UsoIA,
 ): Promise<PropuestaRubrica> {
   const salida = await pedir({
     tipo: "rubrica",
     uso,
-    system: SISTEMA_RUBRICA,
+    system: SISTEMA_RUBRICA + (datos.sinSolucion ? NOTA_RUBRICA_SIN_SOLUCION : ""),
     esquema: EsquemaRubrica,
     contenido: [
-      ...bloquesImagen(imagenes, "Solución del profesor"),
+      ...bloquesImagen(imagenes, datos.sinSolucion ? "Actividad en blanco" : "Solución del profesor"),
       {
         type: "text",
         text: `Actividad: ${datos.titulo}\nIndicaciones del profesor: ${datos.instrucciones?.trim() || "ninguna"}\n\nGenera la rúbrica.`,
@@ -310,11 +332,18 @@ export interface ActividadGenerada {
   reactivos: Reactivo[];
 }
 
-export async function generarActividad(datos: { titulo: string; materia: string; grupo: string; prompt: string; paginas?: number; escala?: Escala }, uso: UsoIA): Promise<ActividadGenerada> {
+export async function generarActividad(
+  datos: { titulo: string; materia: string; grupo: string; prompt: string; paginas?: number; escala?: Escala; sinSolucion?: boolean },
+  uso: UsoIA,
+): Promise<ActividadGenerada> {
   const salida = await pedir({
     tipo: "generar",
     uso,
-    system: SISTEMA_ACTIVIDAD,
+    system:
+      SISTEMA_ACTIVIDAD +
+      (datos.sinSolucion
+        ? `${NOTA_SIN_SOLUCION}\nUsa reactivos tipo "abierto" con espacio amplio para escribir (lineas de 12 a 16). En criterios, usa los que indique el profesor o propón Contenido, Coherencia y Elementos lingüísticos con porcentajes que sumen 100.`
+        : ""),
     esquema: EsquemaActividad,
     contenido: [
       {
@@ -483,6 +512,8 @@ const EsquemaEvaluacion = z.object({
       confianza: z.enum(["alta", "media", "baja"]),
       comentario: z.string(),
       pasos: z.array(z.number()),
+      criterios: z.array(z.number()),
+      subrayados: z.array(z.object({ pagina: z.number().int(), y: z.number(), x0: z.number(), x1: z.number(), comentario: z.string() })),
       pagina: z.number().int(),
       y: z.number(),
       x: z.number(),
@@ -500,6 +531,8 @@ Para cada reactivo de la rúbrica:
 - respuestaLeida: transcribe exactamente lo que el alumno marcó o escribió. Opción múltiple: la letra elegida. V/F: "V" o "F". Relación de columnas: pares como "1-c, 2-a". Paréntesis: las letras en orden. Desarrollo: su resultado final. Si está en blanco, cadena vacía.
 - confianza: alta si se lee con claridad; media si hay alguna duda; baja si la letra, la foto o el tachón no permiten leerlo con seguridad. Nunca adivines: si no se lee, usa confianza baja.
 - pasos: solo para desarrollo, un valor por cada paso de la rúbrica en el mismo orden: 1 si el paso está completo y correcto, 0.5 si está parcial o con un error menor, 0 si falta o es incorrecto. Acepta procedimientos distintos al del profesor si son correctos, salvo que sus indicaciones digan lo contrario. Para los demás tipos, lista vacía.
+- criterios: solo para reactivos abiertos cuando la actividad tiene criterios de evaluación: un valor por criterio, en el orden dado: 1 si lo cumple, 0.5 si lo cumple a medias, 0 si no. Para los demás, lista vacía.
+- subrayados: solo si el estilo de corrección es "subrayado" (se indica abajo); si no, lista vacía. Los fragmentos concretos del texto del alumno que hay que corregir (una palabra, frase o renglón con error de contenido, coherencia, ortografía, gramática o cálculo), máximo 6 por reactivo, cada uno con pagina, y (la línea base del renglón, de 0 arriba a 1 abajo), x0 y x1 (inicio y fin del fragmento, de 0 izquierda a 1 derecha) y comentario (qué corregir, máximo 8 palabras, sin LaTeX).
 - puntosSugeridos: puntos que asignarías según la rúbrica (entre 0 y el valor del reactivo).
 - comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta. Sin LaTeX ni signos de dólar: se imprime en el PDF tal cual.
 - pagina, y, x: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo; x de 0 izquierda a 1 derecha, al final de la respuesta). Ahí se dibuja la marca de corrección.
@@ -539,11 +572,19 @@ export interface EvaluacionAlumno {
 
 const cuartos = (n: number) => Math.round(n * 4) / 4;
 
+const NOTA_EVAL_SIN_SOLUCION = `${NOTA_SIN_SOLUCION}
+No hay solución de referencia: valora cada reactivo con los criterios de evaluación y la respuesta de la rúbrica (que describe lo que debe cumplir). En los comentarios señala concretamente qué corregir del contenido, la coherencia o el lenguaje.`;
+
+const NOTA_EVAL_SIN_PUNTAJE = `
+
+RÚBRICA SIN PUNTAJE: el alumno no recibe calificación; solo se identifican aciertos y se marcan elementos a corregir. Asigna los puntos completos del reactivo si está bien y 0 si hay algo que corregir; el comentario dice qué corregir.`;
+
 export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], uso: UsoIA): Promise<EvaluacionAlumno> {
+  const fijos = diccionarioDe(idiomaDe({ ...uso, actividadId: uso.actividadId ?? act.id }) ?? "es").alumno.correccion;
   const salida = await pedir({
     tipo: "evaluacion",
     uso,
-    system: `${SISTEMA_EVALUACION}\n\nActividad: ${act.titulo}\nIndicaciones del profesor: ${act.instrucciones?.trim() || "ninguna"}${criteriosParaIA(act)}\nRúbrica:\n${JSON.stringify(rubricaParaIA(act), null, 1)}`,
+    system: `${SISTEMA_EVALUACION}${act.sinSolucion ? NOTA_EVAL_SIN_SOLUCION : ""}${act.sinPuntaje ? NOTA_EVAL_SIN_PUNTAJE : ""}\n\nEstilo de corrección: ${act.estiloCorreccion === "subrayado" ? "subrayado" : "margen"}\nActividad: ${act.titulo}\nIndicaciones del profesor: ${act.instrucciones?.trim() || "ninguna"}${criteriosParaIA(act)}\nRúbrica:\n${JSON.stringify(rubricaParaIA(act), null, 1)}`,
     esquema: EsquemaEvaluacion,
     contenido: [...bloquesImagen(imagenes, "Hoja del alumno"), { type: "text", text: "Evalúa esta entrega con la rúbrica." }],
   });
@@ -556,12 +597,13 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
         puntosObtenidos: 0,
         respuestaLeida: "",
         confianza: "baja",
-        comentario: "No se encontró este reactivo en la hoja. Verifica.",
+        comentario: fijos.noEncontrado,
         ubicacion: { pagina: r.pagina, y: r.y ?? 0.5 },
       };
     }
     let puntos: number;
     let pasos: number[] | undefined;
+    let criterios: number[] | undefined;
     if (esCerrado(r)) {
       puntos = puntosReactivoCerrado(r, ia.respuestaLeida) ?? 0;
     } else if (r.tipo === "desarrollo" && r.pasos?.length) {
@@ -571,9 +613,29 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
       });
       const fraccion = r.pasos.reduce((s, p, i) => s + p.peso * pasos![i], 0);
       puntos = cuartos(fraccion * r.puntos);
+    } else if (r.tipo === "abierto" && act.criterios?.length && ia.criterios.length) {
+      // Abiertos con criterios: los puntos salen de lo que cumple cada criterio y su porcentaje.
+      criterios = act.criterios.map((_, i) => {
+        const v = ia.criterios[i] ?? 0;
+        return v >= 0.75 ? 1 : v >= 0.25 ? 0.5 : 0;
+      });
+      puntos = cuartos((fraccionCriterios(act, criterios) ?? 0) * r.puntos);
     } else {
       puntos = cuartos(Math.max(0, Math.min(r.puntos, ia.puntosSugeridos)));
     }
+    const subrayados =
+      act.estiloCorreccion === "subrayado"
+        ? ia.subrayados
+            .filter((s) => s.comentario.trim() && s.x1 > s.x0)
+            .slice(0, 6)
+            .map((s) => ({
+              pagina: Math.max(1, Math.min(imagenes.length, s.pagina || r.pagina)),
+              y: Math.max(0, Math.min(1, s.y)),
+              x0: Math.max(0, Math.min(1, s.x0)),
+              x1: Math.max(0, Math.min(1, s.x1)),
+              comentario: s.comentario.trim().slice(0, 80),
+            }))
+        : [];
     return {
       numero: r.numero,
       puntosObtenidos: puntos,
@@ -582,11 +644,13 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
       // En cerrados el comentario debe coincidir con lo que calculó el código.
       comentario:
         esCerrado(r) && puntos === 0
-          ? `La respuesta correcta es ${r.respuesta}.`
+          ? formato(fijos.correcta, { r: r.respuesta })
           : esCerrado(r) && puntos === r.puntos
-            ? "Correcto."
+            ? fijos.correcto
             : ia.comentario,
       pasos,
+      ...(criterios ? { criterios } : {}),
+      ...(subrayados.length ? { subrayados } : {}),
       ubicacion: {
         pagina: Math.max(1, Math.min(imagenes.length, ia.pagina || r.pagina)),
         y: Math.max(0, Math.min(1, ia.y)),

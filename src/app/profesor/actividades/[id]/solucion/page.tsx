@@ -54,7 +54,19 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
       />
       <ConFlujo vista={2} db={db} actividad={actividad}>
 
-      {!conSolucion ? (
+      {actividad.sinSolucion ? (
+        <Tarjeta className="mx-auto max-w-2xl">
+          <h2 className="text-lg font-semibold">{t.profesor.modalidad.sinSolucionTitulo}</h2>
+          <p className="mt-2 text-sm text-slate-600">{t.profesor.modalidad.sinSolucionTexto}</p>
+          <p className="mt-2 text-sm text-slate-600">{t.profesor.modalidad.sinSolucionCambiar}</p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <BotonLink href={`/profesor/actividades/${id}/rubrica`}>{ts.siguiente}</BotonLink>
+            <BotonLink href={`/profesor/actividades/${id}/editar`} variante="secundario">
+              {t.profesor.hoja.modificar}
+            </BotonLink>
+          </div>
+        </Tarjeta>
+      ) : !conSolucion ? (
         <Tarjeta className="mx-auto max-w-2xl">
           <h2 className="text-lg font-semibold">{ts.paso2}</h2>
           <p className="mt-2 text-sm text-slate-600">

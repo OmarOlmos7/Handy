@@ -1,11 +1,12 @@
 import { PDFDocument } from "pdf-lib";
 import { borrarCarpeta, guardarArchivo, leer, leerArchivo, modificar, slug } from "@/lib/almacen";
-import { ErrorIA, generarActividad } from "@/lib/ia";
+import { ErrorIA, generarActividad, proponerRubrica } from "@/lib/ia";
 import { guardarSubidos } from "@/lib/imagenes";
 import { precisionPara } from "@/lib/configuracion";
 import { profesorActual } from "@/lib/sesion";
 import type { Actividad } from "@/lib/tipos";
 import { deCampoFechaHora } from "@/lib/resultados";
+import { detectarIdioma } from "@/lib/i18n/detectar";
 
 export const maxDuration = 300;
 
@@ -46,13 +47,19 @@ export async function POST(req: Request) {
     escala: form.get("escala") === "10" ? 10 : 100,
     resultadosDesde,
     precision: precisionPara(form.get("motor"), profesor.config),
+    // Ensayos, producciones escritas o análisis: no requieren solución.
+    sinSolucion: form.get("sinSolucion") === "1" || undefined,
+    estiloCorreccion: form.get("estiloCorreccion") === "subrayado" ? "subrayado" : "margen",
   };
 
   if (modo === "ia") {
     const prompt = String(form.get("prompt") ?? "").trim().slice(0, 4000);
     if (prompt.length < 10) return Response.json({ error: "Describe la actividad: tipo de reactivos, ponderaciones y temas" }, { status: 400 });
     try {
-      const generada = await generarActividad({ titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala }, { profesorId: profesor.id, actividadId: id, precision: base.precision });
+      const generada = await generarActividad(
+        { titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala, sinSolucion: base.sinSolucion },
+        { profesorId: profesor.id, actividadId: id, precision: base.precision, idioma: detectarIdioma(`${titulo}\n${prompt}`) },
+      );
       Object.assign(base, {
         origen: "ia",
         prompt,
@@ -69,10 +76,25 @@ export async function POST(req: Request) {
     if (archivos.length === 0) return Response.json({ error: "Sube las fotos o el PDF de tu actividad" }, { status: 400 });
     if (archivos.length > 10) return Response.json({ error: "Máximo 10 archivos" }, { status: 400 });
     try {
-      const { rutas } = await guardarSubidos(archivos, `actividades/${id}/hoja`, guardarArchivo);
+      const { rutas, paraIA } = await guardarSubidos(archivos, `actividades/${id}/hoja`, guardarArchivo);
       let paginas = 0;
       for (const r of rutas) paginas += r.endsWith(".pdf") ? (await PDFDocument.load(leerArchivo(r), { ignoreEncryption: true })).getPageCount() : 1;
       Object.assign(base, { origen: "escaneada", archivos: rutas, paginas: Math.max(1, Math.min(20, paginas)) });
+      if (base.sinSolucion) {
+        // Sin solución: la rúbrica (reactivos y criterios de composición escrita) sale de la hoja en blanco.
+        try {
+          const { reactivos, criterios, recomendaciones } = await proponerRubrica(
+            paraIA,
+            { titulo, instrucciones, sinSolucion: true },
+            { profesorId: profesor.id, actividadId: id, precision: base.precision },
+          );
+          Object.assign(base, { reactivos, criterios, recomendaciones });
+        } catch (e) {
+          console.error(e);
+          borrarCarpeta(`actividades/${id}`);
+          return Response.json({ error: e instanceof ErrorIA ? e.message : "No se pudo leer la actividad." }, { status: 502 });
+        }
+      }
     } catch {
       borrarCarpeta(`actividades/${id}`);
       return Response.json({ error: "Algún archivo no es una imagen o PDF válido" }, { status: 400 });

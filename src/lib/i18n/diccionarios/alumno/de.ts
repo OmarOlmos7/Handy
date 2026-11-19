@@ -20,6 +20,7 @@ const alumno: Diccionario["alumno"] = {
     listosEnFecha: "Ergebnisse ab dem angegebenen Datum verfügbar",
     evaluando: "Wird bewertet",
     entregarFotos: "Fotos abgeben",
+    revisada: "Korrigiert",
   },
   campos: {
     nombre: "Vollständiger Name",
@@ -140,6 +141,13 @@ const alumno: Diccionario["alumno"] = {
     entregada: "Abgegeben",
     solucion: "5. Lösung",
     procedimiento: "Rechenweg:",
+    reactivoSolo: "Aufgabe {n}",
+    sinPuntaje: "Ohne Punkte korrigiert",
+  },
+  correccion: {
+    correcta: "Die richtige Antwort ist {r}.",
+    correcto: "Richtig.",
+    noEncontrado: "Diese Aufgabe wurde auf dem Blatt nicht gefunden. Bitte prüfen.",
   },
   errores: {
     nombre: "Gib deinen vollständigen Namen ein.",

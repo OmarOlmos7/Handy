@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { entregasDe, estadoActividad } from "@/lib/almacen";
 import type { Actividad, BaseDeDatos } from "@/lib/tipos";
 import { textos } from "@/lib/i18n/servidor";
+import { solucionLista } from "@/lib/modalidad";
 
 export type PasoFlujo = 1 | 2 | 3 | 4 | 5;
 
@@ -16,7 +17,7 @@ export function avanceFlujo(db: BaseDeDatos | undefined, actividad: Actividad | 
   const hechos = new Set<PasoFlujo>();
   if (actividad && db) {
     hechos.add(1);
-    if (actividad.reactivos.some((r) => r.respuesta.trim() || r.pasos?.length)) hechos.add(2);
+    if (solucionLista(actividad)) hechos.add(2);
     if (actividad.rubricaConfirmada) hechos.add(3);
     const entregas = entregasDe(db, actividad.id);
     if (entregas.length > 0 && entregas.every((e) => e.estado !== "sin_entregar")) hechos.add(4);

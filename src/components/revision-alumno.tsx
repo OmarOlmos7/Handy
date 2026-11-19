@@ -121,6 +121,7 @@ export function RevisionAlumno({
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm text-slate-500">{tr.sugerida}</p>
+              {actividad.sinPuntaje && <p className="text-xs font-medium text-tinta-700">{t.profesor.modalidad.sinPuntajeAviso}</p>}
               <p className={`text-4xl font-semibold ${colorCalificacion(cal, escalaDe(actividad))}`}>
                 {formatoCal(cal, escalaDe(actividad))}
                 <span className="text-base font-normal text-slate-400"> / {escalaDe(actividad)}</span>

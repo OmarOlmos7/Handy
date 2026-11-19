@@ -20,6 +20,7 @@ const alumno = {
     listosEnFecha: "Resultados listos a partir de la fecha indicada",
     evaluando: "Evaluando",
     entregarFotos: "Entregar fotos",
+    revisada: "Revisada",
   },
   campos: {
     nombre: "Nombre completo",
@@ -140,6 +141,13 @@ const alumno = {
     entregada: "Entregada",
     solucion: "5. Solución",
     procedimiento: "Procedimiento:",
+    reactivoSolo: "Reactivo {n}",
+    sinPuntaje: "Revisada sin puntaje",
+  },
+  correccion: {
+    correcta: "La respuesta correcta es {r}.",
+    correcto: "Correcto.",
+    noEncontrado: "No se encontró este reactivo en la hoja. Verifica.",
   },
   errores: {
     nombre: "Escribe tu nombre completo.",

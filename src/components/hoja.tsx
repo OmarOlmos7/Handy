@@ -9,6 +9,7 @@
 // encima en el PDF (PyMuPDF). Aquí se simula la escritura con una fuente manuscrita.
 import type { Actividad, Alumno, Entrega, Reactivo, ResultadoReactivo } from "@/lib/tipos";
 import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
+import { conPuntaje } from "@/lib/modalidad";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 
@@ -132,6 +133,7 @@ function BloqueReactivo({
   res,
   anotada,
   modoProfesor,
+  puntaje = true,
 }: {
   r: Reactivo;
   y: number;
@@ -139,6 +141,8 @@ function BloqueReactivo({
   res?: ResultadoReactivo;
   anotada: boolean;
   modoProfesor: boolean;
+  /** false en rúbricas sin puntaje: solo palomas y taches, sin puntos. */
+  puntaje?: boolean;
 }) {
   const th = useTextos().t.profesor.hojaAlumno;
   const lineasEnun = envolver(`${r.numero}. ${r.enunciado}`);
@@ -223,16 +227,20 @@ function BloqueReactivo({
           {l}
         </text>
       ))}
-      <text x={margen + 40} y={y + 18} fontSize={13} fill="#94a3b8" textAnchor="end">
-        {r.puntos} {r.puntos === 1 ? th.pt : th.pts}
-      </text>
+      {puntaje && (
+        <text x={margen + 40} y={y + 18} fontSize={13} fill="#94a3b8" textAnchor="end">
+          {r.puntos} {r.puntos === 1 ? th.pt : th.pts}
+        </text>
+      )}
       {cuerpo}
       {anotada && res && (
         <g>
           {fraccion === 1 ? <Paloma x={margen - 20} y={yMarca} /> : <Tache x={margen} y={yMarca - 10} />}
-          <text x={margen + 40} y={yMarca + 30} fontFamily={MANO} fontSize={26} fill={fraccion === 1 ? VERDE : ROJO} textAnchor="end">
-            {res.puntosObtenidos}/{r.puntos}
-          </text>
+          {puntaje && (
+            <text x={margen + 40} y={yMarca + 30} fontFamily={MANO} fontSize={26} fill={fraccion === 1 ? VERDE : ROJO} textAnchor="end">
+              {res.puntosObtenidos}/{r.puntos}
+            </text>
+          )}
         </g>
       )}
       {comentario.map((l, i) => (
@@ -293,11 +301,12 @@ export function Hoja({
       res={res}
       anotada={anotada}
       modoProfesor={modoProfesor}
+      puntaje={conPuntaje(actividad)}
     />
   ));
 
   const nombre = modo === "solucion" ? th.solucionProfesor : modo === "alumno" ? alumno?.nombre : "";
-  const cal = anotada && entrega ? calificacion(actividad, entrega) : null;
+  const cal = anotada && entrega && conPuntaje(actividad) ? calificacion(actividad, entrega) : null;
 
   return (
     <svg

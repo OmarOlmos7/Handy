@@ -20,6 +20,7 @@ const alumno: Diccionario["alumno"] = {
     listosEnFecha: "Resultados disponíveis a partir da data indicada",
     evaluando: "Corrigindo",
     entregarFotos: "Entregar fotos",
+    revisada: "Corrigida",
   },
   campos: {
     nombre: "Nome completo",
@@ -140,6 +141,13 @@ const alumno: Diccionario["alumno"] = {
     entregada: "Entregue em",
     solucion: "5. Solução",
     procedimiento: "Desenvolvimento:",
+    reactivoSolo: "Questão {n}",
+    sinPuntaje: "Corrigida sem pontuação",
+  },
+  correccion: {
+    correcta: "A resposta correta é {r}.",
+    correcto: "Correto.",
+    noEncontrado: "Esta questão não foi encontrada na folha. Verifique.",
   },
   errores: {
     nombre: "Escreva seu nome completo.",
