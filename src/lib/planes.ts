@@ -59,7 +59,7 @@ export const PLANES: Plan[] = [
   {
     id: "gratis",
     nombre: "Gratuito",
-    lema: "Prueba de un uso con tu grupo",
+    lema: "Prueba gratis con tu grupo, sin tarjeta",
     precio: 0,
     creditos: 50,
     periodo: "créditos de bienvenida, una sola vez",
@@ -76,8 +76,8 @@ export const PLANES: Plan[] = [
   {
     id: "basico",
     nombre: "Básico",
-    lema: "Para un profesor con un grupo",
-    precio: 139,
+    lema: "Para un profesor con un grupo: todo un parcial calificado",
+    precio: 215,
     creditos: 300,
     periodo: "pago único por 300 créditos",
     boton: { texto: "Elegir Básico", href: "/profesor/creditos" },
@@ -94,8 +94,8 @@ export const PLANES: Plan[] = [
   {
     id: "pro",
     nombre: "Pro",
-    lema: "Para un profesor con varios grupos",
-    precio: 269,
+    lema: "Para un profesor con dos o tres grupos",
+    precio: 345,
     creditos: 600,
     periodo: "pago único por 600 créditos",
     boton: { texto: "Elegir Pro", href: "/profesor/creditos" },
@@ -112,8 +112,8 @@ export const PLANES: Plan[] = [
   {
     id: "academia",
     nombre: "Academia",
-    lema: "Para todo un semestre o una academia de profesores",
-    precio: 659,
+    lema: "Para todo el semestre o una academia: el mejor precio por página",
+    precio: 635,
     creditos: 1500,
     periodo: "pago único por 1,500 créditos",
     boton: { texto: "Elegir Academia", href: "/profesor/creditos" },

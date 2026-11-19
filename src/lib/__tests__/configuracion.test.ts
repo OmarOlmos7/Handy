@@ -87,9 +87,9 @@ describe("planes", () => {
   it("tiene Gratuito, Básico, Pro, Academia y Escuela con sus créditos", () => {
     expect(PLANES.map((p) => [p.id, p.creditos, p.precio])).toEqual([
       ["gratis", 50, 0],
-      ["basico", 300, 139],
-      ["pro", 600, 269],
-      ["academia", 1500, 659],
+      ["basico", 300, 215],
+      ["pro", 600, 345],
+      ["academia", 1500, 635],
       ["escuela", 10000, undefined],
     ]);
   });
@@ -102,10 +102,11 @@ describe("planes", () => {
   });
 
   it("calcula el precio por página y el ahorro contra Básico", () => {
-    expect(precioPorPagina(planDe("basico"))).toBe(0.46);
-    expect(precioPorPagina(planDe("academia"))).toBe(0.44);
+    expect(precioPorPagina(planDe("basico"))).toBe(0.72);
+    expect(precioPorPagina(planDe("academia"))).toBe(0.42);
     expect(precioPorPagina(planDe("escuela"))).toBeUndefined();
-    expect(ahorroContra(planDe("pro"), planDe("basico"))).toBeUndefined();
+    expect(ahorroContra(planDe("pro"), planDe("basico"))).toBe(21);
+    expect(ahorroContra(planDe("academia"), planDe("basico"))).toBe(42);
     expect(ahorroContra(planDe("basico"), planDe("basico"))).toBeUndefined();
     expect(precioPorPagina(planDe("gratis"))).toBeUndefined();
   });

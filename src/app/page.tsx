@@ -83,6 +83,8 @@ export default async function Inicio() {
     creditos: p.creditos,
     precio: p.precio === undefined ? t.precios.aLaMedida : p.precio === 0 ? i.gratisPrecio : formatoPrecio(p.precio, divisa, locale),
     detalle: t.planes[p.id].lema,
+    // Lo que rinde el plan (actividades y horas ahorradas), para que se vea el valor.
+    valor: t.planes[p.id].ventajas.slice(0, 2),
     destacado: p.destacado,
     aLaMedida: p.precio === undefined,
   }));
@@ -214,6 +216,14 @@ export default async function Inicio() {
                     {formato(t.comun.creditos, { n: p.creditos.toLocaleString(locale) })}
                   </p>
                   <p className={`mt-4 text-sm ${p.destacado ? "text-white" : "text-slate-600"}`}>{p.detalle}</p>
+                  <ul className={`mt-3 space-y-1.5 text-xs ${p.destacado ? "text-tinta-100" : "text-slate-500"}`}>
+                    {p.valor.map((v) => (
+                      <li key={v} className="flex gap-1.5">
+                        <span aria-hidden className={p.destacado ? "text-white" : "text-emerald-600"}>✓</span>
+                        <span>{v}</span>
+                      </li>
+                    ))}
+                  </ul>
                   {p.aLaMedida && (
                     <Link href="/precios#plan-escuela" className="mt-3 inline-block text-sm font-medium text-tinta-700 hover:underline">
                       {i.contactanos}
