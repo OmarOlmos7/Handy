@@ -190,6 +190,19 @@ export interface ResultadoReactivo {
   criterios?: number[];
   /** Fragmentos a corregir, subrayados sobre la hoja (estilo "subrayado"). */
   subrayados?: Subrayado[];
+  /**
+   * Dónde está en la hoja cada elemento de la rúbrica del reactivo (pasos o criterios), en el
+   * mismo orden que `puntosPorElemento`: ahí se dibuja su numeral (1.1, 1.2…).
+   */
+  ubicacionesElementos?: UbicacionElemento[];
+}
+
+export interface UbicacionElemento {
+  pagina: number;
+  /** De 0 arriba a 1 abajo. */
+  y: number;
+  /** De 0 izquierda a 1 derecha. */
+  x: number;
 }
 
 export type EstadoEntrega = "sin_entregar" | "entregada" | "evaluada" | "aprobada";

@@ -503,6 +503,7 @@ const EsquemaEvaluacion = z.object({
       pasos: z.array(z.number()),
       criterios: z.array(z.number()),
       subrayados: z.array(z.object({ pagina: z.number().int(), y: z.number(), x0: z.number(), x1: z.number(), comentario: z.string() })),
+      elementos: z.array(z.object({ pagina: z.number().int(), y: z.number(), x: z.number() })),
       pagina: z.number().int(),
       y: z.number(),
       x: z.number(),
@@ -522,6 +523,7 @@ Para cada reactivo de la rúbrica:
 - pasos: solo para desarrollo, un valor por cada paso de la rúbrica en el mismo orden: 1 si el paso está completo y correcto, 0.5 si está parcial o con un error menor, 0 si falta o es incorrecto. Acepta procedimientos distintos al del profesor si son correctos, salvo que sus indicaciones digan lo contrario. Para los demás tipos, lista vacía.
 - criterios: solo para reactivos abiertos que traen "criterios" en la rúbrica: un valor por cada uno de esos criterios, en ese orden: 1 si lo cumple, 0.5 si lo cumple a medias, 0 si no. Evalúa cada reactivo solo con sus propios criterios: nunca le descuentes por criterios de otro ejercicio. Para los demás, lista vacía.
 - subrayados: solo si el estilo de corrección es "subrayado" (se indica abajo); si no, lista vacía. Los fragmentos concretos del texto del alumno que hay que corregir (una palabra, frase o renglón con error de contenido, coherencia, ortografía, gramática o cálculo), máximo 6 por reactivo, cada uno con pagina, y (la línea base del renglón, de 0 arriba a 1 abajo), x0 y x1 (inicio y fin del fragmento, de 0 izquierda a 1 derecha) y comentario (qué corregir, máximo 8 palabras, sin LaTeX).
+- elementos: si el reactivo trae "pasos" o "criterios" en la rúbrica, una ubicación por cada uno, en el mismo orden: pagina, y (0 arriba a 1 abajo) y x (0 izquierda a 1 derecha) del punto exacto de la hoja del alumno donde se ve ese paso o criterio (por ejemplo, el renglón con el ciclo for para "Uso de ciclos", o el renglón con el error). Si falta, señala dónde debería estar. Ahí se dibuja su marca. Para los demás, lista vacía.
 - puntosSugeridos: puntos que asignarías según la rúbrica (entre 0 y el valor del reactivo).
 - comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta. Sin LaTeX ni signos de dólar: se imprime en el PDF tal cual.
 - pagina, y, x: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo; x de 0 izquierda a 1 derecha, al final de la respuesta). Ahí se dibuja la marca de corrección.
@@ -648,6 +650,19 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
               comentario: s.comentario.trim().slice(0, 80),
             }))
         : [];
+    // Una ubicación por elemento (pasos o criterios del reactivo), en el orden de la rúbrica.
+    const nElementos = pasos ? pasos.length : criterios ? criteriosDelReactivo(act, r.numero).length : 0;
+    const ubicacionesElementos =
+      nElementos && ia.elementos.length
+        ? Array.from({ length: nElementos }, (_, j) => {
+            const u = ia.elementos[j] ?? ia.elementos[ia.elementos.length - 1];
+            return {
+              pagina: Math.max(1, Math.min(imagenes.length, u.pagina || ia.pagina || r.pagina)),
+              y: Math.max(0, Math.min(1, u.y)),
+              x: Math.max(0, Math.min(1, u.x)),
+            };
+          })
+        : [];
     return {
       numero: r.numero,
       puntosObtenidos: puntos,
@@ -663,6 +678,7 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
       pasos,
       ...(criterios ? { criterios } : {}),
       ...(subrayados.length ? { subrayados } : {}),
+      ...(ubicacionesElementos.length ? { ubicacionesElementos } : {}),
       ubicacion: {
         pagina: Math.max(1, Math.min(imagenes.length, ia.pagina || r.pagina)),
         y: Math.max(0, Math.min(1, ia.y)),

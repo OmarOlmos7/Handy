@@ -61,6 +61,17 @@ function circuloNumero(p: PDFPage, f: PDFFont, n: number, x: number, y: number, 
   p.drawText(t, { x: x - f.widthOfTextAtSize(t, tam) / 2, y: y - tam * 0.35, size: tam, font: f, color: rgb(1, 1, 1) });
 }
 
+/** Numeral de un elemento ("1.1") en blanco dentro de un óvalo relleno del color dado. */
+function etiquetaNumeral(p: PDFPage, f: PDFFont, texto: string, x: number, y: number, color: ReturnType<typeof rgb>, s = 1) {
+  const tam = 5.5 * s;
+  const ancho = f.widthOfTextAtSize(texto, tam);
+  const rx = Math.max(5 * s, ancho / 2 + 2.5 * s);
+  if (s > 1) p.drawEllipse({ x: x + rx, y, xScale: rx + 1, yScale: 5 * s + 1, color: rgb(1, 1, 1) });
+  p.drawEllipse({ x: x + rx, y, xScale: rx, yScale: 5 * s, color });
+  p.drawText(texto, { x: x + rx - ancho / 2, y: y - tam * 0.35, size: tam, font: f, color: rgb(1, 1, 1) });
+  return 2 * rx;
+}
+
 export function leerLogo() {
   return fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "public", "logo.png"));
 }
@@ -121,13 +132,28 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       hoja.drawText(nota, { x: xn, y: ys + 11, size: 7.5, font: normal, color: ROJO, maxWidth: ancho - 4 });
     }
 
+    // Sobre la hoja solo va el numeral de cada elemento (1.1, 1.2…), exactamente en el punto que
+    // señala: verde si se cumple, rojo si no. La descripción queda en el margen.
+    for (const res of entrega.resultados) {
+      const r = actividad.reactivos.find((x) => x.numero === res.numero);
+      if (!r || !res.ubicacionesElementos?.length) continue;
+      for (const [j, el] of puntosPorElemento(actividad, r, res).entries()) {
+        const u = res.ubicacionesElementos[j];
+        if (!u || u.pagina !== i + 1) continue;
+        const ok = el.obtenidos >= el.total;
+        const xe = x0 + Math.min(ancho - 30, Math.max(4, ancho * u.x));
+        const ye = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, u.y)));
+        etiquetaNumeral(hoja, negrita, `${r.numero}.${j + 1}`, xe, ye, ok ? VERDE : ROJO, 1.4);
+      }
+    }
+
     const marcas = entrega.resultados
       .filter((r) => (r.ubicacion?.pagina ?? 1) === i + 1)
       .sort((a, b) => (a.ubicacion?.y ?? 0.5) - (b.ubicacion?.y ?? 0.5) || (a.ubicacion?.x ?? 0.9) - (b.ubicacion?.x ?? 0.9));
     for (const res of marcas) {
       const r = actividad.reactivos.find((x) => x.numero === res.numero);
       if (!r) continue;
-      numero += 1;
+      numero = r.numero;
       const completo = res.puntosObtenidos >= r.puntos;
       const color = completo ? VERDE : ROJO;
 
@@ -164,14 +190,19 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
         hoja.drawText(l, { x: xMargen + 4, y: yTexto, size: 8.5, font: normal, color });
         yTexto -= 10.5;
       }
-      // Puntos por elemento de la rúbrica (pasos o criterios).
-      for (const el of puntosPorElemento(actividad, r, res)) {
+      // Puntos por elemento de la rúbrica (pasos o criterios), numerados a partir del reactivo:
+      // paloma verde + "1.1" en círculo verde si se cumple; tache rojo + "1.2" en rojo si no.
+      for (const [j, el] of puntosPorElemento(actividad, r, res).entries()) {
         const ok = el.obtenidos >= el.total;
+        const tono = ok ? VERDE : ROJO;
+        yTexto -= 1.5;
+        if (ok) paloma(hoja, xMargen + 3, yTexto - 0.5, 0.35);
+        else tache(hoja, xMargen + 6, yTexto + 2.5, 0.35);
+        const anchoEtiqueta = etiquetaNumeral(hoja, negrita, `${r.numero}.${j + 1}`, xMargen + 12, yTexto + 2.5, tono);
+        const xTexto = xMargen + 12 + Math.max(anchoEtiqueta, 18) + 3;
         const linea = `${el.nombre}${puntaje ? `  ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}` : ""}`;
-        for (const l of envolver(normal, linea, 7.5, anchoTexto - 14)) {
-          if (ok) paloma(hoja, xMargen + 4, yTexto - 1, 0.35);
-          else tache(hoja, xMargen + 8, yTexto + 2, 0.35);
-          hoja.drawText(l, { x: xMargen + 14, y: yTexto, size: 7.5, font: normal, color: ok ? VERDE : ROJO });
+        for (const l of envolver(normal, linea, 7.5, CARTA.ancho - 12 - xTexto)) {
+          hoja.drawText(l, { x: xTexto, y: yTexto, size: 7.5, font: normal, color: tono });
           yTexto -= 9.5;
         }
       }
