@@ -244,8 +244,7 @@ const en: Diccionario = {
       boton: "Create a free account",
       incluye: "To try it out:",
       ventajas: [
-        "50 credits: grade one activity for your class and see the result",
-        "≈ 3.5 hours of grading saved",
+        "50 credits",
         "AI-generated activities and printable sheets with QR",
         "Submissions from phones with a photo or PDF",
         "AI solution and rubric at no cost",
@@ -254,14 +253,13 @@ const en: Diccionario = {
     basico: {
       nombre: "Basic",
       lema: "For a teacher with one class: a whole term graded",
-      periodo: "one-time payment for 120 credits",
+      periodo: "one-time payment for 210 credits",
       boton: "Choose Basic",
       incluye: "Everything in Free, plus:",
       ventajas: [
-        "120 credits: 5 one-page activities for a class of 30",
-        "≈ 8 hours of grading saved",
+        "210 credits",
         "Personal feedback for every student in minutes",
-        "All five precision levels, from Fast to Advanced",
+        "All precision levels, from Fast to Advanced",
         "Class analytics and PDF and Excel reports",
         "Pay by card, cash at OXXO or SPEI, with invoice (CFDI)",
       ],
@@ -269,12 +267,11 @@ const en: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "For a teacher with two or three classes",
-      periodo: "one-time payment for 240 credits",
+      periodo: "one-time payment for 350 credits",
       boton: "Choose Pro",
       incluye: "Everything in Basic, plus:",
       ventajas: [
-        "240 credits: 5 one-page activities for 2 classes of 30",
-        "≈ 17 hours of grading saved",
+        "350 credits",
         "Study recommendations with videos and readings for each student",
         "Course gradebook",
       ],
@@ -282,12 +279,11 @@ const en: Diccionario = {
     academia: {
       nombre: "Academy",
       lema: "For a whole semester or a department: the best price per page",
-      periodo: "one-time payment for 480 credits",
+      periodo: "one-time payment for 640 credits",
       boton: "Choose Academy",
       incluye: "Everything in Pro, plus:",
       ventajas: [
-        "480 credits: 5 one-page activities for 4 classes of 30",
-        "≈ 34 hours of grading saved",
+        "640 credits",
         "Room to use the Advanced level on exams",
         "Student and class reports all term long",
       ],
@@ -299,8 +295,7 @@ const en: Diccionario = {
       boton: "Contact us to set up an institutional plan",
       incluye: "Everything in Academy, plus:",
       ventajas: [
-        "4,000 credits or more for every teacher at the institution",
-        "≈ 280 hours of grading saved for your school",
+        "4,000 credits or more",
         "Onboarding support for your departments",
         "Institutional invoicing",
       ],
@@ -308,12 +303,12 @@ const en: Diccionario = {
   },
   precios: {
     notaEstimacion:
-      "Activities and hours for each plan are estimated with the Medium precision level (0.7 credits per sheet). Fast covers more sheets and Advanced fewer.",
+      "The cost per credit is approximate. As a midpoint, estimate with the Medium level ({modelo}), which uses ≈ {n} credits per sheet: Fast covers more sheets and Advanced fewer.",
     metaTitulo: "Plans and pricing",
     metaDescripcion: "iEureka-Grader plans: pay only for the pages you grade. Prices in {divisa}.",
     titulo: "Plans that fit your classroom",
     texto:
-      "Pay only for the pages you grade. Fast uses 0.4 credits per page, Agile 0.5, Medium 0.7, High 2.5 and Advanced 7.2. Prices in {divisa}, no subscription.",
+      "Pay only for the pages you grade. Each page uses {min} to {max} credits depending on the precision level, from Fast to Advanced. Prices in {divisa}, no subscription.",
     masPopular: "Most popular",
     aLaMedida: "Custom",
     porPagina: "{p} per credit",
@@ -322,13 +317,13 @@ const en: Diccionario = {
     asuntoEscuela: "iEureka-Grader School plan",
     precisionTitulo: "Choose the AI precision for each assignment",
     precisionTexto:
-      "Every plan includes all five levels. Each level uses a different engine: more precision reads long procedures and difficult handwriting better, but uses more AI tokens. You choose it in your settings and for each new assignment.",
+      "Every plan includes all levels. Each level uses a different engine: more precision reads long procedures and difficult handwriting better, but uses more AI tokens. You choose it in your settings and for each new assignment.",
     consumo: "Usage",
     consumoDe: "Usage {n} of 5",
     predeterminado: "Default",
     preguntasTitulo: "Frequently asked questions",
     preguntas: [
-      ["What is a credit?", "Each graded page uses credits by precision level: 0.4 on Fast, 0.5 on Agile, 0.7 on Medium, 2.5 on High and 7.2 on Advanced. A 3-page submission on Medium uses 2.1 credits."],
+      ["What is a credit?", "Each graded page uses credits by precision level: from {min} on Fast to {max} on Advanced. A 3-page submission on Medium uses {ejemplo} credits."],
       [
         "What doesn't use credits?",
         "Creating your courses, generating the assignment with AI, printing the sheet with QR, uploading your solution and building the rubric.",
@@ -406,7 +401,7 @@ const en: Diccionario = {
     menos: "Less usage",
     mas: "More precision",
     consumoNota:
-      "Each page costs 0.4 credits on Fast, 0.5 on Agile, 0.7 on Medium, 2.5 on High and 7.2 on Advanced, based on the real cost of each engine.",
+      "Each page costs {min} to {max} credits depending on the engine and effort, based on the real cost of each.",
     guardarPrecision: "Save precision",
     conservacionTitulo: "How long data is kept on the server",
     conservacionFotos:

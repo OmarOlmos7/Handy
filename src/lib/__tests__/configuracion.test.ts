@@ -11,10 +11,12 @@ import {
   ESCALA,
   COSTO_CREDITO_USD,
   COSTO_HOJA_USD,
-  MARGEN_SEGURIDAD,
+  MARGEN_RIESGO,
   creditosDeCosto,
   sumarCreditos,
   PUNTO_PREDETERMINADO,
+  gruposEscala,
+  valoresEscala,
   indiceEscala,
   nivelReporte,
   parametrosIA,
@@ -57,8 +59,8 @@ describe("notas altas y bajas", () => {
 });
 
 describe("precisión de la IA", () => {
-  it("el predeterminado es Medio (Sonnet) con esfuerzo medio", () => {
-    expect(parametrosIA(undefined)).toEqual({ modelo: "claude-sonnet-5-5", esfuerzo: "medium" });
+  it("el predeterminado es Medio (Sonnet) con esfuerzo bajo", () => {
+    expect(parametrosIA(undefined)).toEqual({ modelo: "claude-sonnet-5-5", esfuerzo: "low" });
     expect(configuracionDe(undefined).motor).toBe("medio");
   });
 
@@ -74,7 +76,7 @@ describe("precisión de la IA", () => {
     // El esfuerzo elegido en la actividad manda; uno no válido usa el de Configuración.
     expect(precisionPara("rapido", config, "bajo")).toEqual({ motor: "rapido", esfuerzo: "bajo" });
     expect(precisionPara("rapido", config, "x")).toEqual({ motor: "rapido", esfuerzo: "alto" });
-    expect(precisionPara(null, undefined)).toEqual({ motor: "medio", esfuerzo: "medio" });
+    expect(precisionPara(null, undefined)).toEqual({ motor: "medio", esfuerzo: "bajo" });
   });
 
   it("el consumo crece con la precisión y el esfuerzo", () => {
@@ -86,39 +88,51 @@ describe("precisión de la IA", () => {
 });
 
 describe("créditos por página", () => {
-  it("cobra el costo medido de cada motor y esfuerzo más 30% de margen, en décimas de crédito", () => {
-    expect(ESCALA.map((e) => e.creditos)).toEqual([0.4, 0.5, 0.7, 2.5, 7.2]);
+  it("cobra el costo medido de cada motor y esfuerzo más 20% de riesgo, en décimas de crédito", () => {
+    expect(ESCALA.map((e) => e.creditos)).toEqual([0.4, 0.4, 0.6, 2.4, 2.4, 4.5, 5.3, 6.7]);
     expect(creditosPorPagina({ motor: "rapido", esfuerzo: "bajo" })).toBe(0.4);
-    expect(creditosPorPagina({ motor: "medio", esfuerzo: "alto" })).toBe(4.9);
-    expect(creditosPorPagina({ motor: "preciso", esfuerzo: "alto" })).toBe(8.8);
-    // Sin precisión se usa el punto predeterminado (Medio).
-    expect(creditosPorPagina(undefined)).toBe(0.7);
-    expect(creditosDeCosto(0.0718)).toBe(7.2);
+    expect(creditosPorPagina({ motor: "medio", esfuerzo: "bajo" })).toBe(2.4);
+    // Sonnet medio midió un poco menos que bajo; en la escala no baja.
+    expect(creditosPorPagina({ motor: "medio", esfuerzo: "medio" })).toBe(2.4);
+    expect(creditosPorPagina({ motor: "preciso", esfuerzo: "alto" })).toBe(8.1);
+    // Sin precisión se usa el punto predeterminado (Medio: Sonnet bajo).
+    expect(creditosPorPagina(undefined)).toBe(2.4);
+    expect(creditosDeCosto(0.0718)).toBe(6.7);
   });
 
-  it("la escala va de Haiku 5.5 bajo a Opus 5.5 medio y arranca en el punto medio", () => {
-    expect(ESCALA.map((e) => e.punto)).toEqual(["rapido", "agil", "medio", "alto", "avanzado"]);
-    expect(ESCALA.map((e) => `${e.precision.motor}-${e.precision.esfuerzo}`)).toEqual([
-      "rapido-bajo",
-      "rapido-medio",
-      "rapido-alto",
-      "medio-medio",
-      "preciso-medio",
+  it("la escala va de Haiku 5.5 bajo a Opus 5.5 medio y arranca en Medio con Sonnet 5.5 bajo", () => {
+    expect(ESCALA.map((e) => `${e.punto}:${e.clave}`)).toEqual([
+      "rapido:rapido-bajo",
+      "agil:rapido-medio",
+      "agil:rapido-alto",
+      "medio:medio-bajo",
+      "alto:medio-medio",
+      "alto:medio-alto",
+      "avanzado:preciso-bajo",
+      "avanzado:preciso-medio",
     ]);
-    expect(ESCALA[PUNTO_PREDETERMINADO].punto).toBe("medio");
+    expect(gruposEscala().map((g) => [g.punto, g.desde, g.hasta])).toEqual([
+      ["rapido", 0, 0],
+      ["agil", 1, 2],
+      ["medio", 3, 3],
+      ["alto", 4, 5],
+      ["avanzado", 6, 7],
+    ]);
+    expect(ESCALA[PUNTO_PREDETERMINADO].clave).toBe("medio-bajo");
     const creditos = ESCALA.map((e) => e.creditos);
     expect([...creditos].sort((a, b) => a - b)).toEqual(creditos);
-    expect(indiceEscala(undefined)).toBe(2);
-    expect(indiceEscala({ motor: "preciso", esfuerzo: "alto" })).toBe(4);
-    expect(indiceEscala({ motor: "medio", esfuerzo: "alto" })).toBe(3);
+    expect(indiceEscala(undefined)).toBe(3);
+    expect(indiceEscala({ motor: "preciso", esfuerzo: "alto" })).toBe(7);
+    expect(indiceEscala({ motor: "medio", esfuerzo: "alto" })).toBe(5);
     expect(indiceEscala({ motor: "rapido", esfuerzo: "medio" })).toBe(1);
+    expect(valoresEscala("es-MX")).toEqual({ min: "0.4", max: "6.7", n: "2.4", ejemplo: "7.2" });
   });
 
-  it("con el margen de 30%, ningún crédito cuesta más que el costo con que se calculan los planes", () => {
+  it("con el margen de 20%, ningún crédito cuesta más que el costo con que se calculan los planes", () => {
     for (const motor of ["rapido", "medio", "preciso"] as const) {
       for (const esfuerzo of ["bajo", "medio", "alto"] as const) {
         const costo = COSTO_HOJA_USD[motor][esfuerzo];
-        expect((costo * (1 + MARGEN_SEGURIDAD)) / creditosPorPagina({ motor, esfuerzo })).toBeLessThanOrEqual(COSTO_CREDITO_USD + 1e-9);
+        expect((costo * (1 + MARGEN_RIESGO)) / creditosPorPagina({ motor, esfuerzo })).toBeLessThanOrEqual(COSTO_CREDITO_USD + 1e-9);
       }
     }
   });
@@ -133,35 +147,29 @@ describe("planes", () => {
   it("tiene Gratuito, Básico, Pro, Academia y Escuela con sus créditos", () => {
     expect(PLANES.map((p) => [p.id, p.creditos, p.precio])).toEqual([
       ["gratis", 50, 0],
-      ["basico", 120, 215],
-      ["pro", 240, 345],
-      ["academia", 480, 635],
+      ["basico", 210, 215],
+      ["pro", 350, 345],
+      ["academia", 640, 635],
       ["escuela", 4000, undefined],
     ]);
   });
 
-  it("cada plan de pago deja al menos 40 % de utilidad después de IVA, operación e ISR", () => {
+  it("cada plan de pago deja al menos 35 % de utilidad después de IVA, operación e ISR", () => {
     expect(costoCreditoMXN()).toBeCloseTo(0.24, 2);
-    expect(UTILIDAD_OBJETIVO).toBe(0.4);
+    expect(UTILIDAD_OBJETIVO).toBe(0.35);
     for (const p of PLANES.filter((p) => (p.precio ?? 0) > 0)) {
       expect(utilidad(p)!).toBeGreaterThanOrEqual(UTILIDAD_OBJETIVO);
       expect(p.creditos).toBeLessThanOrEqual(creditosMaximos(p.precio!));
     }
-    expect([215, 345, 635].map(creditosMaximos)).toEqual([163, 261, 482]);
+    expect([215, 345, 635].map(creditosMaximos)).toEqual([219, 352, 649]);
   });
 
-  it("cada plan de pago trae el doble de créditos que el anterior", () => {
-    expect(planDe("pro").creditos).toBe(2 * planDe("basico").creditos);
-    expect(planDe("academia").creditos).toBe(2 * planDe("pro").creditos);
-  });
-
-  it("calcula el precio por página y el ahorro contra Básico", () => {
-    expect(precioPorPagina(planDe("basico"))).toBe(1.79);
-    expect(precioPorPagina(planDe("academia"))).toBe(1.32);
+  it("calcula el precio por crédito; sin diferencia de al menos 5 % no se anuncia ahorro", () => {
+    expect(precioPorPagina(planDe("basico"))).toBe(1.02);
+    expect(precioPorPagina(planDe("academia"))).toBe(0.99);
     expect(precioPorPagina(planDe("escuela"))).toBeUndefined();
-    expect(ahorroContra(planDe("pro"), planDe("basico"))).toBe(20);
-    expect(ahorroContra(planDe("academia"), planDe("basico"))).toBe(26);
-    expect(ahorroContra(planDe("basico"), planDe("basico"))).toBeUndefined();
+    expect(ahorroContra(planDe("pro"), planDe("basico"))).toBeUndefined();
+    expect(ahorroContra(planDe("academia"), planDe("basico"))).toBeUndefined();
     expect(precioPorPagina(planDe("gratis"))).toBeUndefined();
   });
 });

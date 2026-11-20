@@ -244,8 +244,7 @@ const de: Diccionario = {
       boton: "Kostenloses Konto erstellen",
       incluye: "Zum Ausprobieren:",
       ventajas: [
-        "50 Credits: eine Aufgabe deiner Klasse bewerten und das Ergebnis sehen",
-        "≈ 3,5 Stunden Korrekturzeit gespart",
+        "50 Credits",
         "KI-generierte Aufgaben und druckbare Blätter mit QR",
         "Abgaben per Handy als Foto oder PDF",
         "Lösung und Bewertungsraster per KI ohne Kosten",
@@ -254,14 +253,13 @@ const de: Diccionario = {
     basico: {
       nombre: "Basis",
       lema: "Für eine Lehrkraft mit einer Klasse: ein ganzer Abschnitt bewertet",
-      periodo: "Einmalzahlung für 120 Credits",
+      periodo: "Einmalzahlung für 210 Credits",
       boton: "Basis wählen",
       incluye: "Alles aus Kostenlos, plus:",
       ventajas: [
-        "120 Credits: 5 einseitige Aufgaben für eine Klasse mit 30",
-        "≈ 8 Stunden Korrekturzeit gespart",
+        "210 Credits",
         "Persönliches Feedback für jede/n Schüler/in in Minuten",
-        "Alle fünf Präzisionsstufen, von Schnell bis Fortgeschritten",
+        "Alle Präzisionsstufen, von Schnell bis Fortgeschritten",
         "Klassenauswertung und Berichte als PDF und Excel",
         "Zahlung per Karte, bar bei OXXO oder SPEI, mit Rechnung (CFDI)",
       ],
@@ -269,12 +267,11 @@ const de: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "Für eine Lehrkraft mit zwei oder drei Klassen",
-      periodo: "Einmalzahlung für 240 Credits",
+      periodo: "Einmalzahlung für 350 Credits",
       boton: "Pro wählen",
       incluye: "Alles aus Basis, plus:",
       ventajas: [
-        "240 Credits: 5 einseitige Aufgaben für 2 Klassen mit 30",
-        "≈ 17 Stunden Korrekturzeit gespart",
+        "350 Credits",
         "Lernempfehlungen mit Videos und Texten für jede/n Schüler/in",
         "Notenbuch des Kurses",
       ],
@@ -282,12 +279,11 @@ const de: Diccionario = {
     academia: {
       nombre: "Akademie",
       lema: "Für ein ganzes Semester oder eine Fachschaft: der beste Preis pro Seite",
-      periodo: "Einmalzahlung für 480 Credits",
+      periodo: "Einmalzahlung für 640 Credits",
       boton: "Akademie wählen",
       incluye: "Alles aus Pro, plus:",
       ventajas: [
-        "480 Credits: 5 einseitige Aufgaben für 4 Klassen mit 30",
-        "≈ 34 Stunden Korrekturzeit gespart",
+        "640 Credits",
         "Spielraum für die Stufe Fortgeschritten bei Prüfungen",
         "Berichte pro Schüler/in und Klasse das ganze Semester",
       ],
@@ -299,8 +295,7 @@ const de: Diccionario = {
       boton: "Kontakt für einen institutionellen Plan",
       incluye: "Alles aus Akademie, plus:",
       ventajas: [
-        "4.000 Credits oder mehr für alle Lehrkräfte der Schule",
-        "≈ 280 Stunden Korrekturzeit für deine Schule gespart",
+        "4.000 Credits oder mehr",
         "Begleitung beim Start mit euren Fachschaften",
         "Rechnung für die Institution",
       ],
@@ -308,12 +303,12 @@ const de: Diccionario = {
   },
   precios: {
     notaEstimacion:
-      "Aufgaben und Stunden jedes Tarifs sind mit der Präzisionsstufe Mittel geschätzt (0,7 Credits pro Blatt). Mit Schnell reicht es für mehr Blätter, mit Fortgeschritten für weniger.",
+      "Die Kosten pro Credit sind ungefähr. Als Mittelwert rechnen Sie mit der Stufe Mittel ({modelo}), die ≈ {n} Credits pro Blatt nutzt: Mit Schnell reicht es für mehr Blätter, mit Fortgeschritten für weniger.",
     metaTitulo: "Tarife und Preise",
     metaDescripcion: "iEureka-Grader-Tarife: Zahlen Sie nur die Seiten, die Sie korrigieren. Preise in {divisa}.",
     titulo: "Tarife, die zu Ihrer Klasse passen",
     texto:
-      "Zahlen Sie nur die Seiten, die Sie korrigieren. Schnell kostet 0,4 Credits pro Seite, Flink 0,5, Mittel 0,7, Hoch 2,5 und Fortgeschritten 7,2. Preise in {divisa}, ohne Abo.",
+      "Zahlen Sie nur die Seiten, die Sie korrigieren. Jede Seite kostet {min} bis {max} Credits je nach Präzisionsstufe, von Schnell bis Fortgeschritten. Preise in {divisa}, ohne Abo.",
     masPopular: "Am beliebtesten",
     aLaMedida: "Individuell",
     porPagina: "{p} pro Credit",
@@ -322,13 +317,13 @@ const de: Diccionario = {
     asuntoEscuela: "iEureka-Grader Tarif Schule",
     precisionTitulo: "Wählen Sie die KI-Präzision für jede Aufgabe",
     precisionTexto:
-      "Alle Tarife enthalten die fünf Stufen. Jede Stufe nutzt ein anderes Modell: Mehr Präzision liest lange Rechenwege und schwierige Handschrift besser, verbraucht aber mehr KI-Tokens. Sie wählen sie in Ihren Einstellungen und bei jeder neuen Aufgabe.",
+      "Alle Tarife enthalten alle Stufen. Jede Stufe nutzt ein anderes Modell: Mehr Präzision liest lange Rechenwege und schwierige Handschrift besser, verbraucht aber mehr KI-Tokens. Sie wählen sie in Ihren Einstellungen und bei jeder neuen Aufgabe.",
     consumo: "Verbrauch",
     consumoDe: "Verbrauch {n} von 5",
     predeterminado: "Standard",
     preguntasTitulo: "Häufige Fragen",
     preguntas: [
-      ["Was ist ein Credit?", "Jede bewertete Seite verbraucht Credits je nach Präzisionsstufe: 0,4 bei Schnell, 0,5 bei Flink, 0,7 bei Mittel, 2,5 bei Hoch und 7,2 bei Fortgeschritten. Eine Abgabe mit 3 Seiten auf Mittel verbraucht 2,1 Credits."],
+      ["Was ist ein Credit?", "Jede bewertete Seite kostet Credits je nach Präzisionsstufe: von {min} bei Schnell bis {max} bei Fortgeschritten. Eine Abgabe mit 3 Seiten auf Mittel kostet {ejemplo} Credits."],
       [
         "Was verbraucht keine Credits?",
         "Kurse anlegen, die Aufgabe mit KI erstellen, das Blatt mit QR drucken, Ihre Lösung hochladen und das Bewertungsraster erstellen.",
@@ -406,7 +401,7 @@ const de: Diccionario = {
     menos: "Weniger Verbrauch",
     mas: "Mehr Genauigkeit",
     consumoNota:
-      "Jede Seite kostet 0,4 Credits bei Schnell, 0,5 bei Flink, 0,7 bei Mittel, 2,5 bei Hoch und 7,2 bei Fortgeschritten, je nach den realen Kosten des Modells.",
+      "Jede Seite kostet {min} bis {max} Credits je nach Modell und Aufwand, auf Basis der realen Kosten.",
     guardarPrecision: "Präzision speichern",
     conservacionTitulo: "Aufbewahrung der Daten auf dem Server",
     conservacionFotos:

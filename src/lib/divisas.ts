@@ -115,7 +115,7 @@ export function formatoPorPagina(precioMxn: number, creditos: number, d: Divisa,
     currency: d.codigo,
     currencyDisplay: "narrowSymbol",
     minimumFractionDigits: 0,
-    maximumSignificantDigits: 2,
+    maximumSignificantDigits: 3,
   });
   return `${d.prefijo} ${n}`;
 }

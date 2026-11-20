@@ -245,8 +245,7 @@ const es = {
       boton: "Crear cuenta gratis",
       incluye: "Para probar:",
       ventajas: [
-        "50 créditos: califica una actividad de tu grupo y mira el resultado",
-        "≈ 3.5 horas de calificación que te ahorras",
+        "50 créditos",
         "Actividades generadas con IA y hojas imprimibles con QR",
         "Entregas desde el celular con foto o PDF",
         "Solución y rúbrica con IA sin costo",
@@ -255,14 +254,13 @@ const es = {
     basico: {
       nombre: "Básico",
       lema: "Para un profesor con un grupo: todo un parcial calificado",
-      periodo: "pago único por 120 créditos",
+      periodo: "pago único por 210 créditos",
       boton: "Elegir Básico",
       incluye: "Todo lo de Gratuito, más:",
       ventajas: [
-        "120 créditos: 5 actividades de 1 página para un grupo de 30",
-        "≈ 8 horas de calificación que te ahorras",
+        "210 créditos",
         "Retroalimentación personal para cada alumno en minutos",
-        "Los cinco niveles de precisión, de Rápido a Avanzado",
+        "Todos los niveles de precisión, de Rápido a Avanzado",
         "Analíticas del grupo y reporte en PDF y Excel",
         "Pago con tarjeta, efectivo en OXXO o SPEI y factura (CFDI)",
       ],
@@ -270,12 +268,11 @@ const es = {
     pro: {
       nombre: "Pro",
       lema: "Para un profesor con dos o tres grupos",
-      periodo: "pago único por 240 créditos",
+      periodo: "pago único por 350 créditos",
       boton: "Elegir Pro",
       incluye: "Todo lo de Básico, más:",
       ventajas: [
-        "240 créditos: 5 actividades de 1 página para 2 grupos de 30",
-        "≈ 17 horas de calificación que te ahorras",
+        "350 créditos",
         "Recomendaciones de estudio con videos y lecturas para cada alumno",
         "Cuaderno de calificaciones del curso",
       ],
@@ -283,12 +280,11 @@ const es = {
     academia: {
       nombre: "Academia",
       lema: "Para todo el semestre o una academia: el mejor precio por página",
-      periodo: "pago único por 480 créditos",
+      periodo: "pago único por 640 créditos",
       boton: "Elegir Academia",
       incluye: "Todo lo de Pro, más:",
       ventajas: [
-        "480 créditos: 5 actividades de 1 página para 4 grupos de 30",
-        "≈ 34 horas de calificación que te ahorras",
+        "640 créditos",
         "Margen para usar el nivel Avanzado en exámenes",
         "Reportes por alumno y por grupo durante todo el curso",
       ],
@@ -300,8 +296,7 @@ const es = {
       boton: "Contactar para gestionar plan institucional",
       incluye: "Todo lo de Academia, más:",
       ventajas: [
-        "4,000 créditos o más para todos los profesores de la institución",
-        "≈ 280 horas de calificación que ahorra tu escuela",
+        "4,000 créditos o más",
         "Acompañamiento para arrancar con tus academias",
         "Facturación institucional",
       ],
@@ -309,12 +304,12 @@ const es = {
   },
   precios: {
     notaEstimacion:
-      "Las actividades y horas de cada plan se estiman con el nivel Medio de precisión (0.7 créditos por hoja). Con Rápido alcanzan para más hojas y con Avanzado para menos.",
+      "El costo por crédito es aproximado. Como punto medio, estima con el nivel Medio ({modelo}), que usa ≈ {n} créditos por hoja: con Rápido alcanzan para más hojas y con Avanzado para menos.",
     metaTitulo: "Planes y precios",
     metaDescripcion: "Planes de iEureka-Grader: paga solo las páginas que calificas. Precios en {divisa}.",
     titulo: "Planes que se ajustan a tu salón",
     texto:
-      "Paga solo las páginas que calificas. Rápido usa 0.4 créditos por página, Ágil 0.5, Medio 0.7, Alto 2.5 y Avanzado 7.2. Precios en {divisa}, sin suscripción.",
+      "Paga solo las páginas que calificas. Cada página usa de {min} a {max} créditos según el nivel de precisión, de Rápido a Avanzado. Precios en {divisa}, sin suscripción.",
     masPopular: "Más popular",
     aLaMedida: "A la medida",
     porPagina: "{p} por crédito",
@@ -323,13 +318,13 @@ const es = {
     asuntoEscuela: "Plan Escuela de iEureka-Grader",
     precisionTitulo: "Elige la precisión de la IA en cada actividad",
     precisionTexto:
-      "Todos los planes incluyen los cinco niveles. Cada nivel usa un motor distinto: más precisión lee mejor los procedimientos largos y la letra difícil, pero consume más tokens de IA. Lo eliges en tu configuración y en cada actividad nueva.",
+      "Todos los planes incluyen todos los niveles. Cada nivel usa un motor distinto: más precisión lee mejor los procedimientos largos y la letra difícil, pero consume más tokens de IA. Lo eliges en tu configuración y en cada actividad nueva.",
     consumo: "Consumo",
     consumoDe: "Consumo {n} de 5",
     predeterminado: "Predeterminado",
     preguntasTitulo: "Preguntas frecuentes",
     preguntas: [
-      ["¿Qué es un crédito?", "Cada página evaluada usa créditos según el nivel de precisión: 0.4 en Rápido, 0.5 en Ágil, 0.7 en Medio, 2.5 en Alto y 7.2 en Avanzado. Una entrega de 3 páginas en Medio usa 2.1 créditos."],
+      ["¿Qué es un crédito?", "Cada página evaluada usa créditos según el nivel de precisión: de {min} en Rápido a {max} en Avanzado. Una entrega de 3 páginas en Medio usa {ejemplo} créditos."],
       [
         "¿Qué no consume créditos?",
         "Crear tus cursos, generar la actividad con IA, imprimir la hoja con QR, subir tu solución y armar la rúbrica.",
@@ -407,7 +402,7 @@ const es = {
     menos: "Menos consumo",
     mas: "Más precisión",
     consumoNota:
-      "Cada página cuesta 0.4 créditos en Rápido, 0.5 en Ágil, 0.7 en Medio, 2.5 en Alto y 7.2 en Avanzado, según el costo real de cada motor.",
+      "Cada página cuesta de {min} a {max} créditos según el motor y el esfuerzo, con base en el costo real de cada uno.",
     guardarPrecision: "Guardar precisión",
     conservacionTitulo: "Conservación de la información en el servidor",
     conservacionFotos:

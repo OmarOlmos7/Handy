@@ -244,8 +244,7 @@ const fr: Diccionario = {
       boton: "Créer un compte gratuit",
       incluye: "Pour essayer :",
       ventajas: [
-        "50 crédits : corrigez une activité de votre classe et voyez le résultat",
-        "≈ 3,5 heures de correction économisées",
+        "50 crédits",
         "Activités générées par l'IA et feuilles imprimables avec QR",
         "Rendus depuis le téléphone en photo ou PDF",
         "Solution et grille par l'IA sans frais",
@@ -254,14 +253,13 @@ const fr: Diccionario = {
     basico: {
       nombre: "Basique",
       lema: "Pour un enseignant avec une classe : toute une période corrigée",
-      periodo: "paiement unique pour 120 crédits",
+      periodo: "paiement unique pour 210 crédits",
       boton: "Choisir Basique",
       incluye: "Tout Gratuit, plus :",
       ventajas: [
-        "120 crédits : 5 activités d'une page pour une classe de 30",
-        "≈ 8 heures de correction économisées",
+        "210 crédits",
         "Un commentaire personnel pour chaque élève en quelques minutes",
-        "Les cinq niveaux de précision, de Rapide à Avancé",
+        "Tous les niveaux de précision, de Rapide à Avancé",
         "Analyses de la classe et rapports PDF et Excel",
         "Paiement par carte, espèces chez OXXO ou SPEI, avec facture (CFDI)",
       ],
@@ -269,12 +267,11 @@ const fr: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "Pour un enseignant avec deux ou trois classes",
-      periodo: "paiement unique pour 240 crédits",
+      periodo: "paiement unique pour 350 crédits",
       boton: "Choisir Pro",
       incluye: "Tout Basique, plus :",
       ventajas: [
-        "240 crédits : 5 activités d'une page pour 2 classes de 30",
-        "≈ 17 heures de correction économisées",
+        "350 crédits",
         "Recommandations d'étude avec vidéos et lectures pour chaque élève",
         "Carnet de notes du cours",
       ],
@@ -282,12 +279,11 @@ const fr: Diccionario = {
     academia: {
       nombre: "Académie",
       lema: "Pour tout le semestre ou une équipe : le meilleur prix par page",
-      periodo: "paiement unique pour 480 crédits",
+      periodo: "paiement unique pour 640 crédits",
       boton: "Choisir Académie",
       incluye: "Tout Pro, plus :",
       ventajas: [
-        "480 crédits : 5 activités d'une page pour 4 classes de 30",
-        "≈ 34 heures de correction économisées",
+        "640 crédits",
         "De la marge pour le niveau Avancé aux examens",
         "Rapports par élève et par classe tout au long du cours",
       ],
@@ -299,8 +295,7 @@ const fr: Diccionario = {
       boton: "Nous contacter pour un plan institutionnel",
       incluye: "Tout Académie, plus :",
       ventajas: [
-        "4 000 crédits ou plus pour tous les enseignants de l'établissement",
-        "≈ 280 heures de correction économisées pour votre établissement",
+        "4 000 crédits ou plus",
         "Accompagnement pour démarrer avec vos équipes",
         "Facturation institutionnelle",
       ],
@@ -308,12 +303,12 @@ const fr: Diccionario = {
   },
   precios: {
     notaEstimacion:
-      "Les activités et heures de chaque offre sont estimées avec le niveau de précision Moyen (0,7 crédit par feuille). Rapide permet plus de feuilles et Avancé moins.",
+      "Le coût par crédit est approximatif. Comme point médian, estimez avec le niveau Moyen ({modelo}), qui utilise ≈ {n} crédits par feuille : Rapide permet plus de feuilles et Avancé moins.",
     metaTitulo: "Offres et tarifs",
     metaDescripcion: "Offres iEureka-Grader : ne payez que les pages que vous corrigez. Prix en {divisa}.",
     titulo: "Des offres adaptées à votre classe",
     texto:
-      "Ne payez que les pages que vous corrigez. Rapide utilise 0,4 crédit par page, Agile 0,5, Moyen 0,7, Élevé 2,5 et Avancé 7,2. Prix en {divisa}, sans abonnement.",
+      "Ne payez que les pages que vous corrigez. Chaque page utilise de {min} à {max} crédits selon le niveau de précision, de Rapide à Avancé. Prix en {divisa}, sans abonnement.",
     masPopular: "La plus choisie",
     aLaMedida: "Sur mesure",
     porPagina: "{p} par crédit",
@@ -322,13 +317,13 @@ const fr: Diccionario = {
     asuntoEscuela: "Offre École iEureka-Grader",
     precisionTitulo: "Choisissez la précision de l'IA pour chaque devoir",
     precisionTexto:
-      "Toutes les offres incluent les cinq niveaux. Chaque niveau utilise un moteur différent : plus de précision lit mieux les longues procédures et l'écriture difficile, mais consomme plus de jetons d'IA. Vous le choisissez dans vos paramètres et pour chaque nouveau devoir.",
+      "Toutes les offres incluent tous les niveaux. Chaque niveau utilise un moteur différent : plus de précision lit mieux les longues procédures et l'écriture difficile, mais consomme plus de jetons d'IA. Vous le choisissez dans vos paramètres et pour chaque nouveau devoir.",
     consumo: "Consommation",
     consumoDe: "Consommation {n} sur 5",
     predeterminado: "Par défaut",
     preguntasTitulo: "Questions fréquentes",
     preguntas: [
-      ["Qu'est-ce qu'un crédit ?", "Chaque page corrigée utilise des crédits selon le niveau de précision : 0,4 en Rapide, 0,5 en Agile, 0,7 en Moyen, 2,5 en Élevé et 7,2 en Avancé. Un rendu de 3 pages en Moyen utilise 2,1 crédits."],
+      ["Qu'est-ce qu'un crédit ?", "Chaque page corrigée utilise des crédits selon le niveau de précision : de {min} en Rapide à {max} en Avancé. Un rendu de 3 pages en Moyen utilise {ejemplo} crédits."],
       [
         "Qu'est-ce qui ne consomme pas de crédits ?",
         "Créer vos cours, générer le devoir avec l'IA, imprimer la feuille avec QR, téléverser votre solution et préparer la grille.",
@@ -406,7 +401,7 @@ const fr: Diccionario = {
     menos: "Moins de consommation",
     mas: "Plus de précision",
     consumoNota:
-      "Chaque page coûte 0,4 crédit en Rapide, 0,5 en Agile, 0,7 en Moyen, 2,5 en Élevé et 7,2 en Avancé, selon le coût réel de chaque moteur.",
+      "Chaque page coûte de {min} à {max} crédits selon le moteur et l'effort, d'après le coût réel de chacun.",
     guardarPrecision: "Enregistrer la précision",
     conservacionTitulo: "Conservation des informations sur le serveur",
     conservacionFotos:

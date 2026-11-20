@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { BotonLink, Logo } from "@/components/ui";
 import { SelectorIdioma } from "@/components/selector-idioma";
-import { ESCALA, INFO_MOTOR, PUNTO_PREDETERMINADO } from "@/lib/configuracion";
+import { ESCALA, INFO_MOTOR, PUNTO_PREDETERMINADO, gruposEscala, valoresEscala } from "@/lib/configuracion";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { formato } from "@/lib/i18n/idiomas";
 import { divisaActual, textos } from "@/lib/i18n/servidor";
@@ -111,6 +111,9 @@ export default async function Precios() {
   const { idioma, t, locale } = await textos();
   const pr = t.precios;
   const divisa = await divisaActual();
+  const valores = valoresEscala(locale);
+  const medio = ESCALA[PUNTO_PREDETERMINADO].precision;
+  const nota = formato(pr.notaEstimacion, { ...valores, modelo: `${INFO_MOTOR[medio.motor].nombreCorto} - ${t.esfuerzos[medio.esfuerzo]}` });
   return (
     <div className="flex min-h-full flex-1 flex-col bg-[#f6f7f9]">
       <header className="border-b border-slate-200 bg-white">
@@ -133,7 +136,7 @@ export default async function Precios() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{pr.titulo}</h1>
-          <p className="mt-3 text-slate-600">{formato(pr.texto, { divisa: textoDivisa(divisa, locale, t.comun.ivaIncluido) })}</p>
+          <p className="mt-3 text-slate-600">{formato(pr.texto, { ...valores, divisa: textoDivisa(divisa, locale, t.comun.ivaIncluido) })}</p>
         </div>
 
         <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -141,7 +144,7 @@ export default async function Precios() {
             <TarjetaPlan key={p.id} plan={p} t={t} locale={locale} divisa={divisa} />
           ))}
         </div>
-        <p className="mx-auto mt-4 max-w-3xl text-center text-xs text-slate-500">{pr.notaEstimacion}</p>
+        <p className="mx-auto mt-4 max-w-3xl text-center text-xs text-slate-500">{nota}</p>
 
         <section className="mt-16" aria-labelledby="precision">
           <h2 id="precision" className="text-2xl font-semibold tracking-tight">
@@ -149,18 +152,24 @@ export default async function Precios() {
           </h2>
           <p className="mt-2 max-w-3xl text-slate-600">{pr.precisionTexto}</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {ESCALA.map((e, k) => {
-              const info = t.escala[e.punto];
+            {gruposEscala().map((g, k) => {
+              const info = t.escala[g.punto];
               const consumo = k + 1;
+              const puntos = ESCALA.slice(g.desde, g.hasta + 1);
+              const a = puntos[0].creditos;
+              const b = puntos[puntos.length - 1].creditos;
+              const n = a === b ? a.toLocaleString(locale) : `${a.toLocaleString(locale)}–${b.toLocaleString(locale)}`;
               return (
-                <div key={e.punto} className="flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                <div key={g.punto} className="flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                   <h3 className="font-semibold">{info.nombre}</h3>
-                  <p className="mt-1 text-xs font-medium text-tinta-700">
-                    {INFO_MOTOR[e.precision.motor].nombreCorto} - {t.esfuerzos[e.precision.esfuerzo]}
-                  </p>
+                  {puntos.map((e) => (
+                    <p key={e.clave} className="mt-1 text-xs font-medium text-tinta-700">
+                      {INFO_MOTOR[e.precision.motor].nombreCorto} - {t.esfuerzos[e.precision.esfuerzo]}
+                    </p>
+                  ))}
                   <p className="mt-2 flex-1 text-sm text-slate-600">{info.descripcion}</p>
                   <p className="mt-3 text-xs font-medium text-slate-700">
-                    ≈ {e.creditos === 1 ? t.configuracion.creditoPagina : formato(t.configuracion.creditosPagina, { n: e.creditos.toLocaleString(locale) })}
+                    ≈ {a === 1 && b === 1 ? t.configuracion.creditoPagina : formato(t.configuracion.creditosPagina, { n })}
                   </p>
                   <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
                     {pr.consumo}
@@ -170,7 +179,9 @@ export default async function Precios() {
                       ))}
                     </span>
                   </div>
-                  {k === PUNTO_PREDETERMINADO && <span className="mt-2 text-xs font-medium text-tinta-700">{pr.predeterminado}</span>}
+                  {PUNTO_PREDETERMINADO >= g.desde && PUNTO_PREDETERMINADO <= g.hasta && (
+                    <span className="mt-2 text-xs font-medium text-tinta-700">{pr.predeterminado}</span>
+                  )}
                 </div>
               );
             })}
@@ -185,7 +196,7 @@ export default async function Precios() {
             {pr.preguntas.map(([p, r]) => (
               <div key={p} className="rounded-xl bg-white p-5 ring-1 ring-slate-200">
                 <dt className="font-medium">{p}</dt>
-                <dd className="mt-1 text-sm text-slate-600">{r}</dd>
+                <dd className="mt-1 text-sm text-slate-600">{formato(r, valores)}</dd>
               </div>
             ))}
           </dl>

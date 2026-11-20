@@ -63,7 +63,7 @@ export async function guardarRangos(form: FormData) {
 /** Punto predeterminado de la escala de precisión para las actividades nuevas (motor y esfuerzo). */
 export async function guardarPrecision(form: FormData) {
   const yo = await requerirProfesor();
-  const punto = ESCALA.find((e) => e.punto === form.get("punto"));
+  const punto = ESCALA.find((e) => e.clave === form.get("punto"));
   if (!punto) volver("precision", "error", "eligePrecision");
   const { motor } = punto.precision;
   const esfuerzos = { ...ESFUERZOS_PREDETERMINADOS, [motor]: punto.precision.esfuerzo } as Record<MotorIA, EsfuerzoIA>;
