@@ -94,12 +94,6 @@ const de: Diccionario = {
       grupo: ["Klassenbericht", "Durchschnitte, starke und schwache Themen, am schlechtesten gelöste Aufgaben und Schüler nach Niveau."],
       excel: ["Excel für Canvas", "Name, Schülernummer und Note, dazu eine CSV-Datei zum Import ins Notenbuch."],
     },
-    preciosTitulo: "Zahlen Sie nur, was Sie korrigieren",
-    preciosTexto:
-      "Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Lösung hochladen und Bewertungsraster erstellen ist kostenlos. Preise in {divisa}.",
-    contactanos: "Kontakt für einen institutionellen Plan",
-    gratisPrecio: "Kostenlos",
-    verPlanes: "Leistungen der einzelnen Tarife ansehen →",
     privacidadTitulo: "Die Daten Ihrer Schüler, geschützt",
     privacidad: [
       "Die Blätter werden auf privaten Servern gespeichert und nur über ablaufende Links geteilt.",

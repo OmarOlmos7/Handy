@@ -94,12 +94,6 @@ const fr: Diccionario = {
       grupo: ["Rapport de la classe", "Moyennes, thèmes forts et faibles, questions les moins réussies et élèves par niveau."],
       excel: ["Excel pour Canvas", "Nom, matricule et note, plus un CSV prêt à importer dans le carnet de notes."],
     },
-    preciosTitulo: "Ne payez que ce que vous corrigez",
-    preciosTexto:
-      "Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Téléverser votre solution et générer la grille est gratuit. Prix en {divisa}.",
-    contactanos: "Nous contacter pour un plan institutionnel",
-    gratisPrecio: "Gratuit",
-    verPlanes: "Voir ce que comprend chaque offre →",
     privacidadTitulo: "Les données de vos élèves, protégées",
     privacidad: [
       "Les feuilles sont stockées sur des serveurs privés et partagées uniquement par des liens qui expirent.",

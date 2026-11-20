@@ -48,7 +48,7 @@ function TarjetaPlan({ plan, t, locale, divisa }: { plan: Plan; t: Diccionario; 
   const porPagina = plan.precio ? formatoPorPagina(plan.precio, plan.creditos, divisa, locale) : undefined;
   const ahorro = ahorroContra(plan, planDe("basico"));
   const d = plan.destacado;
-  const claseBoton = `mt-6 flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+  const claseBoton = `mt-4 flex min-h-17 w-full items-center justify-center rounded-lg px-4 py-2 text-center text-sm font-medium leading-tight transition ${
     d ? "bg-white text-tinta-700 hover:bg-tinta-50" : "bg-slate-900 text-white hover:bg-slate-700"
   }`;
   return (
@@ -56,15 +56,17 @@ function TarjetaPlan({ plan, t, locale, divisa }: { plan: Plan; t: Diccionario; 
       className={`relative flex flex-col rounded-2xl p-6 ring-1 ${d ? "bg-tinta-600 text-white shadow-xl ring-tinta-600" : "bg-white shadow-sm ring-slate-200"}`}
       aria-labelledby={`plan-${plan.id}`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <h2 id={`plan-${plan.id}`} className="text-xl font-semibold">
-          {texto.nombre}
-        </h2>
-        {d && <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-medium">{t.precios.masPopular}</span>}
-      </div>
-      <p className={`mt-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{texto.lema}</p>
+      {d && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-3 py-0.5 text-xs font-medium text-tinta-700 shadow-sm ring-1 ring-tinta-200">
+          {t.precios.masPopular}
+        </span>
+      )}
+      <h2 id={`plan-${plan.id}`} className="text-center text-xl font-semibold">
+        {texto.nombre}
+      </h2>
 
-      <div className="mt-6 flex items-end gap-1.5">
+      {/* Precio y detalle con la misma altura en todos los planes: títulos, precios y botones alineados. */}
+      <div className="mt-6 flex h-11 items-end justify-center gap-1.5 text-center">
         {plan.precio === undefined ? (
           <span className="text-3xl font-semibold tracking-tight">{t.precios.aLaMedida}</span>
         ) : (
@@ -73,8 +75,8 @@ function TarjetaPlan({ plan, t, locale, divisa }: { plan: Plan; t: Diccionario; 
           </>
         )}
       </div>
-      <p className={`mt-1 text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{texto.periodo}</p>
-      <p className={`mt-1 h-5 text-xs font-medium ${d ? "text-white" : "text-tinta-700"}`}>
+      <p className={`mt-1 min-h-15 text-center text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{texto.periodo}</p>
+      <p className={`mt-1 min-h-8 text-center text-xs font-medium ${d ? "text-white" : "text-tinta-700"}`}>
         {porPagina !== undefined && formato(t.precios.porPagina, { p: porPagina })}
         {ahorro !== undefined && ` · ${formato(t.precios.ahorra, { n: ahorro })}`}
       </p>
