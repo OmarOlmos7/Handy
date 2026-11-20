@@ -1,5 +1,6 @@
 // Resumen de la propuesta de evaluación: qué elementos se califican y con cuántos
 // puntos, los criterios con su porcentaje y las recomendaciones del profesor.
+import { reactivosDelCriterio } from "@/lib/elementos";
 import type { Actividad } from "@/lib/tipos";
 import { Tarjeta } from "./ui";
 import { TextoMat } from "./texto-mat";
@@ -83,6 +84,7 @@ export async function PropuestaEvaluacion({ actividad }: { actividad: Actividad 
                     {puntaje && <span className="w-14 shrink-0 font-semibold text-tinta-700">{c.porcentaje ? `${c.porcentaje} %` : "—"}</span>}
                     <span>
                       <span className="font-medium">{c.nombre}</span>
+                      {reactivosDelCriterio(c) && <span className="ml-1.5 text-xs text-slate-500">→ #{reactivosDelCriterio(c)!.join(", #")}</span>}
                       {c.descripcion && <span className="block text-xs text-slate-500">{c.descripcion}</span>}
                     </span>
                   </li>

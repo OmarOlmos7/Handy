@@ -13,7 +13,7 @@ import { DOMINIOS_RECURSOS, extraerJson, limpiarRecursos } from "./recursos";
 import { svgSeguro } from "./svg";
 import { formato, type Idioma } from "./i18n/idiomas";
 import { idiomaDeActividad } from "./i18n/detectar";
-import { fraccionCriterios } from "./elementos";
+import { criteriosDelReactivo, fraccionCriterios, reactivosDelCriterio } from "./elementos";
 import { diccionarioDe } from "./i18n/diccionario";
 import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, RecursoEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
 
@@ -179,7 +179,7 @@ const EsquemaRubrica = z.object({
       solucionPasos: z.array(z.string()),
     }),
   ),
-  criterios: z.array(z.object({ nombre: z.string(), porcentaje: z.number(), descripcion: z.string() })),
+  criterios: z.array(z.object({ nombre: z.string(), porcentaje: z.number(), descripcion: z.string(), reactivos: z.array(z.number().int()) })),
   recomendaciones: z.array(z.string()),
 });
 
@@ -198,7 +198,7 @@ Para cada reactivo, en el orden en que aparece:
 - solucionPasos: solo para desarrollo. Una línea por paso con lo que escribió el profesor. Para los demás tipos, lista vacía.
 
 Las indicaciones del profesor pueden traer criterios de evaluación con porcentajes (por ejemplo "Procedimiento 60 %, Resultado 30 %, Limpieza 10 %") y recomendaciones para calificar. Entre las imágenes también puede venir una hoja con su rúbrica o sus criterios; esa hoja no es un reactivo.
-- criterios: los criterios que indicó el profesor, con su porcentaje (0 si no dio porcentaje) y una descripción breve de qué se evalúa. Si no indicó criterios, lista vacía; no los inventes.
+- criterios: los criterios que indicó el profesor, con su porcentaje (0 si no dio porcentaje) y una descripción breve de qué se evalúa. Si no indicó criterios, lista vacía; no los inventes. reactivos: los números de los reactivos que califica ese criterio (por ejemplo, los criterios del "Ejercicio 2" solo califican el reactivo 2); lista vacía si aplica a todos.
 - Si los criterios aplican a los desarrollos (procedimiento, resultado, unidades…), refléjalos en los pasos y sus pesos. Si indicó cuántos puntos vale cada reactivo, respétalo.
 - recomendaciones: las recomendaciones que dio el profesor para evaluar, una por elemento, redactadas de forma breve e imperativa (por ejemplo "Acepta procedimientos alternativos si son correctos"). Si no dio ninguna, lista vacía.
 
@@ -255,7 +255,7 @@ function normalizarRubrica(salida: z.infer<typeof EsquemaRubrica>): PropuestaRub
     reactivos,
     criterios: salida.criterios
       .filter((c) => c.nombre.trim())
-      .map((c) => ({ ...c, porcentaje: Math.max(0, Math.min(100, Math.round(c.porcentaje))) })),
+      .map(normalizarCriterio),
     recomendaciones: salida.recomendaciones.filter((r) => r.trim()),
   };
 }
@@ -276,7 +276,7 @@ export function unirConHoja(anteriores: Reactivo[], nuevos: Reactivo[]): Reactiv
 
 const EsquemaActividad = z.object({
   instrucciones: z.array(z.string()),
-  criterios: z.array(z.object({ nombre: z.string(), porcentaje: z.number(), descripcion: z.string() })),
+  criterios: z.array(z.object({ nombre: z.string(), porcentaje: z.number(), descripcion: z.string(), reactivos: z.array(z.number().int()) })),
   reactivos: z.array(
     z.object({
       numero: z.number().int(),
@@ -301,7 +301,7 @@ El profesor describe la actividad que quiere: tipos de reactivos, ponderaciones 
 Reglas:
 - Respeta exactamente lo que pide el profesor: cantidad y tipo de reactivos, temas y puntos. Si indica los puntos de cada reactivo, úsalos tal cual aunque el total no coincida con la escala. Si no indica puntos o da porcentajes, reparte los puntos para que el total sea igual a la escala de calificación indicada (100 o 10), salvo que pida otro total.
 - instrucciones: exactamente 3 instrucciones breves para el alumno (máximo 20 palabras cada una), en imperativo. Marca con **doble asterisco** las palabras clave (por ejemplo "Resuelve en orden: **datos** con unidades → **ecuaciones** → **desarrollo** → **respuesta** en recuadro."). Incluye cómo responder cada tipo de reactivo que uses, unidades y redondeo si aplica. No menciones puntos ni porcentajes (la hoja ya los muestra) ni la instrucción de escanear el QR.
-- criterios: cómo se evalúa cada problema, con porcentajes que sumen 100. Usa los que indique el profesor; si no indica y hay problemas de desarrollo, propón algo como Datos 5 %, Ecuaciones 15 %, Desarrollo 60 %, Respuesta 20 %. Si solo hay reactivos cerrados, lista vacía. descripcion: qué se evalúa, breve.
+- criterios: cómo se evalúa cada problema, con porcentajes que sumen 100. reactivos: los números de los reactivos que califica cada criterio; lista vacía si aplica a todos. Usa los que indique el profesor; si no indica y hay problemas de desarrollo, propón algo como Datos 5 %, Ecuaciones 15 %, Desarrollo 60 %, Respuesta 20 %. Si solo hay reactivos cerrados, lista vacía. descripcion: qué se evalúa, breve.
 - tipo: verdadero_falso, opcion_multiple, relacion_columnas, parentesis (relación con letras entre paréntesis), desarrollo (problemas con procedimiento) o abierto (explicación, ensayo, dibujo).
 - enunciado: el texto completo del reactivo, listo para imprimirse. No incluyas las opciones dentro del enunciado. Nunca escribas los puntos ni la ponderación dentro del enunciado: la hoja los muestra aparte. Si un problema tiene varias preguntas, escribe primero el planteamiento con sus datos y al final los incisos en orden: "a) … b) … c) …". Sé eficiente con las palabras: si los incisos comparten el verbo, escríbelo una sola vez antes de los incisos y no lo repitas (por ejemplo "Calcula: a) El momento de inercia del disco. b) El torque respecto al eje. c) La aceleración angular."). Sé conciso: planteamientos de máximo 45 palabras y hasta 3 incisos por problema, salvo que el profesor pida otra cosa. La actividad debe caber en las páginas tamaño carta indicadas (cada problema de desarrollo ocupa casi media página).
 - opciones: solo para opción múltiple, de 3 a 5 opciones con su letra, como "a) 9.8 m/s²". Para los demás tipos, lista vacía.
@@ -356,7 +356,7 @@ function normalizarGenerada(salida: z.infer<typeof EsquemaActividad>, anteriores
     instrucciones: salida.instrucciones.filter((t) => t.trim() && !/\bQR\b/i.test(t)),
     criterios: salida.criterios
       .filter((c) => c.nombre.trim() && c.porcentaje > 0)
-      .map((c) => ({ ...c, porcentaje: Math.max(0, Math.min(100, Math.round(c.porcentaje))) })),
+      .map(normalizarCriterio),
     reactivos: salida.reactivos.map((r, i) => {
       const cerrado = r.tipo !== "desarrollo" && r.tipo !== "abierto";
       return {
@@ -520,7 +520,7 @@ Para cada reactivo de la rúbrica:
 - respuestaLeida: transcribe exactamente lo que el alumno marcó o escribió. Opción múltiple: la letra elegida. V/F: "V" o "F". Relación de columnas: pares como "1-c, 2-a". Paréntesis: las letras en orden. Desarrollo: su resultado final. Si está en blanco, cadena vacía.
 - confianza: alta si se lee con claridad; media si hay alguna duda; baja si la letra, la foto o el tachón no permiten leerlo con seguridad. Nunca adivines: si no se lee, usa confianza baja.
 - pasos: solo para desarrollo, un valor por cada paso de la rúbrica en el mismo orden: 1 si el paso está completo y correcto, 0.5 si está parcial o con un error menor, 0 si falta o es incorrecto. Acepta procedimientos distintos al del profesor si son correctos, salvo que sus indicaciones digan lo contrario. Para los demás tipos, lista vacía.
-- criterios: solo para reactivos abiertos cuando la actividad tiene criterios de evaluación: un valor por criterio, en el orden dado: 1 si lo cumple, 0.5 si lo cumple a medias, 0 si no. Para los demás, lista vacía.
+- criterios: solo para reactivos abiertos que traen "criterios" en la rúbrica: un valor por cada uno de esos criterios, en ese orden: 1 si lo cumple, 0.5 si lo cumple a medias, 0 si no. Evalúa cada reactivo solo con sus propios criterios: nunca le descuentes por criterios de otro ejercicio. Para los demás, lista vacía.
 - subrayados: solo si el estilo de corrección es "subrayado" (se indica abajo); si no, lista vacía. Los fragmentos concretos del texto del alumno que hay que corregir (una palabra, frase o renglón con error de contenido, coherencia, ortografía, gramática o cálculo), máximo 6 por reactivo, cada uno con pagina, y (la línea base del renglón, de 0 arriba a 1 abajo), x0 y x1 (inicio y fin del fragmento, de 0 izquierda a 1 derecha) y comentario (qué corregir, máximo 8 palabras, sin LaTeX).
 - puntosSugeridos: puntos que asignarías según la rúbrica (entre 0 y el valor del reactivo).
 - comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta. Sin LaTeX ni signos de dólar: se imprime en el PDF tal cual.
@@ -533,10 +533,26 @@ Además:
 - mejoras: 2 o 3 aspectos a mejorar, concretos y accionables.
 Escribe en español claro y amable, adecuado para adolescentes.`;
 
+/** Criterio propuesto por la IA: porcentaje entre 0 y 100 y reactivos solo si los indicó. */
+function normalizarCriterio(c: { nombre: string; porcentaje: number; descripcion: string; reactivos: number[] }): CriterioEvaluacion {
+  const reactivos = [...new Set(c.reactivos.filter((n) => Number.isInteger(n) && n > 0))];
+  return {
+    nombre: c.nombre,
+    porcentaje: Math.max(0, Math.min(100, Math.round(c.porcentaje))),
+    descripcion: c.descripcion,
+    ...(reactivos.length ? { reactivos } : {}),
+  };
+}
+
 function criteriosParaIA(act: Actividad) {
   let t = "";
   if (act.criterios?.length)
-    t += `\nCriterios de evaluación: ${act.criterios.map((c) => `${c.nombre}${c.porcentaje ? ` (${c.porcentaje} %)` : ""}: ${c.descripcion}`).join("; ")}`;
+    t += `\nCriterios de evaluación: ${act.criterios
+      .map((c) => {
+        const aplica = reactivosDelCriterio(c);
+        return `${c.nombre}${c.porcentaje ? ` (${c.porcentaje} %)` : ""}: ${c.descripcion}${aplica ? ` [solo reactivo ${aplica.join(", ")}]` : ""}`;
+      })
+      .join("; ")}`;
   if (act.recomendaciones?.length) t += `\nRecomendaciones para evaluar: ${act.recomendaciones.join("; ")}`;
   return t;
 }
@@ -550,6 +566,8 @@ function rubricaParaIA(act: Actividad) {
     puntos: r.puntos,
     pasos: r.pasos?.map((p) => p.nombre),
     solucionDelProfesor: r.solucionPasos,
+    // Solo los criterios que califican este reactivo (los de otros ejercicios no cuentan).
+    criterios: r.tipo === "abierto" ? criteriosDelReactivo(act, r.numero).map(({ criterio: c }) => `${c.nombre}${c.porcentaje ? ` (${c.porcentaje} %)` : ""}: ${c.descripcion}`) : undefined,
   }));
 }
 
@@ -602,13 +620,18 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
       });
       const fraccion = r.pasos.reduce((s, p, i) => s + p.peso * pasos![i], 0);
       puntos = cuartos(fraccion * r.puntos);
-    } else if (r.tipo === "abierto" && act.criterios?.length && ia.criterios.length) {
-      // Abiertos con criterios: los puntos salen de lo que cumple cada criterio y su porcentaje.
-      criterios = act.criterios.map((_, i) => {
-        const v = ia.criterios[i] ?? 0;
-        return v >= 0.75 ? 1 : v >= 0.25 ? 0.5 : 0;
+    } else if (r.tipo === "abierto" && criteriosDelReactivo(act, r.numero).length && ia.criterios.length) {
+      // Abiertos con criterios: los puntos salen de lo que cumple cada criterio del reactivo y su
+      // porcentaje. La IA responde en el orden de los criterios del reactivo; se guardan alineados
+      // con la lista completa de la actividad (los de otros reactivos quedan en 0 y no cuentan).
+      const propios = criteriosDelReactivo(act, r.numero);
+      const valores = (act.criterios ?? []).map(() => 0);
+      propios.forEach(({ indice }, j) => {
+        const v = ia.criterios[j] ?? 0;
+        valores[indice] = v >= 0.75 ? 1 : v >= 0.25 ? 0.5 : 0;
       });
-      puntos = cuartos((fraccionCriterios(act, criterios) ?? 0) * r.puntos);
+      criterios = valores;
+      puntos = cuartos((fraccionCriterios(act, criterios, r.numero) ?? 0) * r.puntos);
     } else {
       puntos = cuartos(Math.max(0, Math.min(r.puntos, ia.puntosSugeridos)));
     }
