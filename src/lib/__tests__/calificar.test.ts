@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { esCerrado, incisosCerrado, puntosReactivoCerrado } from "../calificar";
+import { corregirPuntosPalabras, esCerrado, incisosCerrado, puntosReactivoCerrado } from "../calificar";
 import type { Reactivo } from "../tipos";
 
 const base: Reactivo = {
@@ -61,5 +61,31 @@ describe("aciertos por renglón de un cerrado", () => {
     expect(incisosCerrado({ tipo: "opcion_multiple", respuesta: "c) m/s²" }, "b")).toEqual([{ correcto: false, correcta: "c" }]);
     expect(incisosCerrado({ tipo: "verdadero_falso", respuesta: "F" }, "F")).toEqual([{ correcto: true, correcta: "F" }]);
     expect(incisosCerrado({ tipo: "desarrollo", respuesta: "5" }, "5")).toEqual([]);
+  });
+});
+
+describe("elegir la palabra correcta en cada renglón", () => {
+  const r = { numero: 3, tipo: "opcion_multiple", puntos: 15, respuesta: "1) sportive, 2) divorcée, 3) heureuse, 4) intelligente, 5) sympathique" } as Reactivo;
+  const leida = "1) sportife, 2) divorcé, 3) heureuse, 4) intelligente, 5) sympathique";
+  it("compara la palabra completa, no la inicial", () => {
+    expect(puntosReactivoCerrado(r, leida)).toBe(9);
+    expect(incisosCerrado(r, leida).map((i) => [i.correcto, i.correcta, i.palabra])).toEqual([
+      [false, "sportive", true],
+      [false, "divorcée", true],
+      [true, "heureuse", true],
+      [true, "intelligente", true],
+      [true, "sympathique", true],
+    ]);
+  });
+  it("corrige los puntos guardados con la fórmula vieja, no los del profesor", () => {
+    const vieja = { puntosObtenidos: 15, respuestaLeida: leida };
+    expect(corregirPuntosPalabras(r, vieja)).toBe(true);
+    expect(vieja.puntosObtenidos).toBe(9);
+    const profesor = { puntosObtenidos: 12, respuestaLeida: leida };
+    expect(corregirPuntosPalabras(r, profesor)).toBe(false);
+    expect(profesor.puntosObtenidos).toBe(12);
+  });
+  it("una relación con letras sigue calificándose por letra", () => {
+    expect(incisosCerrado({ tipo: "relacion_columnas", respuesta: "1-e, 2-g" }, "1-e, 2-c").map((i) => i.palabra)).toEqual([undefined, undefined]);
   });
 });

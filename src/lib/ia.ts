@@ -504,7 +504,7 @@ const EsquemaEvaluacion = z.object({
       criterios: z.array(z.number()),
       subrayados: z.array(z.object({ pagina: z.number().int(), y: z.number(), x0: z.number(), x1: z.number(), comentario: z.string() })),
       elementos: z.array(z.object({ pagina: z.number().int(), y: z.number(), x: z.number() })),
-      incisos: z.array(z.object({ pagina: z.number().int(), y: z.number(), x: z.number() })),
+      incisos: z.array(z.object({ pagina: z.number().int(), y: z.number(), x: z.number(), yCorrecta: z.number(), xCorrecta: z.number() })),
       pagina: z.number().int(),
       y: z.number(),
       x: z.number(),
@@ -525,7 +525,7 @@ Para cada reactivo de la rúbrica:
 - criterios: solo para reactivos abiertos que traen "criterios" en la rúbrica: un valor por cada uno de esos criterios, en ese orden: 1 si lo cumple, 0.5 si lo cumple a medias, 0 si no. Evalúa cada reactivo solo con sus propios criterios: nunca le descuentes por criterios de otro ejercicio. Para los demás, lista vacía.
 - subrayados: solo si el estilo de corrección es "subrayado" (se indica abajo); si no, lista vacía. Los fragmentos concretos del texto del alumno que hay que corregir (una palabra, frase o renglón con error de contenido, coherencia, ortografía, gramática o cálculo), máximo 6 por reactivo, cada uno con pagina, y (la línea base del renglón, de 0 arriba a 1 abajo), x0 y x1 (inicio y fin del fragmento, de 0 izquierda a 1 derecha) y comentario (qué corregir, máximo 8 palabras, sin LaTeX).
 - elementos: si el reactivo trae "pasos" o "criterios" en la rúbrica, una ubicación por cada uno, en el mismo orden: pagina, y (0 arriba a 1 abajo) y x (0 izquierda a 1 derecha) del punto exacto de la hoja del alumno donde se ve ese paso o criterio (por ejemplo, el renglón con el ciclo for para "Uso de ciclos", o el renglón con el error). Si falta, señala dónde debería estar. Ahí se dibuja su marca. Para los demás, lista vacía.
-- incisos: solo para relación de columnas y paréntesis: una ubicación por cada renglón de la columna A, en orden (1, 2, 3…): pagina, y (0 arriba a 1 abajo) y x (0 izquierda a 1 derecha) justo a la derecha de la letra que escribió el alumno en ese renglón. Ahí se marca si acertó. Para los demás, lista vacía.
+- incisos: solo para relación de columnas, paréntesis y reactivos de elegir la palabra correcta de un conjunto en cada renglón numerado (encerrar o subrayar): una ubicación por renglón, en orden (1, 2, 3…), con pagina, y (0 arriba a 1 abajo) y x (0 izquierda a 1 derecha). Si el alumno escribió una letra: justo a la derecha de esa letra. Si eligió una palabra: el centro de la palabra que eligió. xCorrecta, yCorrecta: el centro de la opción correcta de ese renglón según la respuesta de la rúbrica (si no hay opciones impresas, igual que x, y). Ahí se marca si acertó. Para los demás, lista vacía. En respuestaLeida de esos reactivos de elegir palabra, escribe cada renglón como "1) palabra, 2) palabra", con la palabra completa tal como la eligió.
 - puntosSugeridos: puntos que asignarías según la rúbrica (entre 0 y el valor del reactivo).
 - comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta. Sin LaTeX ni signos de dólar: se imprime en el PDF tal cual.
 - pagina, y, x: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo; x de 0 izquierda a 1 derecha, al final de la respuesta). Ahí se dibuja la marca de corrección.
@@ -673,6 +673,8 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
             pagina: Math.max(1, Math.min(imagenes.length, u.pagina || ia.pagina || r.pagina)),
             y: Math.max(0, Math.min(1, u.y)),
             x: Math.max(0, Math.min(1, u.x)),
+            yCorrecta: Math.max(0, Math.min(1, u.yCorrecta ?? u.y)),
+            xCorrecta: Math.max(0, Math.min(1, u.xCorrecta ?? u.x)),
           }))
         : [];
     return {

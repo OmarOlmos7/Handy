@@ -199,7 +199,13 @@ export interface ResultadoReactivo {
    * Reactivos cerrados con varios renglones (relación, paréntesis): dónde está cada respuesta del
    * alumno, en el orden de la clave. Ahí se dibuja la paloma o el tache con la letra correcta.
    */
-  ubicacionesIncisos?: UbicacionElemento[];
+  ubicacionesIncisos?: UbicacionInciso[];
+}
+
+/** Respuesta de un renglón; si se elige una palabra de un conjunto, también dónde está la correcta. */
+export interface UbicacionInciso extends UbicacionElemento {
+  xCorrecta?: number;
+  yCorrecta?: number;
 }
 
 export interface UbicacionElemento {

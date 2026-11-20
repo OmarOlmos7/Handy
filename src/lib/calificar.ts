@@ -27,11 +27,46 @@ function pares(s: string) {
   return [...t.matchAll(/[a-z]/g)].map((m) => m[0]);
 }
 
+/** Palabra elegida, comparada sin mayúsculas ni signos alrededor (los acentos sí cuentan). */
+function palabra(s: string) {
+  return s
+    .normalize("NFC")
+    .toLowerCase()
+    .replace(/^[\s"'«»“”.()]+|[\s"'«»“”.()]+$/g, "")
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * Renglones numerados con una palabra elegida de un conjunto ("1) sportive, 2) divorcée"):
+ * número → palabra. Solo si hay dos o más y alguna es más que una letra (si todas son letras,
+ * es una relación de columnas o paréntesis y se califica por letra).
+ */
+export function palabrasNumeradas(s: string): Map<number, string> | null {
+  const items = [...s.matchAll(/(?:^|[,;\n])\s*(\d+)\s*[).:\-–]\s*([^,;\n]+)/g)].map((m) => [Number(m[1]), palabra(m[2])] as const);
+  if (items.length < 2 || !items.some(([, v]) => v.replace(/[^\p{L}\p{N}]/gu, "").length > 1)) return null;
+  return new Map(items);
+}
+
 /**
  * Puntos de un reactivo cerrado según la respuesta leída.
  * Devuelve null si el tipo no es cerrado (lo califica la IA con la rúbrica).
  */
 export function puntosReactivoCerrado(r: Reactivo, leida: string): number | null {
+  if (!leida.trim()) {
+    return r.tipo === "desarrollo" || r.tipo === "abierto" ? null : 0;
+  }
+  // Elegir la palabra correcta en cada renglón: se compara la palabra completa, no su inicial.
+  const clavePalabras = esCerrado(r) ? palabrasNumeradas(r.respuesta) : null;
+  if (clavePalabras) {
+    const alumno = palabrasNumeradas(leida) ?? new Map<number, string>();
+    const aciertos = [...clavePalabras].filter(([n, v]) => alumno.get(n) === v).length;
+    return Math.round((aciertos / clavePalabras.size) * r.puntos * 4) / 4;
+  }
+  return puntosCerradoPorLetra(r, leida);
+}
+
+/** Calificación por letra (opción, V/F, relación, paréntesis). Antes también se usaba para palabras. */
+export function puntosCerradoPorLetra(r: Reactivo, leida: string): number | null {
   if (!leida.trim()) {
     return r.tipo === "desarrollo" || r.tipo === "abierto" ? null : 0;
   }
@@ -55,7 +90,7 @@ export function puntosReactivoCerrado(r: Reactivo, leida: string): number | null
   }
 }
 
-export function esCerrado(r: Reactivo) {
+export function esCerrado(r: Pick<Reactivo, "tipo">) {
   return r.tipo !== "desarrollo" && r.tipo !== "abierto";
 }
 
@@ -63,6 +98,8 @@ export interface IncisoCerrado {
   correcto: boolean;
   /** Respuesta correcta de ese renglón, para escribirla junto al tache ("c", "V"). */
   correcta: string;
+  /** Se eligió una palabra de un conjunto: la paloma va sobre la elegida; el tache, sobre la correcta. */
+  palabra?: boolean;
 }
 
 /**
@@ -71,6 +108,13 @@ export interface IncisoCerrado {
  * `puntosReactivoCerrado`.
  */
 export function incisosCerrado(r: Pick<Reactivo, "tipo" | "respuesta">, leida: string): IncisoCerrado[] {
+  const clavePalabras = r.tipo !== "desarrollo" && r.tipo !== "abierto" ? palabrasNumeradas(r.respuesta) : null;
+  if (clavePalabras) {
+    const alumno = (leida.trim() && palabrasNumeradas(leida)) || new Map<number, string>();
+    return [...clavePalabras]
+      .sort(([a], [b]) => a - b)
+      .map(([n, v]) => ({ correcto: alumno.get(n) === v, correcta: v, palabra: true }));
+  }
   switch (r.tipo) {
     case "verdadero_falso":
     case "opcion_multiple": {
@@ -91,4 +135,19 @@ export function incisosCerrado(r: Pick<Reactivo, "tipo" | "respuesta">, leida: s
     default:
       return [];
   }
+}
+
+/**
+ * Antes, elegir una palabra de un conjunto ("1) sportive, 2) divorcée") se calificaba solo por la
+ * inicial, así que "sportife" contaba como "sportive". Si los puntos guardados son justo los de
+ * esa fórmula (no los cambió el profesor), se recalculan comparando la palabra completa con lo
+ * que ya leyó la evaluación. Devuelve true si cambió algo.
+ */
+export function corregirPuntosPalabras(r: Reactivo, res: { puntosObtenidos: number; respuestaLeida: string }) {
+  if (!esCerrado(r) || !palabrasNumeradas(r.respuesta)) return false;
+  const nuevos = puntosReactivoCerrado(r, res.respuestaLeida);
+  if (nuevos === null || nuevos === res.puntosObtenidos) return false;
+  if (res.puntosObtenidos !== puntosCerradoPorLetra(r, res.respuestaLeida)) return false;
+  res.puntosObtenidos = nuevos;
+  return true;
 }

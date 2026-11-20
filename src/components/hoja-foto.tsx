@@ -103,6 +103,20 @@ export function HojaFoto({
             return incisosCerrado(r, res.respuestaLeida).flatMap((inc, j) => {
               const u = res.ubicacionesIncisos?.[j];
               if (!u || u.pagina !== pagina) return [];
+              if (inc.palabra) {
+                // Palabra elegida: paloma sobre la elegida si acertó; si no, tache sobre la correcta.
+                const ux = inc.correcto ? u.x : (u.xCorrecta ?? u.x);
+                const uy = inc.correcto ? u.y : (u.yCorrecta ?? u.y);
+                return [
+                  <span
+                    key={`i${res.numero}.${j}`}
+                    className={`absolute -translate-x-1/2 -translate-y-full text-sm font-bold leading-none drop-shadow-[0_0_2px_white] sm:text-base ${inc.correcto ? "text-acierto" : "text-error"}`}
+                    style={{ left: `${Math.min(0.98, Math.max(0.01, ux)) * 100}%`, top: `${Math.min(0.98, Math.max(0.02, uy)) * 100}%` }}
+                  >
+                    {inc.correcto ? "✓" : "✗"}
+                  </span>,
+                ];
+              }
               return [
                 <span
                   key={`i${res.numero}.${j}`}
