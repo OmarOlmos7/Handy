@@ -78,6 +78,11 @@ export interface CriterioEvaluacion {
   /** Porcentaje de la calificación (0-100); 0 si el profesor no lo indicó. */
   porcentaje: number;
   descripcion: string;
+  /**
+   * Números de los reactivos a los que aplica (por ejemplo, un criterio del ejercicio 2 solo
+   * califica el reactivo 2). Sin valor o vacío: aplica a todos los reactivos abiertos.
+   */
+  reactivos?: number[];
 }
 
 export type OrigenActividad = "ia" | "escaneada";
