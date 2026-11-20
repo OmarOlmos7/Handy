@@ -1,6 +1,7 @@
 // PDF de retroalimentación del alumno: portada con el reporte y sus hojas con
 // círculos numerados con paloma verde o tache rojo sobre cada reactivo y los
 // comentarios en orden en el margen derecho. El logo va como marca de agua.
+import { actividadDeVersion } from "./versiones";
 import "server-only";
 import fs from "node:fs";
 import path from "node:path";
@@ -324,7 +325,8 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
 }
 
 /** Hojas corregidas solas (sin portada ni marca de agua): es lo que se guarda al archivar la entrega. */
-export async function pdfHojasCorregidas(actividad: Actividad, entrega: Entrega, tx: TextosPdf = alumnoEs.pdf): Promise<Uint8Array> {
+export async function pdfHojasCorregidas(actividadBase: Actividad, entrega: Entrega, tx: TextosPdf = alumnoEs.pdf): Promise<Uint8Array> {
+  const actividad = actividadDeVersion(actividadBase, entrega.version);
   const doc = await PDFDocument.create();
   const { normal, negrita } = await fuentesPdf(doc, [tx.reactivoPuntos, tx.correcto, ...textosDeHojas(actividad, entrega)], leerFuenteCjk);
   await dibujarHojas(doc, actividad, entrega, normal, negrita, formatoCal(calificacion(actividad, entrega), escalaDe(actividad)), tx);
@@ -389,7 +391,8 @@ export async function pdfRetroalimentacion(
   tx: TextosPdf = alumnoEs.pdf,
   locale?: string,
 ): Promise<Uint8Array> {
-  const { actividad, alumno, entrega, grupo } = datos;
+  const { alumno, entrega, grupo } = datos;
+  const actividad = actividadDeVersion(datos.actividad, entrega.version);
   const doc = await PDFDocument.create();
   doc.setTitle(`${tx.tituloDoc} · ${actividad.titulo} · ${alumno.nombre}`);
   const e = entrega.estudio;

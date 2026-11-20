@@ -277,6 +277,7 @@ const profesor: Diccionario["profesor"] = {
       "Delete {nombre}'s submission?\n\nTheir photos and grading are deleted, and they can send a new submission with the same QR. Credits already used are not refunded.",
   },
   hoja: {
+    versionesTexto: "Print each version: every sheet has its letter and its own QR code, so each submission keeps its version.",
     titulo: "Printable sheet",
     siguiente: "Next: prepare the solution",
     escaneadaTexto: "Your scanned activity with a header for name, student ID and grade, and the submission QR code on every page.",
@@ -287,6 +288,9 @@ const profesor: Diccionario["profesor"] = {
     modificar: "Edit assignment",
   },
   solucion: {
+    solucionVersion: "Solution for version {v}",
+    revisarTitulo: "Check these items in version {v}",
+    revisarReactivo: "Item {n}: a second independent solution got “{r}”.",
     hojaQr: "Printable sheet with QR",
     siguiente: "Next: review the rubric",
     paso2: "Step 2 · Prepare the solution",
@@ -345,6 +349,9 @@ const profesor: Diccionario["profesor"] = {
     abajo: "below the question",
     ilustracionesDespues: " (larger, ideal for graphs with data). If you don't ask for them, the sheet has no drawings.",
     paginas: "Approximate pages",
+    versiones: "Versions of the activity",
+    versionesAyuda: "With 2 or more, each version changes only the numbers and has its own solution. All are graded with the same rubric.",
+    versionesUna: "1 (single version)",
     archivo1: "{n} file: {lista}",
     archivoN: "{n} files: {lista}",
     elegirArchivos: "Tap to choose the photos or PDF of your blank activity (one photo per page, in order)",

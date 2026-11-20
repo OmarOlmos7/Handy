@@ -273,6 +273,7 @@ const profesor: Diccionario["profesor"] = {
     confirmar: "删除 {nombre} 的提交？\n\n照片和批改结果将被删除，之后可用同一二维码重新提交。已使用的额度不退还。",
   },
   hoja: {
+    versionesTexto: "请打印每个版本：每张纸都有版本字母和专属二维码，提交时会记录版本。",
     titulo: "打印页",
     siguiente: "下一步：准备答案",
     escaneadaTexto: "你扫描的作业，每页都加上了姓名、学号、成绩栏和提交二维码。",
@@ -283,6 +284,9 @@ const profesor: Diccionario["profesor"] = {
     modificar: "修改作业",
   },
   solucion: {
+    solucionVersion: "版本 {v} 的答案",
+    revisarTitulo: "请检查版本 {v} 的这些题目",
+    revisarReactivo: "第 {n} 题：另一次独立求解得到“{r}”。",
     hojaQr: "带二维码的打印页",
     siguiente: "下一步：检查评分标准",
     paso2: "第 2 步 · 准备答案",
@@ -339,6 +343,9 @@ const profesor: Diccionario["profesor"] = {
     abajo: "题干下方",
     ilustracionesDespues: "（较大，适合带数据的图表）。如果不写，作业页上就没有图。",
     paginas: "大约页数",
+    versiones: "作业版本数",
+    versionesAyuda: "选择 2 个或以上时，每个版本只改变数值，并有自己的答案。所有版本使用同一评分标准。",
+    versionesUna: "1（只有一个版本）",
     archivo1: "{n} 个文件：{lista}",
     archivoN: "{n} 个文件：{lista}",
     elegirArchivos: "点击选择空白作业的照片或 PDF（每页一张照片，按顺序）",

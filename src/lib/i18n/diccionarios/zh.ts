@@ -4,6 +4,7 @@ import profesor from "./profesor/zh";
 
 const zh: Diccionario = {
   comun: {
+    version: "版本 {v}",
     idioma: "语言",
     ingresar: "登录",
     salir: "退出",

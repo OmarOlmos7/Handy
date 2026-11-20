@@ -200,9 +200,12 @@ export async function HojaActividad({
   curso,
   qrSrc,
   solucion = false,
+  version,
 }: {
   actividad: Actividad;
   curso: string;
+  /** Letra de la versión (A, B…) cuando la actividad tiene varias; se imprime junto al título. */
+  version?: string;
   /** Sin QR (por ejemplo, al mostrar la solución), el recuadro dice "Solución propuesta". */
   qrSrc?: string;
   /** Muestra la solución propuesta escrita sobre la hoja. */
@@ -222,7 +225,12 @@ export async function HojaActividad({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.png" alt="" className="h-[74px] w-auto" />
             <div className="min-w-0">
-              <p className="text-xs font-bold uppercase tracking-[0.3em] text-tinta-600">{curso}</p>
+              <p className="flex flex-wrap items-center gap-x-3 text-xs font-bold uppercase tracking-[0.3em] text-tinta-600">
+                {curso}
+                {version && (
+                  <span className="rounded-md bg-slate-900 px-2 py-0.5 text-[13px] tracking-[0.15em] text-white">{formato(t.comun.version, { v: version })}</span>
+                )}
+              </p>
               <h1 className="mt-0.5 text-[28px] font-bold leading-[1.1] tracking-tight text-slate-900">{actividad.titulo}</h1>
               <p className="mt-1 text-sm text-slate-500">
                 {fecha} · {formato(conPuntaje(actividad) ? th.resumen : th.resumenSinPuntos, { n: actividad.reactivos.length, p: total })}

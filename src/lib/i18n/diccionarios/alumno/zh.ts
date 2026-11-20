@@ -39,6 +39,8 @@ const alumno: Diccionario["alumno"] = {
     descargarPdf: "下载 PDF",
   },
   entregar: {
+    versionHoja: "你的试卷版本",
+    versionAyuda: "就是试卷标题旁边的字母。",
     suspendidas: "老师已暂停本作业的提交。请向老师询问何时重新开放。",
     entregasComo: "提交人：",
     noEresTu: "不是你？退出",

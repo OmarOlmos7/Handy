@@ -1,4 +1,5 @@
 import { after } from "next/server";
+import { versionValida } from "@/lib/versiones";
 import { actividadDe, borrarCarpeta, grupoDe, guardarArchivo, leer, modificar } from "@/lib/almacen";
 import { alumnoEnGrupo, esDelProfesor, normalizarCorreo, normalizarMatricula } from "@/lib/cuentas";
 import { crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
@@ -122,6 +123,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
       estado: "entregada",
       paginasRecibidas: imagenes.length,
       imagenes,
+      version: versionValida(actividad, form.get("version")),
       resultados: [],
       positivos: [],
       mejoras: [],

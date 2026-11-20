@@ -40,6 +40,8 @@ const alumno: Diccionario["alumno"] = {
     descargarPdf: "Baixar PDF",
   },
   entregar: {
+    versionHoja: "Versão da sua folha",
+    versionAyuda: "É a letra ao lado do título da sua folha.",
     suspendidas: "O professor suspendeu as entregas desta atividade. Pergunte quando elas serão reabertas.",
     entregasComo: "Você está entregando como",
     noEresTu: "Não é você? Sair",

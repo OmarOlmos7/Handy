@@ -277,6 +277,7 @@ const profesor: Diccionario["profesor"] = {
       "Supprimer le rendu de {nombre} ?\n\nSes photos et sa correction sont supprimées, et il pourra envoyer un nouveau rendu avec le même QR. Les crédits déjà utilisés ne sont pas remboursés.",
   },
   hoja: {
+    versionesTexto: "Imprimez chaque version : chaque feuille porte sa lettre et son propre QR, ainsi le rendu garde sa version.",
     titulo: "Feuille imprimable",
     siguiente: "Suivant : préparer la solution",
     escaneadaTexto: "Votre activité numérisée avec un en-tête pour le nom, le matricule et la note, et le code QR de rendu sur chaque page.",
@@ -287,6 +288,9 @@ const profesor: Diccionario["profesor"] = {
     modificar: "Modifier l'activité",
   },
   solucion: {
+    solucionVersion: "Solution de la version {v}",
+    revisarTitulo: "Vérifiez ces questions de la version {v}",
+    revisarReactivo: "Question {n} : une seconde résolution indépendante a obtenu « {r} ».",
     hojaQr: "Feuille imprimable avec QR",
     siguiente: "Suivant : vérifier la grille",
     paso2: "Étape 2 · Préparez la solution",
@@ -345,6 +349,9 @@ const profesor: Diccionario["profesor"] = {
     abajo: "sous l'énoncé",
     ilustracionesDespues: " (plus grande, idéale pour des graphiques avec données). Si vous ne les demandez pas, la feuille n'a pas de dessins.",
     paginas: "Pages approximatives",
+    versiones: "Versions de l'activité",
+    versionesAyuda: "À partir de 2, chaque version ne change que les valeurs numériques et a sa propre solution. Toutes sont corrigées avec la même grille.",
+    versionesUna: "1 (une seule version)",
     archivo1: "{n} fichier : {lista}",
     archivoN: "{n} fichiers : {lista}",
     elegirArchivos: "Touchez pour choisir les photos ou le PDF de votre activité vierge (une photo par page, dans l'ordre)",

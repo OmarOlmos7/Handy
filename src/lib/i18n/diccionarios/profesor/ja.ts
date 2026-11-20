@@ -277,6 +277,7 @@ const profesor: Diccionario["profesor"] = {
       "{nombre} さんの提出を削除しますか？\n\n写真と採点が削除され、同じQRで新しく提出できるようになります。使用済みのクレジットは返却されません。",
   },
   hoja: {
+    versionesTexto: "各バージョンを印刷してください。各用紙にはバージョンの文字と専用のQRがあり、提出物にバージョンが記録されます。",
     titulo: "印刷用シート",
     siguiente: "次へ：解答の準備",
     escaneadaTexto: "スキャンした課題に、氏名・生徒番号・評価の欄と提出用QRコードを各ページに追加しました。",
@@ -287,6 +288,9 @@ const profesor: Diccionario["profesor"] = {
     modificar: "課題を編集",
   },
   solucion: {
+    solucionVersion: "バージョン {v} の解答",
+    revisarTitulo: "バージョン {v} のこれらの問題を確認してください",
+    revisarReactivo: "問題 {n}：別の独立した解答では「{r}」になりました。",
     hojaQr: "QR付き印刷用シート",
     siguiente: "次へ：ルーブリックの確認",
     paso2: "ステップ2 · 解答を準備",
@@ -345,6 +349,9 @@ const profesor: Diccionario["profesor"] = {
     abajo: "問題文の下",
     ilustracionesDespues: "（大きめ、データのあるグラフに最適）。指定しなければ、シートに図は入りません。",
     paginas: "おおよそのページ数",
+    versiones: "課題のバージョン数",
+    versionesAyuda: "2以上にすると、各バージョンは数値だけが変わり、それぞれの解答を持ちます。すべて同じルーブリックで採点します。",
+    versionesUna: "1（1バージョンのみ）",
     archivo1: "{n} 個のファイル：{lista}",
     archivoN: "{n} 個のファイル：{lista}",
     elegirArchivos: "タップして白紙の課題の写真またはPDFを選択（1ページにつき写真1枚、順番どおり）",

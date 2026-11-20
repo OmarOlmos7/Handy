@@ -277,6 +277,7 @@ const profesor: Diccionario["profesor"] = {
       "Excluir a entrega de {nombre}?\n\nAs fotos e a correção são apagadas, e será possível enviar uma nova entrega com o mesmo QR. Os créditos já usados não são devolvidos.",
   },
   hoja: {
+    versionesTexto: "Imprima cada versão: cada folha leva sua letra e seu próprio QR, assim a entrega fica com sua versão.",
     titulo: "Folha para imprimir",
     siguiente: "Próximo: preparar a solução",
     escaneadaTexto: "Sua atividade digitalizada com cabeçalho para nome, matrícula e nota, e o código QR de entrega em cada página.",
@@ -287,6 +288,9 @@ const profesor: Diccionario["profesor"] = {
     modificar: "Editar atividade",
   },
   solucion: {
+    solucionVersion: "Solução da versão {v}",
+    revisarTitulo: "Revise estas questões da versão {v}",
+    revisarReactivo: "Questão {n}: uma segunda resolução independente obteve «{r}».",
     hojaQr: "Folha para imprimir com QR",
     siguiente: "Próximo: revisar a rubrica",
     paso2: "Passo 2 · Prepare a solução",
@@ -345,6 +349,9 @@ const profesor: Diccionario["profesor"] = {
     abajo: "abaixo do enunciado",
     ilustracionesDespues: " (maior, ideal para gráficos com dados). Se não pedir, a folha não terá desenhos.",
     paginas: "Páginas aproximadas",
+    versiones: "Versões da atividade",
+    versionesAyuda: "Com 2 ou mais, cada versão muda só os valores numéricos e tem sua própria solução. Todas são avaliadas com a mesma rubrica.",
+    versionesUna: "1 (uma só versão)",
     archivo1: "{n} arquivo: {lista}",
     archivoN: "{n} arquivos: {lista}",
     elegirArchivos: "Toque para escolher as fotos ou o PDF da sua atividade em branco (uma foto por página, em ordem)",

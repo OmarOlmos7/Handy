@@ -5,6 +5,7 @@ import profesor from "./profesor/es";
 
 const es = {
   comun: {
+    version: "Versión {v}",
     idioma: "Idioma",
     ingresar: "Ingresar",
     salir: "Salir",

@@ -4,6 +4,7 @@
 import "server-only";
 import { actividadDe, grupoDe, leerAhora, modificar } from "./almacen";
 import { creditosPorPagina } from "./configuracion";
+import { actividadDeVersion } from "./versiones";
 import { saldoDe } from "./cuentas";
 import { ErrorIA, buscarRecursos, evaluarEntrega, recomendarEstudio, temasDe } from "./ia";
 import { imagenesParaIA } from "./imagenes";
@@ -55,7 +56,8 @@ async function evaluarAhora(actividadId: string, matricula: string, reevaluar = 
 
   try {
     // A la IA solo van las fotos y la rúbrica: nunca el nombre ni la matrícula.
-    const evaluacion = await evaluarEntrega(actividad, imagenesParaIA(imagenes), { profesorId: grupo.profesorId, actividadId });
+    // Cada alumno se evalúa con el texto y la solución de su versión; la rúbrica es la misma.
+    const evaluacion = await evaluarEntrega(actividadDeVersion(actividad, entrega.version), imagenesParaIA(imagenes), { profesorId: grupo.profesorId, actividadId });
     modificar((d) => {
       const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
       // Si el alumno volvió a entregar mientras se evaluaba, no se pisa su entrega nueva.
@@ -122,7 +124,7 @@ export async function generarEstudio(actividadId: string, matricula: string): Pr
   if (!actividad || !grupo || !entrega || entrega.resultados.length === 0) return false;
   try {
     // Solo temas, puntos y comentarios: nunca el nombre ni la matrícula.
-    const estudio = await recomendarEstudio(actividad, entrega.resultados, entrega.mejoras, { profesorId: grupo.profesorId, actividadId });
+    const estudio = await recomendarEstudio(actividadDeVersion(actividad, entrega.version), entrega.resultados, entrega.mejoras, { profesorId: grupo.profesorId, actividadId });
     modificar((d) => {
       const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
       if (e) e.estudio = { ...estudio, generadoEn: new Date().toISOString() };

@@ -15,7 +15,8 @@ import { formato, type Idioma } from "./i18n/idiomas";
 import { idiomaDeActividad } from "./i18n/detectar";
 import { criteriosDelReactivo, fraccionCriterios, reactivosDelCriterio } from "./elementos";
 import { diccionarioDe } from "./i18n/diccionario";
-import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, RecursoEstudio, ResultadoReactivo, TipoConsumoIA } from "./tipos";
+import type { Actividad, CriterioEvaluacion, Escala, PrecisionIA, Reactivo, RecomendacionesEstudio, RecursoEstudio, ResultadoReactivo, TipoConsumoIA, VersionActividad } from "./tipos";
+import { coinciden, letraVersion } from "./versiones";
 
 export class ErrorIA extends Error {}
 
@@ -427,6 +428,181 @@ export async function editarActividad(act: Actividad, peticion: string, uso: Uso
   });
   if (salida.reactivos.length === 0) throw new ErrorIA("La IA dejó la actividad sin reactivos. Revisa tu petición.");
   return normalizarGenerada(salida, act.reactivos);
+}
+
+// ---------- Versiones de la actividad (B, C…) ----------
+
+const EsquemaVersion = z.object({
+  reactivos: z.array(
+    z.object({
+      numero: z.number().int(),
+      enunciado: z.string(),
+      opciones: z.array(z.string()),
+      columnaA: z.array(z.string()),
+      columnaB: z.array(z.string()),
+      ilustracion: z.string(),
+    }),
+  ),
+});
+
+const SISTEMA_VERSION = `Eres un diseñador de actividades para profesores de secundaria y bachillerato en México.
+Recibes una actividad impresa (versión A) y debes escribir otra versión para que los alumnos que se sientan juntos no copien. Todas las versiones se califican con la misma rúbrica.
+
+Reglas:
+- Cambia solo los valores numéricos (datos, cantidades, coeficientes, medidas, valores en gráficas). Conserva el mismo contexto, los mismos nombres, las mismas preguntas, el mismo procedimiento de solución, las mismas unidades y la misma dificultad.
+- Elige valores realistas y fáciles de trabajar a mano (como los de la versión A), que den resultados razonables y bien definidos: sin divisiones entre cero, raíces negativas, ángulos imposibles, probabilidades fuera de 0 a 1 ni datos contradictorios. Los valores nuevos deben ser claramente distintos de los de la versión A.
+- Resuelve mentalmente cada reactivo con los valores nuevos y verifica que tenga solución correcta.
+- Opción múltiple: conserva el número de opciones y sus letras. Recalcula las opciones para que exactamente una sea la correcta con los valores nuevos y los distractores sean errores típicos; la correcta puede quedar en otra letra.
+- Relación de columnas y paréntesis: si los elementos tienen números, actualízalos para que la relación correcta siga siendo única.
+- Reactivos sin valores numéricos (conceptos, verdadero o falso sin datos, abiertos): cópialos igual.
+- ilustracion: si el reactivo de la versión A tiene dibujo con valores (ejes, medidas, datos de una gráfica), redibújalo en SVG con los valores nuevos y el mismo estilo; si el dibujo no tiene valores que cambien, escribe "conservar"; si no tiene dibujo, cadena vacía.
+- Conserva el formato: LaTeX entre $…$, incisos "a) … b) …", opciones con su letra, columnaA numerada y columnaB con letras. No escribas puntos, espacios para responder ni respuestas.
+- Devuelve todos los reactivos, con el mismo número que en la versión A.`;
+
+/** Rango sugerido de cambio para cada versión, para que las versiones no repitan valores entre sí. */
+const CAMBIO_VERSION: Record<string, string> = {
+  B: "aumenta la mayoría de los datos entre 20 % y 60 %",
+  C: "disminuye la mayoría de los datos entre 20 % y 50 %",
+  D: "aumenta la mayoría de los datos entre 70 % y 150 %",
+  E: "combina datos más grandes y más pequeños que en la versión A (entre −40 % y +100 %)",
+};
+
+/** Escribe otra versión de la hoja con valores numéricos distintos (sin solución todavía). */
+export async function generarVersion(act: Actividad, letra: string, uso: UsoIA): Promise<VersionActividad> {
+  const original = act.reactivos.map((r) => ({
+    numero: r.numero,
+    tipo: r.tipo,
+    enunciado: r.enunciado,
+    opciones: r.opciones ?? [],
+    columnaA: r.columnaA ?? [],
+    columnaB: r.columnaB ?? [],
+    ilustracion: r.ilustracion ?? "",
+  }));
+  const salida = await pedir({
+    tipo: "generar",
+    uso,
+    system: SISTEMA_VERSION,
+    esquema: EsquemaVersion,
+    contenido: [
+      {
+        type: "text",
+        text: `Actividad: ${act.titulo}\nVersión A:\n${JSON.stringify(original, null, 1)}\n\nEscribe la versión ${letra}. Sugerencia para que no se repita con las demás versiones: ${CAMBIO_VERSION[letra] ?? "usa valores distintos a los de las otras versiones"}.`,
+      },
+    ],
+  });
+  const limpiar = (t: string) => t.replace(/\(\s*_*\s*\)|_{3,}/g, "").replace(/[ \t]{2,}/g, " ").trim();
+  // Lo que no venga completo se queda como en la versión A (mismo número de opciones y renglones).
+  const igualLargo = (nuevas: string[], antes?: string[]) => (antes?.length && nuevas.length === antes.length ? nuevas.map(limpiar) : antes);
+  return {
+    letra,
+    reactivos: act.reactivos.map((r) => {
+      const v = salida.reactivos.find((x) => x.numero === r.numero);
+      const dibujo = v?.ilustracion.trim() ?? "";
+      return {
+        numero: r.numero,
+        enunciado: v?.enunciado.trim() ? limpiar(v.enunciado) : r.enunciado,
+        opciones: v ? igualLargo(v.opciones, r.opciones) : r.opciones,
+        columnaA: v ? igualLargo(v.columnaA, r.columnaA) : r.columnaA,
+        columnaB: v ? igualLargo(v.columnaB, r.columnaB) : r.columnaB,
+        ilustracion: !r.ilustracion || !dibujo || dibujo.toLowerCase() === "conservar" ? r.ilustracion : (svgSeguro(dibujo) ?? r.ilustracion),
+        respuesta: "",
+      };
+    }),
+  };
+}
+
+/** Escribe las versiones B, C… de la actividad, en paralelo. */
+export async function generarVersiones(act: Actividad, cantidad: number, uso: UsoIA): Promise<VersionActividad[]> {
+  const letras = Array.from({ length: Math.max(0, cantidad - 1) }, (_, i) => letraVersion(i + 1));
+  return Promise.all(letras.map((l) => generarVersion(act, l, uso)));
+}
+
+const EsquemaSolucionVersion = z.object({
+  reactivos: z.array(z.object({ numero: z.number().int(), respuesta: z.string(), solucionPasos: z.array(z.string()), valores: z.array(z.number()) })),
+});
+
+const NOTA_VALORES = `- valores: los resultados numéricos finales de la respuesta, como números decimales y en el orden de los incisos (por ejemplo [2.5, 0.75]); lista vacía si la respuesta no es numérica.`;
+
+const SISTEMA_RESOLVER_VERSION = `Eres un profesor experto de secundaria y bachillerato en México. Recibes la solución de la versión A de una actividad y la versión nueva, que solo cambia los valores numéricos. Resuelve la versión nueva siguiendo exactamente el mismo método, los mismos pasos y el mismo formato que la solución de la versión A, con los valores nuevos.
+- Haz cada cálculo con cuidado y verifícalo. La respuesta debe ser correcta para los valores de la versión nueva.
+- respuesta: con el mismo formato que en la versión A (opción múltiple: letra y texto de la opción correcta de la versión nueva; verdadero o falso: "V" o "F"; relación: pares como "1-c, 2-a"; desarrollo: resultado final con unidades, en texto simple sin LaTeX; abierto: los mismos criterios que la versión A, ajustados a los datos nuevos).
+- solucionPasos: solo para desarrollo, una línea por paso como en la versión A, con LaTeX entre $…$; para los demás, lista vacía.
+${NOTA_VALORES}`;
+
+const EsquemaVerificacion = z.object({
+  reactivos: z.array(z.object({ numero: z.number().int(), respuesta: z.string(), valores: z.array(z.number()) })),
+});
+
+const SISTEMA_VERIFICAR = `Eres un profesor experto de secundaria y bachillerato en México. Resuelve cada reactivo de la actividad con cuidado, de forma independiente, y verifica tus cálculos.
+- respuesta: opción múltiple, la letra y el texto de la opción correcta; verdadero o falso, "V" o "F"; relación de columnas, pares como "1-c, 2-a"; paréntesis, las letras en orden; desarrollo, el resultado final con unidades en texto simple; abierto, una respuesta breve.
+${NOTA_VALORES}`;
+
+/** Reactivos de una versión como texto para la IA (sin solución). */
+function reactivosComoTexto(act: Actividad) {
+  return act.reactivos.map((r) => ({ numero: r.numero, tipo: r.tipo, enunciado: r.enunciado, opciones: r.opciones, columnaA: r.columnaA, columnaB: r.columnaB }));
+}
+
+/**
+ * Resuelve otra versión con el método de la solución de la versión A y la verifica con una segunda
+ * resolución independiente. Los reactivos en que no coinciden quedan marcados para que el profesor
+ * los revise.
+ */
+export async function resolverVersion(act: Actividad, version: VersionActividad, uso: UsoIA): Promise<VersionActividad> {
+  const comoVersion: Actividad = {
+    ...act,
+    reactivos: act.reactivos.map((r) => {
+      const v = version.reactivos.find((x) => x.numero === r.numero);
+      return v ? { ...r, enunciado: v.enunciado, opciones: v.opciones, columnaA: v.columnaA, columnaB: v.columnaB } : r;
+    }),
+  };
+  const referencia = act.reactivos.map((r) => ({
+    numero: r.numero,
+    tipo: r.tipo,
+    enunciado: r.enunciado,
+    opciones: r.opciones,
+    columnaA: r.columnaA,
+    columnaB: r.columnaB,
+    pasos: r.pasos?.map((p) => p.nombre),
+    solucionPasos: r.solucionPasos,
+    respuesta: r.respuesta,
+  }));
+  const [solucion, verificacion] = await Promise.all([
+    pedir({
+      tipo: "resolver",
+      uso,
+      system: SISTEMA_RESOLVER_VERSION,
+      esquema: EsquemaSolucionVersion,
+      contenido: [
+        {
+          type: "text",
+          text: `Actividad: ${act.titulo}\nCondiciones del profesor para resolver: ${act.condicionesSolucion?.trim() || "ninguna"}\nSolución de la versión A:\n${JSON.stringify(referencia, null, 1)}\n\nVersión ${version.letra} (resuélvela):\n${JSON.stringify(reactivosComoTexto(comoVersion), null, 1)}`,
+        },
+      ],
+    }),
+    pedir({
+      tipo: "resolver",
+      uso,
+      system: SISTEMA_VERIFICAR,
+      esquema: EsquemaVerificacion,
+      contenido: [{ type: "text", text: `Actividad: ${act.titulo}\nReactivos:\n${JSON.stringify(reactivosComoTexto(comoVersion), null, 1)}` }],
+    }),
+  ]);
+  const revisar: { numero: number; otra: string }[] = [];
+  const reactivos = version.reactivos.map((v) => {
+    const base = act.reactivos.find((r) => r.numero === v.numero);
+    const s = solucion.reactivos.find((x) => x.numero === v.numero);
+    const otra = verificacion.reactivos.find((x) => x.numero === v.numero);
+    if (!base || !s) return v;
+    if (!otra || !coinciden(base.tipo, s, otra)) revisar.push({ numero: v.numero, otra: otra?.respuesta ?? "" });
+    return { ...v, respuesta: s.respuesta.trim(), solucionPasos: base.tipo === "desarrollo" && s.solucionPasos.length ? s.solucionPasos : undefined };
+  });
+  return { ...version, reactivos, revisar: revisar.length ? revisar : undefined };
+}
+
+/** Resuelve todas las versiones de la actividad (que ya tiene la solución de la A), en paralelo. */
+export async function resolverVersiones(act: Actividad, uso: UsoIA): Promise<VersionActividad[] | undefined> {
+  if (!act.versiones?.length) return act.versiones;
+  return Promise.all(act.versiones.map((v) => resolverVersion(act, v, uso)));
 }
 
 // ---------- Solución generada con IA ----------

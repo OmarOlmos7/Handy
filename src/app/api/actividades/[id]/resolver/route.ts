@@ -1,6 +1,6 @@
 import { actividadDe, leer, modificar } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
-import { ErrorIA, resolverActividad } from "@/lib/ia";
+import { ErrorIA, resolverActividad, resolverVersiones } from "@/lib/ia";
 import { imagenesParaIA } from "@/lib/imagenes";
 import { profesorActual } from "@/lib/sesion";
 
@@ -23,12 +23,16 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
 
   try {
     const imagenes = actividad.origen === "escaneada" && actividad.archivos?.length ? imagenesParaIA(actividad.archivos) : undefined;
-    const propuesta = await resolverActividad({ ...actividad, instrucciones: criterios }, { condiciones: String(condiciones).slice(0, 4000), imagenes }, { profesorId: profesor.id, actividadId: actividad.id });
+    const uso = { profesorId: profesor.id, actividadId: actividad.id };
+    const propuesta = await resolverActividad({ ...actividad, instrucciones: criterios }, { condiciones: String(condiciones).slice(0, 4000), imagenes }, uso);
+    // Las demás versiones se resuelven con el mismo método que la A y se verifican.
+    const versiones = await resolverVersiones({ ...actividad, reactivos: propuesta.reactivos, condicionesSolucion: String(condiciones).trim() }, uso);
     modificar((d) => {
       const a = actividadDe(d, id)!;
       a.instrucciones = criterios;
       a.condicionesSolucion = String(condiciones).trim();
       a.reactivos = propuesta.reactivos;
+      a.versiones = versiones;
       a.criterios = propuesta.criterios;
       a.recomendaciones = propuesta.recomendaciones;
       a.solucionIA = true;

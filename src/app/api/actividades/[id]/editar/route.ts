@@ -1,6 +1,6 @@
 import { actividadDe, leer, modificar } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
-import { ErrorIA, editarActividad } from "@/lib/ia";
+import { ErrorIA, editarActividad, generarVersiones, resolverVersiones } from "@/lib/ia";
 import { profesorActual } from "@/lib/sesion";
 
 export const maxDuration = 300;
@@ -29,6 +29,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
       a.criterios = previa.criterios;
       a.reactivos = previa.reactivos;
       a.rubricaConfirmada = previa.rubricaConfirmada;
+      a.versiones = previa.versiones;
       a.hojaAnterior = undefined;
     });
     return Response.json({ ok: true });
@@ -51,6 +52,14 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
     });
     const habiaSolucion = actividad.reactivos.some((r) => r.respuesta.trim() || r.pasos?.length);
     if (habiaSolucion && reactivos.length !== actividad.reactivos.length) cambioSolucion = true;
+    // Las versiones B, C… se vuelven a escribir con la hoja nueva (y a resolver si ya había solución).
+    let versiones = actividad.versiones;
+    if (versiones?.length) {
+      const uso = { profesorId: profesor.id, actividadId: actividad.id };
+      const editada = { ...actividad, reactivos, instruccionesAlumno: nueva.instrucciones, criterios: nueva.criterios };
+      versiones = await generarVersiones(editada, versiones.length + 1, uso);
+      if (reactivos.some((r) => r.respuesta.trim())) versiones = await resolverVersiones({ ...editada, versiones }, uso);
+    }
     modificar((d) => {
       const a = actividadDe(d, id)!;
       a.hojaAnterior = {
@@ -58,10 +67,12 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
         criterios: a.criterios,
         reactivos: a.reactivos,
         rubricaConfirmada: a.rubricaConfirmada,
+        versiones: a.versiones,
       };
       a.instruccionesAlumno = nueva.instrucciones;
       a.criterios = nueva.criterios;
       a.reactivos = reactivos;
+      a.versiones = versiones;
       if (habiaSolucion) a.rubricaConfirmada = false;
     });
     return Response.json({ reactivos: reactivos.length, revisarSolucion: habiaSolucion, cambioSolucion });

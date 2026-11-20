@@ -55,6 +55,8 @@ export function EntregarForm({
   matriculaInicial,
   nombreInicial,
   previa,
+  versiones,
+  versionInicial,
 }: {
   actividadId: string;
   titulo: string;
@@ -66,11 +68,16 @@ export function EntregarForm({
   nombreInicial?: string;
   /** Entrega que el alumno ya hizo (solo con sesión de alumno). */
   previa?: EntregaPrevia;
+  /** Letras de las versiones de la hoja (A, B…), si la actividad tiene varias. */
+  versiones?: string[];
+  /** Versión que trae el QR de la hoja. */
+  versionInicial?: string;
 }) {
   const { t, locale } = useTextos();
   const tf = t.alumno.formulario;
   const tc = t.alumno.campos;
   const [matricula, setMatricula] = useState(matriculaInicial ?? "");
+  const [version, setVersion] = useState(versionInicial ?? versiones?.[0] ?? "");
   const [nombre, setNombre] = useState(nombreInicial ?? "");
   const [cuenta, setCuenta] = useState<"crear" | "entrar">("crear");
   const [correo, setCorreo] = useState("");
@@ -121,6 +128,7 @@ export function EntregarForm({
     datos.append("nombre", nombre);
     datos.append("correo", correo);
     datos.append("clave", clave);
+    if (versiones?.length) datos.append("version", version);
     if (tipo === "pdf" && pdf) datos.append("pdf", pdf);
     else paginas.forEach((p) => datos.append("fotos", p.archivo));
     try {
@@ -317,6 +325,25 @@ export function EntregarForm({
         <p className="text-sm font-medium text-slate-700">
           {modo === "sesion" ? "1." : "2."} {formato(tf.comoEntregas, { titulo })}
         </p>
+        {versiones && versiones.length > 1 && (
+          <fieldset className="mt-3">
+            <legend className="text-sm font-medium text-slate-700">{t.alumno.entregar.versionHoja}</legend>
+            <div className="mt-1 flex gap-1 rounded-lg bg-slate-100 p-1 text-sm">
+              {versiones.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setVersion(v)}
+                  aria-pressed={version === v}
+                  className={`flex-1 rounded-md px-3 py-1.5 font-semibold ${version === v ? "bg-white text-tinta-700 shadow-sm" : "text-slate-600"}`}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-slate-500">{t.alumno.entregar.versionAyuda}</p>
+          </fieldset>
+        )}
         <div
           className="mt-3 grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1 text-sm"
           role="radiogroup"

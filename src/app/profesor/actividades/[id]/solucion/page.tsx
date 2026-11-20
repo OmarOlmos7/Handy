@@ -10,6 +10,7 @@ import { datosProfesor } from "@/lib/sesion";
 import { TextoMat } from "@/components/texto-mat";
 import { textos } from "@/lib/i18n/servidor";
 import { formato } from "@/lib/i18n/idiomas";
+import { versionesCompletas } from "@/lib/versiones";
 
 /** Paso 2 del flujo: preparar la solución (escaneada o con IA) y verla escrita sobre la hoja. */
 export default async function Solucion({ params }: PageProps<"/profesor/actividades/[id]/solucion">) {
@@ -83,11 +84,28 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
             {opciones(true)}
           </Tarjeta>
 
+          {/* Versiones con reactivos por revisar: la segunda resolución no coincidió. */}
+          {(actividad.versiones ?? [])
+            .filter((v) => v.revisar?.length)
+            .map((v) => (
+              <div key={v.letra} className="rounded-xl bg-aviso-suave px-4 py-3 text-sm text-slate-800" role="status">
+                <p className="font-semibold">{formato(ts.revisarTitulo, { v: v.letra })}</p>
+                <ul className="mt-1 list-disc pl-5">
+                  {v.revisar!.map((x) => (
+                    <li key={x.numero}>{formato(ts.revisarReactivo, { n: x.numero, r: x.otra || "—" })}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+
           {/* La solución propuesta, sobre el formato de la hoja que se imprimió. */}
           <section>
-            <h2 className="mb-3 text-lg font-semibold">{actividad.solucionIA ? ts.propuestaIA : ts.tuSolucion}</h2>
+            <h2 className="mb-3 text-lg font-semibold">
+              {actividad.solucionIA ? ts.propuestaIA : ts.tuSolucion}
+              {actividad.versiones?.length ? ` · ${formato(t.comun.version, { v: "A" })}` : ""}
+            </h2>
             {enHoja ? (
-              <HojaActividad actividad={actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion />
+              <HojaActividad actividad={actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion version={actividad.versiones?.length ? "A" : undefined} />
             ) : (
               <div className="mx-auto max-w-3xl space-y-4">
                 {actividad.solucionIA ? (
@@ -121,6 +139,22 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
               </div>
             )}
           </section>
+
+          {/* Soluciones de las demás versiones (mismo método, otros valores). */}
+          {versionesCompletas(actividad)
+            .slice(1)
+            .map((v) => (
+              <section key={v.letra}>
+                <h2 className="mb-3 text-lg font-semibold">{formato(ts.solucionVersion, { v: v.letra })}</h2>
+                {enHoja ? (
+                  <HojaActividad actividad={v.actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion version={v.letra} />
+                ) : (
+                  <div className="mx-auto max-w-3xl">
+                    <SolucionTexto reactivos={v.actividad.reactivos} />
+                  </div>
+                )}
+              </section>
+            ))}
 
           <div className="flex justify-end">
             <BotonLink href={`/profesor/actividades/${id}/rubrica`}>{ts.siguiente}</BotonLink>

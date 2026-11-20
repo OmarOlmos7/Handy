@@ -275,6 +275,7 @@ const profesor = {
       "¿Borrar la entrega de {nombre}?\n\nSe borran sus fotos y su evaluación, y podrá enviar una nueva entrega con el mismo QR. Los créditos ya usados no se devuelven.",
   },
   hoja: {
+    versionesTexto: "Imprime cada versión: cada hoja lleva su letra y su propio QR, así la entrega queda con su versión.",
     titulo: "Hoja imprimible",
     siguiente: "Siguiente: preparar la solución",
     escaneadaTexto: "Tu actividad escaneada con encabezado para nombre, matrícula y calificación, y el código QR de entrega en cada página.",
@@ -285,6 +286,9 @@ const profesor = {
     modificar: "Modificar actividad",
   },
   solucion: {
+    solucionVersion: "Solución de la versión {v}",
+    revisarTitulo: "Revisa estos reactivos de la versión {v}",
+    revisarReactivo: "Reactivo {n}: una segunda resolución independiente obtuvo «{r}».",
     hojaQr: "Hoja imprimible con QR",
     siguiente: "Siguiente: revisar la rúbrica",
     paso2: "Paso 2 · Prepara la solución",
@@ -343,6 +347,9 @@ const profesor = {
     abajo: "abajo del enunciado",
     ilustracionesDespues: " (más grande, ideal para gráficas con datos). Si no las pides, la hoja no lleva dibujos.",
     paginas: "Páginas aproximadas",
+    versiones: "Versiones de la actividad",
+    versionesAyuda: "Con 2 o más, cada versión cambia solo los valores numéricos y tiene su propia solución. Todas se califican con la misma rúbrica.",
+    versionesUna: "1 (una sola versión)",
     archivo1: "{n} archivo: {lista}",
     archivoN: "{n} archivos: {lista}",
     elegirArchivos: "Toca para elegir las fotos o el PDF de tu actividad en blanco (una foto por página, en orden)",

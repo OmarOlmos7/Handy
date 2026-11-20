@@ -277,6 +277,7 @@ const profesor: Diccionario["profesor"] = {
       "Abgabe von {nombre} löschen?\n\nFotos und Bewertung werden gelöscht, und mit demselben QR kann neu abgegeben werden. Bereits verbrauchte Credits werden nicht erstattet.",
   },
   hoja: {
+    versionesTexto: "Drucke jede Version: Jedes Blatt hat seinen Buchstaben und einen eigenen QR-Code, so behält jede Abgabe ihre Version.",
     titulo: "Druckbogen",
     siguiente: "Weiter: Lösung vorbereiten",
     escaneadaTexto: "Deine gescannte Aufgabe mit Kopfzeile für Name, Schülernummer und Note sowie dem Abgabe-QR-Code auf jeder Seite.",
@@ -287,6 +288,9 @@ const profesor: Diccionario["profesor"] = {
     modificar: "Aufgabe bearbeiten",
   },
   solucion: {
+    solucionVersion: "Lösung der Version {v}",
+    revisarTitulo: "Prüfe diese Aufgaben der Version {v}",
+    revisarReactivo: "Aufgabe {n}: Eine zweite, unabhängige Lösung ergab „{r}“.",
     hojaQr: "Druckbogen mit QR",
     siguiente: "Weiter: Bewertungsraster prüfen",
     paso2: "Schritt 2 · Lösung vorbereiten",
@@ -345,6 +349,9 @@ const profesor: Diccionario["profesor"] = {
     abajo: "unter der Frage",
     ilustracionesDespues: " (größer, ideal für Diagramme mit Daten). Ohne Anforderung enthält der Bogen keine Zeichnungen.",
     paginas: "Ungefähre Seitenzahl",
+    versiones: "Versionen der Aufgabe",
+    versionesAyuda: "Ab 2 ändert jede Version nur die Zahlenwerte und hat ihre eigene Lösung. Alle werden mit demselben Bewertungsraster bewertet.",
+    versionesUna: "1 (nur eine Version)",
     archivo1: "{n} Datei: {lista}",
     archivoN: "{n} Dateien: {lista}",
     elegirArchivos: "Tippe, um die Fotos oder das PDF deiner leeren Aufgabe zu wählen (ein Foto pro Seite, in Reihenfolge)",

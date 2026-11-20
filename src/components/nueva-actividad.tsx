@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { EsfuerzoIA, EstiloCorreccion, Grupo, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
+import { MAX_VERSIONES, letraVersion } from "@/lib/versiones";
 import { OpcionEstilo, OpcionSolucion } from "./opcion-solucion";
 import { Boton, BotonLink, campo } from "./ui";
 import { IDIOMAS, NOMBRE_IDIOMA, formato, type Idioma } from "@/lib/i18n/idiomas";
@@ -147,10 +148,25 @@ export function NuevaActividad({
                 </span>
               </span>
             </label>
-            <label className="block w-40 text-sm font-medium text-slate-700">
-              {tn.paginas}
-              <input name="paginas" type="number" min={1} max={10} defaultValue={1} className={campo} />
-            </label>
+            <div className="flex flex-wrap items-start gap-4">
+              <label className="block w-40 text-sm font-medium text-slate-700">
+                {tn.paginas}
+                <input name="paginas" type="number" min={1} max={10} defaultValue={1} className={campo} />
+              </label>
+              {!sinSolucion && (
+                <label className="block min-w-0 flex-1 text-sm font-medium text-slate-700 sm:max-w-md">
+                  {tn.versiones}
+                  <select name="versiones" defaultValue={1} className={`${campo} block sm:w-56`}>
+                    {Array.from({ length: MAX_VERSIONES }, (_, i) => i + 1).map((n) => (
+                      <option key={n} value={n}>
+                        {n === 1 ? tn.versionesUna : `${n} (${Array.from({ length: n }, (_, k) => letraVersion(k)).join(", ")})`}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="mt-1 block text-xs font-normal text-slate-500">{tn.versionesAyuda}</span>
+                </label>
+              )}
+            </div>
           </>
         ) : (
           <label className="block cursor-pointer rounded-xl border-2 border-dashed border-slate-300 p-6 text-center text-sm text-slate-500 hover:border-tinta-500 hover:bg-tinta-50">
