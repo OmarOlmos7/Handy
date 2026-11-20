@@ -192,3 +192,28 @@ export function fraccionEjercicio(
   if (r.puntos > 0) return Math.min(1, Math.max(0, res.puntosObtenidos / r.puntos));
   return anotaciones.filter((a) => a.ok).length / anotaciones.length;
 }
+
+/**
+ * Altura (0 arriba, 1 abajo) del punto medio de la sección que ocupa el ejercicio en su página:
+ * entre el primero y el último de sus incisos o anotaciones. Ahí va su pastel en el costado.
+ */
+export function mitadSeccion(
+  actividad: Pick<Actividad, "criterios">,
+  r: Pick<Reactivo, "numero" | "puntos" | "pasos">,
+  res: Pick<ResultadoReactivo, "pasos" | "criterios" | "ubicacion" | "ubicacionesElementos" | "ubicacionesIncisos" | "subrayados">,
+): number | undefined {
+  const pagina = res.ubicacion?.pagina ?? 1;
+  const ys: number[] = [];
+  for (const u of res.ubicacionesIncisos ?? []) {
+    if (u.pagina !== pagina) continue;
+    ys.push(u.y);
+    if (u.yCorrecta !== undefined) ys.push(u.yCorrecta);
+  }
+  for (const a of anotacionesNumeradas(actividad, r, res)) {
+    if (a.subrayado?.pagina === pagina) ys.push(a.subrayado.y);
+    else if (a.ubicacion?.pagina === pagina) ys.push(a.ubicacion.y);
+  }
+  if (res.ubicacion?.y !== undefined) ys.push(res.ubicacion.y);
+  if (!ys.length) return undefined;
+  return Math.min(0.98, Math.max(0.02, (Math.min(...ys) + Math.max(...ys)) / 2));
+}

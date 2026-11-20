@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anotacionesNumeradas, corregirPuntosCriterios, fraccionEjercicio, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
+import { anotacionesNumeradas, corregirPuntosCriterios, mitadSeccion, fraccionEjercicio, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
 import { conPuntaje, listaParaRubrica } from "../modalidad";
 
 const criterios = [
@@ -154,5 +154,22 @@ describe("mini pastel del número del ejercicio", () => {
     const r = { numero: 1, puntos: 4, tipo: "desarrollo" as const, respuesta: "", pasos: [{ nombre: "Datos", peso: 0.25 }, { nombre: "Desarrollo", peso: 0.75 }] };
     expect(fraccionEjercicio({}, r, { ...vacio, pasos: [1, 0.5], puntosObtenidos: 2.5 })).toBe(0.625);
     expect(fraccionEjercicio({}, { ...r, pasos: undefined }, { ...vacio, puntosObtenidos: 4 })).toBeUndefined();
+  });
+});
+
+describe("mitad de la sección del ejercicio", () => {
+  it("queda entre el primero y el último de sus incisos de la página", () => {
+    const res = {
+      ubicacion: { pagina: 1, y: 0.3, x: 0.5 },
+      ubicacionesIncisos: [
+        { pagina: 1, y: 0.3, x: 0.4 },
+        { pagina: 1, y: 0.5, x: 0.6, xCorrecta: 0.7, yCorrecta: 0.52 },
+        { pagina: 2, y: 0.9, x: 0.9 },
+      ],
+    };
+    expect(mitadSeccion({}, { numero: 3, puntos: 15 }, res)).toBeCloseTo(0.41);
+  });
+  it("sin ubicaciones no hay mitad", () => {
+    expect(mitadSeccion({}, { numero: 3, puntos: 15 }, {})).toBeUndefined();
   });
 });
