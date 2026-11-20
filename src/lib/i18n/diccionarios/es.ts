@@ -246,7 +246,7 @@ const es = {
       incluye: "Para probar:",
       ventajas: [
         "50 créditos: califica una actividad de tu grupo y mira el resultado",
-        "≈ 2.5 horas de calificación que te ahorras",
+        "≈ 3.5 horas de calificación que te ahorras",
         "Actividades generadas con IA y hojas imprimibles con QR",
         "Entregas desde el celular con foto o PDF",
         "Solución y rúbrica con IA sin costo",
@@ -255,12 +255,12 @@ const es = {
     basico: {
       nombre: "Básico",
       lema: "Para un profesor con un grupo: todo un parcial calificado",
-      periodo: "pago único por 300 créditos",
+      periodo: "pago único por 120 créditos",
       boton: "Elegir Básico",
       incluye: "Todo lo de Gratuito, más:",
       ventajas: [
-        "300 créditos: 10 actividades de 1 página para un grupo de 30",
-        "≈ 15 horas de calificación que te ahorras",
+        "120 créditos: 5 actividades de 1 página para un grupo de 30",
+        "≈ 8 horas de calificación que te ahorras",
         "Retroalimentación personal para cada alumno en minutos",
         "Los cinco niveles de precisión, de Rápido a Avanzado",
         "Analíticas del grupo y reporte en PDF y Excel",
@@ -270,12 +270,12 @@ const es = {
     pro: {
       nombre: "Pro",
       lema: "Para un profesor con dos o tres grupos",
-      periodo: "pago único por 600 créditos",
+      periodo: "pago único por 240 créditos",
       boton: "Elegir Pro",
       incluye: "Todo lo de Básico, más:",
       ventajas: [
-        "600 créditos: 10 actividades de 1 página para 2 grupos de 30",
-        "≈ 30 horas de calificación que te ahorras",
+        "240 créditos: 5 actividades de 1 página para 2 grupos de 30",
+        "≈ 17 horas de calificación que te ahorras",
         "Recomendaciones de estudio con videos y lecturas para cada alumno",
         "Cuaderno de calificaciones del curso",
       ],
@@ -283,12 +283,12 @@ const es = {
     academia: {
       nombre: "Academia",
       lema: "Para todo el semestre o una academia: el mejor precio por página",
-      periodo: "pago único por 1,200 créditos",
+      periodo: "pago único por 480 créditos",
       boton: "Elegir Academia",
       incluye: "Todo lo de Pro, más:",
       ventajas: [
-        "1,200 créditos: 10 actividades de 1 página para 4 grupos de 30",
-        "≈ 60 horas de calificación que te ahorras",
+        "480 créditos: 5 actividades de 1 página para 4 grupos de 30",
+        "≈ 34 horas de calificación que te ahorras",
         "Margen para usar el nivel Avanzado en exámenes",
         "Reportes por alumno y por grupo durante todo el curso",
       ],
@@ -296,18 +296,20 @@ const es = {
     escuela: {
       nombre: "Escuela",
       lema: "Para instituciones con varios profesores",
-      periodo: "10,000 créditos o más, a la medida de tu institución",
+      periodo: "4,000 créditos o más, a la medida de tu institución",
       boton: "Contactar para gestionar plan institucional",
       incluye: "Todo lo de Academia, más:",
       ventajas: [
-        "10,000 créditos o más para todos los profesores de la institución",
-        "≈ 500 horas de calificación que ahorra tu escuela",
+        "4,000 créditos o más para todos los profesores de la institución",
+        "≈ 280 horas de calificación que ahorra tu escuela",
         "Acompañamiento para arrancar con tus academias",
         "Facturación institucional",
       ],
     },
   },
   precios: {
+    notaEstimacion:
+      "Las actividades y horas de cada plan se estiman con el nivel Medio de precisión (0.7 créditos por hoja). Con Rápido alcanzan para más hojas y con Avanzado para menos.",
     metaTitulo: "Planes y precios",
     metaDescripcion: "Planes de iEureka-Grader: paga solo las páginas que calificas. Precios en {divisa}.",
     titulo: "Planes que se ajustan a tu salón",

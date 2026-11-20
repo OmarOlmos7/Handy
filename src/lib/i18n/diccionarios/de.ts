@@ -245,7 +245,7 @@ const de: Diccionario = {
       incluye: "Zum Ausprobieren:",
       ventajas: [
         "50 Credits: eine Aufgabe deiner Klasse bewerten und das Ergebnis sehen",
-        "≈ 2,5 Stunden Korrekturzeit gespart",
+        "≈ 3,5 Stunden Korrekturzeit gespart",
         "KI-generierte Aufgaben und druckbare Blätter mit QR",
         "Abgaben per Handy als Foto oder PDF",
         "Lösung und Bewertungsraster per KI ohne Kosten",
@@ -254,12 +254,12 @@ const de: Diccionario = {
     basico: {
       nombre: "Basis",
       lema: "Für eine Lehrkraft mit einer Klasse: ein ganzer Abschnitt bewertet",
-      periodo: "Einmalzahlung für 300 Credits",
+      periodo: "Einmalzahlung für 120 Credits",
       boton: "Basis wählen",
       incluye: "Alles aus Kostenlos, plus:",
       ventajas: [
-        "300 Credits: 10 einseitige Aufgaben für eine Klasse mit 30",
-        "≈ 15 Stunden Korrekturzeit gespart",
+        "120 Credits: 5 einseitige Aufgaben für eine Klasse mit 30",
+        "≈ 8 Stunden Korrekturzeit gespart",
         "Persönliches Feedback für jede/n Schüler/in in Minuten",
         "Alle fünf Präzisionsstufen, von Schnell bis Fortgeschritten",
         "Klassenauswertung und Berichte als PDF und Excel",
@@ -269,12 +269,12 @@ const de: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "Für eine Lehrkraft mit zwei oder drei Klassen",
-      periodo: "Einmalzahlung für 600 Credits",
+      periodo: "Einmalzahlung für 240 Credits",
       boton: "Pro wählen",
       incluye: "Alles aus Basis, plus:",
       ventajas: [
-        "600 Credits: 10 einseitige Aufgaben für 2 Klassen mit 30",
-        "≈ 30 Stunden Korrekturzeit gespart",
+        "240 Credits: 5 einseitige Aufgaben für 2 Klassen mit 30",
+        "≈ 17 Stunden Korrekturzeit gespart",
         "Lernempfehlungen mit Videos und Texten für jede/n Schüler/in",
         "Notenbuch des Kurses",
       ],
@@ -282,12 +282,12 @@ const de: Diccionario = {
     academia: {
       nombre: "Akademie",
       lema: "Für ein ganzes Semester oder eine Fachschaft: der beste Preis pro Seite",
-      periodo: "Einmalzahlung für 1.200 Credits",
+      periodo: "Einmalzahlung für 480 Credits",
       boton: "Akademie wählen",
       incluye: "Alles aus Pro, plus:",
       ventajas: [
-        "1.200 Credits: 10 einseitige Aufgaben für 4 Klassen mit 30",
-        "≈ 60 Stunden Korrekturzeit gespart",
+        "480 Credits: 5 einseitige Aufgaben für 4 Klassen mit 30",
+        "≈ 34 Stunden Korrekturzeit gespart",
         "Spielraum für die Stufe Fortgeschritten bei Prüfungen",
         "Berichte pro Schüler/in und Klasse das ganze Semester",
       ],
@@ -295,18 +295,20 @@ const de: Diccionario = {
     escuela: {
       nombre: "Schule",
       lema: "Für Schulen mit mehreren Lehrkräften",
-      periodo: "10.000 Credits oder mehr, passend für Ihre Institution",
+      periodo: "4.000 Credits oder mehr, passend für Ihre Institution",
       boton: "Kontakt für einen institutionellen Plan",
       incluye: "Alles aus Akademie, plus:",
       ventajas: [
-        "10.000 Credits oder mehr für alle Lehrkräfte der Schule",
-        "≈ 500 Stunden Korrekturzeit für deine Schule gespart",
+        "4.000 Credits oder mehr für alle Lehrkräfte der Schule",
+        "≈ 280 Stunden Korrekturzeit für deine Schule gespart",
         "Begleitung beim Start mit euren Fachschaften",
         "Rechnung für die Institution",
       ],
     },
   },
   precios: {
+    notaEstimacion:
+      "Aufgaben und Stunden jedes Tarifs sind mit der Präzisionsstufe Mittel geschätzt (0,7 Credits pro Blatt). Mit Schnell reicht es für mehr Blätter, mit Fortgeschritten für weniger.",
     metaTitulo: "Tarife und Preise",
     metaDescripcion: "iEureka-Grader-Tarife: Zahlen Sie nur die Seiten, die Sie korrigieren. Preise in {divisa}.",
     titulo: "Tarife, die zu Ihrer Klasse passen",

@@ -26,13 +26,13 @@ export interface Plan {
 // ---------- Costo por crédito y utilidad ----------
 /** Tipo de cambio supuesto (MXN por dólar). */
 export const TIPO_CAMBIO = 18.5;
-/** Comisión del cobro (Mercado Pago, con IVA de la comisión) y cargo fijo por pago en MXN. */
-export const COMISION_COBRO = { porcentaje: 0.0406, fijo: 4 };
 export const IVA = 0.16;
-/** ISR del ejercicio fiscal, sobre la utilidad (ingreso sin IVA menos comisiones y costo de IA). */
-export const ISR = 0.28;
+/** ISR del ejercicio fiscal, sobre la utilidad antes de impuestos. */
+export const ISR = 0.32;
+/** Gastos de operación (incluye la comisión del cobro), sobre el ingreso sin IVA. */
+export const OPERACION = 0.2;
 /** Utilidad mínima después de ISR, sobre el ingreso sin IVA. */
-export const UTILIDAD_OBJETIVO = 0.3;
+export const UTILIDAD_OBJETIVO = 0.4;
 
 /**
  * Costo de IA de un crédito en MXN. Cada nivel cobra los créditos de su costo medido más un margen
@@ -43,15 +43,21 @@ export function costoCreditoMXN(): number {
 }
 
 /**
- * Utilidad del plan después de ISR, sobre su ingreso sin IVA (0.3 = 30 %); undefined si es gratis o
- * a la medida. Se quita el IVA del precio, la comisión del cobro y el costo de IA, y al resto el ISR.
+ * Utilidad del plan después de ISR, sobre su ingreso sin IVA (0.4 = 40 %); undefined si es gratis o
+ * a la medida. Se quita el IVA del precio; del resto, la operación (20 %) y el costo de IA de sus
+ * créditos, y a lo que queda el ISR.
  */
 export function utilidad(p: Pick<Plan, "precio" | "creditos">): number | undefined {
   if (!p.precio) return undefined;
   const sinIva = p.precio / (1 + IVA);
-  const neto = sinIva * (1 - COMISION_COBRO.porcentaje) - COMISION_COBRO.fijo;
-  const antesDeIsr = neto - p.creditos * costoCreditoMXN();
+  const antesDeIsr = sinIva * (1 - OPERACION) - p.creditos * costoCreditoMXN();
   return (antesDeIsr * (1 - ISR)) / sinIva;
+}
+
+/** Créditos máximos que puede incluir un precio (MXN con IVA) sin bajar de la utilidad objetivo. */
+export function creditosMaximos(precio: number): number {
+  const sinIva = precio / (1 + IVA);
+  return Math.floor((sinIva * (1 - OPERACION - UTILIDAD_OBJETIVO / (1 - ISR))) / costoCreditoMXN());
 }
 
 export const PLANES: Plan[] = [
@@ -65,7 +71,7 @@ export const PLANES: Plan[] = [
     boton: { texto: "Crear cuenta gratis", href: "/registro" },
     incluye: "Para probar:",
     ventajas: [
-      "50 páginas de alumno evaluadas",
+      "50 créditos: califica una actividad de tu grupo y mira el resultado",
       "Cursos y alumnos sin límite",
       "Actividades generadas con IA y hojas imprimibles con QR",
       "Entregas desde el celular con foto o PDF",
@@ -77,12 +83,12 @@ export const PLANES: Plan[] = [
     nombre: "Básico",
     lema: "Para un profesor con un grupo: todo un parcial calificado",
     precio: 215,
-    creditos: 300,
-    periodo: "pago único por 300 créditos",
+    creditos: 120,
+    periodo: "pago único por 120 créditos",
     boton: { texto: "Elegir Básico", href: "/profesor/creditos" },
     incluye: "Todo lo de Gratuito, más:",
     ventajas: [
-      "300 páginas evaluadas",
+      "120 créditos: 5 actividades de 1 página para un grupo de 30",
       "Una o dos actividades al mes con un grupo",
       "Los cinco niveles de precisión, de Rápido a Avanzado",
       "Analíticas del grupo y reporte en PDF y Excel",
@@ -95,13 +101,13 @@ export const PLANES: Plan[] = [
     nombre: "Pro",
     lema: "Para un profesor con dos o tres grupos",
     precio: 345,
-    creditos: 600,
-    periodo: "pago único por 600 créditos",
+    creditos: 240,
+    periodo: "pago único por 240 créditos",
     boton: { texto: "Elegir Pro", href: "/profesor/creditos" },
     destacado: true,
     incluye: "Todo lo de Básico, más:",
     ventajas: [
-      "600 páginas evaluadas",
+      "240 créditos: 5 actividades de 1 página para 2 grupos de 30",
       "Dos o tres grupos durante un parcial",
       "Recomendaciones de estudio con videos y lecturas para cada alumno",
       "Cuaderno de calificaciones del curso",
@@ -113,12 +119,12 @@ export const PLANES: Plan[] = [
     nombre: "Academia",
     lema: "Para todo el semestre o una academia: el mejor precio por página",
     precio: 635,
-    creditos: 1200,
-    periodo: "pago único por 1,500 créditos",
+    creditos: 480,
+    periodo: "pago único por 480 créditos",
     boton: { texto: "Elegir Academia", href: "/profesor/creditos" },
     incluye: "Todo lo de Pro, más:",
     ventajas: [
-      "1,500 páginas evaluadas",
+      "480 créditos: 5 actividades de 1 página para 4 grupos de 30",
       "Varios grupos durante todo el semestre o tetramestre",
       "Margen para usar el nivel Avanzado en exámenes",
       "Reportes por alumno y por grupo durante todo el curso",
@@ -129,12 +135,12 @@ export const PLANES: Plan[] = [
     id: "escuela",
     nombre: "Escuela",
     lema: "Para instituciones con varios profesores",
-    creditos: 10000,
-    periodo: "pago único por 10,000 créditos",
+    creditos: 4000,
+    periodo: "4,000 créditos o más, a la medida de tu institución",
     boton: { texto: "Contactar para gestionar plan institucional" },
     incluye: "Todo lo de Academia, más:",
     ventajas: [
-      "10,000 páginas evaluadas",
+      "4,000 créditos o más para todos los profesores de la institución",
       "Créditos para los profesores de la institución",
       "Acompañamiento para arrancar con tus academias",
       "Facturación institucional",

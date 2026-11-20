@@ -245,7 +245,7 @@ const en: Diccionario = {
       incluye: "To try it out:",
       ventajas: [
         "50 credits: grade one activity for your class and see the result",
-        "≈ 2.5 hours of grading saved",
+        "≈ 3.5 hours of grading saved",
         "AI-generated activities and printable sheets with QR",
         "Submissions from phones with a photo or PDF",
         "AI solution and rubric at no cost",
@@ -254,12 +254,12 @@ const en: Diccionario = {
     basico: {
       nombre: "Basic",
       lema: "For a teacher with one class: a whole term graded",
-      periodo: "one-time payment for 300 credits",
+      periodo: "one-time payment for 120 credits",
       boton: "Choose Basic",
       incluye: "Everything in Free, plus:",
       ventajas: [
-        "300 credits: 10 one-page activities for a class of 30",
-        "≈ 15 hours of grading saved",
+        "120 credits: 5 one-page activities for a class of 30",
+        "≈ 8 hours of grading saved",
         "Personal feedback for every student in minutes",
         "All five precision levels, from Fast to Advanced",
         "Class analytics and PDF and Excel reports",
@@ -269,12 +269,12 @@ const en: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "For a teacher with two or three classes",
-      periodo: "one-time payment for 600 credits",
+      periodo: "one-time payment for 240 credits",
       boton: "Choose Pro",
       incluye: "Everything in Basic, plus:",
       ventajas: [
-        "600 credits: 10 one-page activities for 2 classes of 30",
-        "≈ 30 hours of grading saved",
+        "240 credits: 5 one-page activities for 2 classes of 30",
+        "≈ 17 hours of grading saved",
         "Study recommendations with videos and readings for each student",
         "Course gradebook",
       ],
@@ -282,12 +282,12 @@ const en: Diccionario = {
     academia: {
       nombre: "Academy",
       lema: "For a whole semester or a department: the best price per page",
-      periodo: "one-time payment for 1,200 credits",
+      periodo: "one-time payment for 480 credits",
       boton: "Choose Academy",
       incluye: "Everything in Pro, plus:",
       ventajas: [
-        "1,200 credits: 10 one-page activities for 4 classes of 30",
-        "≈ 60 hours of grading saved",
+        "480 credits: 5 one-page activities for 4 classes of 30",
+        "≈ 34 hours of grading saved",
         "Room to use the Advanced level on exams",
         "Student and class reports all term long",
       ],
@@ -295,18 +295,20 @@ const en: Diccionario = {
     escuela: {
       nombre: "School",
       lema: "For institutions with several teachers",
-      periodo: "10,000 credits or more, tailored to your institution",
+      periodo: "4,000 credits or more, tailored to your institution",
       boton: "Contact us to set up an institutional plan",
       incluye: "Everything in Academy, plus:",
       ventajas: [
-        "10,000 credits or more for every teacher at the institution",
-        "≈ 500 hours of grading saved for your school",
+        "4,000 credits or more for every teacher at the institution",
+        "≈ 280 hours of grading saved for your school",
         "Onboarding support for your departments",
         "Institutional invoicing",
       ],
     },
   },
   precios: {
+    notaEstimacion:
+      "Activities and hours for each plan are estimated with the Medium precision level (0.7 credits per sheet). Fast covers more sheets and Advanced fewer.",
     metaTitulo: "Plans and pricing",
     metaDescripcion: "iEureka-Grader plans: pay only for the pages you grade. Prices in {divisa}.",
     titulo: "Plans that fit your classroom",

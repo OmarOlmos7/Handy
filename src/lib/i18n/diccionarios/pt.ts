@@ -245,7 +245,7 @@ const pt: Diccionario = {
       incluye: "Para testar:",
       ventajas: [
         "50 créditos: corrija uma atividade da sua turma e veja o resultado",
-        "≈ 2,5 horas de correção economizadas",
+        "≈ 3,5 horas de correção economizadas",
         "Atividades geradas com IA e folhas para imprimir com QR",
         "Entregas pelo celular com foto ou PDF",
         "Solução e rubrica com IA sem custo",
@@ -254,12 +254,12 @@ const pt: Diccionario = {
     basico: {
       nombre: "Básico",
       lema: "Para um professor com uma turma: um bimestre inteiro corrigido",
-      periodo: "pagamento único por 300 créditos",
+      periodo: "pagamento único por 120 créditos",
       boton: "Escolher Básico",
       incluye: "Tudo do Gratuito, mais:",
       ventajas: [
-        "300 créditos: 10 atividades de 1 página para uma turma de 30",
-        "≈ 15 horas de correção economizadas",
+        "120 créditos: 5 atividades de 1 página para uma turma de 30",
+        "≈ 8 horas de correção economizadas",
         "Feedback pessoal para cada aluno em minutos",
         "Os cinco níveis de precisão, do Rápido ao Avançado",
         "Análises da turma e relatórios em PDF e Excel",
@@ -269,12 +269,12 @@ const pt: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "Para um professor com duas ou três turmas",
-      periodo: "pagamento único por 600 créditos",
+      periodo: "pagamento único por 240 créditos",
       boton: "Escolher Pro",
       incluye: "Tudo do Básico, mais:",
       ventajas: [
-        "600 créditos: 10 atividades de 1 página para 2 turmas de 30",
-        "≈ 30 horas de correção economizadas",
+        "240 créditos: 5 atividades de 1 página para 2 turmas de 30",
+        "≈ 17 horas de correção economizadas",
         "Recomendações de estudo com vídeos e leituras para cada aluno",
         "Diário de notas do curso",
       ],
@@ -282,12 +282,12 @@ const pt: Diccionario = {
     academia: {
       nombre: "Academia",
       lema: "Para o semestre inteiro ou uma coordenação: o melhor preço por página",
-      periodo: "pagamento único por 1.200 créditos",
+      periodo: "pagamento único por 480 créditos",
       boton: "Escolher Academia",
       incluye: "Tudo do Pro, mais:",
       ventajas: [
-        "1.200 créditos: 10 atividades de 1 página para 4 turmas de 30",
-        "≈ 60 horas de correção economizadas",
+        "480 créditos: 5 atividades de 1 página para 4 turmas de 30",
+        "≈ 34 horas de correção economizadas",
         "Folga para usar o nível Avançado nas provas",
         "Relatórios por aluno e por turma durante todo o curso",
       ],
@@ -295,18 +295,20 @@ const pt: Diccionario = {
     escuela: {
       nombre: "Escola",
       lema: "Para instituições com vários professores",
-      periodo: "10.000 créditos ou mais, sob medida para sua instituição",
+      periodo: "4.000 créditos ou mais, sob medida para sua instituição",
       boton: "Fale conosco para um plano institucional",
       incluye: "Tudo do Academia, mais:",
       ventajas: [
-        "10.000 créditos ou mais para todos os professores da instituição",
-        "≈ 500 horas de correção economizadas pela sua escola",
+        "4.000 créditos ou mais para todos os professores da instituição",
+        "≈ 280 horas de correção economizadas pela sua escola",
         "Acompanhamento para começar com suas coordenações",
         "Faturamento institucional",
       ],
     },
   },
   precios: {
+    notaEstimacion:
+      "As atividades e horas de cada plano são estimadas com o nível de precisão Médio (0,7 crédito por folha). Com Rápido rendem mais folhas e com Avançado menos.",
     metaTitulo: "Planos e preços",
     metaDescripcion: "Planos do iEureka-Grader: pague só as páginas que você corrige. Preços em {divisa}.",
     titulo: "Planos que se ajustam à sua sala",
