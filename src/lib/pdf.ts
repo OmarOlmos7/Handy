@@ -14,7 +14,7 @@ import { fuentesPdf, renglones } from "./pdf-fuentes";
 import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
 import { fechaHoraLarga } from "./resultados";
-import { puntosPorElemento, puntosTexto } from "./elementos";
+import { elementosNumerados, puntosTexto } from "./elementos";
 import { conPuntaje } from "./modalidad";
 import { texAPlano } from "./tex-plano";
 import type { Actividad, Alumno, Entrega, Grupo, RecomendacionesEstudio } from "./tipos";
@@ -61,6 +61,14 @@ function circuloNumero(p: PDFPage, f: PDFFont, n: number, x: number, y: number, 
   p.drawText(t, { x: x - f.widthOfTextAtSize(t, tam) / 2, y: y - tam * 0.35, size: tam, font: f, color: rgb(1, 1, 1) });
 }
 
+/** Ancho de una columna de comentarios en el margen del PDF corregido. */
+const COLUMNA = 165;
+
+/** Ancho que ocupa el óvalo de un numeral de elemento a tamaño normal. */
+function anchoNumeral(f: PDFFont, texto: string) {
+  return 2 * Math.max(5, f.widthOfTextAtSize(texto, 5.5) / 2 + 2.5);
+}
+
 /** Numeral de un elemento ("1.1") en blanco dentro de un óvalo relleno del color dado. */
 function etiquetaNumeral(p: PDFPage, f: PDFFont, texto: string, x: number, y: number, color: ReturnType<typeof rgb>, s = 1) {
   const tam = 5.5 * s;
@@ -93,26 +101,61 @@ function textosDeHojas(actividad: Actividad, entrega: Entrega) {
 }
 
 async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Entrega, normal: PDFFont, negrita: PDFFont, calTexto: string, tx: TextosPdf) {
-  // Cada reactivo lleva sobre la hoja un círculo relleno con su número de comentario y,
-  // a un lado, la paloma (verde) o el tache (rojo). Los comentarios van numerados en
-  // orden en el margen derecho, a la misma altura que su marca.
-  let numero = 0;
+  // Cada reactivo lleva sobre la hoja un círculo relleno con su número y, a un lado, la paloma
+  // (verde) o el tache (rojo). Los comentarios van en el margen derecho, de arriba hacia abajo;
+  // si no caben en una columna, siguen en otra columna a su derecha (la hoja se reduce).
   const puntaje = conPuntaje(actividad);
   for (const [i, ruta] of (entrega.imagenes ?? []).entries()) {
     const img = await doc.embedJpg(leerArchivo(ruta));
-    const MARGEN = 170;
-    const escala = Math.min((CARTA.ancho - MARGEN - 12) / img.width, (CARTA.alto - 24) / img.height);
+    const marcas = entrega.resultados
+      .filter((r) => (r.ubicacion?.pagina ?? 1) === i + 1)
+      .sort((a, b) => (a.ubicacion?.y ?? 0.5) - (b.ubicacion?.y ?? 0.5) || (a.ubicacion?.x ?? 0.9) - (b.ubicacion?.x ?? 0.9));
+
+    // Bloques de comentario medidos con el ancho de una columna.
+    const bloques = marcas.flatMap((res) => {
+      const r = actividad.reactivos.find((x) => x.numero === res.numero);
+      if (!r) return [];
+      const completo = res.puntosObtenidos >= r.puntos;
+      const lineas = envolver(normal, res.comentario || (completo ? tx.correcto : ""), 8.5, COLUMNA - 10);
+      const elementos = elementosNumerados(actividad, r, res).map((el) => {
+        const etiqueta = el.numeral;
+        const sangria = 12 + Math.max(anchoNumeral(negrita, etiqueta), 18) + 3;
+        const texto = `${el.nombre}${puntaje ? `  ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}` : ""}`;
+        return { ok: el.obtenidos >= el.total, etiqueta, sangria, lineas: envolver(normal, texto, 7.5, COLUMNA - 6 - sangria) };
+      });
+      const altura = 17 + lineas.length * 10.5 + elementos.reduce((h, e) => h + 1.5 + e.lineas.length * 9.5, 0) + 8;
+      return [{ res, r, completo, lineas, elementos, altura }];
+    });
+
+    // De arriba hacia abajo; al llegar al pie de la hoja, nueva columna a la derecha.
+    const arriba = CARTA.alto - 70; // deja libre la calificación y la marca de agua
+    const abajo = 14;
+    let columna = 0;
+    let y = arriba;
+    const lugares = bloques.map((bl) => {
+      if (y - bl.altura < abajo && y < arriba) {
+        columna += 1;
+        y = arriba;
+      }
+      const lugar = { columna, y };
+      y -= bl.altura;
+      return lugar;
+    });
+    const columnas = bloques.length ? columna + 1 : 1;
+
+    const escala = Math.min((CARTA.ancho - 12 - 10 - columnas * COLUMNA) / img.width, (CARTA.alto - 24) / img.height);
     const ancho = img.width * escala;
     const alto = img.height * escala;
     const x0 = 12;
     const y0 = (CARTA.alto - alto) / 2;
     const xMargen = x0 + ancho + 10;
-    const anchoTexto = CARTA.ancho - xMargen - 12;
     const hoja = doc.addPage([CARTA.ancho, CARTA.alto]);
     hoja.drawImage(img, { x: x0, y: y0, width: ancho, height: alto });
-    hoja.drawLine({ start: { x: xMargen - 4, y: 12 }, end: { x: xMargen - 4, y: CARTA.alto - 12 }, thickness: 0.6, color: GRIS, opacity: 0.4 });
+    for (let k = 0; k < columnas; k++) {
+      const xl = xMargen - 4 + k * COLUMNA;
+      hoja.drawLine({ start: { x: xl, y: 12 }, end: { x: xl, y: CARTA.alto - 12 }, thickness: 0.6, color: GRIS, opacity: 0.4 });
+    }
 
-    let limite = CARTA.alto - 70; // deja libre la marca de agua
     if (i === 0 && puntaje) {
       const xc = xMargen + 30;
       hoja.drawCircle({ x: xc, y: CARTA.alto - 42, size: 26, borderColor: ROJO, borderWidth: 2 });
@@ -137,49 +180,34 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
     for (const res of entrega.resultados) {
       const r = actividad.reactivos.find((x) => x.numero === res.numero);
       if (!r || !res.ubicacionesElementos?.length) continue;
-      for (const [j, el] of puntosPorElemento(actividad, r, res).entries()) {
-        const u = res.ubicacionesElementos[j];
+      for (const el of elementosNumerados(actividad, r, res)) {
+        const u = el.ubicacion;
         if (!u || u.pagina !== i + 1) continue;
         const ok = el.obtenidos >= el.total;
         const xe = x0 + Math.min(ancho - 30, Math.max(4, ancho * u.x));
         const ye = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, u.y)));
-        etiquetaNumeral(hoja, negrita, `${r.numero}.${j + 1}`, xe, ye, ok ? VERDE : ROJO, 1.4);
+        etiquetaNumeral(hoja, negrita, el.numeral, xe, ye, ok ? VERDE : ROJO, 1.4);
       }
     }
 
-    const marcas = entrega.resultados
-      .filter((r) => (r.ubicacion?.pagina ?? 1) === i + 1)
-      .sort((a, b) => (a.ubicacion?.y ?? 0.5) - (b.ubicacion?.y ?? 0.5) || (a.ubicacion?.x ?? 0.9) - (b.ubicacion?.x ?? 0.9));
-    for (const res of marcas) {
-      const r = actividad.reactivos.find((x) => x.numero === res.numero);
-      if (!r) continue;
-      numero = r.numero;
-      const completo = res.puntosObtenidos >= r.puntos;
+    for (const [k, { res, r, completo, lineas, elementos }] of bloques.entries()) {
       const color = completo ? VERDE : ROJO;
 
       // Marca sobre la hoja del alumno, donde está su respuesta.
       const xc = x0 + Math.min(ancho - 34, Math.max(10, ancho * (res.ubicacion?.x ?? 0.9) + 10)); // justo después de la respuesta
       const yc = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, res.ubicacion?.y ?? 0.5)));
-      circuloNumero(hoja, negrita, numero, xc, yc, color);
+      circuloNumero(hoja, negrita, r.numero, xc, yc, color);
       if (completo) paloma(hoja, xc + 11, yc - 4, 0.6);
       else tache(hoja, xc + 17, yc, 0.6);
 
-      // Comentario numerado en el margen, a la misma altura (baja si se enciman).
-      const yEntrada = Math.min(yc, limite - 8);
-      const lineas = envolver(normal, res.comentario || (completo ? tx.correcto : ""), 8.5, anchoTexto - 4);
-      hoja.drawLine({
-        start: { x: xc + 27, y: yc },
-        end: { x: xMargen + 2, y: yEntrada },
-        thickness: 0.6,
-        color,
-        opacity: 0.45,
-        dashArray: [2, 2],
-      });
-      circuloNumero(hoja, negrita, numero, xMargen + 10, yEntrada, color);
-      if (completo) paloma(hoja, xMargen + 22, yEntrada - 4, 0.6);
-      else tache(hoja, xMargen + 28, yEntrada, 0.6);
+      // Comentario en su columna, en orden de arriba hacia abajo.
+      const xCol = xMargen + lugares[k].columna * COLUMNA;
+      const yEntrada = lugares[k].y - 8;
+      circuloNumero(hoja, negrita, r.numero, xCol + 10, yEntrada, color);
+      if (completo) paloma(hoja, xCol + 22, yEntrada - 4, 0.6);
+      else tache(hoja, xCol + 28, yEntrada, 0.6);
       hoja.drawText(seguro(negrita, puntaje ? formato(tx.reactivoPuntos, { n: r.numero, p: puntosTexto(res.puntosObtenidos), t: puntosTexto(r.puntos) }) : formato(tx.reactivoSolo, { n: r.numero })), {
-        x: xMargen + 40,
+        x: xCol + 40,
         y: yEntrada - 3.5,
         size: 9,
         font: negrita,
@@ -187,29 +215,24 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       });
       let yTexto = yEntrada - 17;
       for (const l of lineas) {
-        hoja.drawText(l, { x: xMargen + 4, y: yTexto, size: 8.5, font: normal, color });
+        hoja.drawText(l, { x: xCol + 4, y: yTexto, size: 8.5, font: normal, color });
         yTexto -= 10.5;
       }
       // Puntos por elemento de la rúbrica (pasos o criterios), numerados a partir del reactivo:
       // paloma verde + "1.1" en círculo verde si se cumple; tache rojo + "1.2" en rojo si no.
-      for (const [j, el] of puntosPorElemento(actividad, r, res).entries()) {
-        const ok = el.obtenidos >= el.total;
-        const tono = ok ? VERDE : ROJO;
+      for (const e of elementos) {
+        const tono = e.ok ? VERDE : ROJO;
         yTexto -= 1.5;
-        if (ok) paloma(hoja, xMargen + 3, yTexto - 0.5, 0.35);
-        else tache(hoja, xMargen + 6, yTexto + 2.5, 0.35);
-        const anchoEtiqueta = etiquetaNumeral(hoja, negrita, `${r.numero}.${j + 1}`, xMargen + 12, yTexto + 2.5, tono);
-        const xTexto = xMargen + 12 + Math.max(anchoEtiqueta, 18) + 3;
-        const linea = `${el.nombre}${puntaje ? `  ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}` : ""}`;
-        for (const l of envolver(normal, linea, 7.5, CARTA.ancho - 12 - xTexto)) {
-          hoja.drawText(l, { x: xTexto, y: yTexto, size: 7.5, font: normal, color: tono });
+        if (e.ok) paloma(hoja, xCol + 3, yTexto - 0.5, 0.35);
+        else tache(hoja, xCol + 6, yTexto + 2.5, 0.35);
+        etiquetaNumeral(hoja, negrita, e.etiqueta, xCol + 12, yTexto + 2.5, tono);
+        for (const l of e.lineas) {
+          hoja.drawText(l, { x: xCol + e.sangria, y: yTexto, size: 7.5, font: normal, color: tono });
           yTexto -= 9.5;
         }
       }
-      limite = yTexto + 2;
     }
   }
-
 }
 
 /** Hojas corregidas solas (sin portada ni marca de agua): es lo que se guarda al archivar la entrega. */

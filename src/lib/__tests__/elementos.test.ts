@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { corregirPuntosCriterios, criteriosDelReactivo, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
+import { corregirPuntosCriterios, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
 import { conPuntaje, listaParaRubrica } from "../modalidad";
 
 const criterios = [
@@ -78,6 +78,32 @@ describe("puntos guardados con criterios de otros ejercicios", () => {
     const res = { numero: 1, puntosObtenidos: 50, criterios: [1, 0.5, 0, 0] } as never as { puntosObtenidos: number };
     expect(corregirPuntosCriterios(actividad, res as never)).toBe(false);
     expect(res.puntosObtenidos).toBe(50);
+  });
+});
+
+describe("numerales de los elementos", () => {
+  const r = { numero: 2, puntos: 10 };
+  it("crecen de arriba hacia abajo sobre la hoja", () => {
+    const res = {
+      criterios: [1, 0, 0.5],
+      ubicacionesElementos: [
+        { pagina: 1, y: 0.6, x: 0.2 },
+        { pagina: 1, y: 0.2, x: 0.5 },
+        { pagina: 1, y: 0.4, x: 0.1 },
+      ],
+    };
+    expect(elementosNumerados({ criterios }, r, res).map((e) => [e.numeral, e.nombre])).toEqual([
+      ["2.1", "Coherencia"],
+      ["2.2", "Elementos lingüísticos"],
+      ["2.3", "Contenido"],
+    ]);
+  });
+  it("sin ubicaciones, en el orden de la rúbrica", () => {
+    expect(elementosNumerados({ criterios }, r, { criterios: [1, 0, 0.5] }).map((e) => e.numeral + " " + e.nombre)).toEqual([
+      "2.1 Contenido",
+      "2.2 Coherencia",
+      "2.3 Elementos lingüísticos",
+    ]);
   });
 });
 
