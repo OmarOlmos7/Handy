@@ -141,6 +141,7 @@ export default async function Precios() {
             <TarjetaPlan key={p.id} plan={p} t={t} locale={locale} divisa={divisa} />
           ))}
         </div>
+        <p className="mx-auto mt-4 max-w-3xl text-center text-xs text-slate-500">{pr.notaEstimacion}</p>
 
         <section className="mt-16" aria-labelledby="precision">
           <h2 id="precision" className="text-2xl font-semibold tracking-tight">
