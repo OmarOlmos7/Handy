@@ -260,7 +260,7 @@ const de: Diccionario = {
         "300 Credits: 10 einseitige Aufgaben für eine Klasse mit 30",
         "≈ 15 Stunden Korrekturzeit gespart",
         "Persönliches Feedback für jede/n Schüler/in in Minuten",
-        "Alle fünf Präzisionsstufen, von Schnell bis Präzise",
+        "Alle fünf Präzisionsstufen, von Schnell bis Fortgeschritten",
         "Klassenauswertung und Berichte als PDF und Excel",
         "Zahlung per Karte, bar bei OXXO oder SPEI, mit Rechnung (CFDI)",
       ],
@@ -287,7 +287,7 @@ const de: Diccionario = {
       ventajas: [
         "1.200 Credits: 10 einseitige Aufgaben für 4 Klassen mit 30",
         "≈ 60 Stunden Korrekturzeit gespart",
-        "Spielraum für die Stufe Präzise bei Prüfungen",
+        "Spielraum für die Stufe Fortgeschritten bei Prüfungen",
         "Berichte pro Schüler/in und Klasse das ganze Semester",
       ],
     },
@@ -310,10 +310,10 @@ const de: Diccionario = {
     metaDescripcion: "iEureka-Grader-Tarife: Zahlen Sie nur die Seiten, die Sie korrigieren. Preise in {divisa}.",
     titulo: "Tarife, die zu Ihrer Klasse passen",
     texto:
-      "Zahlen Sie nur die Seiten, die Sie korrigieren. Schnell kostet 1 Credit pro Seite, Flink 3, Mittel 4, Fortgeschritten 7 und Präzise 12. Preise in {divisa}, ohne Abo.",
+      "Zahlen Sie nur die Seiten, die Sie korrigieren. Schnell kostet 0,4 Credits pro Seite, Flink 0,5, Mittel 0,7, Hoch 2,5 und Fortgeschritten 7,2. Preise in {divisa}, ohne Abo.",
     masPopular: "Am beliebtesten",
     aLaMedida: "Individuell",
-    porPagina: "{p} pro Seite",
+    porPagina: "{p} pro Credit",
     ahorra: "{n} % sparen",
     creaYEscribenos: "Konto erstellen und uns schreiben",
     asuntoEscuela: "iEureka-Grader Tarif Schule",
@@ -325,7 +325,7 @@ const de: Diccionario = {
     predeterminado: "Standard",
     preguntasTitulo: "Häufige Fragen",
     preguntas: [
-      ["Was ist ein Credit?", "Jede bewertete Seite verbraucht Credits je nach Präzisionsstufe: 1 bei Schnell, 3 bei Flink, 4 bei Mittel, 7 bei Fortgeschritten und 12 bei Präzise. Eine Abgabe mit 3 Seiten auf Mittel verbraucht 12 Credits."],
+      ["Was ist ein Credit?", "Jede bewertete Seite verbraucht Credits je nach Präzisionsstufe: 0,4 bei Schnell, 0,5 bei Flink, 0,7 bei Mittel, 2,5 bei Hoch und 7,2 bei Fortgeschritten. Eine Abgabe mit 3 Seiten auf Mittel verbraucht 2,1 Credits."],
       [
         "Was verbraucht keine Credits?",
         "Kurse anlegen, die Aufgabe mit KI erstellen, das Blatt mit QR drucken, Ihre Lösung hochladen und das Bewertungsraster erstellen.",
@@ -359,8 +359,8 @@ const de: Diccionario = {
     rapido: { nombre: "Schnell", descripcion: "Schnelles Lesen mit dem geringsten Verbrauch. Ideal für geschlossene Aufgaben (Multiple Choice, wahr oder falsch) und klare Schrift." },
     agil: { nombre: "Flink", descripcion: "Etwas sorgfältiger als Schnell bei geringem Verbrauch. Gut für kurze Antworten und einfache Rechnungen." },
     medio: { nombre: "Mittel", descripcion: "Gleichgewicht zwischen Genauigkeit und Verbrauch. Empfohlen für die meisten Aufgaben mit kurzen Lösungswegen." },
-    avanzado: { nombre: "Fortgeschritten", descripcion: "Prüft Lösungswege und Texte sorgfältiger. Für lange Lösungen mit klarer Schrift." },
-    preciso: { nombre: "Präzise", descripcion: "Das sorgfältigste Lesen langer Lösungswege, Grafiken und schwer lesbarer Schrift. Verbraucht die meisten Tokens." },
+    alto: { nombre: "Hoch", descripcion: "Prüft Lösungswege und Texte sorgfältiger. Für lange Lösungen mit klarer Schrift." },
+    avanzado: { nombre: "Fortgeschritten", descripcion: "Das sorgfältigste Lesen langer Lösungswege, Grafiken und schwer lesbarer Schrift. Verbraucht die meisten Tokens." },
   },
   configuracion: {
     titulo: "Einstellungen",
@@ -403,7 +403,7 @@ const de: Diccionario = {
     menos: "Weniger Verbrauch",
     mas: "Mehr Genauigkeit",
     consumoNota:
-      "Die Tokens sind eine Schätzung pro bewerteter Seite. Jede Seite kostet 1 Credit bei Schnell, 3 bei Flink, 4 bei Mittel, 7 bei Fortgeschritten und 12 bei Präzise.",
+      "Jede Seite kostet 0,4 Credits bei Schnell, 0,5 bei Flink, 0,7 bei Mittel, 2,5 bei Hoch und 7,2 bei Fortgeschritten, je nach den realen Kosten des Modells.",
     guardarPrecision: "Präzision speichern",
     conservacionTitulo: "Aufbewahrung der Daten auf dem Server",
     conservacionFotos:

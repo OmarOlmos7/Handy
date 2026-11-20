@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { prepararReevaluacion } from "@/app/acciones";
-import { ESCALA, creditosPorPagina, indiceEscala } from "@/lib/configuracion";
+import { ESCALA, creditosPorPagina, indiceEscala, sumarCreditos } from "@/lib/configuracion";
 import { formato } from "@/lib/i18n/idiomas";
 import type { EsfuerzoIA, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
@@ -48,7 +48,7 @@ export function ReevaluarActividad({
   const [terminado, setTerminado] = useState(false);
 
   const paginas = entregas.reduce((s, e) => s + e.paginas, 0);
-  const costo = paginas * creditosPorPagina(elegido);
+  const costo = sumarCreditos(paginas * creditosPorPagina(elegido));
   const alcanza = saldo >= costo;
   const base = `/profesor/actividades/${actividadId}`;
 

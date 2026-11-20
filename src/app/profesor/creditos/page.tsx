@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { TiendaCreditos } from "@/components/tienda-creditos";
-import { CREDITOS_POR_PAGINA } from "@/lib/configuracion";
+import { ESCALA, PUNTO_PREDETERMINADO } from "@/lib/configuracion";
 import { Encabezado, Tarjeta, fechaLarga } from "@/components/ui";
 import { QuitarEjemplo } from "@/components/quitar-ejemplo";
 import { saldo } from "@/lib/almacen";
@@ -30,7 +30,7 @@ export default async function Creditos() {
         <Tarjeta>
           <p className="text-sm text-slate-500">{tc.saldo}</p>
           <p className="mt-1 text-3xl font-semibold">{saldoCreditos.toLocaleString(locale)}</p>
-          <p className="text-xs text-slate-500">{formato(tc.aproximado, { n: Math.floor(saldoCreditos / (3 * CREDITOS_POR_PAGINA.medio)).toLocaleString(locale) })}</p>
+          <p className="text-xs text-slate-500">{formato(tc.aproximado, { n: Math.floor(saldoCreditos / (3 * ESCALA[PUNTO_PREDETERMINADO].creditos)).toLocaleString(locale) })}</p>
         </Tarjeta>
       </div>
       <h2 className="mb-3 text-lg font-semibold">{tc.comprar}</h2>
