@@ -35,17 +35,16 @@ export function HojaFoto({
       )
     : [];
 
-  // Si dos reactivos quedan muy juntos, baja el siguiente para que no se encimen.
+  // Los comentarios empiezan en la parte superior del margen y bajan uno tras otro (como en el PDF).
   useLayoutEffect(() => {
     const caja = margen.current;
     const img = foto.current;
     if (!caja || !img) return;
     const acomodar = () => {
       const alto = img.clientHeight;
-      let limite = 0;
+      let limite = 8;
       for (const el of Array.from(caja.children) as HTMLElement[]) {
-        const deseado = Number(el.dataset.y) * alto;
-        const top = Math.max(deseado - 12, limite);
+        const top = limite;
         el.style.top = `${top}px`;
         limite = top + el.offsetHeight + 6;
       }
@@ -180,9 +179,8 @@ export function HojaFoto({
             return (
               <div
                 key={res.numero}
-                data-y={Math.min(0.98, Math.max(0.02, res.ubicacion?.y ?? 0.5))}
                 className="absolute inset-x-0 px-1.5 sm:px-2"
-                style={{ top: `${(res.ubicacion?.y ?? 0.5) * 100}%` }}
+                style={{ top: 0 }}
               >
                 <div className={`flex items-center gap-1 ${color}`}>
                   <Numero n={res.numero} completo={completo} />
