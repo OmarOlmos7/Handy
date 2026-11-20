@@ -15,7 +15,7 @@ import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
 import { fechaHoraLarga } from "./resultados";
 import { esCerrado, incisosCerrado } from "./calificar";
-import { anotacionesNumeradas, puntosTexto } from "./elementos";
+import { anotacionesNumeradas, centroEjercicio, fraccionEjercicio, puntosTexto } from "./elementos";
 import { conPuntaje } from "./modalidad";
 import { texAPlano } from "./tex-plano";
 import type { Actividad, Alumno, Entrega, Grupo, RecomendacionesEstudio } from "./tipos";
@@ -60,6 +60,32 @@ function circuloNumero(p: PDFPage, f: PDFFont, n: number, x: number, y: number, 
   const t = String(n);
   const tam = n > 9 ? 7.5 : 9;
   p.drawText(t, { x: x - f.widthOfTextAtSize(t, tam) / 2, y: y - tam * 0.35, size: tam, font: f, color: rgb(1, 1, 1) });
+}
+
+/** Radio del número de un ejercicio con varios reactivos (1.5 veces el normal). */
+const RADIO_PASTEL = 7.5 * 1.5;
+
+/**
+ * Número de un ejercicio con varios reactivos dentro de un mini pastel: en verde la parte
+ * correcta (desde arriba, en el sentido del reloj) y en rojo el resto.
+ */
+function circuloPastel(p: PDFPage, f: PDFFont, n: number, x: number, y: number, fraccion: number) {
+  const r = RADIO_PASTEL;
+  p.drawCircle({ x, y, size: r + 1.2, color: rgb(1, 1, 1) });
+  if (fraccion >= 0.999) p.drawCircle({ x, y, size: r, color: VERDE });
+  else {
+    p.drawCircle({ x, y, size: r, color: ROJO });
+    if (fraccion > 0.001) {
+      const t = 2 * Math.PI * fraccion;
+      const ex = r * Math.sin(t);
+      const ey = -r * Math.cos(t);
+      // drawSvgPath usa coordenadas SVG (y hacia abajo) a partir del punto dado.
+      p.drawSvgPath(`M 0 0 L 0 ${-r} A ${r} ${r} 0 ${t > Math.PI ? 1 : 0} 1 ${ex.toFixed(3)} ${ey.toFixed(3)} Z`, { x, y, color: VERDE });
+    }
+  }
+  const txt = String(n);
+  const tam = n > 9 ? 11 : 13;
+  p.drawText(txt, { x: x - f.widthOfTextAtSize(txt, tam) / 2, y: y - tam * 0.35, size: tam, font: f, color: rgb(1, 1, 1) });
 }
 
 /** Ancho de una columna de comentarios en el margen del PDF corregido. */
@@ -222,27 +248,33 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       const color = completo ? VERDE : ROJO;
 
       // Marca sobre la hoja del alumno, donde está su respuesta.
-      const xc = x0 + Math.min(ancho - 34, Math.max(10, ancho * (res.ubicacion?.x ?? 0.9) + 10)); // justo después de la respuesta
-      const yc = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, res.ubicacion?.y ?? 0.5)));
-      circuloNumero(hoja, negrita, r.numero, xc, yc, color);
-      if (completo) paloma(hoja, xc + 11, yc - 4, 0.6);
+      // Con varios incisos, el pastel va a media altura de todos ellos.
+      const fraccion = fraccionEjercicio(actividad, r, res);
+      const centro = fraccion === undefined ? undefined : centroEjercicio(actividad, r, res);
+      const xc = x0 + Math.min(ancho - 34, Math.max(10, ancho * (centro?.x ?? res.ubicacion?.x ?? 0.9) + 10)); // justo después de la respuesta
+      const yc = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, centro?.y ?? res.ubicacion?.y ?? 0.5)));
+      const d = fraccion === undefined ? 0 : RADIO_PASTEL - 7.5; // espacio extra del pastel
+      if (fraccion === undefined) circuloNumero(hoja, negrita, r.numero, xc, yc, color);
+      else circuloPastel(hoja, negrita, r.numero, xc + d, yc, fraccion);
+      if (completo) paloma(hoja, xc + 11 + 2 * d, yc - 4, 0.6);
       else {
-        tache(hoja, xc + 17, yc, 0.6);
+        tache(hoja, xc + 17 + 2 * d, yc, 0.6);
         // Opción múltiple o V/F mal contestada: la respuesta correcta junto al tache.
         const unico = esCerrado(r) ? incisosCerrado(r, res.respuestaLeida) : [];
         if (unico.length === 1 && !unico[0].correcto) {
-          hoja.drawText(seguro(negrita, unico[0].correcta), { x: xc + 27, y: yc - 4, size: 11, font: negrita, color: ROJO });
+          hoja.drawText(seguro(negrita, unico[0].correcta), { x: xc + 27 + 2 * d, y: yc - 4, size: 11, font: negrita, color: ROJO });
         }
       }
 
       // Comentario en su columna, en orden de arriba hacia abajo.
       const xCol = xMargen + lugares[k].columna * COLUMNA;
       const yEntrada = lugares[k].y - 8;
-      circuloNumero(hoja, negrita, r.numero, xCol + 10, yEntrada, color);
-      if (completo) paloma(hoja, xCol + 22, yEntrada - 4, 0.6);
-      else tache(hoja, xCol + 28, yEntrada, 0.6);
+      if (fraccion === undefined) circuloNumero(hoja, negrita, r.numero, xCol + 10, yEntrada, color);
+      else circuloPastel(hoja, negrita, r.numero, xCol + 10 + d, yEntrada, fraccion);
+      if (completo) paloma(hoja, xCol + 22 + 2 * d, yEntrada - 4, 0.6);
+      else tache(hoja, xCol + 28 + 2 * d, yEntrada, 0.6);
       hoja.drawText(seguro(negrita, puntaje ? formato(tx.reactivoPuntos, { n: r.numero, p: puntosTexto(res.puntosObtenidos), t: puntosTexto(r.puntos) }) : formato(tx.reactivoSolo, { n: r.numero })), {
-        x: xCol + 40,
+        x: xCol + 40 + 2 * d,
         y: yEntrada - 3.5,
         size: 9,
         font: negrita,
