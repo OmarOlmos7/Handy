@@ -72,7 +72,7 @@ export function HojaFoto({
           alt={formato(th.fotoAlt, { p: pagina })}
           className="block h-auto w-full"
         />
-        {marcas.map(({ res, numero }) => {
+        {marcas.map(({ res }) => {
           const r = actividad.reactivos.find((x) => x.numero === res.numero);
           if (!r) return null;
           const completo = res.puntosObtenidos >= r.puntos;
@@ -84,13 +84,33 @@ export function HojaFoto({
               className={`absolute ml-2 flex -translate-y-1/2 items-center gap-0.5 ${completo ? "text-acierto" : "text-error"}`}
               style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
             >
-              <Numero n={numero} completo={completo} />
+              <Numero n={res.numero} completo={completo} />
               <span className="text-base font-bold leading-none drop-shadow-[0_0_2px_white]">
                 {completo ? "✓" : "✗"}
               </span>
             </span>
           );
         })}
+        {anotada &&
+          entrega.resultados.flatMap((res) => {
+            const r = actividad.reactivos.find((x) => x.numero === res.numero);
+            if (!r || !res.ubicacionesElementos?.length) return [];
+            return puntosPorElemento(actividad, r, res).flatMap((el, j) => {
+              const u = res.ubicacionesElementos?.[j];
+              if (!u || u.pagina !== pagina) return [];
+              const ok = el.obtenidos >= el.total;
+              return [
+                <span
+                  key={`e${res.numero}.${j}`}
+                  title={el.nombre}
+                  className={`absolute -translate-y-1/2 ring-2 ring-white rounded-full ${ok ? "text-acierto" : "text-error"}`}
+                  style={{ left: `${Math.min(0.94, Math.max(0, u.x)) * 100}%`, top: `${Math.min(0.98, Math.max(0.02, u.y)) * 100}%` }}
+                >
+                  <Etiqueta texto={`${res.numero}.${j + 1}`} ok={ok} grande />
+                </span>,
+              ];
+            });
+          })}
         {subrayados.map((s, i) => (
           <span
             key={`s${i}`}
@@ -109,7 +129,7 @@ export function HojaFoto({
           ref={margen}
           className="relative w-[28%] border-l border-slate-300"
         >
-          {marcas.map(({ res, numero }) => {
+          {marcas.map(({ res }) => {
             const r = actividad.reactivos.find((x) => x.numero === res.numero);
             if (!r) return null;
             const completo = res.puntosObtenidos >= r.puntos;
@@ -122,7 +142,7 @@ export function HojaFoto({
                 style={{ top: `${(res.ubicacion?.y ?? 0.5) * 100}%` }}
               >
                 <div className={`flex items-center gap-1 ${color}`}>
-                  <Numero n={numero} completo={completo} />
+                  <Numero n={res.numero} completo={completo} />
                   <span className="text-base font-bold leading-none">
                     {completo ? "✓" : "✗"}
                   </span>
@@ -144,13 +164,20 @@ export function HojaFoto({
                   </p>
                 )}
                 {puntosPorElemento(actividad, r, res).length > 0 && (
-                  <ul className="mt-0.5 text-[10px] leading-tight text-slate-600 sm:text-[11px]">
-                    {puntosPorElemento(actividad, r, res).map((el) => (
-                      <li key={el.nombre} className={el.obtenidos >= el.total ? "text-acierto" : "text-error"}>
-                        {el.obtenidos >= el.total ? "✓" : "✗"} {el.nombre}
-                        {puntaje && ` ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}`}
-                      </li>
-                    ))}
+                  <ul className="mt-1 space-y-0.5 text-[10px] leading-tight text-slate-600 sm:text-[11px]">
+                    {puntosPorElemento(actividad, r, res).map((el, j) => {
+                      const ok = el.obtenidos >= el.total;
+                      return (
+                        <li key={el.nombre} className={`flex items-start gap-1 ${ok ? "text-acierto" : "text-error"}`}>
+                          <span className="w-2.5 shrink-0 text-center font-bold">{ok ? "✓" : "✗"}</span>
+                          <Etiqueta texto={`${res.numero}.${j + 1}`} ok={ok} />
+                          <span>
+                            {el.nombre}
+                            {puntaje && ` ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}`}
+                          </span>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
@@ -168,6 +195,18 @@ function Numero({ n, completo }: { n: number; completo: boolean }) {
       className={`inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold leading-none text-white ring-2 ring-white ${completo ? "bg-acierto" : "bg-error"}`}
     >
       {n}
+    </span>
+  );
+}
+
+/** Numeral del elemento (1.1, 1.2…) en un círculo verde o rojo. */
+function Etiqueta({ texto, ok, grande = false }: { texto: string; ok: boolean; grande?: boolean }) {
+  const tam = grande ? "h-4 min-w-4 text-[9px] sm:h-5 sm:min-w-5 sm:text-[11px]" : "h-3.5 min-w-3.5 text-[8px] sm:h-4 sm:min-w-4 sm:text-[9px]";
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center justify-center rounded-full px-1 font-bold leading-none text-white ${tam} ${ok ? "bg-acierto" : "bg-error"}`}
+    >
+      {texto}
     </span>
   );
 }
