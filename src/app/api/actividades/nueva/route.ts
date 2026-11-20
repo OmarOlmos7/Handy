@@ -1,6 +1,7 @@
 import { PDFDocument } from "pdf-lib";
 import { borrarCarpeta, guardarArchivo, leer, leerArchivo, modificar, slug } from "@/lib/almacen";
-import { ErrorIA, generarActividad, proponerRubrica } from "@/lib/ia";
+import { ErrorIA, generarActividad, generarVersiones, proponerRubrica } from "@/lib/ia";
+import { cantidadVersiones } from "@/lib/versiones";
 import { guardarSubidos } from "@/lib/imagenes";
 import { precisionPara } from "@/lib/configuracion";
 import { profesorActual } from "@/lib/sesion";
@@ -72,6 +73,16 @@ export async function POST(req: Request) {
         criterios: generada.criterios,
         reactivos: generada.reactivos,
       });
+      // Versiones B, C…: los mismos reactivos con otros valores numéricos (no aplica a producciones escritas).
+      const versiones = base.sinSolucion ? 1 : cantidadVersiones(form.get("versiones"));
+      if (versiones > 1) {
+        base.versiones = await generarVersiones(base, versiones, {
+          profesorId: profesor.id,
+          actividadId: id,
+          precision: base.precision,
+          idioma: esIdioma(idiomaElegido) ? idiomaElegido : detectarIdioma(`${titulo}\n${prompt}`),
+        });
+      }
     } catch (e) {
       console.error(e);
       return Response.json({ error: e instanceof ErrorIA ? e.message : "No se pudo generar la actividad." }, { status: 502 });

@@ -10,6 +10,7 @@ import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { actividadDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 import { qrDataUrl, urlBase } from "@/lib/qr";
+import { versionesCompletas } from "@/lib/versiones";
 import { textos, textosDeActividad } from "@/lib/i18n/servidor";
 import { ProveedorTextos } from "@/components/proveedor-textos";
 
@@ -23,7 +24,12 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
   const impreso = await textosDeActividad(actividad);
   const th = t.profesor.hoja;
   const curso = `${grupo.materia} · ${grupo.nombre}`;
-  const qr = await qrDataUrl(`${await urlBase()}/entregar/${id}`);
+  const base = await urlBase();
+  const qr = await qrDataUrl(`${base}/entregar/${id}`);
+  // Con varias versiones, cada hoja lleva su letra y su propio QR (la entrega queda con su versión).
+  const versiones = actividad.versiones?.length
+    ? await Promise.all(versionesCompletas(actividad).map(async (v) => ({ ...v, qr: await qrDataUrl(`${base}/entregar/${id}?v=${v.letra}`) })))
+    : undefined;
   const siguiente = actividad.sinSolucion ? (
     <BotonLink href={`/profesor/actividades/${id}/rubrica`} variante="secundario">
       {th.irRubrica}
@@ -100,7 +106,18 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
             puedeDeshacer={!!actividad.hojaAnterior}
             bloqueada={db.entregas.some((e) => e.actividadId === id && e.estado !== "sin_entregar")}
           />
-          <HojaActividad actividad={actividad} curso={curso} qrSrc={qr} />
+          {versiones ? (
+            <>
+              <p className="no-imprimir mx-auto mb-4 max-w-[8.5in] rounded-lg bg-tinta-50 px-4 py-3 text-sm text-tinta-700">{th.versionesTexto}</p>
+              {versiones.map((v, i) => (
+                <div key={v.letra} className={i > 0 ? "mt-8 break-before-page" : ""}>
+                  <HojaActividad actividad={v.actividad} curso={curso} qrSrc={v.qr} version={v.letra} />
+                </div>
+              ))}
+            </>
+          ) : (
+            <HojaActividad actividad={actividad} curso={curso} qrSrc={qr} />
+          )}
         </>
       ) : (
         <div className="mx-auto max-w-3xl space-y-6">

@@ -6,6 +6,7 @@ import { actividadDe, grupoDe, leer } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
 import { textos } from "@/lib/i18n/servidor";
 import { primeraEntrega } from "@/lib/reenvio";
+import { letrasVersiones, versionValida } from "@/lib/versiones";
 import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 
 // Página pública del QR. El alumno entra con su correo y clave de acceso (o crea su cuenta
@@ -13,7 +14,8 @@ import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 export default async function Entregar({ params, searchParams }: PageProps<"/entregar/[id]">) {
   const { id } = await params;
   // m y n rellenan el formulario cuando el profesor sube las hojas de un alumno.
-  const { m, n } = await searchParams;
+  // v: versión de la hoja que trae el QR (A, B…).
+  const { m, n, v } = await searchParams;
   const db = await leer();
   const actividad = actividadDe(db, id);
   const grupo = actividad && grupoDe(db, actividad.grupoId);
@@ -57,6 +59,8 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
             automatica={Boolean(actividad.rubricaConfirmada)}
             matriculaInicial={typeof m === "string" ? m : undefined}
             nombreInicial={typeof n === "string" ? n : undefined}
+            versiones={actividad.versiones?.length ? letrasVersiones(actividad) : undefined}
+            versionInicial={versionValida(actividad, v) ?? (actividad.versiones?.length ? (entrega?.version ?? "A") : undefined)}
             previa={
               entrega && primera
                 ? { primeraEntregaEn: primera, paginas: entrega.paginasRecibidas, evaluada: entrega.estado === "evaluada" || entrega.estado === "aprobada" }

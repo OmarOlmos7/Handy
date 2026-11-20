@@ -1,5 +1,5 @@
 import { actividadDe, borrarCarpeta, guardarArchivo, leer, modificar } from "@/lib/almacen";
-import { ErrorIA, proponerRubrica, unirConHoja } from "@/lib/ia";
+import { ErrorIA, proponerRubrica, resolverVersiones, unirConHoja } from "@/lib/ia";
 import { guardarSubidos } from "@/lib/imagenes";
 import { esDelProfesor } from "@/lib/cuentas";
 import { profesorActual } from "@/lib/sesion";
@@ -33,11 +33,16 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
   const { rutas, paraIA } = subidos;
 
   try {
-    const { reactivos, criterios, recomendaciones } = await proponerRubrica(paraIA, { titulo: actividad.titulo, instrucciones }, { profesorId: profesor.id, actividadId: actividad.id });
+    const uso = { profesorId: profesor.id, actividadId: actividad.id };
+    const { reactivos, criterios, recomendaciones } = await proponerRubrica(paraIA, { titulo: actividad.titulo, instrucciones }, uso);
+    const unidos = unirConHoja(actividad.reactivos, reactivos);
+    // Las demás versiones se resuelven con el método de la solución del profesor y se verifican.
+    const versiones = await resolverVersiones({ ...actividad, reactivos: unidos }, uso);
     modificar((d) => {
       const a = actividadDe(d, id)!;
       a.solucion = rutas;
       a.reactivos = unirConHoja(a.reactivos, reactivos);
+      a.versiones = versiones;
       a.solucionIA = false;
       a.criterios = criterios;
       a.recomendaciones = recomendaciones;

@@ -4,6 +4,7 @@ import profesor from "./profesor/pt";
 
 const pt: Diccionario = {
   comun: {
+    version: "Versão {v}",
     idioma: "Idioma",
     ingresar: "Entrar",
     salir: "Sair",

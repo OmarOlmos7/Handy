@@ -40,6 +40,8 @@ const alumno: Diccionario["alumno"] = {
     descargarPdf: "PDF herunterladen",
   },
   entregar: {
+    versionHoja: "Version deines Blatts",
+    versionAyuda: "Es ist der Buchstabe neben dem Titel deines Blatts.",
     suspendidas: "Deine Lehrkraft hat die Abgaben für diese Aufgabe pausiert. Frag nach, wann sie wieder geöffnet werden.",
     entregasComo: "Du gibst ab als",
     noEresTu: "Nicht du? Abmelden",

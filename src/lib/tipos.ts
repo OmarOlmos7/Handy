@@ -109,7 +109,12 @@ export interface Actividad {
   /** Condiciones que dio el profesor para que la IA resolviera la actividad. */
   condicionesSolucion?: string;
   /** Versión anterior de la hoja, para deshacer la última edición con IA. */
-  hojaAnterior?: { instruccionesAlumno?: string[]; criterios?: CriterioEvaluacion[]; reactivos: Reactivo[]; rubricaConfirmada?: boolean };
+  hojaAnterior?: { instruccionesAlumno?: string[]; criterios?: CriterioEvaluacion[]; reactivos: Reactivo[]; rubricaConfirmada?: boolean; versiones?: VersionActividad[] };
+  /**
+   * Versiones B, C… de la hoja (la A es la actividad misma): los mismos reactivos con otros
+   * valores numéricos y su propia solución. Todas se califican con la misma rúbrica.
+   */
+  versiones?: VersionActividad[];
   /** true si la solución la generó la IA en lugar de escanearla. */
   solucionIA?: boolean;
   /** true en las actividades de ejemplo (sin fotos reales; se dibujan en SVG). */
@@ -162,6 +167,30 @@ export interface Actividad {
 }
 
 export type EstiloCorreccion = "margen" | "subrayado";
+
+/** Lo que cambia en un reactivo de otra versión: el texto impreso y su solución. */
+export interface ReactivoVersion {
+  numero: number;
+  enunciado: string;
+  opciones?: string[];
+  columnaA?: string[];
+  columnaB?: string[];
+  ilustracion?: string;
+  /** Respuesta correcta de esta versión (vacía hasta preparar la solución). */
+  respuesta: string;
+  solucionPasos?: string[];
+}
+
+export interface VersionActividad {
+  /** Letra impresa en la hoja: B, C, D… */
+  letra: string;
+  reactivos: ReactivoVersion[];
+  /**
+   * Reactivos cuya solución no coincidió con una segunda resolución independiente: el profesor
+   * debe revisarlos. "otra" es la respuesta de la segunda resolución.
+   */
+  revisar?: { numero: number; otra: string }[];
+}
 
 /** Fragmento subrayado en la hoja del alumno con su comentario (estilo "subrayado"). */
 export interface Subrayado {
@@ -228,6 +257,8 @@ export interface Entrega {
   mejoras: string[];
   /** Fotos de las hojas del alumno, en orden (rutas relativas a la carpeta de datos). */
   imagenes?: string[];
+  /** Versión de la hoja que respondió el alumno (A, B, C…); sin valor, la A. */
+  version?: string;
   entregadaEn?: string;
   /** Hora de la primera entrega; los reenvíos de los primeros minutos la conservan. */
   primeraEntregaEn?: string;

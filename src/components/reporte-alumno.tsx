@@ -3,6 +3,7 @@
 // con palomas verdes, taches rojos, anotaciones y puntos de cada reactivo junto a su respuesta,
 // 3) resumen del desempeño (aspectos positivos y de mejora), 4) recomendaciones de mejora
 // (hasta 3 videos, Khan Academy primero; lecturas de OpenStax; ejercicios) y 5) la solución.
+import { actividadDeVersion } from "@/lib/versiones";
 import type { ReactNode } from "react";
 import { idYouTube, recursosParaTemas } from "@/lib/recursos";
 import { enlaceVideo } from "@/lib/videos";
@@ -20,7 +21,7 @@ const titulo = "text-xs font-semibold uppercase tracking-wide text-slate-500";
 const tarjeta = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200";
 
 export async function ReporteAlumno({
-  actividad,
+  actividad: actividadBase,
   alumno,
   entrega,
   grupo,
@@ -33,6 +34,8 @@ export async function ReporteAlumno({
   /** Botón del profesor para (re)generar las recomendaciones de estudio. */
   accionEstudio?: ReactNode;
 }) {
+  // El alumno ve el texto y la solución de su versión de la hoja.
+  const actividad = actividadDeVersion(actividadBase, entrega.version);
   const { t, locale } = await textos();
   const tr = t.profesor.reporte;
   const temas = [...new Set(actividad.reactivos.map((r) => r.tema).filter(Boolean))];

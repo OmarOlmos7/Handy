@@ -11,7 +11,7 @@ function limpiar(s: string) {
 }
 
 /** "c) m/s²" → "c"; "(b)" → "b"; "Verdadero" → "v". */
-function opcion(s: string) {
+export function opcion(s: string) {
   const t = limpiar(s);
   if (/^(v|verdadero|true|cierto)\b/.test(t)) return "v";
   if (/^(f|falso|false)\b/.test(t)) return "f";
@@ -20,7 +20,7 @@ function opcion(s: string) {
 }
 
 /** Pares de una relación de columnas o secuencia de paréntesis: "1-c, 2-a" → ["1c","2a"]; "(b)(a)(c)" → ["b","a","c"]. */
-function pares(s: string) {
+export function pares(s: string) {
   const t = limpiar(s);
   const conNumero = [...t.matchAll(/(\d+)\s*[-–=:>.)]*\s*\(?([a-z])\)?/g)].map((m) => m[1] + m[2]);
   if (conNumero.length) return conNumero;

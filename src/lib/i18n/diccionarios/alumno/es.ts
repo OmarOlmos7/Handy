@@ -40,6 +40,8 @@ const alumno = {
     descargarPdf: "Descargar PDF",
   },
   entregar: {
+    versionHoja: "Versión de tu hoja",
+    versionAyuda: "Es la letra que aparece junto al título de tu hoja.",
     suspendidas: "El profesor suspendió las entregas de esta actividad. Pregúntale cuándo se vuelven a abrir.",
     entregasComo: "Entregas como",
     noEresTu: "¿No eres tú? Salir",

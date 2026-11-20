@@ -40,6 +40,8 @@ const alumno: Diccionario["alumno"] = {
     descargarPdf: "PDF をダウンロード",
   },
   entregar: {
+    versionHoja: "用紙のバージョン",
+    versionAyuda: "用紙のタイトルの横にある文字です。",
     suspendidas: "先生がこの課題の提出を停止しています。再開の時期は先生に確認してください。",
     entregasComo: "提出者：",
     noEresTu: "本人ではありませんか？ログアウト",
