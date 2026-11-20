@@ -195,6 +195,11 @@ export interface ResultadoReactivo {
    * mismo orden que `puntosPorElemento`: ahí se dibuja su numeral (1.1, 1.2…).
    */
   ubicacionesElementos?: UbicacionElemento[];
+  /**
+   * Reactivos cerrados con varios renglones (relación, paréntesis): dónde está cada respuesta del
+   * alumno, en el orden de la clave. Ahí se dibuja la paloma o el tache con la letra correcta.
+   */
+  ubicacionesIncisos?: UbicacionElemento[];
 }
 
 export interface UbicacionElemento {

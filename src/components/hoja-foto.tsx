@@ -8,6 +8,7 @@ import { useTextos } from "./proveedor-textos";
 import { useLayoutEffect, useRef } from "react";
 import type { Actividad, Entrega } from "@/lib/tipos";
 import { elementosNumerados, puntosTexto } from "@/lib/elementos";
+import { esCerrado, incisosCerrado } from "@/lib/calificar";
 import { conPuntaje } from "@/lib/modalidad";
 
 export function HojaFoto({
@@ -88,9 +89,32 @@ export function HojaFoto({
               <span className="text-base font-bold leading-none drop-shadow-[0_0_2px_white]">
                 {completo ? "✓" : "✗"}
               </span>
+              {!completo && unicaIncorrecta(r, res.respuestaLeida) && (
+                <span className="font-mano text-base font-bold leading-none drop-shadow-[0_0_2px_white]">{unicaIncorrecta(r, res.respuestaLeida)}</span>
+              )}
             </span>
           );
         })}
+        {/* Cerrados con varios renglones: paloma junto a cada respuesta correcta; tache y la letra correcta junto a cada incorrecta. */}
+        {anotada &&
+          entrega.resultados.flatMap((res) => {
+            const r = actividad.reactivos.find((x) => x.numero === res.numero);
+            if (!r || !esCerrado(r) || !res.ubicacionesIncisos?.length) return [];
+            return incisosCerrado(r, res.respuestaLeida).flatMap((inc, j) => {
+              const u = res.ubicacionesIncisos?.[j];
+              if (!u || u.pagina !== pagina) return [];
+              return [
+                <span
+                  key={`i${res.numero}.${j}`}
+                  className={`absolute ml-0.5 flex -translate-y-1/2 items-center gap-0.5 font-bold leading-none drop-shadow-[0_0_2px_white] ${inc.correcto ? "text-acierto" : "text-error"}`}
+                  style={{ left: `${Math.min(0.95, Math.max(0, u.x)) * 100}%`, top: `${Math.min(0.98, Math.max(0.02, u.y)) * 100}%` }}
+                >
+                  <span className="text-sm sm:text-base">{inc.correcto ? "✓" : "✗"}</span>
+                  {!inc.correcto && <span className="font-mano text-sm sm:text-base">{inc.correcta}</span>}
+                </span>,
+              ];
+            });
+          })}
         {anotada &&
           entrega.resultados.flatMap((res) => {
             const r = actividad.reactivos.find((x) => x.numero === res.numero);
@@ -197,6 +221,13 @@ function Numero({ n, completo }: { n: number; completo: boolean }) {
       {n}
     </span>
   );
+}
+
+/** Respuesta correcta de un cerrado de una sola respuesta (opción múltiple, V/F) mal contestado. */
+function unicaIncorrecta(r: Actividad["reactivos"][number], leida: string) {
+  if (!esCerrado(r)) return "";
+  const lista = incisosCerrado(r, leida);
+  return lista.length === 1 && !lista[0].correcto ? lista[0].correcta : "";
 }
 
 /** Numeral del elemento (1.1, 1.2…) en un círculo verde o rojo. */
