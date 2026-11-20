@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { corregirPuntosPalabras, esCerrado, incisosCerrado, puntosReactivoCerrado } from "../calificar";
+import { corregirPuntosPalabras, esCerrado, quitarClaveRepetida, incisosCerrado, palabrasNumeradas, puntosReactivoCerrado } from "../calificar";
 import type { Reactivo } from "../tipos";
 
 const base: Reactivo = {
@@ -87,5 +87,31 @@ describe("elegir la palabra correcta en cada renglón", () => {
   });
   it("una relación con letras sigue calificándose por letra", () => {
     expect(incisosCerrado({ tipo: "relacion_columnas", respuesta: "1-e, 2-g" }, "1-e, 2-c").map((i) => i.palabra)).toEqual([undefined, undefined]);
+  });
+});
+
+describe("clave con marcas y alternativas", () => {
+  const r = {
+    numero: 3,
+    tipo: "opcion_multiple",
+    puntos: 15,
+    respuesta:
+      "1) sportive ✔ (sportife ✗, sportie ✗); 2) divorcée ✔ (divorcé ✗, divorseuse ✗); 3) heureuse ✔ (heureue ✗, heureuxe ✗); 4) intelligente ✔ (intelligenteuse ✗, intelligenté ✗); 5) sympathique ✔ (sympatiqué ✗, synpathique ✗)",
+  } as Reactivo;
+  const leida = "1) sportife, 2) divorcée, 3) heureuse, 4) intelligente, 5) synpathique";
+  it("toma solo la palabra correcta de cada renglón", () => {
+    expect([...(palabrasNumeradas(r.respuesta) ?? new Map()).values()]).toEqual(["sportive", "divorcée", "heureuse", "intelligente", "sympathique"]);
+    expect(puntosReactivoCerrado(r, leida)).toBe(9);
+    expect(incisosCerrado(r, leida).map((i) => i.correcto)).toEqual([false, true, true, true, false]);
+  });
+  it("quita el comentario que repetía toda la clave", () => {
+    const res = { comentario: `La bonne réponse est ${r.respuesta}.`, respuestaLeida: leida };
+    expect(quitarClaveRepetida(r, res)).toBe(true);
+    expect(res.comentario).toBe("");
+  });
+  it("corrige el 0 que dejó la clave sin limpiar", () => {
+    const res = { puntosObtenidos: 0, respuestaLeida: leida };
+    expect(corregirPuntosPalabras(r, res)).toBe(true);
+    expect(res.puntosObtenidos).toBe(9);
   });
 });
