@@ -310,10 +310,10 @@ const fr: Diccionario = {
     metaDescripcion: "Offres iEureka-Grader : ne payez que les pages que vous corrigez. Prix en {divisa}.",
     titulo: "Des offres adaptées à votre classe",
     texto:
-      "Ne payez que les pages que vous corrigez. Rapide utilise 1 crédit par page, Agile 3, Moyen 4, Élevé 7 et Avancé 12. Prix en {divisa}, sans abonnement.",
+      "Ne payez que les pages que vous corrigez. Rapide utilise 0,4 crédit par page, Agile 0,5, Moyen 0,7, Élevé 2,5 et Avancé 7,2. Prix en {divisa}, sans abonnement.",
     masPopular: "La plus choisie",
     aLaMedida: "Sur mesure",
-    porPagina: "{p} par page",
+    porPagina: "{p} par crédit",
     ahorra: "économisez {n} %",
     creaYEscribenos: "Créez votre compte et écrivez-nous",
     asuntoEscuela: "Offre École iEureka-Grader",
@@ -325,7 +325,7 @@ const fr: Diccionario = {
     predeterminado: "Par défaut",
     preguntasTitulo: "Questions fréquentes",
     preguntas: [
-      ["Qu'est-ce qu'un crédit ?", "Chaque page corrigée utilise des crédits selon le niveau de précision : 1 en Rapide, 3 en Agile, 4 en Moyen, 7 en Élevé et 12 en Avancé. Un rendu de 3 pages en Moyen utilise 12 crédits."],
+      ["Qu'est-ce qu'un crédit ?", "Chaque page corrigée utilise des crédits selon le niveau de précision : 0,4 en Rapide, 0,5 en Agile, 0,7 en Moyen, 2,5 en Élevé et 7,2 en Avancé. Un rendu de 3 pages en Moyen utilise 2,1 crédits."],
       [
         "Qu'est-ce qui ne consomme pas de crédits ?",
         "Créer vos cours, générer le devoir avec l'IA, imprimer la feuille avec QR, téléverser votre solution et préparer la grille.",
@@ -403,7 +403,7 @@ const fr: Diccionario = {
     menos: "Moins de consommation",
     mas: "Plus de précision",
     consumoNota:
-      "Chaque page coûte 1 crédit en Rapide, 3 en Agile, 4 en Moyen, 7 en Élevé et 12 en Avancé.",
+      "Chaque page coûte 0,4 crédit en Rapide, 0,5 en Agile, 0,7 en Moyen, 2,5 en Élevé et 7,2 en Avancé, selon le coût réel de chaque moteur.",
     guardarPrecision: "Enregistrer la précision",
     conservacionTitulo: "Conservation des informations sur le serveur",
     conservacionFotos:

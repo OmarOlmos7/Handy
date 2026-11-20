@@ -3,6 +3,7 @@
 import { corregirPuntosCriterios } from "./elementos";
 import { corregirPuntosPalabras, quitarClaveRepetida } from "./calificar";
 import crypto from "node:crypto";
+import { sumarCreditos } from "./configuracion";
 import type { Alumno, BaseDeDatos, CuentaAlumno, Grupo } from "./tipos";
 
 const LARGO_HASH = 64;
@@ -139,7 +140,7 @@ export function adoptarSinDueno(db: BaseDeDatos, profesorId: string) {
 }
 
 export function saldoDe(db: BaseDeDatos, profesorId: string): number {
-  return db.movimientos.filter((m) => m.profesorId === profesorId).reduce((s, m) => s + m.cantidad, 0);
+  return sumarCreditos(...db.movimientos.filter((m) => m.profesorId === profesorId).map((m) => m.cantidad));
 }
 
 

@@ -311,10 +311,10 @@ const es = {
     metaDescripcion: "Planes de iEureka-Grader: paga solo las páginas que calificas. Precios en {divisa}.",
     titulo: "Planes que se ajustan a tu salón",
     texto:
-      "Paga solo las páginas que calificas. Rápido usa 1 crédito por página, Ágil 3, Medio 4, Alto 7 y Avanzado 12. Precios en {divisa}, sin suscripción.",
+      "Paga solo las páginas que calificas. Rápido usa 0.4 créditos por página, Ágil 0.5, Medio 0.7, Alto 2.5 y Avanzado 7.2. Precios en {divisa}, sin suscripción.",
     masPopular: "Más popular",
     aLaMedida: "A la medida",
-    porPagina: "{p} por página",
+    porPagina: "{p} por crédito",
     ahorra: "ahorra {n} %",
     creaYEscribenos: "Crea tu cuenta y escríbenos",
     asuntoEscuela: "Plan Escuela de iEureka-Grader",
@@ -326,7 +326,7 @@ const es = {
     predeterminado: "Predeterminado",
     preguntasTitulo: "Preguntas frecuentes",
     preguntas: [
-      ["¿Qué es un crédito?", "Cada página evaluada usa créditos según el nivel de precisión: 1 en Rápido, 3 en Ágil, 4 en Medio, 7 en Alto y 12 en Avanzado. Una entrega de 3 páginas en Medio usa 12 créditos."],
+      ["¿Qué es un crédito?", "Cada página evaluada usa créditos según el nivel de precisión: 0.4 en Rápido, 0.5 en Ágil, 0.7 en Medio, 2.5 en Alto y 7.2 en Avanzado. Una entrega de 3 páginas en Medio usa 2.1 créditos."],
       [
         "¿Qué no consume créditos?",
         "Crear tus cursos, generar la actividad con IA, imprimir la hoja con QR, subir tu solución y armar la rúbrica.",
@@ -404,7 +404,7 @@ const es = {
     menos: "Menos consumo",
     mas: "Más precisión",
     consumoNota:
-      "Cada página cuesta 1 crédito en Rápido, 3 en Ágil, 4 en Medio, 7 en Alto y 12 en Avanzado.",
+      "Cada página cuesta 0.4 créditos en Rápido, 0.5 en Ágil, 0.7 en Medio, 2.5 en Alto y 7.2 en Avanzado, según el costo real de cada motor.",
     guardarPrecision: "Guardar precisión",
     conservacionTitulo: "Conservación de la información en el servidor",
     conservacionFotos:

@@ -3,7 +3,7 @@
 // Cobra al profesor dueño del curso los créditos por página del nivel de precisión de la actividad.
 import "server-only";
 import { actividadDe, grupoDe, leerAhora, modificar } from "./almacen";
-import { creditosPorPagina } from "./configuracion";
+import { creditosPorPagina, sumarCreditos } from "./configuracion";
 import { saldoDe } from "./cuentas";
 import { ErrorIA, buscarRecursos, evaluarEntrega, recomendarEstudio, temasDe } from "./ia";
 import { imagenesParaIA } from "./imagenes";
@@ -43,7 +43,7 @@ async function evaluarAhora(actividadId: string, matricula: string, reevaluar = 
   if (!entrega?.imagenes?.length) return { ok: false, error: "Esta entrega no tiene fotos", status: 400 };
   if (reevaluar ? entrega.estado === "sin_entregar" : entrega.estado !== "entregada") return { ok: true };
   const paginas = entrega.imagenes.length;
-  const costo = paginas * creditosPorPagina(actividad.precision);
+  const costo = sumarCreditos(paginas * creditosPorPagina(actividad.precision));
   if (!grupo.profesorId || saldoDe(db, grupo.profesorId) < costo) {
     const error = "No hay créditos suficientes para evaluar. Compra créditos y vuelve a intentar.";
     marcar(actividadId, matricula, { evaluandoDesde: undefined, error });

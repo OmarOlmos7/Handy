@@ -9,6 +9,11 @@ import {
   intervaloNivel,
   nivelConsumo,
   ESCALA,
+  COSTO_CREDITO_USD,
+  COSTO_HOJA_USD,
+  MARGEN_SEGURIDAD,
+  creditosDeCosto,
+  sumarCreditos,
   PUNTO_PREDETERMINADO,
   indiceEscala,
   nivelReporte,
@@ -17,7 +22,7 @@ import {
   rebanadasNiveles,
   validarRangos,
 } from "../configuracion";
-import { COSTO_PAGINA_USD, PLANES, UTILIDAD_OBJETIVO, ahorroContra, costoCreditoMXN, planDe, precioPorPagina, utilidad } from "../planes";
+import { PLANES, UTILIDAD_OBJETIVO, ahorroContra, costoCreditoMXN, planDe, precioPorPagina, utilidad } from "../planes";
 
 describe("rangos de calificación", () => {
   it("usa Bajo 0-69, Medio 70-84, Alto 85-95 y Superior 96-100 por omisión", () => {
@@ -81,36 +86,46 @@ describe("precisión de la IA", () => {
 });
 
 describe("créditos por página", () => {
-  it("cobra según el punto de la escala; sin precisión se usa el punto medio", () => {
-    expect(ESCALA.map((e) => e.creditos)).toEqual([1, 3, 4, 7, 12]);
-    expect(creditosPorPagina({ motor: "rapido", esfuerzo: "bajo" })).toBe(1);
-    expect(creditosPorPagina({ motor: "medio", esfuerzo: "bajo" })).toBe(3);
-    expect(creditosPorPagina({ motor: "medio", esfuerzo: "alto" })).toBe(7);
-    expect(creditosPorPagina({ motor: "preciso", esfuerzo: "medio" })).toBe(12);
-    expect(creditosPorPagina(undefined)).toBe(4);
-    // Precisiones guardadas antes de la escala cobran lo de su motor.
-    expect(creditosPorPagina({ motor: "rapido", esfuerzo: "alto" })).toBe(1);
-    expect(creditosPorPagina({ motor: "preciso", esfuerzo: "alto" })).toBe(12);
+  it("cobra el costo medido de cada motor y esfuerzo más 30% de margen, en décimas de crédito", () => {
+    expect(ESCALA.map((e) => e.creditos)).toEqual([0.4, 0.5, 0.7, 2.5, 7.2]);
+    expect(creditosPorPagina({ motor: "rapido", esfuerzo: "bajo" })).toBe(0.4);
+    expect(creditosPorPagina({ motor: "medio", esfuerzo: "alto" })).toBe(4.9);
+    expect(creditosPorPagina({ motor: "preciso", esfuerzo: "alto" })).toBe(8.8);
+    // Sin precisión se usa el punto predeterminado (Medio).
+    expect(creditosPorPagina(undefined)).toBe(0.7);
+    expect(creditosDeCosto(0.0718)).toBe(7.2);
   });
 
-  it("la escala va del motor más económico al más preciso y arranca en el punto medio", () => {
-    expect(ESCALA[0].precision).toEqual({ motor: "rapido", esfuerzo: "bajo" });
-    expect(ESCALA[ESCALA.length - 1].precision).toEqual({ motor: "preciso", esfuerzo: "medio" });
+  it("la escala va de Haiku 5.5 bajo a Opus 5.5 medio y arranca en el punto medio", () => {
     expect(ESCALA.map((e) => e.punto)).toEqual(["rapido", "agil", "medio", "alto", "avanzado"]);
+    expect(ESCALA.map((e) => `${e.precision.motor}-${e.precision.esfuerzo}`)).toEqual([
+      "rapido-bajo",
+      "rapido-medio",
+      "rapido-alto",
+      "medio-medio",
+      "preciso-medio",
+    ]);
     expect(ESCALA[PUNTO_PREDETERMINADO].punto).toBe("medio");
-    const tokens = ESCALA.map((e) => e.tokens);
-    expect([...tokens].sort((a, b) => a - b)).toEqual(tokens);
+    const creditos = ESCALA.map((e) => e.creditos);
+    expect([...creditos].sort((a, b) => a - b)).toEqual(creditos);
     expect(indiceEscala(undefined)).toBe(2);
     expect(indiceEscala({ motor: "preciso", esfuerzo: "alto" })).toBe(4);
     expect(indiceEscala({ motor: "medio", esfuerzo: "alto" })).toBe(3);
+    expect(indiceEscala({ motor: "rapido", esfuerzo: "medio" })).toBe(1);
   });
 
-  it("cada punto cuesta a lo más lo que cuesta un crédito en Rápido", () => {
-    const factor = { bajo: 0.6, medio: 1, alto: 1.6 };
-    for (const e of ESCALA) {
-      const costo = (COSTO_PAGINA_USD[e.precision.motor] * factor[e.precision.esfuerzo]) / e.creditos;
-      expect(costo).toBeLessThanOrEqual(COSTO_PAGINA_USD.rapido + 1e-9);
+  it("con el margen de 30%, ningún crédito cuesta más que el costo con que se calculan los planes", () => {
+    for (const motor of ["rapido", "medio", "preciso"] as const) {
+      for (const esfuerzo of ["bajo", "medio", "alto"] as const) {
+        const costo = COSTO_HOJA_USD[motor][esfuerzo];
+        expect((costo * (1 + MARGEN_SEGURIDAD)) / creditosPorPagina({ motor, esfuerzo })).toBeLessThanOrEqual(COSTO_CREDITO_USD + 1e-9);
+      }
     }
+  });
+
+  it("suma créditos con fracciones sin errores de redondeo", () => {
+    expect(sumarCreditos(50, -0.7, -0.7, -0.7)).toBe(47.9);
+    expect(sumarCreditos(3 * 0.7)).toBe(2.1);
   });
 });
 

@@ -5,6 +5,7 @@ import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { connection } from "next/server";
+import { sumarCreditos } from "./configuracion";
 import { migrar } from "./cuentas";
 import { semilla } from "./datos-ejemplo";
 import type { Actividad, BaseDeDatos, Entrega, EstadoActividad, Grupo } from "./tipos";
@@ -94,7 +95,7 @@ export function entregasDe(db: BaseDeDatos, actividadId: string): Entrega[] {
   );
 }
 export function saldo(db: BaseDeDatos) {
-  return db.movimientos.reduce((s, m) => s + m.cantidad, 0);
+  return sumarCreditos(...db.movimientos.map((m) => m.cantidad));
 }
 
 export function estadoActividad(db: BaseDeDatos, act: Actividad): EstadoActividad {

@@ -310,10 +310,10 @@ const en: Diccionario = {
     metaDescripcion: "iEureka-Grader plans: pay only for the pages you grade. Prices in {divisa}.",
     titulo: "Plans that fit your classroom",
     texto:
-      "Pay only for the pages you grade. Fast uses 1 credit per page, Agile 3, Medium 4, High 7 and Advanced 12. Prices in {divisa}, no subscription.",
+      "Pay only for the pages you grade. Fast uses 0.4 credits per page, Agile 0.5, Medium 0.7, High 2.5 and Advanced 7.2. Prices in {divisa}, no subscription.",
     masPopular: "Most popular",
     aLaMedida: "Custom",
-    porPagina: "{p} per page",
+    porPagina: "{p} per credit",
     ahorra: "save {n}%",
     creaYEscribenos: "Create your account and write to us",
     asuntoEscuela: "iEureka-Grader School plan",
@@ -325,7 +325,7 @@ const en: Diccionario = {
     predeterminado: "Default",
     preguntasTitulo: "Frequently asked questions",
     preguntas: [
-      ["What is a credit?", "Each graded page uses credits by precision level: 1 on Fast, 3 on Agile, 4 on Medium, 7 on High and 12 on Advanced. A 3-page submission on Medium uses 12 credits."],
+      ["What is a credit?", "Each graded page uses credits by precision level: 0.4 on Fast, 0.5 on Agile, 0.7 on Medium, 2.5 on High and 7.2 on Advanced. A 3-page submission on Medium uses 2.1 credits."],
       [
         "What doesn't use credits?",
         "Creating your courses, generating the assignment with AI, printing the sheet with QR, uploading your solution and building the rubric.",
@@ -403,7 +403,7 @@ const en: Diccionario = {
     menos: "Less usage",
     mas: "More precision",
     consumoNota:
-      "Each page costs 1 credit on Fast, 3 on Agile, 4 on Medium, 7 on High and 12 on Advanced.",
+      "Each page costs 0.4 credits on Fast, 0.5 on Agile, 0.7 on Medium, 2.5 on High and 7.2 on Advanced, based on the real cost of each engine.",
     guardarPrecision: "Save precision",
     conservacionTitulo: "How long data is kept on the server",
     conservacionFotos:

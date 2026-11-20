@@ -12,7 +12,7 @@ import { useTextos } from "./proveedor-textos";
  * elegido como "Modelo - esfuerzo". Manda en el formulario el punto, el motor y el esfuerzo.
  */
 function BarraPrecision({ inicial, leyenda, onCambio }: { inicial: number; leyenda: string; onCambio?: (p: PrecisionIA) => void }) {
-  const { t } = useTextos();
+  const { t, locale } = useTextos();
   const c = t.configuracion;
   const [indice, setIndiceInterno] = useState(ESCALA[inicial] ? inicial : PUNTO_PREDETERMINADO);
   const setIndice = (i: number) => {
@@ -21,7 +21,7 @@ function BarraPrecision({ inicial, leyenda, onCambio }: { inicial: number; leyen
   };
   const e = ESCALA[indice];
   const modelo = `${INFO_MOTOR[e.precision.motor].nombreCorto} - ${t.esfuerzos[e.precision.esfuerzo]}`;
-  const creditos = e.creditos === 1 ? c.creditoPagina : formato(c.creditosPagina, { n: e.creditos });
+  const creditos = e.creditos === 1 ? c.creditoPagina : formato(c.creditosPagina, { n: e.creditos.toLocaleString(locale) });
   return (
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">{leyenda}</legend>
