@@ -15,7 +15,7 @@ import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
 import { fechaHoraLarga } from "./resultados";
 import { esCerrado, incisosCerrado } from "./calificar";
-import { anotacionesNumeradas, fraccionEjercicio, puntosTexto } from "./elementos";
+import { anotacionesNumeradas, fraccionEjercicio, mitadSeccion, puntosTexto } from "./elementos";
 import { conPuntaje } from "./modalidad";
 import { texAPlano } from "./tex-plano";
 import type { Actividad, Alumno, Entrega, Grupo, RecomendacionesEstudio } from "./tipos";
@@ -151,7 +151,9 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
         return { ok: el.ok, etiqueta, sangria, lineas: envolver(normal, texto, 7.5, COLUMNA - 6 - sangria) };
       });
       const altura = 17 + lineas.length * 10.5 + elementos.reduce((h, e) => h + 1.5 + e.lineas.length * 9.5, 0) + 8;
-      return [{ res, r, completo, lineas, elementos, altura }];
+      // Ejercicios con varios incisos: su pastel va a la mitad de la sección que ocupan en la hoja.
+      const mitad = fraccionEjercicio(actividad, r, res) === undefined ? undefined : mitadSeccion(actividad, r, res);
+      return [{ res, r, completo, lineas, elementos, altura, mitad }];
     });
 
     // De arriba hacia abajo; al llegar al pie de la hoja, nueva columna a la derecha.
@@ -159,7 +161,7 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
     const abajo = 14;
     let columna = 0;
     let y = arriba;
-    const lugares = bloques.map((bl) => {
+    const primeros = bloques.map((bl) => {
       if (y - bl.altura < abajo && y < arriba) {
         columna += 1;
         y = arriba;
@@ -175,6 +177,25 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
     const alto = img.height * escala;
     const x0 = 12;
     const y0 = (CARTA.alto - alto) / 2;
+
+    // Con la hoja ya medida, el pastel de un ejercicio con varios incisos baja hasta la mitad de su
+    // sección, sin encimarse con el comentario anterior ni salirse de la columna.
+    let col = -1;
+    let yLibre = arriba;
+    const lugares = primeros.map((p, k) => {
+      if (p.columna !== col) {
+        col = p.columna;
+        yLibre = arriba;
+      }
+      const bl = bloques[k];
+      const deseado = bl.mitad === undefined ? yLibre : y0 + alto * (1 - bl.mitad) + 8;
+      // Deja lugar para los comentarios que siguen en la misma columna.
+      const resto = bloques.slice(k + 1).filter((_, j) => primeros[k + 1 + j].columna === col).reduce((h, b) => h + b.altura, 0);
+      const minimo = abajo + bl.altura + resto;
+      const yb = Math.min(yLibre, Math.max(deseado, minimo));
+      yLibre = yb - bl.altura;
+      return { columna: col, y: yb };
+    });
     const xMargen = x0 + ancho + 10;
     const hoja = doc.addPage([CARTA.ancho, CARTA.alto]);
     hoja.drawImage(img, { x: x0, y: y0, width: ancho, height: alto });

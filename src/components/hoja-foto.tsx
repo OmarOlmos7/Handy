@@ -7,7 +7,7 @@ import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 import { useLayoutEffect, useRef } from "react";
 import type { Actividad, Entrega } from "@/lib/tipos";
-import { anotacionesNumeradas, fraccionEjercicio, puntosTexto } from "@/lib/elementos";
+import { anotacionesNumeradas, fraccionEjercicio, mitadSeccion, puntosTexto } from "@/lib/elementos";
 import { esCerrado, incisosCerrado } from "@/lib/calificar";
 import { conPuntaje } from "@/lib/modalidad";
 
@@ -44,7 +44,9 @@ export function HojaFoto({
       const alto = img.clientHeight;
       let limite = 8;
       for (const el of Array.from(caja.children) as HTMLElement[]) {
-        const top = limite;
+        // El pastel de un ejercicio con varios incisos va a la mitad de su sección en la hoja.
+        const mitad = Number(el.dataset.mitad);
+        const top = el.dataset.mitad ? Math.max(limite, mitad * alto - 15) : limite;
         el.style.top = `${top}px`;
         limite = top + el.offsetHeight + 6;
       }
@@ -181,6 +183,7 @@ export function HojaFoto({
             return (
               <div
                 key={res.numero}
+                data-mitad={fraccionEjercicio(actividad, r, res) === undefined ? undefined : mitadSeccion(actividad, r, res)}
                 className="absolute inset-x-0 px-1.5 sm:px-2"
                 style={{ top: 0 }}
               >
