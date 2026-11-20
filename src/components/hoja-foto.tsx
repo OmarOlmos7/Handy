@@ -7,7 +7,7 @@ import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 import { useLayoutEffect, useRef } from "react";
 import type { Actividad, Entrega } from "@/lib/tipos";
-import { puntosPorElemento, puntosTexto } from "@/lib/elementos";
+import { elementosNumerados, puntosTexto } from "@/lib/elementos";
 import { conPuntaje } from "@/lib/modalidad";
 
 export function HojaFoto({
@@ -95,18 +95,18 @@ export function HojaFoto({
           entrega.resultados.flatMap((res) => {
             const r = actividad.reactivos.find((x) => x.numero === res.numero);
             if (!r || !res.ubicacionesElementos?.length) return [];
-            return puntosPorElemento(actividad, r, res).flatMap((el, j) => {
-              const u = res.ubicacionesElementos?.[j];
+            return elementosNumerados(actividad, r, res).flatMap((el) => {
+              const u = el.ubicacion;
               if (!u || u.pagina !== pagina) return [];
               const ok = el.obtenidos >= el.total;
               return [
                 <span
-                  key={`e${res.numero}.${j}`}
+                  key={`e${el.numeral}`}
                   title={el.nombre}
                   className={`absolute -translate-y-1/2 ring-2 ring-white rounded-full ${ok ? "text-acierto" : "text-error"}`}
                   style={{ left: `${Math.min(0.94, Math.max(0, u.x)) * 100}%`, top: `${Math.min(0.98, Math.max(0.02, u.y)) * 100}%` }}
                 >
-                  <Etiqueta texto={`${res.numero}.${j + 1}`} ok={ok} grande />
+                  <Etiqueta texto={el.numeral} ok={ok} grande />
                 </span>,
               ];
             });
@@ -163,14 +163,14 @@ export function HojaFoto({
                     {res.comentario}
                   </p>
                 )}
-                {puntosPorElemento(actividad, r, res).length > 0 && (
+                {elementosNumerados(actividad, r, res).length > 0 && (
                   <ul className="mt-1 space-y-0.5 text-[10px] leading-tight text-slate-600 sm:text-[11px]">
-                    {puntosPorElemento(actividad, r, res).map((el, j) => {
+                    {elementosNumerados(actividad, r, res).map((el) => {
                       const ok = el.obtenidos >= el.total;
                       return (
                         <li key={el.nombre} className={`flex items-start gap-1 ${ok ? "text-acierto" : "text-error"}`}>
                           <span className="w-2.5 shrink-0 text-center font-bold">{ok ? "✓" : "✗"}</span>
-                          <Etiqueta texto={`${res.numero}.${j + 1}`} ok={ok} />
+                          <Etiqueta texto={el.numeral} ok={ok} />
                           <span>
                             {el.nombre}
                             {puntaje && ` ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}`}

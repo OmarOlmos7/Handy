@@ -107,3 +107,26 @@ export function corregirPuntosCriterios(actividad: Pick<Actividad, "criterios" |
   res.puntosObtenidos = nuevos;
   return true;
 }
+
+/**
+ * Elementos del reactivo con su numeral (1.1, 1.2…). Si la evaluación dio dónde está cada uno en
+ * la hoja, se numeran en orden de lectura: página, de arriba hacia abajo y de izquierda a derecha,
+ * para que el numeral crezca conforme baja la revisión. Si no, en el orden de la rúbrica.
+ */
+export function elementosNumerados(
+  actividad: Pick<Actividad, "criterios">,
+  r: Pick<Reactivo, "numero" | "puntos" | "pasos">,
+  res: Pick<ResultadoReactivo, "pasos" | "criterios" | "ubicacionesElementos">,
+) {
+  const lista = puntosPorElemento(actividad, r, res).map((el, j) => ({ ...el, ubicacion: res.ubicacionesElementos?.[j] }));
+  if (lista.length && lista.every((e) => e.ubicacion)) {
+    lista.sort(
+      (a, b) =>
+        a.ubicacion!.pagina - b.ubicacion!.pagina ||
+        // Mismo renglón (diferencia menor a 1.5 % de la altura): de izquierda a derecha.
+        (Math.abs(a.ubicacion!.y - b.ubicacion!.y) < 0.015 ? 0 : a.ubicacion!.y - b.ubicacion!.y) ||
+        a.ubicacion!.x - b.ubicacion!.x,
+    );
+  }
+  return lista.map((e, k) => ({ ...e, numeral: `${r.numero}.${k + 1}` }));
+}
