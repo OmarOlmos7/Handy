@@ -17,7 +17,7 @@ export function NuevaActividad({
   hoy,
   grupoInicial,
   motorInicial = "medio",
-  esfuerzos = { rapido: "medio", medio: "medio", preciso: "medio" },
+  esfuerzos = { rapido: "bajo", medio: "medio", preciso: "medio" },
   idiomaInicial = "es",
 }: {
   grupos: Pick<Grupo, "id" | "materia" | "nombre">[];

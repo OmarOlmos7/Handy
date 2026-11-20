@@ -88,11 +88,12 @@ export function rebanadasNiveles(
 export const MOTORES: MotorIA[] = ["rapido", "medio", "preciso"];
 export const ESFUERZOS: EsfuerzoIA[] = ["bajo", "medio", "alto"];
 
-export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; nombreModelo: string; descripcion: string; consumo: number }> = {
+export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; nombreModelo: string; nombreCorto: string; descripcion: string; consumo: number }> = {
   rapido: {
     nombre: "Rápido",
     modelo: "claude-haiku-5-5",
     nombreModelo: "Claude Haiku 5.5",
+    nombreCorto: "Haiku 5.5",
     descripcion: "Respuestas veloces y el menor consumo. Ideal para reactivos cerrados (opción múltiple, verdadero o falso) y letra clara.",
     consumo: 1,
   },
@@ -100,6 +101,7 @@ export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; nombr
     nombre: "Medio",
     modelo: "claude-sonnet-5-5",
     nombreModelo: "Claude Sonnet 5.5",
+    nombreCorto: "Sonnet 5.5",
     descripcion: "Equilibrio entre precisión y consumo. Recomendado para la mayoría de las actividades con desarrollos cortos.",
     consumo: 3,
   },
@@ -107,6 +109,7 @@ export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; nombr
     nombre: "Preciso",
     modelo: "claude-opus-5-5",
     nombreModelo: "Claude Opus 5.5",
+    nombreCorto: "Opus 5.5",
     descripcion: "La lectura más cuidadosa de procedimientos largos, gráficas y letra difícil. Es el que más tokens consume.",
     consumo: 6,
   },
@@ -122,19 +125,20 @@ export const INFO_ESFUERZO: Record<EsfuerzoIA, { nombre: string; api: "low" | "m
 export const CREDITOS_POR_PAGINA: Record<MotorIA, number> = { rapido: 1, medio: 4, preciso: 12 };
 
 /** Puntos de la escala de precisión y consumo, del análisis más rápido al más preciso. */
-export type PuntoEscala = "rapido" | "agil" | "medio" | "avanzado" | "preciso";
+export type PuntoEscala = "rapido" | "agil" | "medio" | "alto" | "avanzado";
 
 /**
- * Escala de precisión: cada punto fija el motor y el esfuerzo. Los créditos van en proporción al
- * costo de la IA (unos US$0.013 por crédito o menos) y los tokens son un estimado por página
- * evaluada (unos 4,000 de entrada con la foto, más la salida y el razonamiento del motor).
+ * Escala de precisión: cada punto fija el motor y el esfuerzo, de Haiku 5.5 con esfuerzo bajo a
+ * Opus 5.5 con esfuerzo medio. Los créditos van en proporción al costo de la IA (unos US$0.013 por
+ * crédito o menos) y los tokens son un estimado por página evaluada (unos 4,000 de entrada con la
+ * foto, más la salida y el razonamiento del motor).
  */
 export const ESCALA: { punto: PuntoEscala; precision: PrecisionIA; creditos: number; tokens: number }[] = [
-  { punto: "rapido", precision: { motor: "rapido", esfuerzo: "medio" }, creditos: 1, tokens: 6000 },
+  { punto: "rapido", precision: { motor: "rapido", esfuerzo: "bajo" }, creditos: 1, tokens: 5500 },
   { punto: "agil", precision: { motor: "medio", esfuerzo: "bajo" }, creditos: 3, tokens: 6500 },
   { punto: "medio", precision: { motor: "medio", esfuerzo: "medio" }, creditos: 4, tokens: 7500 },
-  { punto: "avanzado", precision: { motor: "medio", esfuerzo: "alto" }, creditos: 7, tokens: 9000 },
-  { punto: "preciso", precision: { motor: "preciso", esfuerzo: "medio" }, creditos: 12, tokens: 10000 },
+  { punto: "alto", precision: { motor: "medio", esfuerzo: "alto" }, creditos: 7, tokens: 9000 },
+  { punto: "avanzado", precision: { motor: "preciso", esfuerzo: "medio" }, creditos: 12, tokens: 10000 },
 ];
 
 /** La escala arranca en el punto medio. */
@@ -161,7 +165,7 @@ export function creditosPorPagina(p: PrecisionIA | undefined): number {
 export const PRECISION_PREDETERMINADA: PrecisionIA = { motor: "medio", esfuerzo: "medio" };
 
 /** Esfuerzo elegido para cada motor si el profesor no lo ha cambiado. */
-export const ESFUERZOS_PREDETERMINADOS: Record<MotorIA, EsfuerzoIA> = { rapido: "medio", medio: "medio", preciso: "medio" };
+export const ESFUERZOS_PREDETERMINADOS: Record<MotorIA, EsfuerzoIA> = { rapido: "bajo", medio: "medio", preciso: "medio" };
 
 export function esMotor(x: unknown): x is MotorIA {
   return typeof x === "string" && (MOTORES as string[]).includes(x);

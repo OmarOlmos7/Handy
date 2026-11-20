@@ -83,7 +83,7 @@ describe("precisión de la IA", () => {
 describe("créditos por página", () => {
   it("cobra según el punto de la escala; sin precisión se usa el punto medio", () => {
     expect(ESCALA.map((e) => e.creditos)).toEqual([1, 3, 4, 7, 12]);
-    expect(creditosPorPagina({ motor: "rapido", esfuerzo: "medio" })).toBe(1);
+    expect(creditosPorPagina({ motor: "rapido", esfuerzo: "bajo" })).toBe(1);
     expect(creditosPorPagina({ motor: "medio", esfuerzo: "bajo" })).toBe(3);
     expect(creditosPorPagina({ motor: "medio", esfuerzo: "alto" })).toBe(7);
     expect(creditosPorPagina({ motor: "preciso", esfuerzo: "medio" })).toBe(12);
@@ -94,7 +94,9 @@ describe("créditos por página", () => {
   });
 
   it("la escala va del motor más económico al más preciso y arranca en el punto medio", () => {
-    expect(ESCALA.map((e) => e.punto)).toEqual(["rapido", "agil", "medio", "avanzado", "preciso"]);
+    expect(ESCALA[0].precision).toEqual({ motor: "rapido", esfuerzo: "bajo" });
+    expect(ESCALA[ESCALA.length - 1].precision).toEqual({ motor: "preciso", esfuerzo: "medio" });
+    expect(ESCALA.map((e) => e.punto)).toEqual(["rapido", "agil", "medio", "alto", "avanzado"]);
     expect(ESCALA[PUNTO_PREDETERMINADO].punto).toBe("medio");
     const tokens = ESCALA.map((e) => e.tokens);
     expect([...tokens].sort((a, b) => a - b)).toEqual(tokens);
