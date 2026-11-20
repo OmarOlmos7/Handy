@@ -136,7 +136,7 @@ const profesor = {
   },
   creditos: {
     titulo: "Créditos",
-    subtitulo: "Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Subir tu solución y generar la rúbrica es gratis.",
+    subtitulo: "Rápido usa 1 crédito por página, Ágil 3, Medio 4, Avanzado 7 y Preciso 12. Subir tu solución y generar la rúbrica es gratis.",
     saldo: "Saldo disponible",
     aproximado: "≈ {n} alumnos con actividades de 3 páginas en nivel Medio",
     comprar: "Comprar créditos",

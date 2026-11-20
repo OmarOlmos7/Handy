@@ -1,5 +1,5 @@
 // Planes de iEureka-Grader. Cada página evaluada usa créditos según el nivel de precisión
-// (Rápido 1, Medio 4, Preciso 12; ver CREDITOS_POR_PAGINA). Precios en MXN con IVA.
+// (Rápido 1, Ágil 3, Medio 4, Avanzado 7, Preciso 12; ver ESCALA). Precios en MXN con IVA.
 import { CREDITOS_POR_PAGINA } from "./configuracion";
 // Los precios y lo que incluye cada plan viven aquí para que la página de precios, el
 // inicio y la tienda de créditos muestren siempre lo mismo.
@@ -92,7 +92,7 @@ export const PLANES: Plan[] = [
     ventajas: [
       "300 páginas evaluadas",
       "Una o dos actividades al mes con un grupo",
-      "Los tres niveles de precisión: Rápido, Medio y Preciso",
+      "Los cinco niveles de precisión, de Rápido a Preciso",
       "Analíticas del grupo y reporte en PDF y Excel",
       "Pago con tarjeta, efectivo en OXXO o SPEI y factura (CFDI)",
     ],

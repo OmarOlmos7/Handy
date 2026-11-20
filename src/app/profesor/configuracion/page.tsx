@@ -176,18 +176,7 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
           </h2>
           <p className="mt-1 text-sm text-slate-500">{c.precisionTexto}</p>
           <form action={guardarPrecision} className="mt-4">
-            <ConfigPrecision
-              motor={conf.motor}
-              esfuerzos={conf.esfuerzos}
-              textos={{
-                motores: t.motores,
-                esfuerzos: t.esfuerzos,
-                esfuerzo: c.esfuerzo,
-                consumo: c.consumo,
-                consumoDe: c.consumoDe,
-                tokens: c.tokens,
-              }}
-            />
+            <ConfigPrecision motor={conf.motor} esfuerzos={conf.esfuerzos} />
             <p className="mt-3 text-xs text-slate-500">{c.consumoNota}</p>
             <Boton type="submit" className="mt-4">
               {c.guardarPrecision}

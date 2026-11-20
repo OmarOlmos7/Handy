@@ -260,7 +260,7 @@ const fr: Diccionario = {
         "300 crédits : 10 activités d'une page pour une classe de 30",
         "≈ 15 heures de correction économisées",
         "Un commentaire personnel pour chaque élève en quelques minutes",
-        "Les trois niveaux de précision : Rapide, Moyen et Précis",
+        "Les cinq niveaux de précision, de Rapide à Précis",
         "Analyses de la classe et rapports PDF et Excel",
         "Paiement par carte, espèces chez OXXO ou SPEI, avec facture (CFDI)",
       ],
@@ -310,7 +310,7 @@ const fr: Diccionario = {
     metaDescripcion: "Offres iEureka-Grader : ne payez que les pages que vous corrigez. Prix en {divisa}.",
     titulo: "Des offres adaptées à votre classe",
     texto:
-      "Ne payez que les pages que vous corrigez. Rapide utilise 1 crédit par page, Moyen 4 et Précis 12. Prix en {divisa}, sans abonnement.",
+      "Ne payez que les pages que vous corrigez. Rapide utilise 1 crédit par page, Agile 3, Moyen 4, Avancé 7 et Précis 12. Prix en {divisa}, sans abonnement.",
     masPopular: "La plus choisie",
     aLaMedida: "Sur mesure",
     porPagina: "{p} par page",
@@ -319,13 +319,13 @@ const fr: Diccionario = {
     asuntoEscuela: "Offre École iEureka-Grader",
     precisionTitulo: "Choisissez la précision de l'IA pour chaque devoir",
     precisionTexto:
-      "Toutes les offres incluent les trois niveaux. Chaque niveau utilise un moteur différent : plus de précision lit mieux les longues procédures et l'écriture difficile, mais consomme plus de jetons d'IA. Vous le choisissez dans vos paramètres et pour chaque nouveau devoir.",
+      "Toutes les offres incluent les cinq niveaux. Chaque niveau utilise un moteur différent : plus de précision lit mieux les longues procédures et l'écriture difficile, mais consomme plus de jetons d'IA. Vous le choisissez dans vos paramètres et pour chaque nouveau devoir.",
     consumo: "Consommation",
     consumoDe: "Consommation {n} sur 5",
     predeterminado: "Par défaut",
     preguntasTitulo: "Questions fréquentes",
     preguntas: [
-      ["Qu'est-ce qu'un crédit ?", "Chaque page corrigée utilise des crédits selon le niveau de précision : 1 en Rapide, 4 en Moyen et 12 en Précis. Un rendu de 3 pages en Moyen utilise 12 crédits."],
+      ["Qu'est-ce qu'un crédit ?", "Chaque page corrigée utilise des crédits selon le niveau de précision : 1 en Rapide, 3 en Agile, 4 en Moyen, 7 en Avancé et 12 en Précis. Un rendu de 3 pages en Moyen utilise 12 crédits."],
       [
         "Qu'est-ce qui ne consomme pas de crédits ?",
         "Créer vos cours, générer le devoir avec l'IA, imprimer la feuille avec QR, téléverser votre solution et préparer la grille.",
@@ -355,6 +355,13 @@ const fr: Diccionario = {
     },
   },
   esfuerzos: { bajo: "Faible", medio: "Moyen", alto: "Élevé" },
+  escala: {
+    rapido: { nombre: "Rapide", descripcion: "Lecture rapide avec la plus faible consommation. Idéal pour les questions fermées (QCM, vrai ou faux) et une écriture claire." },
+    agil: { nombre: "Agile", descripcion: "Un peu plus de soin que Rapide avec peu de consommation. Bien pour les réponses courtes et les calculs simples." },
+    medio: { nombre: "Moyen", descripcion: "Équilibre entre précision et consommation. Recommandé pour la plupart des activités avec des développements courts." },
+    avanzado: { nombre: "Avancé", descripcion: "Vérifie plus attentivement les démarches et la rédaction. Pour les développements longs avec une écriture claire." },
+    preciso: { nombre: "Précis", descripcion: "La lecture la plus attentive des démarches longues, des graphiques et de l'écriture difficile. C'est celui qui consomme le plus de jetons." },
+  },
   configuracion: {
     titulo: "Paramètres",
     subtitulo: "Personnalisez votre compte, votre langue, vos rapports et la façon dont l'IA travaille sur vos devoirs.",
@@ -389,8 +396,14 @@ const fr: Diccionario = {
     consumo: "Consommation",
     consumoDe: "{e} : {n} sur 5",
     tokens: "≈ {n}× jetons",
+    tokensPagina: "≈ {n} jetons par page",
+    creditosPagina: "{n} crédits par page",
+    creditoPagina: "1 crédit par page",
+    motorEsfuerzo: "Moteur : {m} · effort {e}",
+    menos: "Moins de consommation",
+    mas: "Plus de précision",
     consumoNota:
-      "La consommation est relative : 1× correspond au niveau Rapide avec un effort moyen. Chaque page coûte 1 crédit en Rapide, 4 en Moyen et 12 en Précis.",
+      "Les jetons sont une estimation par page évaluée. Chaque page coûte 1 crédit en Rapide, 3 en Agile, 4 en Moyen, 7 en Avancé et 12 en Précis.",
     guardarPrecision: "Enregistrer la précision",
     conservacionTitulo: "Conservation des informations sur le serveur",
     conservacionFotos:

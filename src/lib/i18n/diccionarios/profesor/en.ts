@@ -138,7 +138,7 @@ const profesor: Diccionario["profesor"] = {
   },
   creditos: {
     titulo: "Credits",
-    subtitulo: "Fast uses 1 credit per page, Medium 4 and Precise 12. Uploading your solution and generating the rubric is free.",
+    subtitulo: "Fast uses 1 credit per page, Agile 3, Medium 4, Advanced 7 and Precise 12. Uploading your solution and generating the rubric is free.",
     saldo: "Available balance",
     aproximado: "≈ {n} students with 3-page activities on Medium",
     comprar: "Buy credits",

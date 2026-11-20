@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { prepararReevaluacion } from "@/app/acciones";
-import { CREDITOS_POR_PAGINA } from "@/lib/configuracion";
+import { ESCALA, creditosPorPagina, indiceEscala } from "@/lib/configuracion";
 import { formato } from "@/lib/i18n/idiomas";
 import type { EsfuerzoIA, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
@@ -41,14 +41,14 @@ export function ReevaluarActividad({
   const router = useRouter();
   const tr = useTextos().t.profesor.reevaluar;
   const [abierto, setAbierto] = useState(false);
-  const [elegido, setElegido] = useState(motor);
+  const [elegido, setElegido] = useState(() => ESCALA[indiceEscala({ motor, esfuerzo: esfuerzoActual ?? esfuerzos[motor] })].precision);
   const [hechas, setHechas] = useState(0);
   const [actual, setActual] = useState<string | null>(null);
   const [errores, setErrores] = useState<string[]>([]);
   const [terminado, setTerminado] = useState(false);
 
   const paginas = entregas.reduce((s, e) => s + e.paginas, 0);
-  const costo = paginas * CREDITOS_POR_PAGINA[elegido];
+  const costo = paginas * creditosPorPagina(elegido);
   const alcanza = saldo >= costo;
   const base = `/profesor/actividades/${actividadId}`;
 
@@ -135,7 +135,7 @@ export function ReevaluarActividad({
             <p className="mb-2 text-sm font-semibold text-slate-900">3. {tr.paso3}</p>
             <div className="rounded-lg bg-slate-50 p-3 text-sm ring-1 ring-slate-200">
               <p>{formato(tr.resumen, { n: entregas.length, p: paginas })}</p>
-              <p className="mt-1 font-semibold text-slate-900">{formato(tr.costo, { c: costo, k: CREDITOS_POR_PAGINA[elegido] })}</p>
+              <p className="mt-1 font-semibold text-slate-900">{formato(tr.costo, { c: costo, k: creditosPorPagina(elegido) })}</p>
               <p className={`mt-1 text-xs ${alcanza ? "text-slate-500" : "text-error"}`}>
                 {alcanza ? formato(tr.saldo, { s: saldo }) : formato(tr.sinSaldo, { s: saldo })}
               </p>

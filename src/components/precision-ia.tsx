@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ESFUERZOS, INFO_ESFUERZO, INFO_MOTOR, MOTORES, consumoRelativo, nivelConsumo } from "@/lib/configuracion";
+import { ESCALA, INFO_MOTOR, indiceEscala } from "@/lib/configuracion";
 import { formato } from "@/lib/i18n/idiomas";
-import type { EsfuerzoIA, MotorIA } from "@/lib/tipos";
+import type { EsfuerzoIA, MotorIA, PrecisionIA } from "@/lib/tipos";
 import { useTextos } from "./proveedor-textos";
 
 /** Cinco rayitas que se llenan según el consumo de tokens. */
@@ -23,101 +23,76 @@ export function MedidorConsumo({ nivel, etiqueta = "Consumo", ariaLabel }: { niv
   );
 }
 
-/**
- * Configuración: elige el motor predeterminado (Rápido, Medio o Preciso) y el esfuerzo
- * de cada uno con una barra de tres posiciones (bajo, medio, alto).
- */
-/** Textos de la tarjeta de precisión (vienen del diccionario del idioma elegido). */
-export interface TextosPrecision {
-  motores: Record<MotorIA, { nombre: string; descripcion: string }>;
-  esfuerzos: Record<EsfuerzoIA, string>;
-  esfuerzo: string;
-  consumo: string;
-  /** "{e}: {n} de 5" */
-  consumoDe: string;
-  /** "≈ {n}× tokens" */
-  tokens: string;
+/** Datos de un punto de la escala para mostrarlo: nombre, motor de IA, tokens y créditos. */
+function usePunto() {
+  const { t, locale } = useTextos();
+  const c = t.configuracion;
+  return (i: number) => {
+    const e = ESCALA[i];
+    return {
+      nombre: t.escala[e.punto].nombre,
+      descripcion: t.escala[e.punto].descripcion,
+      motor: formato(c.motorEsfuerzo, {
+        m: INFO_MOTOR[e.precision.motor].nombreModelo,
+        e: t.esfuerzos[e.precision.esfuerzo].toLocaleLowerCase(locale),
+      }),
+      tokens: formato(c.tokensPagina, { n: e.tokens.toLocaleString(locale) }),
+      creditos: e.creditos === 1 ? c.creditoPagina : formato(c.creditosPagina, { n: e.creditos }),
+      // Consumo de 1 a 5 según su lugar en la escala.
+      consumo: i + 1,
+      consumoDe: formato(c.consumoDe, { e: c.consumo, n: i + 1 }),
+      etiquetaConsumo: c.consumo,
+    };
+  };
 }
 
-export function ConfigPrecision({
-  motor,
-  esfuerzos,
-  textos,
-}: {
-  motor: MotorIA;
-  esfuerzos: Record<MotorIA, EsfuerzoIA>;
-  textos?: TextosPrecision;
-}) {
-  const [elegido, setElegido] = useState(motor);
-  const [nivel, setNivel] = useState(esfuerzos);
-
+/**
+ * Configuración: elige el punto predeterminado de la escala de precisión (de Rápido a Preciso).
+ * Cada punto fija el motor de IA y su esfuerzo.
+ */
+export function ConfigPrecision({ motor, esfuerzos }: { motor: MotorIA; esfuerzos: Record<MotorIA, EsfuerzoIA> }) {
+  const punto = usePunto();
+  const [elegido, setElegido] = useState(indiceEscala({ motor, esfuerzo: esfuerzos[motor] }));
   return (
-    <div className="grid gap-3 lg:grid-cols-3">
-      {MOTORES.map((m) => {
-        const info = textos?.motores[m] ?? INFO_MOTOR[m];
-        const activo = elegido === m;
-        const p = { motor: m, esfuerzo: nivel[m] };
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      {ESCALA.map((e, i) => {
+        const p = punto(i);
+        const activo = elegido === i;
         return (
-          <div
-            key={m}
-            className={`flex flex-col rounded-xl p-4 ring-2 transition ${activo ? "bg-tinta-50/60 ring-tinta-500" : "bg-white ring-slate-200"}`}
+          <label
+            key={e.punto}
+            className={`flex cursor-pointer flex-col rounded-xl p-4 ring-2 transition ${activo ? "bg-tinta-50/60 ring-tinta-500" : "bg-white ring-slate-200"}`}
           >
-            <label className="flex cursor-pointer items-start gap-3">
+            <span className="flex items-center gap-2">
               <input
                 type="radio"
-                name="motor"
-                value={m}
+                name="punto"
+                value={e.punto}
                 checked={activo}
-                onChange={() => setElegido(m)}
-                className="mt-1 h-4 w-4 accent-tinta-600"
+                onChange={() => setElegido(i)}
+                className="h-4 w-4 accent-tinta-600"
               />
-              <span>
-                <span className="flex flex-wrap items-center gap-2">
-                  <span className="font-semibold text-slate-900">{info.nombre}</span>
-                </span>
-                <span className="mt-1 block text-sm text-slate-600">{info.descripcion}</span>
-              </span>
-            </label>
-
-            <fieldset className="mt-4">
-              <legend className="text-xs font-medium text-slate-600">{textos?.esfuerzo ?? "Esfuerzo"}</legend>
-              <div className="mt-1 grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1">
-                {ESFUERZOS.map((e) => (
-                  <label
-                    key={e}
-                    className="cursor-pointer rounded-md px-2 py-1 text-center text-xs font-medium text-slate-600 has-[:checked]:bg-white has-[:checked]:text-tinta-700 has-[:checked]:shadow-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-tinta-400"
-                  >
-                    <input
-                      type="radio"
-                      name={`esfuerzo_${m}`}
-                      value={e}
-                      checked={nivel[m] === e}
-                      onChange={() => setNivel({ ...nivel, [m]: e })}
-                      className="sr-only"
-                    />
-                    {textos?.esfuerzos[e] ?? INFO_ESFUERZO[e].nombre}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <MedidorConsumo
-                nivel={nivelConsumo(p)}
-                etiqueta={textos?.consumo}
-                ariaLabel={textos && formato(textos.consumoDe, { e: textos.consumo, n: nivelConsumo(p) })}
-              />
-              <span className="text-xs text-slate-500">
-                {textos ? formato(textos.tokens, { n: consumoRelativo(p) }) : `≈ ${consumoRelativo(p)}× tokens`}
-              </span>
-            </div>
-          </div>
+              <span className="font-semibold text-slate-900">{p.nombre}</span>
+            </span>
+            <span className="mt-2 text-xs font-medium text-tinta-700">{p.motor}</span>
+            <span className="mt-1 flex-1 text-sm text-slate-600">{p.descripcion}</span>
+            <span className="mt-3">
+              <MedidorConsumo nivel={p.consumo} etiqueta={p.etiquetaConsumo} ariaLabel={p.consumoDe} />
+            </span>
+            <span className="mt-1 text-xs text-slate-500">{p.tokens}</span>
+            <span className="text-xs font-medium text-slate-700">{p.creditos}</span>
+          </label>
         );
       })}
     </div>
   );
 }
 
-/** Deslizador de precisión y consumo para una actividad nueva (Rápido · Medio · Preciso). */
+/**
+ * Deslizador de precisión y consumo de una actividad: cinco puntos del análisis más rápido al
+ * más preciso. Cada punto fija el motor de IA y el esfuerzo, y muestra los tokens y créditos
+ * estimados por página.
+ */
 export function DeslizadorPrecision({
   inicial,
   esfuerzos,
@@ -129,90 +104,65 @@ export function DeslizadorPrecision({
   esfuerzos: Record<MotorIA, EsfuerzoIA>;
   /** Esfuerzo ya guardado para el motor inicial (por ejemplo, al re-evaluar). */
   esfuerzoInicial?: EsfuerzoIA;
-  /** Avisa el motor elegido (por ejemplo, para recalcular los créditos). */
-  onCambio?: (m: MotorIA) => void;
+  /** Avisa la precisión elegida (por ejemplo, para recalcular los créditos). */
+  onCambio?: (p: PrecisionIA) => void;
 }) {
   const { t } = useTextos();
   const td = t.profesor.deslizador;
-  const tconf = t.configuracion;
-  const [indice, setIndiceInterno] = useState(MOTORES.indexOf(inicial));
+  const c = t.configuracion;
+  const punto = usePunto();
+  const [indice, setIndiceInterno] = useState(() => indiceEscala({ motor: inicial, esfuerzo: esfuerzoInicial ?? esfuerzos[inicial] }));
   const setIndice = (i: number) => {
     setIndiceInterno(i);
-    if (MOTORES[i]) onCambio?.(MOTORES[i]);
+    if (ESCALA[i]) onCambio?.(ESCALA[i].precision);
   };
-  // El esfuerzo se elige aquí para esta actividad; cada motor recuerda el suyo.
-  const [elegidos, setElegidos] = useState<Record<MotorIA, EsfuerzoIA>>(() =>
-    esfuerzoInicial ? { ...esfuerzos, [inicial]: esfuerzoInicial } : { ...esfuerzos },
-  );
-  const motor = MOTORES[indice] ?? "medio";
-  const info = t.motores[motor];
-  const esfuerzo = (e: EsfuerzoIA) => t.esfuerzos[e].toLocaleLowerCase();
-  const p = { motor, esfuerzo: elegidos[motor] };
+  const e = ESCALA[indice] ?? ESCALA[2];
+  const p = punto(indice);
   return (
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">{td.leyenda}</legend>
-      <input type="hidden" name="motor" value={motor} />
-      <input type="hidden" name="esfuerzo" value={p.esfuerzo} />
+      <input type="hidden" name="motor" value={e.precision.motor} />
+      <input type="hidden" name="esfuerzo" value={e.precision.esfuerzo} />
       <input
         type="range"
         min={0}
-        max={MOTORES.length - 1}
+        max={ESCALA.length - 1}
         step={1}
         value={indice}
-        onChange={(e) => setIndice(Number(e.target.value))}
+        onChange={(ev) => setIndice(Number(ev.target.value))}
         aria-label={td.leyenda}
-        aria-valuetext={formato(td.esfuerzo, { m: info.nombre, e: esfuerzo(p.esfuerzo) })}
+        aria-valuetext={`${p.nombre}. ${p.motor}`}
         className="mt-3 w-full accent-tinta-600"
       />
-      <div className="mt-1 grid grid-cols-3 text-xs font-medium">
-        {MOTORES.map((m, i) => (
+      <div className="mt-1 grid grid-cols-5 text-[11px] font-medium sm:text-xs">
+        {ESCALA.map((x, i) => (
           <button
-            key={m}
+            key={x.punto}
             type="button"
             onClick={() => setIndice(i)}
-            className={`${i === 0 ? "text-left" : i === MOTORES.length - 1 ? "text-right" : "text-center"} ${
+            className={`${i === 0 ? "text-left" : i === ESCALA.length - 1 ? "text-right" : "text-center"} ${
               i === indice ? "text-tinta-700" : "text-slate-500 hover:text-slate-700"
             }`}
           >
-            {t.motores[m].nombre}
+            {t.escala[x.punto].nombre}
           </button>
         ))}
       </div>
+      <div className="mt-0.5 flex justify-between text-[11px] text-slate-400">
+        <span>{c.menos}</span>
+        <span>{c.mas}</span>
+      </div>
       <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm ring-1 ring-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="font-medium text-slate-800">
-            {formato(td.resumen, { m: info.nombre, e: esfuerzo(p.esfuerzo) })}
-          </span>
-          <MedidorConsumo
-            nivel={nivelConsumo(p)}
-            etiqueta={tconf.consumo}
-            ariaLabel={formato(tconf.consumoDe, { e: tconf.consumo, n: nivelConsumo(p) })}
-          />
+          <span className="font-medium text-slate-800">{p.nombre}</span>
+          <MedidorConsumo nivel={p.consumo} etiqueta={p.etiquetaConsumo} ariaLabel={p.consumoDe} />
         </div>
-        <p className="mt-1 text-xs text-slate-600">{info.descripcion}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-slate-600">{tconf.esfuerzo}</span>
-          <div role="radiogroup" aria-label={tconf.esfuerzo} className="inline-flex gap-1 rounded-lg bg-white p-0.5 ring-1 ring-slate-200">
-            {ESFUERZOS.map((e) => (
-              <button
-                key={e}
-                type="button"
-                role="radio"
-                aria-checked={p.esfuerzo === e}
-                onClick={() => setElegidos({ ...elegidos, [motor]: e })}
-                className={`rounded-md px-3 py-1 text-xs font-medium ${
-                  p.esfuerzo === e ? "bg-tinta-600 text-white" : "text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                {t.esfuerzos[e]}
-              </button>
-            ))}
-          </div>
-          <span className="text-xs text-slate-500">{formato(tconf.tokens, { n: consumoRelativo(p) })}</span>
-        </div>
+        <p className="mt-1 text-xs font-medium text-tinta-700">{p.motor}</p>
+        <p className="mt-1 text-xs text-slate-600">{p.descripcion}</p>
         <p className="mt-2 text-xs text-slate-500">
-          {td.ayuda}
+          {p.tokens} · <span className="font-medium text-slate-700">{p.creditos}</span>
         </p>
+        <p className="mt-2 text-xs text-slate-500">{td.ayuda}</p>
       </div>
     </fieldset>
   );

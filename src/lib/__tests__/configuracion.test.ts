@@ -8,13 +8,16 @@ import {
   creditosPorPagina,
   intervaloNivel,
   nivelConsumo,
+  ESCALA,
+  PUNTO_PREDETERMINADO,
+  indiceEscala,
   nivelReporte,
   parametrosIA,
   precisionPara,
   rebanadasNiveles,
   validarRangos,
 } from "../configuracion";
-import { PLANES, UTILIDAD_OBJETIVO, ahorroContra, costoCreditoMXN, planDe, precioPorPagina, utilidad } from "../planes";
+import { COSTO_PAGINA_USD, PLANES, UTILIDAD_OBJETIVO, ahorroContra, costoCreditoMXN, planDe, precioPorPagina, utilidad } from "../planes";
 
 describe("rangos de calificación", () => {
   it("usa Bajo 0-69, Medio 70-84, Alto 85-95 y Superior 96-100 por omisión", () => {
@@ -78,11 +81,34 @@ describe("precisión de la IA", () => {
 });
 
 describe("créditos por página", () => {
-  it("Rápido cobra 1, Medio 4 y Preciso 12; sin precisión se usa Medio", () => {
-    expect(creditosPorPagina({ motor: "rapido", esfuerzo: "alto" })).toBe(1);
-    expect(creditosPorPagina({ motor: "medio", esfuerzo: "bajo" })).toBe(4);
+  it("cobra según el punto de la escala; sin precisión se usa el punto medio", () => {
+    expect(ESCALA.map((e) => e.creditos)).toEqual([1, 3, 4, 7, 12]);
+    expect(creditosPorPagina({ motor: "rapido", esfuerzo: "medio" })).toBe(1);
+    expect(creditosPorPagina({ motor: "medio", esfuerzo: "bajo" })).toBe(3);
+    expect(creditosPorPagina({ motor: "medio", esfuerzo: "alto" })).toBe(7);
     expect(creditosPorPagina({ motor: "preciso", esfuerzo: "medio" })).toBe(12);
     expect(creditosPorPagina(undefined)).toBe(4);
+    // Precisiones guardadas antes de la escala cobran lo de su motor.
+    expect(creditosPorPagina({ motor: "rapido", esfuerzo: "alto" })).toBe(1);
+    expect(creditosPorPagina({ motor: "preciso", esfuerzo: "alto" })).toBe(12);
+  });
+
+  it("la escala va del motor más económico al más preciso y arranca en el punto medio", () => {
+    expect(ESCALA.map((e) => e.punto)).toEqual(["rapido", "agil", "medio", "avanzado", "preciso"]);
+    expect(ESCALA[PUNTO_PREDETERMINADO].punto).toBe("medio");
+    const tokens = ESCALA.map((e) => e.tokens);
+    expect([...tokens].sort((a, b) => a - b)).toEqual(tokens);
+    expect(indiceEscala(undefined)).toBe(2);
+    expect(indiceEscala({ motor: "preciso", esfuerzo: "alto" })).toBe(4);
+    expect(indiceEscala({ motor: "medio", esfuerzo: "alto" })).toBe(3);
+  });
+
+  it("cada punto cuesta a lo más lo que cuesta un crédito en Rápido", () => {
+    const factor = { bajo: 0.6, medio: 1, alto: 1.6 };
+    for (const e of ESCALA) {
+      const costo = (COSTO_PAGINA_USD[e.precision.motor] * factor[e.precision.esfuerzo]) / e.creditos;
+      expect(costo).toBeLessThanOrEqual(COSTO_PAGINA_USD.rapido + 1e-9);
+    }
   });
 });
 
