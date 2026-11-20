@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anotacionesNumeradas, corregirPuntosCriterios, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
+import { anotacionesNumeradas, centroEjercicio, corregirPuntosCriterios, fraccionEjercicio, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
 import { conPuntaje, listaParaRubrica } from "../modalidad";
 
 const criterios = [
@@ -137,5 +137,41 @@ describe("modalidades", () => {
     expect(listaParaRubrica({ reactivos: [reactivo] })).toBe(false);
     expect(conPuntaje({ sinPuntaje: true })).toBe(false);
     expect(conPuntaje({})).toBe(true);
+  });
+});
+
+describe("mini pastel del número del ejercicio", () => {
+  const vacio = { respuestaLeida: "", puntosObtenidos: 0 };
+  it("en cerrados con varios renglones es la parte de renglones correctos", () => {
+    const r = { numero: 2, puntos: 4, tipo: "relacion_columnas" as const, respuesta: "1-c, 2-a, 3-b, 4-d" };
+    expect(fraccionEjercicio({}, r, { ...vacio, respuestaLeida: "1-c, 2-a, 3-d, 4-b" })).toBe(0.5);
+  });
+  it("no aplica a un cerrado de una sola respuesta", () => {
+    const r = { numero: 1, puntos: 1, tipo: "opcion_multiple" as const, respuesta: "b" };
+    expect(fraccionEjercicio({}, r, { ...vacio, respuestaLeida: "b" })).toBeUndefined();
+  });
+  it("con elementos numerados es la parte de puntos obtenidos", () => {
+    const r = { numero: 1, puntos: 4, tipo: "desarrollo" as const, respuesta: "", pasos: [{ nombre: "Datos", peso: 0.25 }, { nombre: "Desarrollo", peso: 0.75 }] };
+    expect(fraccionEjercicio({}, r, { ...vacio, pasos: [1, 0.5], puntosObtenidos: 2.5 })).toBe(0.625);
+    expect(fraccionEjercicio({}, { ...r, pasos: undefined }, { ...vacio, puntosObtenidos: 4 })).toBeUndefined();
+  });
+});
+
+describe("lugar del mini pastel", () => {
+  it("va a media altura de los incisos, a la derecha del más a la derecha", () => {
+    const res = {
+      ubicacion: { pagina: 1, y: 0.2, x: 0.5 },
+      ubicacionesIncisos: [
+        { pagina: 1, y: 0.3, x: 0.4 },
+        { pagina: 1, y: 0.5, x: 0.6, xCorrecta: 0.7, yCorrecta: 0.5 },
+        { pagina: 2, y: 0.9, x: 0.9 },
+      ],
+    };
+    const c = centroEjercicio({}, { numero: 3, puntos: 15 }, res);
+    expect(c?.y).toBeCloseTo(0.4);
+    expect(c?.x).toBeCloseTo(0.76);
+  });
+  it("sin ubicaciones de incisos no cambia el lugar", () => {
+    expect(centroEjercicio({}, { numero: 3, puntos: 15 }, { ubicacion: { pagina: 1, y: 0.2 } })).toBeUndefined();
   });
 });

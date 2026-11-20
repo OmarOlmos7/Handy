@@ -1,5 +1,6 @@
 // Puntos por elemento de la rúbrica de un reactivo: los pasos de un desarrollo o los criterios
 // de evaluación de un reactivo abierto. Los calcula el código con lo que marcó la IA.
+import { esCerrado, incisosCerrado } from "./calificar";
 import type { Actividad, CriterioEvaluacion, Reactivo, ResultadoReactivo, Subrayado, UbicacionElemento } from "./tipos";
 
 export interface PuntosElemento {
@@ -169,4 +170,51 @@ export function anotacionesNumeradas(
     })),
   ];
   return lista.map((a, k) => ({ ...a, numeral: `${r.numero}.${k + 1}` }));
+}
+
+/**
+ * Parte correcta (0 a 1) de un ejercicio con varios reactivos, para el mini pastel del número:
+ * cerrados con varios renglones, por renglones correctos; con anotaciones numeradas, por puntos.
+ * Sin varios reactivos devuelve undefined y el número va en un círculo de un solo color.
+ */
+export function fraccionEjercicio(
+  actividad: Pick<Actividad, "criterios">,
+  r: Pick<Reactivo, "numero" | "puntos" | "pasos" | "tipo" | "respuesta">,
+  res: Pick<ResultadoReactivo, "pasos" | "criterios" | "ubicacionesElementos" | "subrayados" | "respuestaLeida" | "puntosObtenidos">,
+): number | undefined {
+  if (esCerrado(r)) {
+    const incisos = incisosCerrado(r, res.respuestaLeida);
+    if (incisos.length < 2) return undefined;
+    return incisos.filter((i) => i.correcto).length / incisos.length;
+  }
+  const anotaciones = anotacionesNumeradas(actividad, r, res);
+  if (!anotaciones.length) return undefined;
+  if (r.puntos > 0) return Math.min(1, Math.max(0, res.puntosObtenidos / r.puntos));
+  return anotaciones.filter((a) => a.ok).length / anotaciones.length;
+}
+
+/**
+ * Dónde va el número (mini pastel) de un ejercicio con varios reactivos: a media altura entre
+ * todos sus incisos o anotaciones de la página, a la derecha de la respuesta más a la derecha.
+ * Sin ubicaciones de sus incisos devuelve undefined y se usa la ubicación del reactivo.
+ */
+export function centroEjercicio(
+  actividad: Pick<Actividad, "criterios">,
+  r: Pick<Reactivo, "numero" | "puntos" | "pasos">,
+  res: Pick<ResultadoReactivo, "pasos" | "criterios" | "ubicacion" | "ubicacionesElementos" | "ubicacionesIncisos" | "subrayados">,
+): { x: number; y: number } | undefined {
+  const pagina = res.ubicacion?.pagina ?? 1;
+  const puntos: { x: number; y: number }[] = [];
+  for (const u of res.ubicacionesIncisos ?? []) {
+    if (u.pagina !== pagina) continue;
+    puntos.push({ x: u.x, y: u.y });
+    if (u.xCorrecta !== undefined && u.yCorrecta !== undefined) puntos.push({ x: u.xCorrecta, y: u.yCorrecta });
+  }
+  for (const a of anotacionesNumeradas(actividad, r, res)) {
+    if (a.subrayado?.pagina === pagina) puntos.push({ x: a.subrayado.x1, y: a.subrayado.y });
+    else if (a.ubicacion?.pagina === pagina) puntos.push({ x: a.ubicacion.x, y: a.ubicacion.y });
+  }
+  if (puntos.length < 2) return undefined;
+  const ys = puntos.map((p) => p.y);
+  return { x: Math.max(...puntos.map((p) => p.x)) + 0.06, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
 }
