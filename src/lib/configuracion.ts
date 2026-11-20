@@ -123,8 +123,8 @@ export const INFO_ESFUERZO: Record<EsfuerzoIA, { nombre: string; api: "low" | "m
 
 /** Lo que puede costar de IA, como máximo, un crédito; con este costo se calculan los precios de los planes. */
 export const COSTO_CREDITO_USD = 0.013;
-/** Margen de seguridad sobre el costo medido (reintentos, hojas con más texto, rúbrica y recomendaciones). */
-export const MARGEN_SEGURIDAD = 0.3;
+/** Margen de riesgo sobre el costo medido (reintentos, hojas con más texto, rúbrica y recomendaciones). */
+export const MARGEN_RIESGO = 0.2;
 
 /**
  * Costo medido de evaluar una hoja, en dólares, por motor y esfuerzo (20-nov-2026, hoja completa de
@@ -137,44 +137,74 @@ export const COSTO_HOJA_USD: Record<MotorIA, Record<EsfuerzoIA, number>> = {
   preciso: { bajo: 0.0572, medio: 0.0718, alto: 0.0876 },
 };
 
-/** Créditos por hoja: costo medido más el margen de seguridad, entre el costo de un crédito, hacia arriba a décimas. */
+/** Créditos por hoja: costo medido más el margen de riesgo, entre el costo de un crédito, hacia arriba a décimas. */
 export function creditosDeCosto(costoUsd: number): number {
-  return Math.ceil(Math.round(((costoUsd * (1 + MARGEN_SEGURIDAD)) / COSTO_CREDITO_USD) * 1000) / 100) / 10;
+  return Math.ceil(Math.round(((costoUsd * (1 + MARGEN_RIESGO)) / COSTO_CREDITO_USD) * 1000) / 100) / 10;
 }
 
-/** Puntos de la escala de precisión y consumo, del análisis más rápido al más preciso. */
+/** Niveles con nombre de la escala de precisión, del análisis más rápido al más preciso. */
 export type PuntoEscala = "rapido" | "agil" | "medio" | "alto" | "avanzado";
 
 /**
- * Escala de precisión: Haiku 5.5 con esfuerzo bajo, medio y alto; Sonnet 5.5 medio y Opus 5.5 medio.
- * Los créditos salen del costo medido con el margen de seguridad.
+ * Escala de precisión en ocho puntos: Rápido es Haiku 5.5 bajo; Ágil, Haiku medio y alto; Medio,
+ * Sonnet 5.5 bajo; Alto, Sonnet medio y alto; Avanzado, Opus 5.5 bajo y medio. Los créditos salen
+ * del costo medido con el margen de riesgo y nunca bajan al subir en la escala.
  */
-export const ESCALA: { punto: PuntoEscala; precision: PrecisionIA; creditos: number }[] = (
+export const ESCALA: { punto: PuntoEscala; clave: string; precision: PrecisionIA; creditos: number }[] = (
   [
     ["rapido", "rapido", "bajo"],
     ["agil", "rapido", "medio"],
-    ["medio", "rapido", "alto"],
+    ["agil", "rapido", "alto"],
+    ["medio", "medio", "bajo"],
     ["alto", "medio", "medio"],
+    ["alto", "medio", "alto"],
+    ["avanzado", "preciso", "bajo"],
     ["avanzado", "preciso", "medio"],
   ] as const
-).map(([punto, motor, esfuerzo]) => ({ punto, precision: { motor, esfuerzo }, creditos: creditosDeCosto(COSTO_HOJA_USD[motor][esfuerzo]) }));
+).reduce<{ punto: PuntoEscala; clave: string; precision: PrecisionIA; creditos: number }[]>((lista, [punto, motor, esfuerzo]) => {
+  const anterior = lista.at(-1)?.creditos ?? 0;
+  const creditos = Math.max(anterior, creditosDeCosto(COSTO_HOJA_USD[motor][esfuerzo]));
+  return [...lista, { punto, clave: `${motor}-${esfuerzo}`, precision: { motor, esfuerzo }, creditos }];
+}, []);
 
-/** La escala arranca en el punto medio. */
-export const PUNTO_PREDETERMINADO = 2;
+/** La escala arranca en el nivel Medio (Sonnet 5.5 con esfuerzo bajo). */
+export const PUNTO_PREDETERMINADO = 3;
+
+/** Niveles con nombre y los puntos de la escala que abarca cada uno (índices desde y hasta). */
+export function gruposEscala(): { punto: PuntoEscala; desde: number; hasta: number }[] {
+  const grupos: { punto: PuntoEscala; desde: number; hasta: number }[] = [];
+  ESCALA.forEach((e, i) => {
+    const ultimo = grupos.at(-1);
+    if (ultimo?.punto === e.punto) ultimo.hasta = i;
+    else grupos.push({ punto: e.punto, desde: i, hasta: i });
+  });
+  return grupos;
+}
 
 /** Punto de la escala de una precisión; si no está en la escala, el más cercano de su motor. */
 export function indiceEscala(p: PrecisionIA | undefined): number {
   if (!p) return PUNTO_PREDETERMINADO;
   const exacto = ESCALA.findIndex((e) => e.precision.motor === p.motor && e.precision.esfuerzo === p.esfuerzo);
   if (exacto >= 0) return exacto;
-  if (p.motor === "rapido") return p.esfuerzo === "bajo" ? 0 : p.esfuerzo === "alto" ? 2 : 1;
-  return p.motor === "preciso" ? ESCALA.length - 1 : 3;
+  return p.motor === "preciso" ? ESCALA.length - 1 : PUNTO_PREDETERMINADO;
 }
 
 /** Créditos por página de una actividad según su motor y esfuerzo; sin precisión guardada se usa la predeterminada. */
 export function creditosPorPagina(p: PrecisionIA | undefined): number {
   if (!p || !esMotor(p.motor)) return ESCALA[PUNTO_PREDETERMINADO].creditos;
+  const enEscala = ESCALA.find((e) => e.precision.motor === p.motor && e.precision.esfuerzo === p.esfuerzo);
+  if (enEscala) return enEscala.creditos;
   return creditosDeCosto(COSTO_HOJA_USD[p.motor][esEsfuerzo(p.esfuerzo) ? p.esfuerzo : "medio"]);
+}
+
+/**
+ * Valores de la escala para los textos, con el formato del idioma: créditos por página del primer
+ * y del último punto, del punto predeterminado (n) y de una entrega de 3 páginas en ese punto.
+ */
+export function valoresEscala(locale: string): { min: string; max: string; n: string; ejemplo: string } {
+  const f = (x: number) => x.toLocaleString(locale);
+  const medio = ESCALA[PUNTO_PREDETERMINADO].creditos;
+  return { min: f(ESCALA[0].creditos), max: f(ESCALA[ESCALA.length - 1].creditos), n: f(medio), ejemplo: f(sumarCreditos(3 * medio)) };
 }
 
 /** Suma créditos sin errores de redondeo (a centésimas). */
@@ -182,10 +212,10 @@ export function sumarCreditos(...cantidades: number[]): number {
   return Math.round(cantidades.reduce((s, x) => s + x, 0) * 100) / 100;
 }
 
-export const PRECISION_PREDETERMINADA: PrecisionIA = { motor: "medio", esfuerzo: "medio" };
+export const PRECISION_PREDETERMINADA: PrecisionIA = { motor: "medio", esfuerzo: "bajo" };
 
 /** Esfuerzo elegido para cada motor si el profesor no lo ha cambiado. */
-export const ESFUERZOS_PREDETERMINADOS: Record<MotorIA, EsfuerzoIA> = { rapido: "bajo", medio: "medio", preciso: "medio" };
+export const ESFUERZOS_PREDETERMINADOS: Record<MotorIA, EsfuerzoIA> = { rapido: "bajo", medio: "bajo", preciso: "medio" };
 
 export function esMotor(x: unknown): x is MotorIA {
   return typeof x === "string" && (MOTORES as string[]).includes(x);

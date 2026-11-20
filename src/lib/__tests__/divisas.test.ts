@@ -23,8 +23,8 @@ describe("divisas", () => {
     expect(formatoPrecio(139, divisaDePais("MX"), "es-MX")).toBe("Mx $139");
     expect(formatoPrecio(269, divisaDePais("US"), "en-US")).toBe("USD $15");
     expect(formatoPrecio(139, divisaDePais("FR"), "fr-FR")).toMatch(/^EUR 7\s?€$/);
-    expect(formatoPorPagina(139, 300, divisaDePais("MX"), "es-MX")).toBe("Mx $0.46");
-    expect(formatoPorPagina(139, 300, divisaDePais("US"), "en-US")).toBe("USD $0.027");
+    expect(formatoPorPagina(139, 300, divisaDePais("MX"), "es-MX")).toBe("Mx $0.463");
+    expect(formatoPorPagina(139, 300, divisaDePais("US"), "en-US")).toBe("USD $0.0267");
   });
 
   it("nombra la divisa y aclara el IVA solo en pesos", () => {

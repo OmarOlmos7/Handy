@@ -244,8 +244,7 @@ const pt: Diccionario = {
       boton: "Criar conta grátis",
       incluye: "Para testar:",
       ventajas: [
-        "50 créditos: corrija uma atividade da sua turma e veja o resultado",
-        "≈ 3,5 horas de correção economizadas",
+        "50 créditos",
         "Atividades geradas com IA e folhas para imprimir com QR",
         "Entregas pelo celular com foto ou PDF",
         "Solução e rubrica com IA sem custo",
@@ -254,14 +253,13 @@ const pt: Diccionario = {
     basico: {
       nombre: "Básico",
       lema: "Para um professor com uma turma: um bimestre inteiro corrigido",
-      periodo: "pagamento único por 120 créditos",
+      periodo: "pagamento único por 210 créditos",
       boton: "Escolher Básico",
       incluye: "Tudo do Gratuito, mais:",
       ventajas: [
-        "120 créditos: 5 atividades de 1 página para uma turma de 30",
-        "≈ 8 horas de correção economizadas",
+        "210 créditos",
         "Feedback pessoal para cada aluno em minutos",
-        "Os cinco níveis de precisão, do Rápido ao Avançado",
+        "Todos os níveis de precisão, do Rápido ao Avançado",
         "Análises da turma e relatórios em PDF e Excel",
         "Pagamento com cartão, dinheiro no OXXO ou SPEI, com nota fiscal (CFDI)",
       ],
@@ -269,12 +267,11 @@ const pt: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "Para um professor com duas ou três turmas",
-      periodo: "pagamento único por 240 créditos",
+      periodo: "pagamento único por 350 créditos",
       boton: "Escolher Pro",
       incluye: "Tudo do Básico, mais:",
       ventajas: [
-        "240 créditos: 5 atividades de 1 página para 2 turmas de 30",
-        "≈ 17 horas de correção economizadas",
+        "350 créditos",
         "Recomendações de estudo com vídeos e leituras para cada aluno",
         "Diário de notas do curso",
       ],
@@ -282,12 +279,11 @@ const pt: Diccionario = {
     academia: {
       nombre: "Academia",
       lema: "Para o semestre inteiro ou uma coordenação: o melhor preço por página",
-      periodo: "pagamento único por 480 créditos",
+      periodo: "pagamento único por 640 créditos",
       boton: "Escolher Academia",
       incluye: "Tudo do Pro, mais:",
       ventajas: [
-        "480 créditos: 5 atividades de 1 página para 4 turmas de 30",
-        "≈ 34 horas de correção economizadas",
+        "640 créditos",
         "Folga para usar o nível Avançado nas provas",
         "Relatórios por aluno e por turma durante todo o curso",
       ],
@@ -299,8 +295,7 @@ const pt: Diccionario = {
       boton: "Fale conosco para um plano institucional",
       incluye: "Tudo do Academia, mais:",
       ventajas: [
-        "4.000 créditos ou mais para todos os professores da instituição",
-        "≈ 280 horas de correção economizadas pela sua escola",
+        "4.000 créditos ou mais",
         "Acompanhamento para começar com suas coordenações",
         "Faturamento institucional",
       ],
@@ -308,12 +303,12 @@ const pt: Diccionario = {
   },
   precios: {
     notaEstimacion:
-      "As atividades e horas de cada plano são estimadas com o nível de precisão Médio (0,7 crédito por folha). Com Rápido rendem mais folhas e com Avançado menos.",
+      "O custo por crédito é aproximado. Como ponto médio, estime com o nível Médio ({modelo}), que usa ≈ {n} créditos por folha: com Rápido rendem mais folhas e com Avançado menos.",
     metaTitulo: "Planos e preços",
     metaDescripcion: "Planos do iEureka-Grader: pague só as páginas que você corrige. Preços em {divisa}.",
     titulo: "Planos que se ajustam à sua sala",
     texto:
-      "Pague só as páginas que você corrige. Rápido usa 0,4 crédito por página, Ágil 0,5, Médio 0,7, Alto 2,5 e Avançado 7,2. Preços em {divisa}, sem assinatura.",
+      "Pague só as páginas que você corrige. Cada página usa de {min} a {max} créditos conforme o nível de precisão, do Rápido ao Avançado. Preços em {divisa}, sem assinatura.",
     masPopular: "Mais popular",
     aLaMedida: "Sob medida",
     porPagina: "{p} por crédito",
@@ -322,13 +317,13 @@ const pt: Diccionario = {
     asuntoEscuela: "Plano Escola do iEureka-Grader",
     precisionTitulo: "Escolha a precisão da IA em cada atividade",
     precisionTexto:
-      "Todos os planos incluem os cinco níveis. Cada nível usa um motor diferente: mais precisão lê melhor os procedimentos longos e a letra difícil, mas consome mais tokens de IA. Você escolhe nas configurações e em cada atividade nova.",
+      "Todos os planos incluem todos os níveis. Cada nível usa um motor diferente: mais precisão lê melhor os procedimentos longos e a letra difícil, mas consome mais tokens de IA. Você escolhe nas configurações e em cada atividade nova.",
     consumo: "Consumo",
     consumoDe: "Consumo {n} de 5",
     predeterminado: "Padrão",
     preguntasTitulo: "Perguntas frequentes",
     preguntas: [
-      ["O que é um crédito?", "Cada página avaliada usa créditos conforme o nível de precisão: 0,4 no Rápido, 0,5 no Ágil, 0,7 no Médio, 2,5 no Alto e 7,2 no Avançado. Uma entrega de 3 páginas no Médio usa 2,1 créditos."],
+      ["O que é um crédito?", "Cada página corrigida usa créditos conforme o nível de precisão: de {min} no Rápido a {max} no Avançado. Uma entrega de 3 páginas no Médio usa {ejemplo} créditos."],
       [
         "O que não consome créditos?",
         "Criar seus cursos, gerar a atividade com IA, imprimir a folha com QR, enviar sua solução e montar a rubrica.",
@@ -406,7 +401,7 @@ const pt: Diccionario = {
     menos: "Menos consumo",
     mas: "Mais precisão",
     consumoNota:
-      "Cada página custa 0,4 crédito no Rápido, 0,5 no Ágil, 0,7 no Médio, 2,5 no Alto e 7,2 no Avançado, conforme o custo real de cada motor.",
+      "Cada página custa de {min} a {max} créditos conforme o motor e o esforço, com base no custo real de cada um.",
     guardarPrecision: "Salvar precisão",
     conservacionTitulo: "Conservação das informações no servidor",
     conservacionFotos:

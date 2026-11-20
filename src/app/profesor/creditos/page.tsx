@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { TiendaCreditos } from "@/components/tienda-creditos";
-import { ESCALA, PUNTO_PREDETERMINADO } from "@/lib/configuracion";
+import { ESCALA, PUNTO_PREDETERMINADO, valoresEscala } from "@/lib/configuracion";
 import { Encabezado, Tarjeta, fechaLarga } from "@/components/ui";
 import { QuitarEjemplo } from "@/components/quitar-ejemplo";
 import { saldo } from "@/lib/almacen";
@@ -24,7 +24,7 @@ export default async function Creditos() {
     <>
       <Encabezado
         titulo={tc.titulo}
-        subtitulo={tc.subtitulo}
+        subtitulo={formato(tc.subtitulo, valoresEscala(locale))}
       />
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Tarjeta>

@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ESCALA, INFO_MOTOR, PUNTO_PREDETERMINADO, indiceEscala } from "@/lib/configuracion";
+import { ESCALA, INFO_MOTOR, PUNTO_PREDETERMINADO, gruposEscala, indiceEscala } from "@/lib/configuracion";
 import { formato } from "@/lib/i18n/idiomas";
 import type { EsfuerzoIA, MotorIA, PrecisionIA } from "@/lib/tipos";
 import { useTextos } from "./proveedor-textos";
 
 /**
- * Barra deslizable de precisión: cinco puntos de Rápido (Haiku 5.5, esfuerzo bajo) a Avanzado
- * (Opus 5.5, esfuerzo medio). Debajo muestra los créditos aproximados por página y el motor
+ * Barra deslizable de precisión: ocho puntos de Rápido (Haiku 5.5, esfuerzo bajo) a Avanzado
+ * (Opus 5.5, esfuerzo medio), con las cinco etiquetas bajo los puntos que abarca cada nivel. Debajo muestra los créditos aproximados por página y el motor
  * elegido como "Modelo - esfuerzo". Manda en el formulario el punto, el motor y el esfuerzo.
  */
 function BarraPrecision({ inicial, leyenda, onCambio }: { inicial: number; leyenda: string; onCambio?: (p: PrecisionIA) => void }) {
@@ -25,7 +25,7 @@ function BarraPrecision({ inicial, leyenda, onCambio }: { inicial: number; leyen
   return (
     <fieldset>
       <legend className="text-sm font-medium text-slate-700">{leyenda}</legend>
-      <input type="hidden" name="punto" value={e.punto} />
+      <input type="hidden" name="punto" value={e.clave} />
       <input type="hidden" name="motor" value={e.precision.motor} />
       <input type="hidden" name="esfuerzo" value={e.precision.esfuerzo} />
       <input
@@ -39,19 +39,23 @@ function BarraPrecision({ inicial, leyenda, onCambio }: { inicial: number; leyen
         aria-valuetext={`${t.escala[e.punto].nombre}. ${modelo}. ${creditos}`}
         className="mt-3 w-full accent-tinta-600"
       />
-      <div className="mt-1 grid grid-cols-5 text-[11px] font-medium sm:text-xs">
-        {ESCALA.map((x, i) => (
-          <button
-            key={x.punto}
-            type="button"
-            onClick={() => setIndice(i)}
-            className={`${i === 0 ? "text-left" : i === ESCALA.length - 1 ? "text-right" : "text-center"} ${
-              i === indice ? "text-tinta-700" : "text-slate-500 hover:text-slate-700"
-            }`}
-          >
-            {t.escala[x.punto].nombre}
-          </button>
-        ))}
+      <div className="relative mt-1 h-5 text-[11px] font-medium sm:text-xs">
+        {gruposEscala().map((g, k, todos) => {
+          const centro = ((g.desde + g.hasta) / 2 / (ESCALA.length - 1)) * 100;
+          const lugar = k === 0 ? { left: 0 } : k === todos.length - 1 ? { right: 0 } : { left: `${centro}%`, transform: "translateX(-50%)" };
+          const activo = indice >= g.desde && indice <= g.hasta;
+          return (
+            <button
+              key={g.punto}
+              type="button"
+              onClick={() => setIndice(g.desde)}
+              style={lugar}
+              className={`absolute top-0 whitespace-nowrap ${activo ? "text-tinta-700" : "text-slate-500 hover:text-slate-700"}`}
+            >
+              {t.escala[g.punto].nombre}
+            </button>
+          );
+        })}
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm ring-1 ring-slate-200">
         <span className="font-medium text-tinta-700">{modelo}</span>

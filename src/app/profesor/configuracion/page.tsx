@@ -3,7 +3,7 @@ import { guardarCuenta, guardarPrecision, guardarRangos } from "@/app/acciones-c
 import { cambiarIdioma } from "@/app/acciones-idioma";
 import { ConfigPrecision } from "@/components/precision-ia";
 import { Boton, Encabezado, Tarjeta, campo, fechaLarga } from "@/components/ui";
-import { NIVELES_REPORTE, configuracionDe, type NivelReporte } from "@/lib/configuracion";
+import { NIVELES_REPORTE, configuracionDe, valoresEscala, type NivelReporte } from "@/lib/configuracion";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { IDIOMAS, NOMBRE_IDIOMA, formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
@@ -177,7 +177,7 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
           <p className="mt-1 text-sm text-slate-500">{c.precisionTexto}</p>
           <form action={guardarPrecision} className="mt-4">
             <ConfigPrecision motor={conf.motor} esfuerzos={conf.esfuerzos} />
-            <p className="mt-3 text-xs text-slate-500">{c.consumoNota}</p>
+            <p className="mt-3 text-xs text-slate-500">{formato(c.consumoNota, valoresEscala(locale))}</p>
             <Boton type="submit" className="mt-4">
               {c.guardarPrecision}
             </Boton>
