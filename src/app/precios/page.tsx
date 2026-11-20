@@ -155,15 +155,11 @@ export default async function Precios() {
                 <div key={e.punto} className="flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
                   <h3 className="font-semibold">{info.nombre}</h3>
                   <p className="mt-1 text-xs font-medium text-tinta-700">
-                    {formato(t.configuracion.motorEsfuerzo, {
-                      m: INFO_MOTOR[e.precision.motor].nombreModelo,
-                      e: t.esfuerzos[e.precision.esfuerzo].toLocaleLowerCase(locale),
-                    })}
+                    {INFO_MOTOR[e.precision.motor].nombreCorto} - {t.esfuerzos[e.precision.esfuerzo]}
                   </p>
                   <p className="mt-2 flex-1 text-sm text-slate-600">{info.descripcion}</p>
-                  <p className="mt-3 text-xs text-slate-500">{formato(t.configuracion.tokensPagina, { n: e.tokens.toLocaleString(locale) })}</p>
-                  <p className="text-xs font-medium text-slate-700">
-                    {e.creditos === 1 ? t.configuracion.creditoPagina : formato(t.configuracion.creditosPagina, { n: e.creditos })}
+                  <p className="mt-3 text-xs font-medium text-slate-700">
+                    ≈ {e.creditos === 1 ? t.configuracion.creditoPagina : formato(t.configuracion.creditosPagina, { n: e.creditos.toLocaleString(locale) })}
                   </p>
                   <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
                     {pr.consumo}

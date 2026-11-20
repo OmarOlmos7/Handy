@@ -88,11 +88,12 @@ export function rebanadasNiveles(
 export const MOTORES: MotorIA[] = ["rapido", "medio", "preciso"];
 export const ESFUERZOS: EsfuerzoIA[] = ["bajo", "medio", "alto"];
 
-export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; nombreModelo: string; descripcion: string; consumo: number }> = {
+export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; nombreModelo: string; nombreCorto: string; descripcion: string; consumo: number }> = {
   rapido: {
     nombre: "Rápido",
     modelo: "claude-haiku-5-5",
     nombreModelo: "Claude Haiku 5.5",
+    nombreCorto: "Haiku 5.5",
     descripcion: "Respuestas veloces y el menor consumo. Ideal para reactivos cerrados (opción múltiple, verdadero o falso) y letra clara.",
     consumo: 1,
   },
@@ -100,6 +101,7 @@ export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; nombr
     nombre: "Medio",
     modelo: "claude-sonnet-5-5",
     nombreModelo: "Claude Sonnet 5.5",
+    nombreCorto: "Sonnet 5.5",
     descripcion: "Equilibrio entre precisión y consumo. Recomendado para la mayoría de las actividades con desarrollos cortos.",
     consumo: 3,
   },
@@ -107,6 +109,7 @@ export const INFO_MOTOR: Record<MotorIA, { nombre: string; modelo: string; nombr
     nombre: "Preciso",
     modelo: "claude-opus-5-5",
     nombreModelo: "Claude Opus 5.5",
+    nombreCorto: "Opus 5.5",
     descripcion: "La lectura más cuidadosa de procedimientos largos, gráficas y letra difícil. Es el que más tokens consume.",
     consumo: 6,
   },
@@ -118,24 +121,43 @@ export const INFO_ESFUERZO: Record<EsfuerzoIA, { nombre: string; api: "low" | "m
   alto: { nombre: "Alto", api: "high", factor: 1.6 },
 };
 
-/** Créditos que cuesta cada página evaluada según el nivel de precisión (el precio se fija con Rápido). */
-export const CREDITOS_POR_PAGINA: Record<MotorIA, number> = { rapido: 1, medio: 4, preciso: 12 };
-
-/** Puntos de la escala de precisión y consumo, del análisis más rápido al más preciso. */
-export type PuntoEscala = "rapido" | "agil" | "medio" | "avanzado" | "preciso";
+/** Lo que puede costar de IA, como máximo, un crédito; con este costo se calculan los precios de los planes. */
+export const COSTO_CREDITO_USD = 0.013;
+/** Margen de seguridad sobre el costo medido (reintentos, hojas con más texto, rúbrica y recomendaciones). */
+export const MARGEN_SEGURIDAD = 0.3;
 
 /**
- * Escala de precisión: cada punto fija el motor y el esfuerzo. Los créditos van en proporción al
- * costo de la IA (unos US$0.013 por crédito o menos) y los tokens son un estimado por página
- * evaluada (unos 4,000 de entrada con la foto, más la salida y el razonamiento del motor).
+ * Costo medido de evaluar una hoja, en dólares, por motor y esfuerzo (20-nov-2026, hoja completa de
+ * 6 reactivos: 6,170 tokens de entrada y de 1,200 a 11,300 de salida). Precios por millón de tokens:
+ * Haiku 5.5 $0.10/$0.50, Sonnet 5.5 $2/$10 y Opus 5.5 $4/$20.
  */
-export const ESCALA: { punto: PuntoEscala; precision: PrecisionIA; creditos: number; tokens: number }[] = [
-  { punto: "rapido", precision: { motor: "rapido", esfuerzo: "medio" }, creditos: 1, tokens: 6000 },
-  { punto: "agil", precision: { motor: "medio", esfuerzo: "bajo" }, creditos: 3, tokens: 6500 },
-  { punto: "medio", precision: { motor: "medio", esfuerzo: "medio" }, creditos: 4, tokens: 7500 },
-  { punto: "avanzado", precision: { motor: "medio", esfuerzo: "alto" }, creditos: 7, tokens: 9000 },
-  { punto: "preciso", precision: { motor: "preciso", esfuerzo: "medio" }, creditos: 12, tokens: 10000 },
-];
+export const COSTO_HOJA_USD: Record<MotorIA, Record<EsfuerzoIA, number>> = {
+  rapido: { bajo: 0.0034, medio: 0.0042, alto: 0.0063 },
+  medio: { bajo: 0.0251, medio: 0.0246, alto: 0.0487 },
+  preciso: { bajo: 0.0572, medio: 0.0718, alto: 0.0876 },
+};
+
+/** Créditos por hoja: costo medido más el margen de seguridad, entre el costo de un crédito, hacia arriba a décimas. */
+export function creditosDeCosto(costoUsd: number): number {
+  return Math.ceil(Math.round(((costoUsd * (1 + MARGEN_SEGURIDAD)) / COSTO_CREDITO_USD) * 1000) / 100) / 10;
+}
+
+/** Puntos de la escala de precisión y consumo, del análisis más rápido al más preciso. */
+export type PuntoEscala = "rapido" | "agil" | "medio" | "alto" | "avanzado";
+
+/**
+ * Escala de precisión: Haiku 5.5 con esfuerzo bajo, medio y alto; Sonnet 5.5 medio y Opus 5.5 medio.
+ * Los créditos salen del costo medido con el margen de seguridad.
+ */
+export const ESCALA: { punto: PuntoEscala; precision: PrecisionIA; creditos: number }[] = (
+  [
+    ["rapido", "rapido", "bajo"],
+    ["agil", "rapido", "medio"],
+    ["medio", "rapido", "alto"],
+    ["alto", "medio", "medio"],
+    ["avanzado", "preciso", "medio"],
+  ] as const
+).map(([punto, motor, esfuerzo]) => ({ punto, precision: { motor, esfuerzo }, creditos: creditosDeCosto(COSTO_HOJA_USD[motor][esfuerzo]) }));
 
 /** La escala arranca en el punto medio. */
 export const PUNTO_PREDETERMINADO = 2;
@@ -145,23 +167,25 @@ export function indiceEscala(p: PrecisionIA | undefined): number {
   if (!p) return PUNTO_PREDETERMINADO;
   const exacto = ESCALA.findIndex((e) => e.precision.motor === p.motor && e.precision.esfuerzo === p.esfuerzo);
   if (exacto >= 0) return exacto;
-  if (p.motor === "rapido") return 0;
-  if (p.motor === "preciso") return ESCALA.length - 1;
-  return p.esfuerzo === "bajo" ? 1 : p.esfuerzo === "alto" ? 3 : 2;
+  if (p.motor === "rapido") return p.esfuerzo === "bajo" ? 0 : p.esfuerzo === "alto" ? 2 : 1;
+  return p.motor === "preciso" ? ESCALA.length - 1 : 3;
 }
 
-/** Créditos por página de una actividad; sin precisión guardada se usa la predeterminada. */
+/** Créditos por página de una actividad según su motor y esfuerzo; sin precisión guardada se usa la predeterminada. */
 export function creditosPorPagina(p: PrecisionIA | undefined): number {
   if (!p || !esMotor(p.motor)) return ESCALA[PUNTO_PREDETERMINADO].creditos;
-  const punto = ESCALA.find((e) => e.precision.motor === p.motor && e.precision.esfuerzo === p.esfuerzo);
-  // Precisiones guardadas antes de la escala (por ejemplo, Rápido con esfuerzo alto) cobran lo de su motor.
-  return punto?.creditos ?? CREDITOS_POR_PAGINA[p.motor];
+  return creditosDeCosto(COSTO_HOJA_USD[p.motor][esEsfuerzo(p.esfuerzo) ? p.esfuerzo : "medio"]);
+}
+
+/** Suma créditos sin errores de redondeo (a centésimas). */
+export function sumarCreditos(...cantidades: number[]): number {
+  return Math.round(cantidades.reduce((s, x) => s + x, 0) * 100) / 100;
 }
 
 export const PRECISION_PREDETERMINADA: PrecisionIA = { motor: "medio", esfuerzo: "medio" };
 
 /** Esfuerzo elegido para cada motor si el profesor no lo ha cambiado. */
-export const ESFUERZOS_PREDETERMINADOS: Record<MotorIA, EsfuerzoIA> = { rapido: "medio", medio: "medio", preciso: "medio" };
+export const ESFUERZOS_PREDETERMINADOS: Record<MotorIA, EsfuerzoIA> = { rapido: "bajo", medio: "medio", preciso: "medio" };
 
 export function esMotor(x: unknown): x is MotorIA {
   return typeof x === "string" && (MOTORES as string[]).includes(x);

@@ -1,6 +1,6 @@
 // Planes de iEureka-Grader. Cada página evaluada usa créditos según el nivel de precisión
-// (Rápido 1, Ágil 3, Medio 4, Avanzado 7, Preciso 12; ver ESCALA). Precios en MXN con IVA.
-import { CREDITOS_POR_PAGINA } from "./configuracion";
+// (de 0.4 en Rápido a 7.2 en Avanzado; ver ESCALA). Precios en MXN con IVA.
+import { COSTO_CREDITO_USD } from "./configuracion";
 // Los precios y lo que incluye cada plan viven aquí para que la página de precios, el
 // inicio y la tienda de créditos muestren siempre lo mismo.
 
@@ -24,10 +24,6 @@ export interface Plan {
 }
 
 // ---------- Costo por crédito y utilidad ----------
-// Costo de la IA por página evaluada, en dólares, medido en evaluaciones reales (unos 4,000
-// tokens de entrada con la foto y de 2,000 a 6,000 de salida según el nivel), más lo que cuesta
-// por página la rúbrica, las recomendaciones de estudio y la búsqueda de videos y lecturas.
-export const COSTO_PAGINA_USD = { rapido: 0.013, medio: 0.05, preciso: 0.15 } as const;
 /** Tipo de cambio supuesto (MXN por dólar). */
 export const TIPO_CAMBIO = 18.5;
 /** Comisión del cobro (Mercado Pago, con IVA de la comisión) y cargo fijo por pago en MXN. */
@@ -39,15 +35,11 @@ export const ISR = 0.28;
 export const UTILIDAD_OBJETIVO = 0.3;
 
 /**
- * Costo de IA de un crédito en MXN. Los precios se calculan con el nivel Rápido (1 crédito por
- * página); Medio y Preciso cobran más créditos por página, así que se toma el nivel más caro por
- * crédito para que ningún uso baje del margen.
+ * Costo de IA de un crédito en MXN. Cada nivel cobra los créditos de su costo medido más un margen
+ * de seguridad (ver ESCALA), así que ningún crédito cuesta más de COSTO_CREDITO_USD.
  */
 export function costoCreditoMXN(): number {
-  const usd = Math.max(
-    ...(Object.keys(COSTO_PAGINA_USD) as (keyof typeof COSTO_PAGINA_USD)[]).map((k) => COSTO_PAGINA_USD[k] / CREDITOS_POR_PAGINA[k]),
-  );
-  return usd * TIPO_CAMBIO;
+  return COSTO_CREDITO_USD * TIPO_CAMBIO;
 }
 
 /**
@@ -92,7 +84,7 @@ export const PLANES: Plan[] = [
     ventajas: [
       "300 páginas evaluadas",
       "Una o dos actividades al mes con un grupo",
-      "Los cinco niveles de precisión, de Rápido a Preciso",
+      "Los cinco niveles de precisión, de Rápido a Avanzado",
       "Analíticas del grupo y reporte en PDF y Excel",
       "Pago con tarjeta, efectivo en OXXO o SPEI y factura (CFDI)",
     ],
@@ -128,7 +120,7 @@ export const PLANES: Plan[] = [
     ventajas: [
       "1,500 páginas evaluadas",
       "Varios grupos durante todo el semestre o tetramestre",
-      "Margen para usar el nivel Preciso en exámenes",
+      "Margen para usar el nivel Avanzado en exámenes",
       "Reportes por alumno y por grupo durante todo el curso",
     ],
     enTienda: true,

@@ -261,7 +261,7 @@ const pt: Diccionario = {
         "300 créditos: 10 atividades de 1 página para uma turma de 30",
         "≈ 15 horas de correção economizadas",
         "Feedback pessoal para cada aluno em minutos",
-        "Os cinco níveis de precisão, do Rápido ao Preciso",
+        "Os cinco níveis de precisão, do Rápido ao Avançado",
         "Análises da turma e relatórios em PDF e Excel",
         "Pagamento com cartão, dinheiro no OXXO ou SPEI, com nota fiscal (CFDI)",
       ],
@@ -288,7 +288,7 @@ const pt: Diccionario = {
       ventajas: [
         "1.200 créditos: 10 atividades de 1 página para 4 turmas de 30",
         "≈ 60 horas de correção economizadas",
-        "Folga para usar o nível Preciso nas provas",
+        "Folga para usar o nível Avançado nas provas",
         "Relatórios por aluno e por turma durante todo o curso",
       ],
     },
@@ -311,10 +311,10 @@ const pt: Diccionario = {
     metaDescripcion: "Planos do iEureka-Grader: pague só as páginas que você corrige. Preços em {divisa}.",
     titulo: "Planos que se ajustam à sua sala",
     texto:
-      "Pague só as páginas que você corrige. Rápido usa 1 crédito por página, Ágil 3, Médio 4, Avançado 7 e Preciso 12. Preços em {divisa}, sem assinatura.",
+      "Pague só as páginas que você corrige. Rápido usa 0,4 crédito por página, Ágil 0,5, Médio 0,7, Alto 2,5 e Avançado 7,2. Preços em {divisa}, sem assinatura.",
     masPopular: "Mais popular",
     aLaMedida: "Sob medida",
-    porPagina: "{p} por página",
+    porPagina: "{p} por crédito",
     ahorra: "economize {n} %",
     creaYEscribenos: "Crie sua conta e escreva para nós",
     asuntoEscuela: "Plano Escola do iEureka-Grader",
@@ -326,7 +326,7 @@ const pt: Diccionario = {
     predeterminado: "Padrão",
     preguntasTitulo: "Perguntas frequentes",
     preguntas: [
-      ["O que é um crédito?", "Cada página avaliada usa créditos conforme o nível de precisão: 1 no Rápido, 3 no Ágil, 4 no Médio, 7 no Avançado e 12 no Preciso. Uma entrega de 3 páginas no Médio usa 12 créditos."],
+      ["O que é um crédito?", "Cada página avaliada usa créditos conforme o nível de precisão: 0,4 no Rápido, 0,5 no Ágil, 0,7 no Médio, 2,5 no Alto e 7,2 no Avançado. Uma entrega de 3 páginas no Médio usa 2,1 créditos."],
       [
         "O que não consome créditos?",
         "Criar seus cursos, gerar a atividade com IA, imprimir a folha com QR, enviar sua solução e montar a rubrica.",
@@ -360,8 +360,8 @@ const pt: Diccionario = {
     rapido: { nombre: "Rápido", descripcion: "Leitura veloz com o menor consumo. Ideal para questões fechadas (múltipla escolha, verdadeiro ou falso) e letra clara." },
     agil: { nombre: "Ágil", descripcion: "Um pouco mais de cuidado que o Rápido com pouco consumo. Bom para respostas curtas e contas simples." },
     medio: { nombre: "Médio", descripcion: "Equilíbrio entre precisão e consumo. Recomendado para a maioria das atividades com desenvolvimentos curtos." },
-    avanzado: { nombre: "Avançado", descripcion: "Revisa com mais cuidado os procedimentos e a redação. Para desenvolvimentos longos com letra clara." },
-    preciso: { nombre: "Preciso", descripcion: "A leitura mais cuidadosa de procedimentos longos, gráficos e letra difícil. É o que mais consome tokens." },
+    alto: { nombre: "Alto", descripcion: "Revisa com mais cuidado os procedimentos e a redação. Para desenvolvimentos longos com letra clara." },
+    avanzado: { nombre: "Avançado", descripcion: "A leitura mais cuidadosa de procedimentos longos, gráficos e letra difícil. É o que mais consome tokens." },
   },
   configuracion: {
     titulo: "Configurações",
@@ -404,7 +404,7 @@ const pt: Diccionario = {
     menos: "Menos consumo",
     mas: "Mais precisão",
     consumoNota:
-      "Os tokens são uma estimativa por página avaliada. Cada página custa 1 crédito no Rápido, 3 no Ágil, 4 no Médio, 7 no Avançado e 12 no Preciso.",
+      "Cada página custa 0,4 crédito no Rápido, 0,5 no Ágil, 0,7 no Médio, 2,5 no Alto e 7,2 no Avançado, conforme o custo real de cada motor.",
     guardarPrecision: "Salvar precisão",
     conservacionTitulo: "Conservação das informações no servidor",
     conservacionFotos:
