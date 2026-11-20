@@ -260,7 +260,7 @@ const en: Diccionario = {
         "300 credits: 10 one-page activities for a class of 30",
         "≈ 15 hours of grading saved",
         "Personal feedback for every student in minutes",
-        "All three precision levels: Fast, Medium and Precise",
+        "All five precision levels, from Fast to Precise",
         "Class analytics and PDF and Excel reports",
         "Pay by card, cash at OXXO or SPEI, with invoice (CFDI)",
       ],
@@ -310,7 +310,7 @@ const en: Diccionario = {
     metaDescripcion: "iEureka-Grader plans: pay only for the pages you grade. Prices in {divisa}.",
     titulo: "Plans that fit your classroom",
     texto:
-      "Pay only for the pages you grade. Fast uses 1 credit per page, Medium 4 and Precise 12. Prices in {divisa}, no subscription.",
+      "Pay only for the pages you grade. Fast uses 1 credit per page, Agile 3, Medium 4, Advanced 7 and Precise 12. Prices in {divisa}, no subscription.",
     masPopular: "Most popular",
     aLaMedida: "Custom",
     porPagina: "{p} per page",
@@ -319,13 +319,13 @@ const en: Diccionario = {
     asuntoEscuela: "iEureka-Grader School plan",
     precisionTitulo: "Choose the AI precision for each assignment",
     precisionTexto:
-      "Every plan includes all three levels. Each level uses a different engine: more precision reads long procedures and difficult handwriting better, but uses more AI tokens. You choose it in your settings and for each new assignment.",
+      "Every plan includes all five levels. Each level uses a different engine: more precision reads long procedures and difficult handwriting better, but uses more AI tokens. You choose it in your settings and for each new assignment.",
     consumo: "Usage",
     consumoDe: "Usage {n} of 5",
     predeterminado: "Default",
     preguntasTitulo: "Frequently asked questions",
     preguntas: [
-      ["What is a credit?", "Each graded page uses credits by precision level: 1 on Fast, 4 on Medium and 12 on Precise. A 3-page submission on Medium uses 12 credits."],
+      ["What is a credit?", "Each graded page uses credits by precision level: 1 on Fast, 3 on Agile, 4 on Medium, 7 on Advanced and 12 on Precise. A 3-page submission on Medium uses 12 credits."],
       [
         "What doesn't use credits?",
         "Creating your courses, generating the assignment with AI, printing the sheet with QR, uploading your solution and building the rubric.",
@@ -355,6 +355,13 @@ const en: Diccionario = {
     },
   },
   esfuerzos: { bajo: "Low", medio: "Medium", alto: "High" },
+  escala: {
+    rapido: { nombre: "Fast", descripcion: "Quick reading with the lowest usage. Ideal for closed items (multiple choice, true or false) and clear handwriting." },
+    agil: { nombre: "Agile", descripcion: "A bit more care than Fast with low usage. Good for short answers and simple calculations." },
+    medio: { nombre: "Medium", descripcion: "Balance between precision and usage. Recommended for most activities with short work." },
+    avanzado: { nombre: "Advanced", descripcion: "Checks procedures and writing more carefully. For long work with clear handwriting." },
+    preciso: { nombre: "Precise", descripcion: "The most careful reading of long procedures, graphs and hard-to-read handwriting. It uses the most tokens." },
+  },
   configuracion: {
     titulo: "Settings",
     subtitulo: "Customize your account, your language, your reports and how the AI works on your assignments.",
@@ -389,8 +396,14 @@ const en: Diccionario = {
     consumo: "Usage",
     consumoDe: "{e}: {n} of 5",
     tokens: "≈ {n}× tokens",
+    tokensPagina: "≈ {n} tokens per page",
+    creditosPagina: "{n} credits per page",
+    creditoPagina: "1 credit per page",
+    motorEsfuerzo: "Engine: {m} · effort {e}",
+    menos: "Less usage",
+    mas: "More precision",
     consumoNota:
-      "Usage is relative: 1× is the Fast level with medium effort. Each page costs 1 credit on Fast, 4 on Medium and 12 on Precise.",
+      "Tokens are an estimate per graded page. Each page costs 1 credit on Fast, 3 on Agile, 4 on Medium, 7 on Advanced and 12 on Precise.",
     guardarPrecision: "Save precision",
     conservacionTitulo: "How long data is kept on the server",
     conservacionFotos:

@@ -260,7 +260,7 @@ const pt: Diccionario = {
         "300 créditos: 10 atividades de 1 página para uma turma de 30",
         "≈ 15 horas de correção economizadas",
         "Feedback pessoal para cada aluno em minutos",
-        "Os três níveis de precisão: Rápido, Médio e Preciso",
+        "Os cinco níveis de precisão, do Rápido ao Preciso",
         "Análises da turma e relatórios em PDF e Excel",
         "Pagamento com cartão, dinheiro no OXXO ou SPEI, com nota fiscal (CFDI)",
       ],
@@ -310,7 +310,7 @@ const pt: Diccionario = {
     metaDescripcion: "Planos do iEureka-Grader: pague só as páginas que você corrige. Preços em {divisa}.",
     titulo: "Planos que se ajustam à sua sala",
     texto:
-      "Pague só as páginas que você corrige. Rápido usa 1 crédito por página, Médio 4 e Preciso 12. Preços em {divisa}, sem assinatura.",
+      "Pague só as páginas que você corrige. Rápido usa 1 crédito por página, Ágil 3, Médio 4, Avançado 7 e Preciso 12. Preços em {divisa}, sem assinatura.",
     masPopular: "Mais popular",
     aLaMedida: "Sob medida",
     porPagina: "{p} por página",
@@ -319,13 +319,13 @@ const pt: Diccionario = {
     asuntoEscuela: "Plano Escola do iEureka-Grader",
     precisionTitulo: "Escolha a precisão da IA em cada atividade",
     precisionTexto:
-      "Todos os planos incluem os três níveis. Cada nível usa um motor diferente: mais precisão lê melhor os procedimentos longos e a letra difícil, mas consome mais tokens de IA. Você escolhe nas configurações e em cada atividade nova.",
+      "Todos os planos incluem os cinco níveis. Cada nível usa um motor diferente: mais precisão lê melhor os procedimentos longos e a letra difícil, mas consome mais tokens de IA. Você escolhe nas configurações e em cada atividade nova.",
     consumo: "Consumo",
     consumoDe: "Consumo {n} de 5",
     predeterminado: "Padrão",
     preguntasTitulo: "Perguntas frequentes",
     preguntas: [
-      ["O que é um crédito?", "Cada página avaliada usa créditos conforme o nível de precisão: 1 no Rápido, 4 no Médio e 12 no Preciso. Uma entrega de 3 páginas no Médio usa 12 créditos."],
+      ["O que é um crédito?", "Cada página avaliada usa créditos conforme o nível de precisão: 1 no Rápido, 3 no Ágil, 4 no Médio, 7 no Avançado e 12 no Preciso. Uma entrega de 3 páginas no Médio usa 12 créditos."],
       [
         "O que não consome créditos?",
         "Criar seus cursos, gerar a atividade com IA, imprimir a folha com QR, enviar sua solução e montar a rubrica.",
@@ -355,6 +355,13 @@ const pt: Diccionario = {
     },
   },
   esfuerzos: { bajo: "Baixo", medio: "Médio", alto: "Alto" },
+  escala: {
+    rapido: { nombre: "Rápido", descripcion: "Leitura veloz com o menor consumo. Ideal para questões fechadas (múltipla escolha, verdadeiro ou falso) e letra clara." },
+    agil: { nombre: "Ágil", descripcion: "Um pouco mais de cuidado que o Rápido com pouco consumo. Bom para respostas curtas e contas simples." },
+    medio: { nombre: "Médio", descripcion: "Equilíbrio entre precisão e consumo. Recomendado para a maioria das atividades com desenvolvimentos curtos." },
+    avanzado: { nombre: "Avançado", descripcion: "Revisa com mais cuidado os procedimentos e a redação. Para desenvolvimentos longos com letra clara." },
+    preciso: { nombre: "Preciso", descripcion: "A leitura mais cuidadosa de procedimentos longos, gráficos e letra difícil. É o que mais consome tokens." },
+  },
   configuracion: {
     titulo: "Configurações",
     subtitulo: "Personalize sua conta, seu idioma, seus relatórios e a forma como a IA trabalha nas suas atividades.",
@@ -389,8 +396,14 @@ const pt: Diccionario = {
     consumo: "Consumo",
     consumoDe: "{e}: {n} de 5",
     tokens: "≈ {n}× tokens",
+    tokensPagina: "≈ {n} tokens por página",
+    creditosPagina: "{n} créditos por página",
+    creditoPagina: "1 crédito por página",
+    motorEsfuerzo: "Motor: {m} · esforço {e}",
+    menos: "Menos consumo",
+    mas: "Mais precisão",
     consumoNota:
-      "O consumo é relativo: 1× é o nível Rápido com esforço médio. Cada página custa 1 crédito no Rápido, 4 no Médio e 12 no Preciso.",
+      "Os tokens são uma estimativa por página avaliada. Cada página custa 1 crédito no Rápido, 3 no Ágil, 4 no Médio, 7 no Avançado e 12 no Preciso.",
     guardarPrecision: "Salvar precisão",
     conservacionTitulo: "Conservação das informações no servidor",
     conservacionFotos:

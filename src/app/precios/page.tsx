@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { BotonLink, Logo } from "@/components/ui";
 import { SelectorIdioma } from "@/components/selector-idioma";
-import { MOTORES, PRECISION_PREDETERMINADA, nivelConsumo } from "@/lib/configuracion";
+import { ESCALA, INFO_MOTOR, PUNTO_PREDETERMINADO } from "@/lib/configuracion";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { formato } from "@/lib/i18n/idiomas";
 import { divisaActual, textos } from "@/lib/i18n/servidor";
@@ -147,25 +147,33 @@ export default async function Precios() {
             {pr.precisionTitulo}
           </h2>
           <p className="mt-2 max-w-3xl text-slate-600">{pr.precisionTexto}</p>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            {MOTORES.map((m) => {
-              const info = t.motores[m];
-              const consumo = nivelConsumo({ motor: m, esfuerzo: "medio" });
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {ESCALA.map((e, k) => {
+              const info = t.escala[e.punto];
+              const consumo = k + 1;
               return (
-                <div key={m} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">{info.nombre}</h3>
-                  </div>
-                  <p className="mt-2 text-sm text-slate-600">{info.descripcion}</p>
-                  <div className="mt-4 flex items-center gap-2 text-xs text-slate-500">
+                <div key={e.punto} className="flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+                  <h3 className="font-semibold">{info.nombre}</h3>
+                  <p className="mt-1 text-xs font-medium text-tinta-700">
+                    {formato(t.configuracion.motorEsfuerzo, {
+                      m: INFO_MOTOR[e.precision.motor].nombreModelo,
+                      e: t.esfuerzos[e.precision.esfuerzo].toLocaleLowerCase(locale),
+                    })}
+                  </p>
+                  <p className="mt-2 flex-1 text-sm text-slate-600">{info.descripcion}</p>
+                  <p className="mt-3 text-xs text-slate-500">{formato(t.configuracion.tokensPagina, { n: e.tokens.toLocaleString(locale) })}</p>
+                  <p className="text-xs font-medium text-slate-700">
+                    {e.creditos === 1 ? t.configuracion.creditoPagina : formato(t.configuracion.creditosPagina, { n: e.creditos })}
+                  </p>
+                  <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
                     {pr.consumo}
                     <span className="flex gap-1" aria-label={formato(pr.consumoDe, { n: consumo })}>
                       {[1, 2, 3, 4, 5].map((i) => (
-                        <span key={i} className={`h-1.5 w-5 rounded-full ${i <= consumo ? "bg-tinta-500" : "bg-slate-200"}`} />
+                        <span key={i} className={`h-1.5 w-4 rounded-full ${i <= consumo ? "bg-tinta-500" : "bg-slate-200"}`} />
                       ))}
                     </span>
-                    {m === PRECISION_PREDETERMINADA.motor && <span className="ml-auto font-medium text-tinta-700">{pr.predeterminado}</span>}
                   </div>
+                  {k === PUNTO_PREDETERMINADO && <span className="mt-2 text-xs font-medium text-tinta-700">{pr.predeterminado}</span>}
                 </div>
               );
             })}

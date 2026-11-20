@@ -260,7 +260,7 @@ const de: Diccionario = {
         "300 Credits: 10 einseitige Aufgaben für eine Klasse mit 30",
         "≈ 15 Stunden Korrekturzeit gespart",
         "Persönliches Feedback für jede/n Schüler/in in Minuten",
-        "Alle drei Präzisionsstufen: Schnell, Mittel und Präzise",
+        "Alle fünf Präzisionsstufen, von Schnell bis Präzise",
         "Klassenauswertung und Berichte als PDF und Excel",
         "Zahlung per Karte, bar bei OXXO oder SPEI, mit Rechnung (CFDI)",
       ],
@@ -310,7 +310,7 @@ const de: Diccionario = {
     metaDescripcion: "iEureka-Grader-Tarife: Zahlen Sie nur die Seiten, die Sie korrigieren. Preise in {divisa}.",
     titulo: "Tarife, die zu Ihrer Klasse passen",
     texto:
-      "Zahlen Sie nur die Seiten, die Sie korrigieren. Schnell kostet 1 Credit pro Seite, Mittel 4 und Präzise 12. Preise in {divisa}, ohne Abo.",
+      "Zahlen Sie nur die Seiten, die Sie korrigieren. Schnell kostet 1 Credit pro Seite, Flink 3, Mittel 4, Fortgeschritten 7 und Präzise 12. Preise in {divisa}, ohne Abo.",
     masPopular: "Am beliebtesten",
     aLaMedida: "Individuell",
     porPagina: "{p} pro Seite",
@@ -319,13 +319,13 @@ const de: Diccionario = {
     asuntoEscuela: "iEureka-Grader Tarif Schule",
     precisionTitulo: "Wählen Sie die KI-Präzision für jede Aufgabe",
     precisionTexto:
-      "Alle Tarife enthalten die drei Stufen. Jede Stufe nutzt ein anderes Modell: Mehr Präzision liest lange Rechenwege und schwierige Handschrift besser, verbraucht aber mehr KI-Tokens. Sie wählen sie in Ihren Einstellungen und bei jeder neuen Aufgabe.",
+      "Alle Tarife enthalten die fünf Stufen. Jede Stufe nutzt ein anderes Modell: Mehr Präzision liest lange Rechenwege und schwierige Handschrift besser, verbraucht aber mehr KI-Tokens. Sie wählen sie in Ihren Einstellungen und bei jeder neuen Aufgabe.",
     consumo: "Verbrauch",
     consumoDe: "Verbrauch {n} von 5",
     predeterminado: "Standard",
     preguntasTitulo: "Häufige Fragen",
     preguntas: [
-      ["Was ist ein Credit?", "Jede bewertete Seite verbraucht Credits je nach Präzisionsstufe: 1 bei Schnell, 4 bei Mittel und 12 bei Präzise. Eine Abgabe mit 3 Seiten auf Mittel verbraucht 12 Credits."],
+      ["Was ist ein Credit?", "Jede bewertete Seite verbraucht Credits je nach Präzisionsstufe: 1 bei Schnell, 3 bei Flink, 4 bei Mittel, 7 bei Fortgeschritten und 12 bei Präzise. Eine Abgabe mit 3 Seiten auf Mittel verbraucht 12 Credits."],
       [
         "Was verbraucht keine Credits?",
         "Kurse anlegen, die Aufgabe mit KI erstellen, das Blatt mit QR drucken, Ihre Lösung hochladen und das Bewertungsraster erstellen.",
@@ -355,6 +355,13 @@ const de: Diccionario = {
     },
   },
   esfuerzos: { bajo: "Niedrig", medio: "Mittel", alto: "Hoch" },
+  escala: {
+    rapido: { nombre: "Schnell", descripcion: "Schnelles Lesen mit dem geringsten Verbrauch. Ideal für geschlossene Aufgaben (Multiple Choice, wahr oder falsch) und klare Schrift." },
+    agil: { nombre: "Flink", descripcion: "Etwas sorgfältiger als Schnell bei geringem Verbrauch. Gut für kurze Antworten und einfache Rechnungen." },
+    medio: { nombre: "Mittel", descripcion: "Gleichgewicht zwischen Genauigkeit und Verbrauch. Empfohlen für die meisten Aufgaben mit kurzen Lösungswegen." },
+    avanzado: { nombre: "Fortgeschritten", descripcion: "Prüft Lösungswege und Texte sorgfältiger. Für lange Lösungen mit klarer Schrift." },
+    preciso: { nombre: "Präzise", descripcion: "Das sorgfältigste Lesen langer Lösungswege, Grafiken und schwer lesbarer Schrift. Verbraucht die meisten Tokens." },
+  },
   configuracion: {
     titulo: "Einstellungen",
     subtitulo: "Passen Sie Ihr Konto, Ihre Sprache, Ihre Berichte und die Arbeitsweise der KI bei Ihren Aufgaben an.",
@@ -389,8 +396,14 @@ const de: Diccionario = {
     consumo: "Verbrauch",
     consumoDe: "{e}: {n} von 5",
     tokens: "≈ {n}× Tokens",
+    tokensPagina: "≈ {n} Tokens pro Seite",
+    creditosPagina: "{n} Credits pro Seite",
+    creditoPagina: "1 Credit pro Seite",
+    motorEsfuerzo: "Modell: {m} · Aufwand {e}",
+    menos: "Weniger Verbrauch",
+    mas: "Mehr Genauigkeit",
     consumoNota:
-      "Der Verbrauch ist relativ: 1× ist die Stufe Schnell mit mittlerem Aufwand. Jede Seite kostet 1 Credit bei Schnell, 4 bei Mittel und 12 bei Präzise.",
+      "Die Tokens sind eine Schätzung pro bewerteter Seite. Jede Seite kostet 1 Credit bei Schnell, 3 bei Flink, 4 bei Mittel, 7 bei Fortgeschritten und 12 bei Präzise.",
     guardarPrecision: "Präzision speichern",
     conservacionTitulo: "Aufbewahrung der Daten auf dem Server",
     conservacionFotos:

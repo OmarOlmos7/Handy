@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { modificar } from "@/lib/almacen";
-import { ESFUERZOS_PREDETERMINADOS, MOTORES, esEsfuerzo, esMotor, validarRangos } from "@/lib/configuracion";
+import { ESCALA, ESFUERZOS_PREDETERMINADOS, validarRangos } from "@/lib/configuracion";
 import { hashContrasena, verificarContrasena } from "@/lib/cuentas";
 import { requerirProfesor } from "@/lib/sesion";
 import type { EsfuerzoIA, MotorIA } from "@/lib/tipos";
@@ -60,16 +60,13 @@ export async function guardarRangos(form: FormData) {
   volver("rangos", "ok", "rangosGuardados");
 }
 
-/** Motor predeterminado para las actividades nuevas y el esfuerzo de cada motor. */
+/** Punto predeterminado de la escala de precisión para las actividades nuevas (motor y esfuerzo). */
 export async function guardarPrecision(form: FormData) {
   const yo = await requerirProfesor();
-  const motor = form.get("motor");
-  if (!esMotor(motor)) volver("precision", "error", "eligePrecision");
-  const esfuerzos = { ...ESFUERZOS_PREDETERMINADOS } as Record<MotorIA, EsfuerzoIA>;
-  for (const m of MOTORES) {
-    const e = form.get(`esfuerzo_${m}`);
-    if (esEsfuerzo(e)) esfuerzos[m] = e;
-  }
+  const punto = ESCALA.find((e) => e.punto === form.get("punto"));
+  if (!punto) volver("precision", "error", "eligePrecision");
+  const { motor } = punto.precision;
+  const esfuerzos = { ...ESFUERZOS_PREDETERMINADOS, [motor]: punto.precision.esfuerzo } as Record<MotorIA, EsfuerzoIA>;
   modificar((db) => {
     const p = db.profesores.find((x) => x.id === yo.id);
     if (p) p.config = { ...p.config, motor, esfuerzos };
