@@ -199,6 +199,17 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       for (const [j, inc] of incisosCerrado(r, res.respuestaLeida).entries()) {
         const u = res.ubicacionesIncisos[j];
         if (!u || u.pagina !== i + 1) continue;
+        if (inc.palabra) {
+          // Palabra elegida de un conjunto: paloma sobre la elegida si acertó; si no, tache sobre la
+          // opción correcta que no se eligió.
+          const ux = inc.correcto ? u.x : (u.xCorrecta ?? u.x);
+          const uy = inc.correcto ? u.y : (u.yCorrecta ?? u.y);
+          const xp = x0 + Math.min(ancho - 10, Math.max(6, ancho * ux));
+          const yp = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, uy))) + 9;
+          if (inc.correcto) paloma(hoja, xp - 5, yp - 3, 0.55);
+          else tache(hoja, xp, yp, 0.5);
+          continue;
+        }
         const xi = x0 + Math.min(ancho - 30, Math.max(4, ancho * u.x + 3));
         const yi = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, u.y)));
         if (inc.correcto) paloma(hoja, xi, yi - 4, 0.55);

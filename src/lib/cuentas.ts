@@ -1,6 +1,7 @@
 // Cuentas de profesor y separación de datos por profesor. Funciones puras (sin
 // cookies ni disco) para poder probarlas; la sesión vive en sesion.ts.
 import { corregirPuntosCriterios } from "./elementos";
+import { corregirPuntosPalabras } from "./calificar";
 import crypto from "node:crypto";
 import type { Alumno, BaseDeDatos, CuentaAlumno, Grupo } from "./tipos";
 
@@ -118,6 +119,11 @@ export function migrar(db: BaseDeDatos): BaseDeDatos {
   for (const e of db.entregas ?? []) {
     const act = actividades.get(e.actividadId);
     if (act?.criterios?.length) for (const res of e.resultados ?? []) corregirPuntosCriterios(act, res);
+    // Palabras elegidas calificadas antes solo por su inicial.
+    for (const res of act ? (e.resultados ?? []) : []) {
+      const r = act!.reactivos.find((x) => x.numero === res.numero);
+      if (r) corregirPuntosPalabras(r, res);
+    }
   }
   db.version = 3;
   return db;
