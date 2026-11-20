@@ -94,12 +94,6 @@ const pt: Diccionario = {
       grupo: ["Relatório da turma", "Médias, temas fortes e fracos, questões com menor acerto e alunos por nível."],
       excel: ["Excel para o Canvas", "Nome, matrícula e nota, mais um CSV pronto para importar no diário de notas."],
     },
-    preciosTitulo: "Pague só o que você corrige",
-    preciosTexto:
-      "Rápido usa 1 crédito por página, Médio 4 e Preciso 12. Enviar sua solução e gerar a rubrica não custa nada. Preços em {divisa}.",
-    contactanos: "Fale conosco para um plano institucional",
-    gratisPrecio: "Grátis",
-    verPlanes: "Ver o que cada plano inclui →",
     privacidadTitulo: "Dados dos seus alunos, protegidos",
     privacidad: [
       "As folhas ficam em servidores privados e só são compartilhadas por links que expiram.",

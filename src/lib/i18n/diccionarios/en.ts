@@ -94,12 +94,6 @@ const en: Diccionario = {
       grupo: ["Class report", "Averages, strong and weak topics, questions with the lowest scores and students by level."],
       excel: ["Excel for Canvas", "Name, student ID and grade, plus a CSV ready to import into the gradebook."],
     },
-    preciosTitulo: "Pay only for what you grade",
-    preciosTexto:
-      "Fast uses 1 credit per page, Medium 4 and Precise 12. Uploading your solution and generating the rubric is free. Prices in {divisa}.",
-    contactanos: "Contact us to set up an institutional plan",
-    gratisPrecio: "Free",
-    verPlanes: "See what each plan includes →",
     privacidadTitulo: "Your students' data, protected",
     privacidad: [
       "Sheets are stored on private servers and only shared through expiring links.",

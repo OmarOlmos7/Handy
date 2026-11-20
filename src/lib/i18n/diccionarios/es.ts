@@ -95,12 +95,6 @@ const es = {
       grupo: ["Reporte del grupo", "Promedios, temas fuertes y débiles, reactivos con menor acierto y alumnos por nivel."],
       excel: ["Excel para Canvas", "Nombre, matrícula y calificación, más un CSV listo para importar al libro de calificaciones."],
     },
-    preciosTitulo: "Paga solo lo que calificas",
-    preciosTexto:
-      "Rápido usa 1 crédito por página, Medio 4 y Preciso 12. Subir tu solución y generar la rúbrica no cuesta. Precios en {divisa}.",
-    contactanos: "Contactar para gestionar plan institucional",
-    gratisPrecio: "Gratis",
-    verPlanes: "Ver qué incluye cada plan →",
     privacidadTitulo: "Datos de tus alumnos, protegidos",
     privacidad: [
       "Las hojas se guardan en servidores privados y solo se comparten con enlaces que expiran.",

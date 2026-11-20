@@ -94,12 +94,6 @@ const ja: Diccionario = {
       grupo: ["クラスレポート", "平均点、得意・苦手な単元、正答率の低い問題、レベル別の生徒数。"],
       excel: ["Canvas用Excel", "名前、学籍番号、点数に加え、成績表にそのまま取り込めるCSV。"],
     },
-    preciosTitulo: "採点した分だけお支払い",
-    preciosTexto:
-      "1ページあたり、高速は1クレジット、標準は4、高精度は12を使います。解答のアップロードとルーブリック作成は無料です。価格は{divisa}。",
-    contactanos: "機関向けプランのお問い合わせ",
-    gratisPrecio: "無料",
-    verPlanes: "各プランの内容を見る →",
     privacidadTitulo: "生徒のデータを守ります",
     privacidad: [
       "答案は非公開のサーバーに保存され、期限付きのリンクでのみ共有されます。",

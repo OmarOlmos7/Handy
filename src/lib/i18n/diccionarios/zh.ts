@@ -88,12 +88,6 @@ const zh: Diccionario = {
       grupo: ["班级报告", "平均分、强项和弱项知识点、正确率最低的题目以及各水平的学生人数。"],
       excel: ["Canvas 用 Excel", "姓名、学号和分数，另附可直接导入成绩册的 CSV。"],
     },
-    preciosTitulo: "只为批改的内容付费",
-    preciosTexto:
-      "每页在“快速”用 1 点数，“标准”用 4，“精准”用 12。上传答案和生成评分细则免费。价格以{divisa}计。",
-    contactanos: "联系我们办理机构方案",
-    gratisPrecio: "免费",
-    verPlanes: "查看各套餐包含的内容 →",
     privacidadTitulo: "保护学生的数据",
     privacidad: [
       "作业纸保存在私有服务器上，只通过会过期的链接分享。",
