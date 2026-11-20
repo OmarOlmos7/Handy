@@ -48,85 +48,85 @@ function Tarjetas<T extends string | boolean>({
 }
 
 /**
- * "Incluir solución" o "No requiere solución". Las actividades como ensayos, producciones escritas
- * o análisis valoran la composición escrita (contenido, coherencia, elementos lingüísticos) y no
- * necesitan una solución.
+ * Botón mixto (segmentado) de dos o más opciones, con la explicación de la opción elegida debajo.
+ * Mismo estilo que el selector de escala de puntos.
+ */
+function Segmentado<T extends string | boolean>({
+  nombre,
+  pregunta,
+  valor,
+  onCambio,
+  opciones,
+}: {
+  nombre: string;
+  pregunta: string;
+  valor: T;
+  onCambio: (v: T) => void;
+  opciones: { valor: T; titulo: string; texto: string }[];
+}) {
+  const elegida = opciones.find((o) => o.valor === valor);
+  return (
+    <fieldset>
+      <legend className="text-sm font-medium text-slate-700">{pregunta}</legend>
+      <div className="mt-1 inline-flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
+        {opciones.map((o) => (
+          <label
+            key={String(o.valor)}
+            className="cursor-pointer rounded-lg px-4 py-1.5 text-sm font-medium text-slate-600 has-[:checked]:bg-white has-[:checked]:text-tinta-700 has-[:checked]:shadow-sm has-[:checked]:ring-1 has-[:checked]:ring-slate-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-tinta-500"
+          >
+            <input
+              type="radio"
+              name={nombre}
+              value={String(o.valor)}
+              checked={valor === o.valor}
+              onChange={() => onCambio(o.valor)}
+              className="sr-only"
+            />
+            {o.titulo}
+          </label>
+        ))}
+      </div>
+      {elegida && <span className="mt-1 block max-w-2xl text-xs text-slate-500">{elegida.texto}</span>}
+    </fieldset>
+  );
+}
+
+/**
+ * Con solución o sin solución. Las actividades como ensayos, producciones escritas o análisis
+ * valoran la composición escrita (contenido, coherencia, elementos lingüísticos) y no necesitan
+ * una solución.
  */
 export function OpcionSolucion({ sinSolucion, onCambio }: { sinSolucion: boolean; onCambio: (sinSolucion: boolean) => void }) {
   const tm = useTextos().t.profesor.modalidad;
   return (
-    <Tarjetas
+    <Segmentado
       nombre="solucion"
       pregunta={tm.solucionPregunta}
       valor={sinSolucion}
       onCambio={onCambio}
       opciones={[
-        { valor: false, titulo: tm.incluirSolucion, texto: tm.incluirSolucionTexto },
-        { valor: true, titulo: tm.sinSolucion, texto: tm.sinSolucionTexto },
+        { valor: false, titulo: tm.conSolucionCorto, texto: tm.incluirSolucionTexto },
+        { valor: true, titulo: tm.sinSolucionCorto, texto: tm.sinSolucionTexto },
       ]}
     />
   );
 }
 
 /**
- * Un solo botón por modalidad: "Incluir solución" + "Marcar el procedimiento y comentar al margen",
- * o "No requiere solución" + "Subrayar y comentar sobre el texto" (producciones escritas).
+ * Cómo se marcan los elementos de mejora y los comentarios sobre la hoja: numerados con el
+ * comentario al margen, o subrayados con el comentario encima del texto.
  */
-export function OpcionModalidad({ sinSolucion, onCambio }: { sinSolucion: boolean; onCambio: (sinSolucion: boolean) => void }) {
-  const tm = useTextos().t.profesor.modalidad;
-  const opciones = [
-    { valor: false, partes: [[tm.incluirSolucion, tm.incluirSolucionTexto], [tm.estiloMargen, tm.estiloMargenTexto]] },
-    { valor: true, partes: [[tm.sinSolucion, tm.sinSolucionTexto], [tm.estiloSubrayado, tm.estiloSubrayadoTexto]] },
-  ];
-  return (
-    <fieldset>
-      <legend className="text-sm font-medium text-slate-700">{tm.modalidadPregunta}</legend>
-      <div className="mt-2 grid gap-3 sm:grid-cols-2">
-        {opciones.map((o) => (
-          <label
-            key={String(o.valor)}
-            className={`flex cursor-pointer items-start gap-3 rounded-xl p-4 ring-2 transition ${
-              sinSolucion === o.valor ? "bg-tinta-50 ring-tinta-500" : "bg-white ring-slate-200 hover:ring-slate-300"
-            }`}
-          >
-            <input
-              type="radio"
-              name="modalidad"
-              value={String(o.valor)}
-              checked={sinSolucion === o.valor}
-              onChange={() => onCambio(o.valor)}
-              className="mt-1 accent-tinta-600"
-            />
-            <span className="space-y-3">
-              {o.partes.map(([titulo, texto], i) => (
-                <span key={titulo} className={`block ${i > 0 ? "border-t border-slate-200 pt-3" : ""}`}>
-                  <span className="block font-semibold text-slate-900">
-                    {i > 0 && "+ "}
-                    {titulo}
-                  </span>
-                  <span className="mt-1 block text-sm text-slate-600">{texto}</span>
-                </span>
-              ))}
-            </span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
-
-/** Cómo se corrige sobre la hoja: subrayar y comentar encima, o marcar y comentar al margen. */
 export function OpcionEstilo({ estilo, onCambio }: { estilo: EstiloCorreccion; onCambio: (estilo: EstiloCorreccion) => void }) {
   const tm = useTextos().t.profesor.modalidad;
   return (
-    <Tarjetas
+    <Segmentado
       nombre="estiloCorreccion"
-      pregunta={tm.estiloPregunta}
+      pregunta={tm.marcadoPregunta}
       valor={estilo}
       onCambio={onCambio}
       opciones={[
-        { valor: "margen", titulo: tm.estiloMargen, texto: tm.estiloMargenTexto },
-        { valor: "subrayado", titulo: tm.estiloSubrayado, texto: tm.estiloSubrayadoTexto },
+        { valor: "subrayado", titulo: tm.estiloSubrayadoCorto, texto: tm.estiloSubrayadoTexto },
+        { valor: "margen", titulo: tm.estiloMargenCorto, texto: tm.estiloMargenTexto },
       ]}
     />
   );
