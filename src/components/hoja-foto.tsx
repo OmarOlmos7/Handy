@@ -7,7 +7,7 @@ import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 import { useLayoutEffect, useRef } from "react";
 import type { Actividad, Entrega } from "@/lib/tipos";
-import { elementosNumerados, puntosTexto } from "@/lib/elementos";
+import { anotacionesNumeradas, puntosTexto } from "@/lib/elementos";
 import { esCerrado, incisosCerrado } from "@/lib/calificar";
 import { conPuntaje } from "@/lib/modalidad";
 
@@ -29,8 +29,6 @@ export function HojaFoto({
   const foto = useRef<HTMLImageElement>(null);
   const ruta = entrega.imagenes?.[pagina - 1];
   const puntaje = conPuntaje(actividad);
-  // Estilo "subrayado": fragmentos a corregir subrayados con su comentario encima.
-  const subrayados = anotada ? entrega.resultados.flatMap((res) => (res.subrayados ?? []).filter((s) => s.pagina === pagina)) : [];
   const marcas = anotada
     ? numerarMarcas(entrega).filter(
         (m) => (m.res.ubicacion?.pagina ?? 1) === pagina,
@@ -129,14 +127,33 @@ export function HojaFoto({
               ];
             });
           })}
+        {/* Sobre la hoja solo van los numerales; la descripción queda en el margen. */}
         {anotada &&
           entrega.resultados.flatMap((res) => {
             const r = actividad.reactivos.find((x) => x.numero === res.numero);
-            if (!r || !res.ubicacionesElementos?.length) return [];
-            return elementosNumerados(actividad, r, res).flatMap((el) => {
+            if (!r) return [];
+            return anotacionesNumeradas(actividad, r, res).flatMap((el) => {
+              const s = el.subrayado;
+              if (s) {
+                // Estilo "subrayado": línea roja bajo el error y su numeral a la izquierda.
+                if (s.pagina !== pagina) return [];
+                return [
+                  <span
+                    key={`s${el.numeral}`}
+                    title={el.nombre}
+                    className="pointer-events-none absolute"
+                    style={{ left: `${s.x0 * 100}%`, width: `${Math.max(0.02, s.x1 - s.x0) * 100}%`, top: `${s.y * 100}%` }}
+                  >
+                    <span className="block h-0 border-b-2 border-error/80" />
+                    <span className="absolute bottom-0 right-full mr-0.5 rounded-full ring-2 ring-white">
+                      <Etiqueta texto={el.numeral} ok={false} grande />
+                    </span>
+                  </span>,
+                ];
+              }
               const u = el.ubicacion;
               if (!u || u.pagina !== pagina) return [];
-              const ok = el.obtenidos >= el.total;
+              const ok = el.ok;
               return [
                 <span
                   key={`e${el.numeral}`}
@@ -149,18 +166,6 @@ export function HojaFoto({
               ];
             });
           })}
-        {subrayados.map((s, i) => (
-          <span
-            key={`s${i}`}
-            className="pointer-events-none absolute"
-            style={{ left: `${s.x0 * 100}%`, width: `${Math.max(0.02, s.x1 - s.x0) * 100}%`, top: `${s.y * 100}%` }}
-          >
-            <span className="block h-0 border-b-2 border-error/80" />
-            <span className="font-mano absolute bottom-full left-0 mb-3 whitespace-nowrap rounded bg-white/85 px-1 text-[11px] leading-tight text-error sm:text-xs">
-              {s.comentario}
-            </span>
-          </span>
-        ))}
       </div>
       {marcas.length > 0 && (
         <div
@@ -201,17 +206,17 @@ export function HojaFoto({
                     {res.comentario}
                   </p>
                 )}
-                {elementosNumerados(actividad, r, res).length > 0 && (
+                {anotacionesNumeradas(actividad, r, res).length > 0 && (
                   <ul className="mt-1 space-y-0.5 text-[10px] leading-tight text-slate-600 sm:text-[11px]">
-                    {elementosNumerados(actividad, r, res).map((el) => {
-                      const ok = el.obtenidos >= el.total;
+                    {anotacionesNumeradas(actividad, r, res).map((el) => {
+                      const ok = el.ok;
                       return (
-                        <li key={el.nombre} className={`flex items-start gap-1 ${ok ? "text-acierto" : "text-error"}`}>
+                        <li key={el.numeral} className={`flex items-start gap-1 ${ok ? "text-acierto" : "text-error"}`}>
                           <span className="w-2.5 shrink-0 text-center font-bold">{ok ? "✓" : "✗"}</span>
                           <Etiqueta texto={el.numeral} ok={ok} />
                           <span>
                             {el.nombre}
-                            {puntaje && ` ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}`}
+                            {puntaje && el.puntos && ` ${puntosTexto(el.puntos.obtenidos)}/${puntosTexto(el.puntos.total)}`}
                           </span>
                         </li>
                       );

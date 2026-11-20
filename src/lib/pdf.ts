@@ -15,7 +15,7 @@ import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
 import { fechaHoraLarga } from "./resultados";
 import { esCerrado, incisosCerrado } from "./calificar";
-import { elementosNumerados, puntosTexto } from "./elementos";
+import { anotacionesNumeradas, puntosTexto } from "./elementos";
 import { conPuntaje } from "./modalidad";
 import { texAPlano } from "./tex-plano";
 import type { Actividad, Alumno, Entrega, Grupo, RecomendacionesEstudio } from "./tipos";
@@ -118,11 +118,11 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       if (!r) return [];
       const completo = res.puntosObtenidos >= r.puntos;
       const lineas = envolver(normal, res.comentario || (completo ? tx.correcto : ""), 8.5, COLUMNA - 10);
-      const elementos = elementosNumerados(actividad, r, res).map((el) => {
+      const elementos = anotacionesNumeradas(actividad, r, res).map((el) => {
         const etiqueta = el.numeral;
         const sangria = 12 + Math.max(anchoNumeral(negrita, etiqueta), 18) + 3;
-        const texto = `${el.nombre}${puntaje ? `  ${puntosTexto(el.obtenidos)}/${puntosTexto(el.total)}` : ""}`;
-        return { ok: el.obtenidos >= el.total, etiqueta, sangria, lineas: envolver(normal, texto, 7.5, COLUMNA - 6 - sangria) };
+        const texto = `${el.nombre}${puntaje && el.puntos ? `  ${puntosTexto(el.puntos.obtenidos)}/${puntosTexto(el.puntos.total)}` : ""}`;
+        return { ok: el.ok, etiqueta, sangria, lineas: envolver(normal, texto, 7.5, COLUMNA - 6 - sangria) };
       });
       const altura = 17 + lineas.length * 10.5 + elementos.reduce((h, e) => h + 1.5 + e.lineas.length * 9.5, 0) + 8;
       return [{ res, r, completo, lineas, elementos, altura }];
@@ -163,31 +163,29 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       hoja.drawText(calTexto, { x: xc - negrita.widthOfTextAtSize(calTexto, 17) / 2, y: CARTA.alto - 48, size: 17, font: negrita, color: ROJO });
     }
 
-    // Estilo "subrayado": línea roja bajo el fragmento a corregir y el comentario encima.
-    for (const s of entrega.resultados.flatMap((r) => (r.subrayados ?? []).filter((x) => x.pagina === i + 1))) {
-      const ys = y0 + alto * (1 - s.y) - 2;
-      const xa = x0 + ancho * s.x0;
-      const xb = x0 + ancho * Math.max(s.x1, s.x0 + 0.02);
-      hoja.drawLine({ start: { x: xa, y: ys }, end: { x: xb, y: ys }, thickness: 1.4, color: ROJO, opacity: 0.85 });
-      const nota = seguro(normal, s.comentario);
-      const anchoNota = Math.min(normal.widthOfTextAtSize(nota, 7.5), ancho - 4);
-      const xn = Math.min(xa, x0 + ancho - anchoNota - 2);
-      hoja.drawRectangle({ x: xn - 1, y: ys + 9, width: anchoNota + 2, height: 9, color: rgb(1, 1, 1), opacity: 0.8 });
-      hoja.drawText(nota, { x: xn, y: ys + 11, size: 7.5, font: normal, color: ROJO, maxWidth: ancho - 4 });
-    }
-
-    // Sobre la hoja solo va el numeral de cada elemento (1.1, 1.2…), exactamente en el punto que
-    // señala: verde si se cumple, rojo si no. La descripción queda en el margen.
+    // Sobre la hoja solo van los numerales (1.1, 1.2…); la descripción queda en el margen.
+    // - Estilo "subrayado": línea roja bajo el error y su numeral a la izquierda.
+    // - Elementos con ubicación: el numeral en el punto que señala, verde si se cumple, rojo si no.
     for (const res of entrega.resultados) {
       const r = actividad.reactivos.find((x) => x.numero === res.numero);
-      if (!r || !res.ubicacionesElementos?.length) continue;
-      for (const el of elementosNumerados(actividad, r, res)) {
+      if (!r) continue;
+      for (const el of anotacionesNumeradas(actividad, r, res)) {
+        const s = el.subrayado;
+        if (s) {
+          if (s.pagina !== i + 1) continue;
+          const ys = y0 + alto * (1 - s.y) - 2;
+          const xa = x0 + ancho * s.x0;
+          const xb = x0 + ancho * Math.max(s.x1, s.x0 + 0.02);
+          hoja.drawLine({ start: { x: xa, y: ys }, end: { x: xb, y: ys }, thickness: 1.4, color: ROJO, opacity: 0.85 });
+          const anchoEt = anchoNumeral(negrita, el.numeral) * 1.4 + 2;
+          etiquetaNumeral(hoja, negrita, el.numeral, Math.max(x0 + 1, xa - anchoEt - 1), ys + 5, ROJO, 1.4);
+          continue;
+        }
         const u = el.ubicacion;
         if (!u || u.pagina !== i + 1) continue;
-        const ok = el.obtenidos >= el.total;
         const xe = x0 + Math.min(ancho - 30, Math.max(4, ancho * u.x));
         const ye = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, u.y)));
-        etiquetaNumeral(hoja, negrita, el.numeral, xe, ye, ok ? VERDE : ROJO, 1.4);
+        etiquetaNumeral(hoja, negrita, el.numeral, xe, ye, el.ok ? VERDE : ROJO, 1.4);
       }
     }
 

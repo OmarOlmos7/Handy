@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { corregirPuntosCriterios, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
+import { anotacionesNumeradas, corregirPuntosCriterios, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
 import { conPuntaje, listaParaRubrica } from "../modalidad";
 
 const criterios = [
@@ -104,6 +104,29 @@ describe("numerales de los elementos", () => {
       "2.2 Coherencia",
       "2.3 Elementos lingüísticos",
     ]);
+  });
+});
+
+describe("anotaciones con subrayado", () => {
+  it("primero los errores subrayados de arriba hacia abajo y luego los criterios con sus puntos", () => {
+    const res = {
+      criterios: [1, 0.5, 1],
+      subrayados: [
+        { pagina: 1, y: 0.6, x0: 0.2, x1: 0.4, comentario: "Je sors : conjugaison" },
+        { pagina: 1, y: 0.3, x0: 0.1, x1: 0.3, comentario: "Verbe présenter" },
+      ],
+      ubicacionesElementos: [{ pagina: 1, y: 0.1, x: 0.1 }, { pagina: 1, y: 0.2, x: 0.1 }, { pagina: 1, y: 0.3, x: 0.1 }],
+    };
+    const lista = anotacionesNumeradas({ criterios }, { numero: 1, puntos: 10 }, res);
+    expect(lista.map((a) => [a.numeral, a.nombre, a.ok, a.puntos?.obtenidos ?? null])).toEqual([
+      ["1.1", "Verbe présenter", false, null],
+      ["1.2", "Je sors : conjugaison", false, null],
+      ["1.3", "Contenido", true, 4],
+      ["1.4", "Coherencia", false, 1.5],
+      ["1.5", "Elementos lingüísticos", true, 3],
+    ]);
+    // Con subrayados, los criterios son generales: sin numeral sobre la hoja.
+    expect(lista.slice(2).every((a) => !a.ubicacion)).toBe(true);
   });
 });
 
