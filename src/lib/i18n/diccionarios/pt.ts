@@ -267,11 +267,11 @@ const pt: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "Para um professor com duas ou três turmas",
-      periodo: "pagamento único por 350 créditos",
+      periodo: "pagamento único por 460 créditos",
       boton: "Escolher Pro",
       incluye: "Tudo do Básico, mais:",
       ventajas: [
-        "350 créditos",
+        "460 créditos",
         "Recomendações de estudo com vídeos e leituras para cada aluno",
         "Diário de notas do curso",
       ],
@@ -279,11 +279,11 @@ const pt: Diccionario = {
     academia: {
       nombre: "Academia",
       lema: "Para o semestre inteiro ou uma coordenação: o melhor preço por página",
-      periodo: "pagamento único por 640 créditos",
+      periodo: "pagamento único por 1.000 créditos",
       boton: "Escolher Academia",
       incluye: "Tudo do Pro, mais:",
       ventajas: [
-        "640 créditos",
+        "1.000 créditos",
         "Folga para usar o nível Avançado nas provas",
         "Relatórios por aluno e por turma durante todo o curso",
       ],

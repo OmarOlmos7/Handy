@@ -268,11 +268,11 @@ const es = {
     pro: {
       nombre: "Pro",
       lema: "Para un profesor con dos o tres grupos",
-      periodo: "pago único por 350 créditos",
+      periodo: "pago único por 460 créditos",
       boton: "Elegir Pro",
       incluye: "Todo lo de Básico, más:",
       ventajas: [
-        "350 créditos",
+        "460 créditos",
         "Recomendaciones de estudio con videos y lecturas para cada alumno",
         "Cuaderno de calificaciones del curso",
       ],
@@ -280,11 +280,11 @@ const es = {
     academia: {
       nombre: "Academia",
       lema: "Para todo el semestre o una academia: el mejor precio por página",
-      periodo: "pago único por 640 créditos",
+      periodo: "pago único por 1,000 créditos",
       boton: "Elegir Academia",
       incluye: "Todo lo de Pro, más:",
       ventajas: [
-        "640 créditos",
+        "1,000 créditos",
         "Margen para usar el nivel Avanzado en exámenes",
         "Reportes por alumno y por grupo durante todo el curso",
       ],

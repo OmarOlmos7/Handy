@@ -267,11 +267,11 @@ const en: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "For a teacher with two or three classes",
-      periodo: "one-time payment for 350 credits",
+      periodo: "one-time payment for 460 credits",
       boton: "Choose Pro",
       incluye: "Everything in Basic, plus:",
       ventajas: [
-        "350 credits",
+        "460 credits",
         "Study recommendations with videos and readings for each student",
         "Course gradebook",
       ],
@@ -279,11 +279,11 @@ const en: Diccionario = {
     academia: {
       nombre: "Academy",
       lema: "For a whole semester or a department: the best price per page",
-      periodo: "one-time payment for 640 credits",
+      periodo: "one-time payment for 1,000 credits",
       boton: "Choose Academy",
       incluye: "Everything in Pro, plus:",
       ventajas: [
-        "640 credits",
+        "1,000 credits",
         "Room to use the Advanced level on exams",
         "Student and class reports all term long",
       ],

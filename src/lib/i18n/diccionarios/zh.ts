@@ -261,11 +261,11 @@ const zh: Diccionario = {
     pro: {
       nombre: "专业",
       lema: "适合带两三个班的老师",
-      periodo: "一次性购买 350 积分",
+      periodo: "一次性购买 460 积分",
       boton: "选择专业",
       incluye: "包含基础版全部内容，另外：",
       ventajas: [
-        "350 点数",
+        "460 点数",
         "为每位学生推荐学习视频和阅读材料",
         "课程成绩册",
       ],
@@ -273,11 +273,11 @@ const zh: Diccionario = {
     academia: {
       nombre: "学院",
       lema: "适合整个学期或教研组：每页价格最低",
-      periodo: "一次性购买 640 积分",
+      periodo: "一次性购买 1,000 积分",
       boton: "选择学院",
       incluye: "包含专业版全部内容，另外：",
       ventajas: [
-        "640 点数",
+        "1,000 点数",
         "考试时可放心使用进阶等级",
         "整个学期的学生和班级报告",
       ],

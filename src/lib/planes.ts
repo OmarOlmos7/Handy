@@ -1,6 +1,6 @@
 // Planes de iEureka-Grader. Cada página evaluada usa créditos según el nivel de precisión
 // (ver ESCALA en configuracion.ts). Precios en MXN con IVA.
-import { COSTO_CREDITO_USD } from "./configuracion";
+import { COSTO_CREDITO_USD, MARGEN_RIESGO } from "./configuracion";
 // Los precios y lo que incluye cada plan viven aquí para que la página de precios, el
 // inicio y la tienda de créditos muestren siempre lo mismo.
 
@@ -11,6 +11,13 @@ export interface Plan {
   /** Precio en MXN con IVA; undefined = a la medida. */
   precio?: number;
   creditos: number;
+  /**
+   * Margen de riesgo con que se calcula el costo de IA de sus créditos (0.2 = 20 %). Los planes
+   * más grandes asumen menos riesgo, así que traen más créditos y cada crédito sale más barato.
+   */
+  riesgo?: number;
+  /** Utilidad mínima del plan después de ISR, sobre su ingreso sin IVA (0.35 = 35 %). */
+  utilidad?: number;
   /** Texto bajo el precio. */
   periodo: string;
   /** Sin href: botón de contacto (correo en CONTACTO_CORREO). */
@@ -31,33 +38,35 @@ export const IVA = 0.16;
 export const ISR = 0.32;
 /** Gastos de operación (incluye la comisión del cobro), sobre el ingreso sin IVA. */
 export const OPERACION = 0.2;
-/** Utilidad mínima después de ISR, sobre el ingreso sin IVA. */
+/** Utilidad mínima después de ISR, sobre el ingreso sin IVA, si el plan no fija la suya. */
 export const UTILIDAD_OBJETIVO = 0.35;
 
 /**
- * Costo de IA de un crédito en MXN. Cada nivel cobra los créditos de su costo medido más un margen
- * de riesgo (ver ESCALA), así que ningún crédito cuesta más de COSTO_CREDITO_USD.
+ * Costo de IA de un crédito en MXN con un margen de riesgo. Cada hoja cobra su costo medido más
+ * MARGEN_RIESGO (ver ESCALA), así que el costo real de un crédito es COSTO_CREDITO_USD ÷ (1 +
+ * MARGEN_RIESGO); a eso se suma el riesgo que asume el plan. Con el riesgo completo (20 %) un
+ * crédito cuesta COSTO_CREDITO_USD.
  */
-export function costoCreditoMXN(): number {
-  return COSTO_CREDITO_USD * TIPO_CAMBIO;
+export function costoCreditoMXN(riesgo: number = MARGEN_RIESGO): number {
+  return (COSTO_CREDITO_USD / (1 + MARGEN_RIESGO)) * (1 + riesgo) * TIPO_CAMBIO;
 }
 
 /**
  * Utilidad del plan después de ISR, sobre su ingreso sin IVA (0.35 = 35 %); undefined si es gratis o
  * a la medida. Se quita el IVA del precio; del resto, la operación (20 %) y el costo de IA de sus
- * créditos, y a lo que queda el ISR.
+ * créditos con el riesgo del plan, y a lo que queda el ISR.
  */
-export function utilidad(p: Pick<Plan, "precio" | "creditos">): number | undefined {
+export function utilidad(p: Pick<Plan, "precio" | "creditos" | "riesgo">): number | undefined {
   if (!p.precio) return undefined;
   const sinIva = p.precio / (1 + IVA);
-  const antesDeIsr = sinIva * (1 - OPERACION) - p.creditos * costoCreditoMXN();
+  const antesDeIsr = sinIva * (1 - OPERACION) - p.creditos * costoCreditoMXN(p.riesgo);
   return (antesDeIsr * (1 - ISR)) / sinIva;
 }
 
-/** Créditos máximos que puede incluir un precio (MXN con IVA) sin bajar de la utilidad objetivo. */
-export function creditosMaximos(precio: number): number {
+/** Créditos máximos que puede incluir un precio (MXN con IVA) con un riesgo, sin bajar de la utilidad pedida. */
+export function creditosMaximos(precio: number, riesgo: number = MARGEN_RIESGO, utilidadMinima: number = UTILIDAD_OBJETIVO): number {
   const sinIva = precio / (1 + IVA);
-  return Math.floor((sinIva * (1 - OPERACION - UTILIDAD_OBJETIVO / (1 - ISR))) / costoCreditoMXN());
+  return Math.floor((sinIva * (1 - OPERACION - utilidadMinima / (1 - ISR))) / costoCreditoMXN(riesgo));
 }
 
 export const PLANES: Plan[] = [
@@ -84,6 +93,8 @@ export const PLANES: Plan[] = [
     lema: "Para un profesor con un grupo: todo un parcial calificado",
     precio: 215,
     creditos: 210,
+    riesgo: 0.2,
+    utilidad: 0.35,
     periodo: "pago único por 210 créditos",
     boton: { texto: "Elegir Básico", href: "/profesor/creditos" },
     incluye: "Todo lo de Gratuito, más:",
@@ -101,13 +112,15 @@ export const PLANES: Plan[] = [
     nombre: "Pro",
     lema: "Para un profesor con dos o tres grupos",
     precio: 345,
-    creditos: 350,
-    periodo: "pago único por 350 créditos",
+    creditos: 460,
+    riesgo: 0.1,
+    utilidad: 0.31,
+    periodo: "pago único por 460 créditos",
     boton: { texto: "Elegir Pro", href: "/profesor/creditos" },
     destacado: true,
     incluye: "Todo lo de Básico, más:",
     ventajas: [
-      "350 créditos",
+      "460 créditos",
       "Dos o tres grupos durante un parcial",
       "Recomendaciones de estudio con videos y lecturas para cada alumno",
       "Cuaderno de calificaciones del curso",
@@ -119,12 +132,14 @@ export const PLANES: Plan[] = [
     nombre: "Academia",
     lema: "Para todo el semestre o una academia: el mejor precio por página",
     precio: 635,
-    creditos: 640,
-    periodo: "pago único por 640 créditos",
+    creditos: 1000,
+    riesgo: 0.05,
+    utilidad: 0.28,
+    periodo: "pago único por 1,000 créditos",
     boton: { texto: "Elegir Academia", href: "/profesor/creditos" },
     incluye: "Todo lo de Pro, más:",
     ventajas: [
-      "640 créditos",
+      "1,000 créditos",
       "Varios grupos durante todo el semestre o tetramestre",
       "Margen para usar el nivel Avanzado en exámenes",
       "Reportes por alumno y por grupo durante todo el curso",
