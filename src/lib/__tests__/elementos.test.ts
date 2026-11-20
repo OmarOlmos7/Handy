@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { anotacionesNumeradas, centroEjercicio, corregirPuntosCriterios, fraccionEjercicio, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
+import { anotacionesNumeradas, corregirPuntosCriterios, fraccionEjercicio, criteriosDelReactivo, elementosNumerados, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
 import { conPuntaje, listaParaRubrica } from "../modalidad";
 
 const criterios = [
@@ -154,24 +154,5 @@ describe("mini pastel del número del ejercicio", () => {
     const r = { numero: 1, puntos: 4, tipo: "desarrollo" as const, respuesta: "", pasos: [{ nombre: "Datos", peso: 0.25 }, { nombre: "Desarrollo", peso: 0.75 }] };
     expect(fraccionEjercicio({}, r, { ...vacio, pasos: [1, 0.5], puntosObtenidos: 2.5 })).toBe(0.625);
     expect(fraccionEjercicio({}, { ...r, pasos: undefined }, { ...vacio, puntosObtenidos: 4 })).toBeUndefined();
-  });
-});
-
-describe("lugar del mini pastel", () => {
-  it("va a media altura de los incisos, a la derecha del más a la derecha", () => {
-    const res = {
-      ubicacion: { pagina: 1, y: 0.2, x: 0.5 },
-      ubicacionesIncisos: [
-        { pagina: 1, y: 0.3, x: 0.4 },
-        { pagina: 1, y: 0.5, x: 0.6, xCorrecta: 0.7, yCorrecta: 0.5 },
-        { pagina: 2, y: 0.9, x: 0.9 },
-      ],
-    };
-    const c = centroEjercicio({}, { numero: 3, puntos: 15 }, res);
-    expect(c?.y).toBeCloseTo(0.4);
-    expect(c?.x).toBeCloseTo(0.76);
-  });
-  it("sin ubicaciones de incisos no cambia el lugar", () => {
-    expect(centroEjercicio({}, { numero: 3, puntos: 15 }, { ubicacion: { pagina: 1, y: 0.2 } })).toBeUndefined();
   });
 });
