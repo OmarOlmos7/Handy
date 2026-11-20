@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { esCerrado, puntosReactivoCerrado } from "../calificar";
+import { esCerrado, incisosCerrado, puntosReactivoCerrado } from "../calificar";
 import type { Reactivo } from "../tipos";
 
 const base: Reactivo = {
@@ -43,5 +43,23 @@ describe("reactivos cerrados", () => {
     const r: Reactivo = { ...base, tipo: "desarrollo" };
     expect(puntosReactivoCerrado(r, "algo")).toBeNull();
     expect(esCerrado(r)).toBe(false);
+  });
+});
+
+describe("aciertos por renglón de un cerrado", () => {
+  it("relación de columnas: cada renglón con su letra correcta", () => {
+    const r = { tipo: "relacion_columnas", respuesta: "1-e, 2-g, 3-a, 4-f, 5-b" } as const;
+    expect(incisosCerrado(r, "1-e, 2-c, 3-a, 4-f, 5-d")).toEqual([
+      { correcto: true, correcta: "e" },
+      { correcto: false, correcta: "g" },
+      { correcto: true, correcta: "a" },
+      { correcto: true, correcta: "f" },
+      { correcto: false, correcta: "b" },
+    ]);
+  });
+  it("opción múltiple y V/F: una sola respuesta", () => {
+    expect(incisosCerrado({ tipo: "opcion_multiple", respuesta: "c) m/s²" }, "b")).toEqual([{ correcto: false, correcta: "c" }]);
+    expect(incisosCerrado({ tipo: "verdadero_falso", respuesta: "F" }, "F")).toEqual([{ correcto: true, correcta: "F" }]);
+    expect(incisosCerrado({ tipo: "desarrollo", respuesta: "5" }, "5")).toEqual([]);
   });
 });

@@ -58,3 +58,37 @@ export function puntosReactivoCerrado(r: Reactivo, leida: string): number | null
 export function esCerrado(r: Reactivo) {
   return r.tipo !== "desarrollo" && r.tipo !== "abierto";
 }
+
+export interface IncisoCerrado {
+  correcto: boolean;
+  /** Respuesta correcta de ese renglón, para escribirla junto al tache ("c", "V"). */
+  correcta: string;
+}
+
+/**
+ * Acierto de cada respuesta de un reactivo cerrado, en el orden de la clave: un renglón por
+ * relación o paréntesis; uno solo para opción múltiple y verdadero/falso. Mismo criterio que
+ * `puntosReactivoCerrado`.
+ */
+export function incisosCerrado(r: Pick<Reactivo, "tipo" | "respuesta">, leida: string): IncisoCerrado[] {
+  switch (r.tipo) {
+    case "verdadero_falso":
+    case "opcion_multiple": {
+      const clave = opcion(r.respuesta);
+      const correcta = r.tipo === "verdadero_falso" ? clave.toUpperCase() : clave;
+      return [{ correcto: Boolean(leida.trim()) && opcion(leida) === clave, correcta }];
+    }
+    case "relacion_columnas":
+    case "parentesis": {
+      const clave = pares(r.respuesta);
+      const alumno = leida.trim() ? pares(leida) : [];
+      if (clave.length === 0) return [{ correcto: Boolean(leida.trim()) && limpiar(leida) === limpiar(r.respuesta), correcta: r.respuesta.trim() }];
+      return clave.map((c, i) => ({
+        correcto: r.tipo === "parentesis" ? alumno[i] === c : alumno.includes(c),
+        correcta: c.replace(/^\d+/, ""),
+      }));
+    }
+    default:
+      return [];
+  }
+}

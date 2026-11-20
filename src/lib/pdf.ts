@@ -14,6 +14,7 @@ import { fuentesPdf, renglones } from "./pdf-fuentes";
 import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
 import { fechaHoraLarga } from "./resultados";
+import { esCerrado, incisosCerrado } from "./calificar";
 import { elementosNumerados, puntosTexto } from "./elementos";
 import { conPuntaje } from "./modalidad";
 import { texAPlano } from "./tex-plano";
@@ -190,6 +191,24 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       }
     }
 
+    // Cerrados con varios renglones: paloma verde a la derecha de cada respuesta correcta; tache
+    // rojo y la letra correcta en rojo junto a cada incorrecta.
+    for (const res of entrega.resultados) {
+      const r = actividad.reactivos.find((x) => x.numero === res.numero);
+      if (!r || !esCerrado(r) || !res.ubicacionesIncisos?.length) continue;
+      for (const [j, inc] of incisosCerrado(r, res.respuestaLeida).entries()) {
+        const u = res.ubicacionesIncisos[j];
+        if (!u || u.pagina !== i + 1) continue;
+        const xi = x0 + Math.min(ancho - 30, Math.max(4, ancho * u.x + 3));
+        const yi = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, u.y)));
+        if (inc.correcto) paloma(hoja, xi, yi - 4, 0.55);
+        else {
+          tache(hoja, xi + 5, yi, 0.5);
+          hoja.drawText(seguro(negrita, inc.correcta), { x: xi + 12, y: yi - 4, size: 11, font: negrita, color: ROJO });
+        }
+      }
+    }
+
     for (const [k, { res, r, completo, lineas, elementos }] of bloques.entries()) {
       const color = completo ? VERDE : ROJO;
 
@@ -198,7 +217,14 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
       const yc = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, res.ubicacion?.y ?? 0.5)));
       circuloNumero(hoja, negrita, r.numero, xc, yc, color);
       if (completo) paloma(hoja, xc + 11, yc - 4, 0.6);
-      else tache(hoja, xc + 17, yc, 0.6);
+      else {
+        tache(hoja, xc + 17, yc, 0.6);
+        // Opción múltiple o V/F mal contestada: la respuesta correcta junto al tache.
+        const unico = esCerrado(r) ? incisosCerrado(r, res.respuestaLeida) : [];
+        if (unico.length === 1 && !unico[0].correcto) {
+          hoja.drawText(seguro(negrita, unico[0].correcta), { x: xc + 27, y: yc - 4, size: 11, font: negrita, color: ROJO });
+        }
+      }
 
       // Comentario en su columna, en orden de arriba hacia abajo.
       const xCol = xMargen + lugares[k].columna * COLUMNA;
