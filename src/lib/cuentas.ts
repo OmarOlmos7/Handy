@@ -1,5 +1,6 @@
 // Cuentas de profesor y separación de datos por profesor. Funciones puras (sin
 // cookies ni disco) para poder probarlas; la sesión vive en sesion.ts.
+import { corregirPuntosCriterios } from "./elementos";
 import crypto from "node:crypto";
 import type { Alumno, BaseDeDatos, CuentaAlumno, Grupo } from "./tipos";
 
@@ -112,6 +113,12 @@ export function migrar(db: BaseDeDatos): BaseDeDatos {
   }
   // Las entregas ya evaluadas se liberan solas: las que esperaban aprobación quedan liberadas.
   for (const e of db.entregas ?? []) if (e.estado === "evaluada") e.estado = "aprobada";
+  // Puntos de abiertos calificados con criterios de otros ejercicios: se recalculan con los suyos.
+  const actividades = new Map((db.actividades ?? []).map((a) => [a.id, a]));
+  for (const e of db.entregas ?? []) {
+    const act = actividades.get(e.actividadId);
+    if (act?.criterios?.length) for (const res of e.resultados ?? []) corregirPuntosCriterios(act, res);
+  }
   db.version = 3;
   return db;
 }

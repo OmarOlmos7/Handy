@@ -83,3 +83,27 @@ export function fraccionCriterios(actividad: Pick<Actividad, "criterios">, valor
   const w = pesos(lista);
   return lista.reduce((s, { indice }, j) => s + w[j] * (valores[indice] ?? 0), 0);
 }
+
+const cuartos = (n: number) => Math.round(n * 4) / 4;
+
+/**
+ * Antes, un reactivo abierto se calificaba con todos los criterios de la actividad (también los
+ * de otros ejercicios, que valían 0 y le bajaban los puntos). Si los puntos guardados son justo
+ * los de esa fórmula vieja (no los cambió el profesor), se recalculan solo con los criterios del
+ * reactivo, con los mismos valores que ya dio la evaluación: no hace falta volver a evaluar.
+ * Devuelve true si cambió algo.
+ */
+export function corregirPuntosCriterios(actividad: Pick<Actividad, "criterios" | "reactivos">, res: ResultadoReactivo) {
+  const criterios = actividad.criterios ?? [];
+  const r = actividad.reactivos.find((x) => x.numero === res.numero);
+  if (!r || r.tipo !== "abierto" || !res.criterios?.length || !criterios.length) return false;
+  const propios = criteriosDelReactivo(actividad, r.numero);
+  if (!propios.length || propios.length === criterios.length) return false;
+  const suma = criterios.reduce((s, c) => s + (c.porcentaje || 0), 0);
+  const vieja = criterios.reduce((s, c, i) => s + (suma > 0 ? (c.porcentaje || 0) / suma : 1 / criterios.length) * (res.criterios?.[i] ?? 0), 0);
+  if (res.puntosObtenidos !== cuartos(vieja * r.puntos)) return false;
+  const nuevos = cuartos((fraccionCriterios(actividad, res.criterios, r.numero) ?? 0) * r.puntos);
+  if (nuevos === res.puntosObtenidos) return false;
+  res.puntosObtenidos = nuevos;
+  return true;
+}
