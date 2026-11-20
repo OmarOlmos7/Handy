@@ -29,6 +29,9 @@ export default async function Ingresar({ searchParams }: PageProps<"/ingresar">)
         <label className="block text-sm">
           <span className="font-medium text-slate-700">{c.contrasena}</span>
           <input name="contrasena" type="password" required autoComplete="current-password" className={campoCuenta} />
+          <Link href="/recuperar" className="mt-1 inline-block text-xs font-medium text-tinta-700 hover:underline">
+            {t.recuperar.olvideProfesor}
+          </Link>
         </label>
         <Boton type="submit" className="w-full">
           {t.comun.ingresar}

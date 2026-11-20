@@ -341,6 +341,14 @@ export interface CuentaAlumno {
 }
 
 /** Sesión abierta. Se guarda solo el hash SHA-256 del token de la cookie. */
+/** Enlace para recuperar la contraseña. Se guarda solo el hash SHA-256 del token del correo. */
+export interface Recuperacion {
+  hash: string;
+  tipo: "profesor" | "alumno";
+  cuentaId: string;
+  vence: string;
+}
+
 export interface Sesion {
   token: string;
   expira: string;
@@ -373,6 +381,8 @@ export interface BaseDeDatos {
   profesores: Profesor[];
   cuentasAlumno: CuentaAlumno[];
   sesiones: Sesion[];
+  /** Enlaces vigentes para recuperar la contraseña. */
+  recuperaciones?: Recuperacion[];
   grupos: Grupo[];
   actividades: Actividad[];
   entregas: Entrega[];

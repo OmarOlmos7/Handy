@@ -188,6 +188,29 @@ Si todo eso funciona, la plataforma ya está en línea.
   eso se crea su registro en el curso. Para ver sus reportes aprobados entran a
   `/alumno` con el ID de curso y su matrícula.
 - Las contraseñas se guardan cifradas (scrypt) y la sesión dura 30 días.
+- **Recuperar contraseña:** en ingresar, registro, el acceso del alumno y la
+  pantalla de entrega hay un enlace "¿Olvidaste tu contraseña?" (o "clave de
+  acceso"). Manda al correo registrado un enlace que vale 1 hora y se usa una
+  sola vez; al cambiarla se cierran las sesiones abiertas de esa cuenta.
+
+### Configurar el correo de recuperación
+
+1. En hPanel → **Correos**, crea un buzón del dominio, por ejemplo
+   `no-responder@ieureka-grader.com`, con su propia contraseña.
+2. En el VPS, edita `/opt/retroalimenta/.env` y agrega (la contraseña la
+   escribes solo ahí, nunca en el chat ni en GitHub):
+
+   ```
+   SMTP_HOST=smtp.hostinger.com
+   SMTP_PUERTO=465
+   SMTP_USUARIO=no-responder@ieureka-grader.com
+   SMTP_CONTRASENA=la-contraseña-del-buzón
+   ```
+
+3. Corre `docker compose up -d --build`.
+
+Mientras no esté configurado, la pantalla de recuperar avisa que el envío de
+correos todavía no está listo.
 
 Límite actual: cualquiera que conozca el ID de curso y una matrícula puede ver
 los reportes aprobados de ese alumno. Para el piloto es aceptable si el ID de

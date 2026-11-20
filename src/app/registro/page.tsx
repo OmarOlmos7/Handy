@@ -53,6 +53,11 @@ export default async function Registro({ searchParams }: PageProps<"/registro">)
           {c.ingresa}
         </Link>
       </p>
+      <p className="mt-2 text-sm">
+        <Link href="/recuperar" className="font-medium text-tinta-700 hover:underline">
+          {t.recuperar.olvideProfesor}
+        </Link>
+      </p>
     </TarjetaCuenta>
   );
 }
