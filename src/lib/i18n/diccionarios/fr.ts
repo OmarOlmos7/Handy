@@ -267,11 +267,11 @@ const fr: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "Pour un enseignant avec deux ou trois classes",
-      periodo: "paiement unique pour 350 crédits",
+      periodo: "paiement unique pour 460 crédits",
       boton: "Choisir Pro",
       incluye: "Tout Basique, plus :",
       ventajas: [
-        "350 crédits",
+        "460 crédits",
         "Recommandations d'étude avec vidéos et lectures pour chaque élève",
         "Carnet de notes du cours",
       ],
@@ -279,11 +279,11 @@ const fr: Diccionario = {
     academia: {
       nombre: "Académie",
       lema: "Pour tout le semestre ou une équipe : le meilleur prix par page",
-      periodo: "paiement unique pour 640 crédits",
+      periodo: "paiement unique pour 1 000 crédits",
       boton: "Choisir Académie",
       incluye: "Tout Pro, plus :",
       ventajas: [
-        "640 crédits",
+        "1 000 crédits",
         "De la marge pour le niveau Avancé aux examens",
         "Rapports par élève et par classe tout au long du cours",
       ],

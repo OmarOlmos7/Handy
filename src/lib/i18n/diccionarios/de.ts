@@ -267,11 +267,11 @@ const de: Diccionario = {
     pro: {
       nombre: "Pro",
       lema: "Für eine Lehrkraft mit zwei oder drei Klassen",
-      periodo: "Einmalzahlung für 350 Credits",
+      periodo: "Einmalzahlung für 460 Credits",
       boton: "Pro wählen",
       incluye: "Alles aus Basis, plus:",
       ventajas: [
-        "350 Credits",
+        "460 Credits",
         "Lernempfehlungen mit Videos und Texten für jede/n Schüler/in",
         "Notenbuch des Kurses",
       ],
@@ -279,11 +279,11 @@ const de: Diccionario = {
     academia: {
       nombre: "Akademie",
       lema: "Für ein ganzes Semester oder eine Fachschaft: der beste Preis pro Seite",
-      periodo: "Einmalzahlung für 640 Credits",
+      periodo: "Einmalzahlung für 1.000 Credits",
       boton: "Akademie wählen",
       incluye: "Alles aus Pro, plus:",
       ventajas: [
-        "640 Credits",
+        "1.000 Credits",
         "Spielraum für die Stufe Fortgeschritten bei Prüfungen",
         "Berichte pro Schüler/in und Klasse das ganze Semester",
       ],
