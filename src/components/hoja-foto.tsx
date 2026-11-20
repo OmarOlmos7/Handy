@@ -7,7 +7,7 @@ import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 import { useLayoutEffect, useRef } from "react";
 import type { Actividad, Entrega } from "@/lib/tipos";
-import { anotacionesNumeradas, centroEjercicio, fraccionEjercicio, puntosTexto } from "@/lib/elementos";
+import { anotacionesNumeradas, fraccionEjercicio, puntosTexto } from "@/lib/elementos";
 import { esCerrado, incisosCerrado } from "@/lib/calificar";
 import { conPuntaje } from "@/lib/modalidad";
 
@@ -74,18 +74,17 @@ export function HojaFoto({
           const r = actividad.reactivos.find((x) => x.numero === res.numero);
           if (!r) return null;
           const completo = res.puntosObtenidos >= r.puntos;
-          // Con varios incisos, el pastel va a media altura de todos ellos.
-          const fraccion = fraccionEjercicio(actividad, r, res);
-          const centro = fraccion === undefined ? undefined : centroEjercicio(actividad, r, res);
-          const x = Math.min(0.92, Math.max(0.02, centro?.x ?? res.ubicacion?.x ?? 0.9));
-          const y = Math.min(0.98, Math.max(0.02, centro?.y ?? res.ubicacion?.y ?? 0.5));
+          // Con varios incisos, el pastel va solo en el costado: sobre la hoja ya están las marcas de cada inciso.
+          if (fraccionEjercicio(actividad, r, res) !== undefined) return null;
+          const x = Math.min(0.94, Math.max(0.02, res.ubicacion?.x ?? 0.9));
+          const y = Math.min(0.98, Math.max(0.02, res.ubicacion?.y ?? 0.5));
           return (
             <span
               key={res.numero}
               className={`absolute ml-2 flex -translate-y-1/2 items-center gap-0.5 ${completo ? "text-acierto" : "text-error"}`}
               style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
             >
-              <Numero n={res.numero} completo={completo} fraccion={fraccion} />
+              <Numero n={res.numero} completo={completo} />
               <span className="text-base font-bold leading-none drop-shadow-[0_0_2px_white]">
                 {completo ? "✓" : "✗"}
               </span>

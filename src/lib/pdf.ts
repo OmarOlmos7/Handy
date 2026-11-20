@@ -15,7 +15,7 @@ import { pdfEstudio } from "./pdf-estudio";
 import { recursosParaTemas } from "./recursos";
 import { fechaHoraLarga } from "./resultados";
 import { esCerrado, incisosCerrado } from "./calificar";
-import { anotacionesNumeradas, centroEjercicio, fraccionEjercicio, puntosTexto } from "./elementos";
+import { anotacionesNumeradas, fraccionEjercicio, puntosTexto } from "./elementos";
 import { conPuntaje } from "./modalidad";
 import { texAPlano } from "./tex-plano";
 import type { Actividad, Alumno, Entrega, Grupo, RecomendacionesEstudio } from "./tipos";
@@ -247,22 +247,22 @@ async function dibujarHojas(doc: PDFDocument, actividad: Actividad, entrega: Ent
     for (const [k, { res, r, completo, lineas, elementos }] of bloques.entries()) {
       const color = completo ? VERDE : ROJO;
 
-      // Marca sobre la hoja del alumno, donde está su respuesta.
-      // Con varios incisos, el pastel va a media altura de todos ellos.
+      // Con varios incisos, el pastel va solo en el costado: sobre la hoja ya están las marcas de cada inciso.
       const fraccion = fraccionEjercicio(actividad, r, res);
-      const centro = fraccion === undefined ? undefined : centroEjercicio(actividad, r, res);
-      const xc = x0 + Math.min(ancho - 34, Math.max(10, ancho * (centro?.x ?? res.ubicacion?.x ?? 0.9) + 10)); // justo después de la respuesta
-      const yc = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, centro?.y ?? res.ubicacion?.y ?? 0.5)));
       const d = fraccion === undefined ? 0 : RADIO_PASTEL - 7.5; // espacio extra del pastel
-      if (fraccion === undefined) circuloNumero(hoja, negrita, r.numero, xc, yc, color);
-      else circuloPastel(hoja, negrita, r.numero, xc + d, yc, fraccion);
-      if (completo) paloma(hoja, xc + 11 + 2 * d, yc - 4, 0.6);
-      else {
-        tache(hoja, xc + 17 + 2 * d, yc, 0.6);
-        // Opción múltiple o V/F mal contestada: la respuesta correcta junto al tache.
-        const unico = esCerrado(r) ? incisosCerrado(r, res.respuestaLeida) : [];
-        if (unico.length === 1 && !unico[0].correcto) {
-          hoja.drawText(seguro(negrita, unico[0].correcta), { x: xc + 27 + 2 * d, y: yc - 4, size: 11, font: negrita, color: ROJO });
+      if (fraccion === undefined) {
+        // Marca sobre la hoja del alumno, justo después de su respuesta.
+        const xc = x0 + Math.min(ancho - 34, Math.max(10, ancho * (res.ubicacion?.x ?? 0.9) + 10));
+        const yc = y0 + alto * (1 - Math.min(0.98, Math.max(0.02, res.ubicacion?.y ?? 0.5)));
+        circuloNumero(hoja, negrita, r.numero, xc, yc, color);
+        if (completo) paloma(hoja, xc + 11, yc - 4, 0.6);
+        else {
+          tache(hoja, xc + 17, yc, 0.6);
+          // Opción múltiple o V/F mal contestada: la respuesta correcta junto al tache.
+          const unico = esCerrado(r) ? incisosCerrado(r, res.respuestaLeida) : [];
+          if (unico.length === 1 && !unico[0].correcto) {
+            hoja.drawText(seguro(negrita, unico[0].correcta), { x: xc + 27, y: yc - 4, size: 11, font: negrita, color: ROJO });
+          }
         }
       }
 
