@@ -3,8 +3,13 @@
 import crypto from "node:crypto";
 import { redirect } from "next/navigation";
 import { leer, modificar } from "@/lib/almacen";
-import { adoptarSinDueno, hashContrasena, normalizarCorreo, verificarContrasena } from "@/lib/cuentas";
-import { crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
+import { adoptarSinDueno, correoValido, cuentaAlumnoPorCorreo, hashContrasena, normalizarCorreo, verificarContrasena } from "@/lib/cuentas";
+import { LARGO_MINIMO_CLAVE, crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
+import { correoConfigurado, enviarCorreo } from "@/lib/correo";
+import { formato } from "@/lib/i18n/idiomas";
+import { textos } from "@/lib/i18n/servidor";
+import { urlBase } from "@/lib/qr";
+import { buscarRecuperacion, crearRecuperacion, usarRecuperacion } from "@/lib/recuperacion";
 import { cerrarSesionAlumno, cerrarSesionProfesor, iniciarSesionAlumno, iniciarSesionProfesor } from "@/lib/sesion";
 
 const CREDITOS_INICIALES = Number(process.env.CREDITOS_INICIALES ?? 50);
@@ -89,4 +94,62 @@ export async function registrarAlumno(form: FormData) {
 export async function salirAlumno() {
   await cerrarSesionAlumno();
   redirect("/alumno");
+}
+
+/** Largo mínimo de la contraseña (profesor) o de la clave de acceso (alumno). */
+const LARGO_MINIMO = { profesor: 8, alumno: LARGO_MINIMO_CLAVE } as const;
+
+/** Solo se vuelve a la página de entrega de una actividad (nunca a otro sitio). */
+function volverSeguro(v: FormDataEntryValue | null): string {
+  const ruta = String(v ?? "");
+  return /^\/entregar\/[\w-]+$/.test(ruta) ? ruta : "";
+}
+
+/**
+ * Envía al correo registrado un enlace para crear una nueva contraseña (profesor) o clave de
+ * acceso (alumno). La respuesta es la misma exista o no la cuenta.
+ */
+export async function solicitarRecuperacion(form: FormData) {
+  const tipo = form.get("tipo") === "alumno" ? "alumno" : "profesor";
+  const volver = volverSeguro(form.get("volver"));
+  const base = `/recuperar?tipo=${tipo}${volver ? `&volver=${encodeURIComponent(volver)}` : ""}`;
+  const correo = normalizarCorreo(String(form.get("correo") ?? ""));
+  if (!correoValido(correo)) redirect(`${base}&error=correo`);
+  if (!correoConfigurado()) redirect(`${base}&error=sinCorreo`);
+
+  const db = await leer();
+  const cuenta = tipo === "profesor" ? db.profesores.find((p) => p.correo === correo) : cuentaAlumnoPorCorreo(db, correo);
+  if (cuenta) {
+    const token = modificar((d) => crearRecuperacion(d, tipo, cuenta.id));
+    if (token) {
+      const { t } = await textos();
+      const tr = t.recuperar;
+      const enlace = `${await urlBase()}/restablecer?t=${encodeURIComponent(token)}${volver ? `&volver=${encodeURIComponent(volver)}` : ""}`;
+      const nombre = cuenta.nombre.split(" ")[0] || cuenta.nombre;
+      let fallo = false;
+      try {
+        await enviarCorreo(cuenta.correo, tr.asunto, formato(tr.cuerpo, { nombre, que: tr[tipo].que, enlace }));
+      } catch (e) {
+        console.error("No se pudo enviar el correo de recuperación:", e instanceof Error ? e.message : e);
+        fallo = true;
+      }
+      if (fallo) redirect(`${base}&error=envio`);
+    }
+  }
+  redirect(`${base}&enviado=1`);
+}
+
+/** Guarda la nueva contraseña o clave con el enlace del correo. */
+export async function restablecerContrasena(form: FormData) {
+  const token = String(form.get("t") ?? "");
+  const volver = volverSeguro(form.get("volver"));
+  const nueva = String(form.get("nueva") ?? "");
+  const pagina = `/restablecer?t=${encodeURIComponent(token)}${volver ? `&volver=${encodeURIComponent(volver)}` : ""}`;
+  const r = buscarRecuperacion(await leer(), token);
+  if (!r) redirect(`${pagina}&error=enlaceInvalido`);
+  if (nueva.length < LARGO_MINIMO[r.tipo]) redirect(`${pagina}&error=corta`);
+  if (nueva !== String(form.get("nueva2") ?? "")) redirect(`${pagina}&error=distintas`);
+  const tipo = modificar((db) => usarRecuperacion(db, token, hashContrasena(nueva)));
+  if (!tipo) redirect(`${pagina}&error=enlaceInvalido`);
+  redirect(`/restablecer?listo=${tipo}${volver ? `&volver=${encodeURIComponent(volver)}` : ""}`);
 }

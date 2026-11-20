@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formato } from "@/lib/i18n/idiomas";
@@ -299,6 +300,14 @@ export function EntregarForm({
               <p className="mt-2 text-xs text-slate-500">
                 {cuenta === "crear" ? tf.ayudaCrear : tf.ayudaEntrar}
               </p>
+              {cuenta === "entrar" && (
+                <Link
+                  href={`/recuperar?tipo=alumno&volver=${encodeURIComponent(`/entregar/${actividadId}`)}`}
+                  className="mt-1 inline-block text-xs font-medium text-tinta-700 hover:underline"
+                >
+                  {t.recuperar.olvideAlumno}
+                </Link>
+              )}
             </>
           )}
         </div>

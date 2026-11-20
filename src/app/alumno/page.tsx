@@ -74,6 +74,9 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
             <label className="block text-sm font-medium text-slate-700">
               {tc.clave}
               <input name="clave" type="password" required autoComplete="current-password" className={campo} />
+              <Link href="/recuperar?tipo=alumno" className="mt-1 inline-block text-xs font-medium text-tinta-700 hover:underline">
+                {t.recuperar.olvideAlumno}
+              </Link>
             </label>
             {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{errorAlumno(t, error)}</p>}
             <Boton type="submit" className="w-full">
