@@ -1,6 +1,6 @@
 // Puntos por elemento de la rúbrica de un reactivo: los pasos de un desarrollo o los criterios
 // de evaluación de un reactivo abierto. Los calcula el código con lo que marcó la IA.
-import type { Actividad, CriterioEvaluacion, Reactivo, ResultadoReactivo } from "./tipos";
+import type { Actividad, CriterioEvaluacion, Reactivo, ResultadoReactivo, Subrayado, UbicacionElemento } from "./tipos";
 
 export interface PuntosElemento {
   nombre: string;
@@ -129,4 +129,44 @@ export function elementosNumerados(
     );
   }
   return lista.map((e, k) => ({ ...e, numeral: `${r.numero}.${k + 1}` }));
+}
+
+/** Una anotación numerada del margen: un error subrayado o un elemento de la rúbrica con sus puntos. */
+export interface AnotacionNumerada {
+  numeral: string;
+  nombre: string;
+  ok: boolean;
+  /** Puntos del elemento de la rúbrica (los subrayados no llevan). */
+  puntos?: { obtenidos: number; total: number };
+  /** Dónde va el numeral de un elemento sobre la hoja. */
+  ubicacion?: UbicacionElemento;
+  /** Error subrayado sobre la hoja: el numeral va a su izquierda. */
+  subrayado?: Subrayado;
+}
+
+/**
+ * Anotaciones del reactivo numeradas en forma consecutiva (1.1, 1.2…). Primero los errores
+ * subrayados, en orden de lectura sobre la hoja; después los elementos de la rúbrica con sus
+ * puntos. Si hay subrayados, los elementos son generales: van solo en el margen (sin numeral
+ * sobre la hoja), en verde los que se cumplen.
+ */
+export function anotacionesNumeradas(
+  actividad: Pick<Actividad, "criterios">,
+  r: Pick<Reactivo, "numero" | "puntos" | "pasos">,
+  res: Pick<ResultadoReactivo, "pasos" | "criterios" | "ubicacionesElementos" | "subrayados">,
+): AnotacionNumerada[] {
+  const subrayados = (res.subrayados ?? [])
+    .filter((s) => s.comentario.trim())
+    .slice()
+    .sort((a, b) => a.pagina - b.pagina || (Math.abs(a.y - b.y) < 0.015 ? 0 : a.y - b.y) || a.x0 - b.x0);
+  const lista: Omit<AnotacionNumerada, "numeral">[] = [
+    ...subrayados.map((s) => ({ nombre: s.comentario.trim(), ok: false, subrayado: s })),
+    ...elementosNumerados(actividad, r, res).map((el) => ({
+      nombre: el.nombre,
+      ok: el.obtenidos >= el.total,
+      puntos: { obtenidos: el.obtenidos, total: el.total },
+      ubicacion: subrayados.length ? undefined : el.ubicacion,
+    })),
+  ];
+  return lista.map((a, k) => ({ ...a, numeral: `${r.numero}.${k + 1}` }));
 }
