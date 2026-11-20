@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { criteriosDelReactivo, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
+import { corregirPuntosCriterios, criteriosDelReactivo, fraccionCriterios, puntosPorElemento, reactivosDelCriterio } from "../elementos";
 import { conPuntaje, listaParaRubrica } from "../modalidad";
 
 const criterios = [
@@ -54,6 +54,30 @@ describe("criterios por reactivo", () => {
       { nombre: "Exercice 1 : Cohérence", total: 17.5, obtenidos: 8.75 },
       { nombre: "Ortografía", total: 0, obtenidos: 0 },
     ]);
+  });
+});
+
+describe("puntos guardados con criterios de otros ejercicios", () => {
+  // Caso de la actividad de francés: el ejercicio 1 vale 70 y sus criterios suman 70 de 100 %.
+  const criterios = [
+    { nombre: "Exercice 1 : Verbes", porcentaje: 40, descripcion: "" },
+    { nombre: "Exercice 1 : Cohérence", porcentaje: 30, descripcion: "" },
+    { nombre: "Exercice 2 : L'heure", porcentaje: 15, descripcion: "" },
+    { nombre: "Exercice 3 : Adjectifs", porcentaje: 15, descripcion: "" },
+  ];
+  const actividad = { criterios, reactivos: [{ numero: 1, tipo: "abierto", puntos: 70 }] } as never;
+  it("recalcula si los puntos son los de la fórmula vieja", () => {
+    // Vieja: (40 + 15) / 100 × 70 = 38.5. Nueva: (40 + 15) / 70 × 70 = 55.
+    const res = { numero: 1, puntosObtenidos: 38.5, criterios: [1, 0.5, 0, 0] } as never as { puntosObtenidos: number };
+    expect(corregirPuntosCriterios(actividad, res as never)).toBe(true);
+    expect(res.puntosObtenidos).toBe(55);
+    // Ya corregido, no vuelve a cambiar.
+    expect(corregirPuntosCriterios(actividad, res as never)).toBe(false);
+  });
+  it("respeta los puntos que cambió el profesor", () => {
+    const res = { numero: 1, puntosObtenidos: 50, criterios: [1, 0.5, 0, 0] } as never as { puntosObtenidos: number };
+    expect(corregirPuntosCriterios(actividad, res as never)).toBe(false);
+    expect(res.puntosObtenidos).toBe(50);
   });
 });
 
