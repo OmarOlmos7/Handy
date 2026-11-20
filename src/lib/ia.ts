@@ -190,7 +190,7 @@ Para cada reactivo, en el orden en que aparece:
 - numero: el número del reactivo tal como está en la hoja.
 - tipo: verdadero_falso, opcion_multiple, relacion_columnas, parentesis, desarrollo (problemas matemáticos, algoritmos o procedimientos) o abierto (ensayo, explicación, dibujo o boceto).
 - enunciado: el texto impreso del reactivo, breve.
-- respuesta: la respuesta del profesor. Opción múltiple: la letra y el texto, como "c) m/s²". Verdadero o falso: "V" o "F". Relación de columnas: pares como "1-c, 2-a, 3-b". Paréntesis: las letras en orden, como "(b) (a) (c)". Desarrollo: el resultado final con unidades. Abierto: los criterios que debe cumplir la respuesta.
+- respuesta: la respuesta del profesor. Opción múltiple: la letra y el texto, como "c) m/s²". Verdadero o falso: "V" o "F". Relación de columnas: pares como "1-c, 2-a, 3-b". Paréntesis: las letras en orden, como "(b) (a) (c)". Elegir la palabra correcta de un conjunto en cada renglón: "1) palabra, 2) palabra", solo la correcta, sin marcas ni alternativas. Desarrollo: el resultado final con unidades. Abierto: los criterios que debe cumplir la respuesta.
 - puntos: el valor del reactivo si está escrito en la hoja; si no, 1 para cerrados, 2 para abiertos y 3 para desarrollos.
 - tema y habilidad: etiquetas cortas en español (tema de la materia; habilidad como "Comprensión de conceptos", "Resolución de problemas", "Interpretación de gráficas", "Comunicación escrita").
 - pagina (desde 1) e y: posición vertical aproximada del inicio del reactivo en esa página, de 0 (arriba) a 1 (abajo).
@@ -527,7 +527,7 @@ Para cada reactivo de la rúbrica:
 - elementos: si el reactivo trae "pasos" o "criterios" en la rúbrica, una ubicación por cada uno, en el mismo orden: pagina, y (0 arriba a 1 abajo) y x (0 izquierda a 1 derecha) del punto exacto de la hoja del alumno donde se ve ese paso o criterio (por ejemplo, el renglón con el ciclo for para "Uso de ciclos", o el renglón con el error). Si falta, señala dónde debería estar. Ahí se dibuja su marca. Para los demás, lista vacía.
 - incisos: solo para relación de columnas, paréntesis y reactivos de elegir la palabra correcta de un conjunto en cada renglón numerado (encerrar o subrayar): una ubicación por renglón, en orden (1, 2, 3…), con pagina, y (0 arriba a 1 abajo) y x (0 izquierda a 1 derecha). Si el alumno escribió una letra: justo a la derecha de esa letra. Si eligió una palabra: el centro de la palabra que eligió. xCorrecta, yCorrecta: el centro de la opción correcta de ese renglón según la respuesta de la rúbrica (si no hay opciones impresas, igual que x, y). Ahí se marca si acertó. Para los demás, lista vacía. En respuestaLeida de esos reactivos de elegir palabra, escribe cada renglón como "1) palabra, 2) palabra", con la palabra completa tal como la eligió.
 - puntosSugeridos: puntos que asignarías según la rúbrica (entre 0 y el valor del reactivo).
-- comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. Si es correcto, una frase de reconocimiento corta. Sin LaTeX ni signos de dólar: se imprime en el PDF tal cual.
+- comentario: retroalimentación breve para el alumno, en segunda persona, máximo 15 palabras. En reactivos cerrados con varios renglones no repitas las respuestas ni las opciones: ya se marcan sobre la hoja. Si es correcto, una frase de reconocimiento corta. Sin LaTeX ni signos de dólar: se imprime en el PDF tal cual.
 - pagina, y, x: dónde está la respuesta en la hoja del alumno (página desde 1; y de 0 arriba a 1 abajo; x de 0 izquierda a 1 derecha, al final de la respuesta). Ahí se dibuja la marca de corrección.
 
 Si el profesor dio criterios de evaluación con porcentajes o recomendaciones, síguelos al asignar puntos y al redactar los comentarios.
@@ -683,8 +683,11 @@ export async function evaluarEntrega(act: Actividad, imagenes: ImagenParaIA[], u
       respuestaLeida: ia.respuestaLeida,
       confianza: ia.confianza,
       // En cerrados el comentario debe coincidir con lo que calculó el código.
+      // Si tiene varios renglones, las respuestas ya se marcan sobre la hoja: no se repiten.
       comentario:
-        esCerrado(r) && puntos === 0
+        esCerrado(r) && puntos === 0 && nIncisos > 1
+          ? ia.comentario
+          : esCerrado(r) && puntos === 0
           ? formato(fijos.correcta, { r: r.respuesta })
           : esCerrado(r) && puntos === r.puntos
             ? fijos.correcto

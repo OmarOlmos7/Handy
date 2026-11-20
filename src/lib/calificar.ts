@@ -28,8 +28,10 @@ function pares(s: string) {
 }
 
 /** Palabra elegida, comparada sin mayúsculas ni signos alrededor (los acentos sí cuentan). */
-function palabra(s: string) {
-  return s
+function palabra(s: string, limpia = true) {
+  // La clave a veces trae marcas de corrección (✔, ✗) junto a la palabra: no son parte de ella.
+  const base = limpia ? s.replace(/[✔✓☑✗✘✕×]/g, " ") : s;
+  return base
     .normalize("NFC")
     .toLowerCase()
     .replace(/^[\s"'«»“”.()]+|[\s"'«»“”.()]+$/g, "")
@@ -41,8 +43,10 @@ function palabra(s: string) {
  * número → palabra. Solo si hay dos o más y alguna es más que una letra (si todas son letras,
  * es una relación de columnas o paréntesis y se califica por letra).
  */
-export function palabrasNumeradas(s: string): Map<number, string> | null {
-  const items = [...s.matchAll(/(?:^|[,;\n])\s*(\d+)\s*[).:\-–]\s*([^,;\n]+)/g)].map((m) => [Number(m[1]), palabra(m[2])] as const);
+export function palabrasNumeradas(s: string, limpia = true): Map<number, string> | null {
+  // Quita las alternativas entre paréntesis ("sportive ✔ (sportife ✗, sportie ✗)"), salvo "(1)".
+  const texto = limpia ? s.replace(/\((?!\s*\d+\s*\))[^()]*\)/g, " ") : s;
+  const items = [...texto.matchAll(/(?:^|[,;\n])\s*(\d+)\s*[).:\-–]\s*([^,;\n]+)/g)].map((m) => [Number(m[1]), palabra(m[2], limpia)] as const);
   if (items.length < 2 || !items.some(([, v]) => v.replace(/[^\p{L}\p{N}]/gu, "").length > 1)) return null;
   return new Map(items);
 }
@@ -147,7 +151,25 @@ export function corregirPuntosPalabras(r: Reactivo, res: { puntosObtenidos: numb
   if (!esCerrado(r) || !palabrasNumeradas(r.respuesta)) return false;
   const nuevos = puntosReactivoCerrado(r, res.respuestaLeida);
   if (nuevos === null || nuevos === res.puntosObtenidos) return false;
-  if (res.puntosObtenidos !== puntosCerradoPorLetra(r, res.respuestaLeida)) return false;
+  // Solo si los puntos guardados salieron de una fórmula anterior: por inicial, o por palabra sin
+  // limpiar la clave (con ✔, ✗ y alternativas entre paréntesis nada coincidía).
+  const crudaClave = palabrasNumeradas(r.respuesta, false);
+  const crudaAlumno = palabrasNumeradas(res.respuestaLeida, false) ?? new Map<number, string>();
+  const cruda = crudaClave ? Math.round(([...crudaClave].filter(([n, v]) => crudaAlumno.get(n) === v).length / crudaClave.size) * r.puntos * 4) / 4 : null;
+  if (res.puntosObtenidos !== puntosCerradoPorLetra(r, res.respuestaLeida) && res.puntosObtenidos !== cruda) return false;
   res.puntosObtenidos = nuevos;
+  return true;
+}
+
+/**
+ * En cerrados con varios renglones, el comentario "La respuesta correcta es …" repetía toda la
+ * clave, que ya se marca sobre la hoja. Si el comentario guardado la trae completa, se quita.
+ * Devuelve true si cambió algo.
+ */
+export function quitarClaveRepetida(r: Reactivo, res: { comentario: string; respuestaLeida: string }) {
+  const clave = r.respuesta.trim();
+  if (!esCerrado(r) || clave.length < 10 || incisosCerrado(r, res.respuestaLeida).length < 2) return false;
+  if (!res.comentario.includes(clave)) return false;
+  res.comentario = "";
   return true;
 }
