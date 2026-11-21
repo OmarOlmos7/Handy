@@ -100,16 +100,11 @@ const alumno: Diccionario["alumno"] = {
   },
   cuaderno: {
     titulo: "成績表",
-    subtitulo: "{curso}。成績がついた課題で未提出のものは0点として数えます（先生の成績表と同じ）。",
-    colActividad: "課題",
-    colCalificacion: "自分の成績",
-    colGrupo: "クラス平均",
-    colEstado: "状態",
+    subtitulo: "{curso} · {a} · 課題ごとの満点で表示。平均は{e}点満点です。",
     estados: { calificada: "採点済み", no_entregada: "未提出", pendiente: "確認中", sin_resultados: "結果はまだありません" },
     ajustada: "先生が調整しました",
-    promedioFinal: "コースの自分の平均",
     promedioGrupo: "クラス平均",
-    sobre: "{e}点満点",
+    ayuda: "採点済みの課題名をタップするとフィードバックを見られます。成績がついた課題で未提出のものは0点です。クラス平均は採点済みの生徒が{n}人以上で表示されます。",
     vacio: "このコースにはまだ表示できる成績がありません。",
   },
   campos: {

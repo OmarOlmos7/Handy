@@ -100,16 +100,11 @@ const alumno = {
   },
   cuaderno: {
     titulo: "Cuaderno de calificaciones",
-    subtitulo: "{curso}. Una actividad sin entregar cuenta como 0 cuando ya tiene calificaciones, igual que en el cuaderno de tu profesor.",
-    colActividad: "Actividad",
-    colCalificacion: "Mi calificación",
-    colGrupo: "Promedio del grupo",
-    colEstado: "Estado",
+    subtitulo: "{curso} · {a} · Cada actividad en su escala; tu promedio va sobre {e}.",
     estados: { calificada: "Calificada", no_entregada: "No entregada", pendiente: "En revisión", sin_resultados: "Sin resultados aún" },
     ajustada: "Ajustada por tu profesor",
-    promedioFinal: "Mi promedio del curso",
     promedioGrupo: "Promedio del grupo",
-    sobre: "sobre {e}",
+    ayuda: "Toca el nombre de una actividad calificada para ver su retroalimentación. Una actividad sin entregar cuenta como 0 cuando ya tiene calificaciones. El promedio del grupo aparece cuando hay {n} o más alumnos calificados.",
     vacio: "Aún no hay calificaciones visibles en este curso.",
   },
   campos: {
