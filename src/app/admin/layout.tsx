@@ -16,7 +16,7 @@ export default async function LayoutAdmin({ children }: LayoutProps<"/admin">) {
           { href: "/admin", texto: "Administración", exacto: true },
           { href: "/profesor", texto: "Mi panel de profesor" },
         ]}
-        usuario={{ nombre: admin.nombre, rol: "Administrador" }}
+        usuario={{ nombre: admin.nombre, tipo: t.barra.tipos.administrador, rol: admin.correo }}
         extra={
           <form action={salirProfesor}>
             <button type="submit" className="rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 hover:text-slate-800">

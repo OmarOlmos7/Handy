@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ingresarAlumno, registrarAlumno } from "@/app/acciones-cuenta";
-import { AceptarAvisos } from "@/components/aceptar-avisos";
-import { datosResponsable } from "@/lib/legal/documentos";
 import { InstalarApp } from "@/components/instalar-app";
-import { Boton, Encabezado, Insignia, campo, colorCalificacion, fechaLarga } from "@/components/ui";
+import { Encabezado, Insignia, colorCalificacion, fechaLarga } from "@/components/ui";
+import { FormIngresoAlumno, FormRegistroAlumno } from "@/components/formularios-alumno";
+import { SelectorPerfil } from "@/components/selector-perfil";
 import { leer } from "@/lib/almacen";
 import { calificacion, escalaDe, formatoCal } from "@/lib/estadisticas";
 import { conPuntaje } from "@/lib/modalidad";
-import { errorAlumno } from "@/lib/i18n/alumno";
 import { textosInstalar } from "@/lib/i18n/cuenta";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
@@ -25,7 +23,6 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
   const alumno = await alumnoActual();
   const { t, locale } = await textos();
   const tp = t.alumno.panel;
-  const tc = t.alumno.campos;
   if (!alumno) {
     const { error, crear } = await searchParams;
     const creando = crear === "1";
@@ -35,64 +32,11 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
           titulo={tp.titulo}
           subtitulo={creando ? tp.subtituloCrear : tp.subtituloEntrar}
         />
+        <SelectorPerfil actual="alumno" hrefProfesor="/ingresar" hrefAlumno="/alumno" t={t} />
         {creando ? (
-          <form action={registrarAlumno} className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <label className="block text-sm font-medium text-slate-700">
-              {tc.nombre}
-              <input name="nombre" required autoComplete="name" className={campo} placeholder={tc.nombreEjemplo} />
-            </label>
-            <label className="block text-sm font-medium text-slate-700">
-              {tc.matricula}
-              <input name="matricula" required className={`${campo} font-mono uppercase`} placeholder={tc.matriculaEjemplo} autoCapitalize="characters" />
-            </label>
-            <label className="block text-sm font-medium text-slate-700">
-              {tc.correo}
-              <input name="correo" type="email" required autoComplete="email" className={campo} placeholder={tc.correoEjemplo} />
-            </label>
-            <label className="block text-sm font-medium text-slate-700">
-              {tc.claveNueva}
-              <input name="clave" type="password" required minLength={6} autoComplete="new-password" className={campo} />
-            </label>
-            <label className="block text-sm font-medium text-slate-700">
-              {tc.repiteClave}
-              <input name="clave2" type="password" required minLength={6} autoComplete="new-password" className={campo} />
-            </label>
-            <AceptarAvisos t={t.legal} tipo="alumno" correo={datosResponsable(process.env).correo} />
-            {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{errorAlumno(t, error)}</p>}
-            <Boton type="submit" className="w-full">
-              {tp.crearCuenta}
-            </Boton>
-            <p className="text-center text-sm text-slate-600">
-              {tp.yaTienesCuenta}{" "}
-              <Link href="/alumno" className="font-medium text-tinta-700 hover:underline">
-                {tp.entraAqui}
-              </Link>
-            </p>
-          </form>
+          <FormRegistroAlumno t={t} error={typeof error === "string" ? error : undefined} />
         ) : (
-          <form action={ingresarAlumno} className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-            <label className="block text-sm font-medium text-slate-700">
-              {tc.correo}
-              <input name="correo" type="email" required autoComplete="email" className={campo} placeholder={tc.correoEjemplo} />
-            </label>
-            <label className="block text-sm font-medium text-slate-700">
-              {tc.clave}
-              <input name="clave" type="password" required autoComplete="current-password" className={campo} />
-              <Link href="/recuperar?tipo=alumno" className="mt-1 inline-block text-xs font-medium text-tinta-700 hover:underline">
-                {t.recuperar.olvideAlumno}
-              </Link>
-            </label>
-            {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{errorAlumno(t, error)}</p>}
-            <Boton type="submit" className="w-full">
-              {tp.verResultados}
-            </Boton>
-            <p className="text-center text-sm text-slate-600">
-              {tp.primeraVez}{" "}
-              <Link href="/alumno?crear=1" className="font-medium text-tinta-700 hover:underline">
-                {tp.creaTuCuenta}
-              </Link>
-            </p>
-          </form>
+          <FormIngresoAlumno t={t} error={typeof error === "string" ? error : undefined} />
         )}
         <InstalarApp textos={textosInstalar(t)} />
         <p className="mt-4 text-sm text-slate-500">{tp.comoEntregar}</p>

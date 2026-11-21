@@ -27,7 +27,7 @@ export default async function LayoutProfesor({ children }: LayoutProps<"/profeso
           { href: "/profesor/creditos", texto: t.barra.creditos },
           ...(esAdmin(profesor.correo) ? [{ href: "/admin", texto: t.barra.administracion }] : []),
         ]}
-        usuario={{ nombre: profesor.nombre, rol: profesor.correo }}
+        usuario={{ nombre: profesor.nombre, tipo: t.barra.tipos[profesor.tipo], rol: profesor.correo }}
         configuracion="/profesor/configuracion"
         textoConfiguracion={t.comun.configuracion}
         extra={

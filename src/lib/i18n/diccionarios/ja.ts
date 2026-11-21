@@ -29,6 +29,7 @@ const ja: Diccionario = {
     misActividades: "自分の課題",
     alumno: "生徒",
     sinSesion: "未ログイン",
+    tipos: { alumno: "生徒", profesor: "先生", administrador: "管理者" },
   },
   inicio: {
     nav: { comoFunciona: "使い方", queRecibes: "受け取れるもの", precios: "料金", privacidad: "プライバシー" },
@@ -191,6 +192,10 @@ const ja: Diccionario = {
     instalarIos: "iPhoneやiPadでアプリとして使うには、{compartir}をタップしてから{agregar}をタップします。",
     compartir: "共有",
     agregarInicio: "ホーム画面に追加",
+    tipoPerfil: "プロフィールの種類",
+    perfilProfesor: "編集者：課題を作成・採点",
+    perfilAlumno: "提出して結果を確認",
+    registroAlumnoTitulo: "生徒アカウントを作成",
     errores: {
       datosRegistro: "名前と有効なメールアドレスを入力してください。",
       contrasenaCorta: "パスワードは8文字以上にしてください。",

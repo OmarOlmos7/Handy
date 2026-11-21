@@ -1,7 +1,7 @@
 // Panel de administración: quién es administrador y las cifras de operación
 // (usuarios, uso, créditos y consumo de la IA). Funciones puras para poder probarlas.
 import { normalizarCorreo } from "./cuentas";
-import type { BaseDeDatos, ConsumoIA, TipoConsumoIA } from "./tipos";
+import type { BaseDeDatos, ConsumoIA, Profesor, TipoConsumoIA } from "./tipos";
 
 /**
  * Correos con rol de administrador, separados por comas, en la variable ADMIN_CORREOS
@@ -18,6 +18,21 @@ export function correosAdmin(valor = process.env.ADMIN_CORREOS ?? ""): Set<strin
 
 export function esAdmin(correo: string | undefined, valor?: string): boolean {
   return Boolean(correo) && correosAdmin(valor).has(normalizarCorreo(correo!));
+}
+
+/** Tipo de una cuenta de profesor: administrador si su correo está en ADMIN_CORREOS. */
+export function tipoDeProfesor(correo: string, valor?: string): Profesor["tipo"] {
+  return esAdmin(correo, valor) ? "administrador" : "profesor";
+}
+
+/**
+ * Pone el tipo de usuario en cada cuenta: alumno en las de alumno; profesor o administrador en
+ * las de profesor, según ADMIN_CORREOS (así el rol de administrador se quita desde el servidor).
+ */
+export function asignarTipos(db: BaseDeDatos, valor?: string): BaseDeDatos {
+  for (const p of db.profesores ?? []) p.tipo = tipoDeProfesor(p.correo, valor);
+  for (const c of db.cuentasAlumno ?? []) c.tipo = "alumno";
+  return db;
 }
 
 // ---------- Consumo de la IA ----------

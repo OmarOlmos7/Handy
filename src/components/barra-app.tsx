@@ -15,7 +15,8 @@ export function BarraApp({
   textoConfiguracion = "Configuración",
 }: {
   enlaces: { href: string; texto: string; exacto?: boolean }[];
-  usuario: { nombre: string; rol: string };
+  /** Nombre, tipo de perfil (va debajo del nombre) y un dato extra, como el correo. */
+  usuario: { nombre: string; rol: string; tipo?: string };
   extra?: React.ReactNode;
   /** Ruta de la configuración; muestra un engrane a la izquierda del nombre. */
   configuracion?: string;
@@ -73,6 +74,7 @@ export function BarraApp({
             </span>
             <span className="hidden text-sm leading-tight md:block">
               <span className="block font-medium">{usuario.nombre}</span>
+              {usuario.tipo && <span className="block text-xs font-medium text-tinta-700">{usuario.tipo}</span>}
               <span className="block text-xs text-slate-500">{usuario.rol}</span>
             </span>
           </div>

@@ -28,6 +28,7 @@ const zh: Diccionario = {
     misActividades: "我的作业",
     alumno: "学生",
     sinSesion: "未登录",
+    tipos: { alumno: "学生", profesor: "教师", administrador: "管理员" },
   },
   inicio: {
     nav: { comoFunciona: "使用方法", queRecibes: "你会得到什么", precios: "价格", privacidad: "隐私" },
@@ -185,6 +186,10 @@ const zh: Diccionario = {
     instalarIos: "要在 iPhone 或 iPad 上作为应用使用：点按{compartir}，然后点按{agregar}。",
     compartir: "“共享”",
     agregarInicio: "“添加到主屏幕”",
+    tipoPerfil: "账户类型",
+    perfilProfesor: "编辑者：创建并批改作业",
+    perfilAlumno: "提交作业并查看结果",
+    registroAlumnoTitulo: "创建学生账户",
     errores: {
       datosRegistro: "请输入姓名和有效的邮箱。",
       contrasenaCorta: "密码至少需要 8 个字符。",

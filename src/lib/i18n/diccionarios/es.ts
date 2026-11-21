@@ -30,6 +30,7 @@ const es = {
     misActividades: "Mis actividades",
     alumno: "Alumno",
     sinSesion: "Sin sesión",
+    tipos: { alumno: "Alumno", profesor: "Profesor", administrador: "Administrador" },
   },
   inicio: {
     nav: { comoFunciona: "Cómo funciona", queRecibes: "Qué recibes", precios: "Precios", privacidad: "Privacidad" },
@@ -192,6 +193,10 @@ const es = {
     instalarIos: "Para usarla como app en tu iPhone o iPad: toca {compartir} y luego {agregar}.",
     compartir: "Compartir",
     agregarInicio: "Agregar a inicio",
+    tipoPerfil: "Tipo de perfil",
+    perfilProfesor: "Editor: crea y califica actividades",
+    perfilAlumno: "Entrega y ve tus resultados",
+    registroAlumnoTitulo: "Crea tu cuenta de alumno",
     errores: {
       datosRegistro: "Escribe tu nombre y un correo válido.",
       contrasenaCorta: "La contraseña debe tener al menos 8 caracteres.",

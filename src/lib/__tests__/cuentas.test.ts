@@ -78,7 +78,7 @@ describe("datos por profesor", () => {
 });
 
 describe("cuentas de alumno", () => {
-  const cuenta = { id: "a-1", correo: "ana@correo.mx", nombre: "Ana", matricula: "A0301", contrasena: "", creadoEn: "" };
+  const cuenta = { id: "a-1", tipo: "alumno" as const, correo: "ana@correo.mx", nombre: "Ana", matricula: "A0301", contrasena: "", creadoEn: "" };
 
   it("encuentra al alumno por correo o, si el profesor no lo registró, por matrícula", () => {
     const grupo = { id: "g", materia: "F", nombre: "1", ciclo: "", alumnos: [{ matricula: "A0301", nombre: "Ana", correo: "" }] };

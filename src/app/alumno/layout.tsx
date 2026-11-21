@@ -10,7 +10,7 @@ export default async function LayoutAlumno({ children }: LayoutProps<"/alumno">)
     <>
       <BarraApp
         enlaces={[{ href: "/alumno", texto: t.barra.misActividades, exacto: true }]}
-        usuario={alumno ? { nombre: alumno.nombre, rol: alumno.correo } : { nombre: t.barra.alumno, rol: t.barra.sinSesion }}
+        usuario={alumno ? { nombre: alumno.nombre, tipo: t.barra.tipos[alumno.tipo], rol: alumno.correo } : { nombre: t.barra.alumno, rol: t.barra.sinSesion }}
         idioma={{ actual: idioma, etiqueta: t.comun.idioma }}
         extra={
           alumno && (

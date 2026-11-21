@@ -5,6 +5,8 @@ import { ingresarProfesor } from "@/app/acciones-cuenta";
 import { TarjetaCuenta, campoCuenta } from "@/components/tarjeta-cuenta";
 import { InstalarApp } from "@/components/instalar-app";
 import { Boton } from "@/components/ui";
+import { FormIngresoAlumno } from "@/components/formularios-alumno";
+import { SelectorPerfil } from "@/components/selector-perfil";
 import { textoError, textosInstalar } from "@/lib/i18n/cuenta";
 import { textos } from "@/lib/i18n/servidor";
 import { profesorActual } from "@/lib/sesion";
@@ -18,9 +20,17 @@ export default async function Ingresar({ searchParams }: PageProps<"/ingresar">)
   if (await profesorActual()) redirect("/profesor");
   const { idioma, t } = await textos();
   const c = t.cuenta;
-  const { error } = await searchParams;
+  const { error, perfil } = await searchParams;
+  const comoAlumno = perfil === "alumno";
   return (
-    <TarjetaCuenta titulo={c.ingresarTitulo} error={textoError(t, error)} idioma={{ actual: idioma, etiqueta: t.comun.idioma }}>
+    <TarjetaCuenta titulo={c.ingresarTitulo} error={comoAlumno ? undefined : textoError(t, error)} idioma={{ actual: idioma, etiqueta: t.comun.idioma }}>
+      <SelectorPerfil actual={comoAlumno ? "alumno" : "profesor"} hrefProfesor="/ingresar" hrefAlumno="/ingresar?perfil=alumno" t={t} />
+      {comoAlumno ? (
+        <>
+          <FormIngresoAlumno t={t} clase="mt-6 space-y-4" registro="/registro?perfil=alumno" />
+        </>
+      ) : (
+      <>
       <form action={ingresarProfesor} className="mt-6 space-y-4">
         <label className="block text-sm">
           <span className="font-medium text-slate-700">{c.correo}</span>
@@ -43,12 +53,8 @@ export default async function Ingresar({ searchParams }: PageProps<"/ingresar">)
           {c.registrate}
         </Link>
       </p>
-      <p className="mt-2 text-sm text-slate-600">
-        {c.eresAlumno}{" "}
-        <Link href="/alumno" className="font-medium text-tinta-700 hover:underline">
-          {c.entraAlumno}
-        </Link>
-      </p>
+      </>
+      )}
       <Link
         href="/precios"
         target="_blank"

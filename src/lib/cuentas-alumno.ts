@@ -39,6 +39,7 @@ export function crearCuentaAlumno(datos: {
   if (!datos.aceptacion) return { ok: false, error: "aceptacion" };
   const cuenta: CuentaAlumno = {
     id: `al-${crypto.randomBytes(6).toString("hex")}`,
+    tipo: "alumno",
     correo,
     nombre,
     matricula,
