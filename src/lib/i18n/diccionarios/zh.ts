@@ -381,13 +381,12 @@ const zh: Diccionario = {
   },
   usoEscala: {
     titulo: "推荐用于",
-    tiempo: "每页用时：约 {a}–{b} 秒",
-    tiempoAlto: "每页用时：所有等级中最长",
+    tiempo: "每页用时：约 {s} 秒",
     puntos: {
       "rapido-bajo": "字迹清楚的客观题（选择、判断、连线）。最省点数。",
       "rapido-medio": "客观题以及简答或填空。点数与“快速”相同。",
       "rapido-alto": "含一两步简单计算的简答题。",
-      "medio-bajo": "大多数作业：步骤较少的题目和简短的解题过程。响应最快。",
+      "medio-bajo": "大多数作业：步骤较少的题目和简短的解题过程。响应速度名列前茅。",
       "medio-medio": "多步骤的解题过程和简短写作。点数与“标准”相同。",
       "medio-alto": "较长的解题过程、作文或难以辨认的字迹。",
       "preciso-bajo": "图表、示意图、表格以及非常难认的字迹。",

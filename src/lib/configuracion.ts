@@ -138,12 +138,19 @@ export const COSTO_HOJA_USD: Record<MotorIA, Record<EsfuerzoIA, number>> = {
 };
 
 /**
- * Segundos que tardó en evaluarse una hoja completa, por motor (mínimo y máximo de las corridas
- * del 20-nov-2026). Haiku escribe mucho más y tarda más que Sonnet; Opus no se cronometró.
+ * Segundos que tarda la IA en evaluar una hoja en cada punto de la escala, medidos con una hoja
+ * real de 6 reactivos (Haiku y Sonnet el 20-nov-2026, Opus el 21-nov-2026). Haiku escribe mucho
+ * más y por eso tarda más que Sonnet y Opus.
  */
-export const TIEMPO_HOJA_SEG: Partial<Record<MotorIA, [number, number]>> = {
-  rapido: [25, 50],
-  medio: [10, 25],
+export const TIEMPO_HOJA_SEG: Record<string, number> = {
+  "rapido-bajo": 25,
+  "rapido-medio": 32,
+  "rapido-alto": 49,
+  "medio-bajo": 9,
+  "medio-medio": 8,
+  "medio-alto": 26,
+  "preciso-bajo": 10,
+  "preciso-medio": 21,
 };
 
 /** Créditos por hoja: costo medido más el margen de riesgo, entre el costo de un crédito, hacia arriba a décimas. */

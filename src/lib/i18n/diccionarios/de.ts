@@ -396,13 +396,12 @@ const de: Diccionario = {
   },
   usoEscala: {
     titulo: "Empfohlen für",
-    tiempo: "Zeit pro Blatt: ≈ {a} bis {b} s",
-    tiempoAlto: "Zeit pro Blatt: die längste der Skala",
+    tiempo: "Zeit pro Blatt: ≈ {s} s",
     puntos: {
       "rapido-bajo": "Geschlossene Aufgaben (Multiple Choice, richtig oder falsch, Zuordnung) mit klarer Schrift. Am günstigsten.",
       "rapido-medio": "Geschlossene Aufgaben und kurze Antworten oder Lückentexte. Kostet so viel wie Schnell.",
       "rapido-alto": "Kurze Antworten mit einfachen Rechnungen in ein bis zwei Schritten.",
-      "medio-bajo": "Die meisten Aufgaben: Probleme mit wenigen Schritten und kurze Rechenwege. Antwortet am schnellsten.",
+      "medio-bajo": "Die meisten Aufgaben: Probleme mit wenigen Schritten und kurze Rechenwege. Antwortet mit am schnellsten.",
       "medio-medio": "Rechenwege mit mehreren Schritten und kurze Texte. Kostet so viel wie Mittel.",
       "medio-alto": "Lange Rechenwege, Aufsätze oder schwer lesbare Schrift.",
       "preciso-bajo": "Diagramme, Skizzen, Tabellen und sehr schwierige Schrift.",

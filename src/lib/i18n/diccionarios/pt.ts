@@ -396,13 +396,12 @@ const pt: Diccionario = {
   },
   usoEscala: {
     titulo: "Recomendado para",
-    tiempo: "Tempo por folha: ≈ {a} a {b} s",
-    tiempoAlto: "Tempo por folha: o maior da escala",
+    tiempo: "Tempo por folha: ≈ {s} s",
     puntos: {
       "rapido-bajo": "Questões fechadas (múltipla escolha, verdadeiro ou falso, associação) com letra clara. É o mais barato.",
       "rapido-medio": "Fechadas e respostas curtas ou de completar. Custa o mesmo que Rápido.",
       "rapido-alto": "Respostas curtas com contas simples de um ou dois passos.",
-      "medio-bajo": "A maioria das atividades: problemas de poucos passos e desenvolvimentos curtos. É o mais rápido para responder.",
+      "medio-bajo": "A maioria das atividades: problemas de poucos passos e desenvolvimentos curtos. Está entre os mais rápidos para responder.",
       "medio-medio": "Procedimentos de vários passos e redação breve. Custa o mesmo que Médio.",
       "medio-alto": "Procedimentos longos, redações ou letra difícil de ler.",
       "preciso-bajo": "Gráficos, diagramas, tabelas e letra muito difícil.",

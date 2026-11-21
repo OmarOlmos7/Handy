@@ -398,13 +398,12 @@ const es = {
   },
   usoEscala: {
     titulo: "Recomendado para",
-    tiempo: "Tiempo por hoja: ≈ {a} a {b} s",
-    tiempoAlto: "Tiempo por hoja: el mayor de la escala",
+    tiempo: "Tiempo por hoja: ≈ {s} s",
     puntos: {
       "rapido-bajo": "Reactivos cerrados (opción múltiple, verdadero o falso, relacionar) con letra clara. Es lo más barato.",
       "rapido-medio": "Cerrados y respuestas cortas o de completar. Cuesta lo mismo que Rápido.",
       "rapido-alto": "Respuestas cortas con cuentas sencillas de uno o dos pasos.",
-      "medio-bajo": "La mayoría de las actividades: problemas de pocos pasos y desarrollos cortos. Es el más rápido en responder.",
+      "medio-bajo": "La mayoría de las actividades: problemas de pocos pasos y desarrollos cortos. Es de los más rápidos en responder.",
       "medio-medio": "Procedimientos de varios pasos y redacción breve. Cuesta lo mismo que Medio.",
       "medio-alto": "Procedimientos largos, ensayos o letra difícil de leer.",
       "preciso-bajo": "Gráficas, diagramas, tablas y letra muy difícil.",
