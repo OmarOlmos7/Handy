@@ -100,16 +100,11 @@ const alumno: Diccionario["alumno"] = {
   },
   cuaderno: {
     titulo: "Notenbuch",
-    subtitulo: "{curso}. Eine nicht abgegebene Aufgabe zählt als 0, sobald sie Noten hat, wie im Notenbuch deiner Lehrkraft.",
-    colActividad: "Aufgabe",
-    colCalificacion: "Meine Note",
-    colGrupo: "Klassendurchschnitt",
-    colEstado: "Status",
+    subtitulo: "{curso} · {a} · Jede Aufgabe in ihrer eigenen Skala; dein Durchschnitt ist von {e}.",
     estados: { calificada: "Bewertet", no_entregada: "Nicht abgegeben", pendiente: "In Prüfung", sin_resultados: "Noch keine Ergebnisse" },
     ajustada: "Von deiner Lehrkraft angepasst",
-    promedioFinal: "Mein Kursdurchschnitt",
     promedioGrupo: "Klassendurchschnitt",
-    sobre: "von {e}",
+    ayuda: "Tippe auf den Namen einer bewerteten Aufgabe, um die Rückmeldung zu sehen. Eine nicht abgegebene Aufgabe zählt als 0, sobald sie Noten hat. Der Klassendurchschnitt erscheint ab {n} bewerteten Schülern.",
     vacio: "In diesem Kurs gibt es noch keine sichtbaren Noten.",
   },
   campos: {

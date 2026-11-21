@@ -99,16 +99,11 @@ const alumno: Diccionario["alumno"] = {
   },
   cuaderno: {
     titulo: "成绩册",
-    subtitulo: "{curso}。已有成绩的作业如未提交按 0 分计算，与老师的成绩册相同。",
-    colActividad: "作业",
-    colCalificacion: "我的成绩",
-    colGrupo: "班级平均分",
-    colEstado: "状态",
+    subtitulo: "{curso} · {a} · 每项作业按各自满分计算；你的平均分满分 {e}。",
     estados: { calificada: "已评分", no_entregada: "未提交", pendiente: "审核中", sin_resultados: "暂无结果" },
     ajustada: "老师已调整",
-    promedioFinal: "我的课程平均分",
     promedioGrupo: "班级平均分",
-    sobre: "满分 {e}",
+    ayuda: "点击已评分作业的名称查看反馈。已有成绩的作业如未提交按 0 分计算。有 {n} 名或以上学生评分后显示班级平均分。",
     vacio: "本课程还没有可查看的成绩。",
   },
   campos: {

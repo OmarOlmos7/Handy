@@ -100,16 +100,11 @@ const alumno: Diccionario["alumno"] = {
   },
   cuaderno: {
     titulo: "Gradebook",
-    subtitulo: "{curso}. A missing assignment counts as 0 once it has grades, just like in your teacher's gradebook.",
-    colActividad: "Assignment",
-    colCalificacion: "My grade",
-    colGrupo: "Class average",
-    colEstado: "Status",
+    subtitulo: "{curso} · {a} · Each assignment on its own scale; your average is out of {e}.",
     estados: { calificada: "Graded", no_entregada: "Not submitted", pendiente: "Under review", sin_resultados: "No results yet" },
     ajustada: "Adjusted by your teacher",
-    promedioFinal: "My course average",
     promedioGrupo: "Class average",
-    sobre: "out of {e}",
+    ayuda: "Tap a graded assignment's name to see its feedback. A missing assignment counts as 0 once it has grades. The class average appears when {n} or more students are graded.",
     vacio: "There are no visible grades in this course yet.",
   },
   campos: {

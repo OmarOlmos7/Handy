@@ -100,16 +100,11 @@ const alumno: Diccionario["alumno"] = {
   },
   cuaderno: {
     titulo: "Carnet de notes",
-    subtitulo: "{curso}. Un devoir non rendu compte pour 0 dès qu'il a des notes, comme dans le carnet de ton professeur.",
-    colActividad: "Devoir",
-    colCalificacion: "Ma note",
-    colGrupo: "Moyenne de la classe",
-    colEstado: "État",
+    subtitulo: "{curso} · {a} · Chaque devoir sur son barème ; ta moyenne est sur {e}.",
     estados: { calificada: "Noté", no_entregada: "Non rendu", pendiente: "En révision", sin_resultados: "Pas encore de résultats" },
     ajustada: "Ajustée par ton professeur",
-    promedioFinal: "Ma moyenne du cours",
     promedioGrupo: "Moyenne de la classe",
-    sobre: "sur {e}",
+    ayuda: "Touche le nom d'un devoir noté pour voir son retour. Un devoir non rendu compte pour 0 dès qu'il a des notes. La moyenne de la classe apparaît à partir de {n} élèves évalués.",
     vacio: "Il n'y a pas encore de notes visibles dans ce cours.",
   },
   campos: {

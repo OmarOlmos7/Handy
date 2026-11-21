@@ -100,16 +100,11 @@ const alumno: Diccionario["alumno"] = {
   },
   cuaderno: {
     titulo: "Caderno de notas",
-    subtitulo: "{curso}. Uma atividade não entregue vale 0 quando já tem notas, igual ao caderno do seu professor.",
-    colActividad: "Atividade",
-    colCalificacion: "Minha nota",
-    colGrupo: "Média da turma",
-    colEstado: "Situação",
+    subtitulo: "{curso} · {a} · Cada atividade na sua escala; sua média é de {e}.",
     estados: { calificada: "Avaliada", no_entregada: "Não entregue", pendiente: "Em revisão", sin_resultados: "Ainda sem resultados" },
     ajustada: "Ajustada pelo seu professor",
-    promedioFinal: "Minha média no curso",
     promedioGrupo: "Média da turma",
-    sobre: "de {e}",
+    ayuda: "Toque no nome de uma atividade avaliada para ver o retorno. Uma atividade não entregue vale 0 quando já tem notas. A média da turma aparece quando há {n} ou mais alunos avaliados.",
     vacio: "Ainda não há notas visíveis neste curso.",
   },
   campos: {
