@@ -396,13 +396,12 @@ const fr: Diccionario = {
   },
   usoEscala: {
     titulo: "Recommandé pour",
-    tiempo: "Temps par feuille : ≈ {a} à {b} s",
-    tiempoAlto: "Temps par feuille : le plus long de l'échelle",
+    tiempo: "Temps par feuille : ≈ {s} s",
     puntos: {
       "rapido-bajo": "Questions fermées (QCM, vrai ou faux, association) avec une écriture claire. Le moins cher.",
       "rapido-medio": "Questions fermées et réponses courtes ou à compléter. Même coût que Rapide.",
       "rapido-alto": "Réponses courtes avec des calculs simples en une ou deux étapes.",
-      "medio-bajo": "La plupart des devoirs : problèmes en peu d'étapes et développements courts. Le plus rapide à répondre.",
+      "medio-bajo": "La plupart des devoirs : problèmes en peu d'étapes et développements courts. L'un des plus rapides à répondre.",
       "medio-medio": "Démarches en plusieurs étapes et rédaction brève. Même coût que Moyen.",
       "medio-alto": "Démarches longues, rédactions ou écriture difficile à lire.",
       "preciso-bajo": "Graphiques, schémas, tableaux et écriture très difficile.",
