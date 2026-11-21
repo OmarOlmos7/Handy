@@ -13,7 +13,7 @@ import { useTextos } from "./proveedor-textos";
 import { TextoMat } from "./texto-mat";
 
 /** Ejercicio sin la clave ni la explicación (el alumno aún no lo resuelve). */
-export type EjercicioAlumno = Omit<EjercicioAuto, "respuesta" | "explicacion">;
+export type EjercicioAlumno = Omit<EjercicioAuto, "respuesta" | "explicacion" | "procedimiento" | "tolerancia">;
 
 const svgUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 type Respuesta = { seleccion?: string[]; texto?: string };
@@ -151,33 +151,68 @@ function Ejercicio({ ej, valor, archivos, onCambiar, onArchivos }: { ej: Ejercic
       return (
         <div>
           <p className="mb-2 text-xs text-slate-500">{th.manuscrito}</p>
-          <div className="flex flex-wrap gap-2">
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-tinta-600 px-3 py-2 text-sm font-medium text-white hover:bg-tinta-700">
-              📷 {th.tomarFoto}
-              <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => onArchivos([...archivos, ...Array.from(e.target.files ?? [])].slice(0, MAX_FOTOS_EJERCICIO))} />
-            </label>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
-              📎 {th.elegirArchivo}
-              <input type="file" accept="image/*,application/pdf" multiple className="sr-only" onChange={(e) => onArchivos([...archivos, ...Array.from(e.target.files ?? [])].slice(0, MAX_FOTOS_EJERCICIO))} />
-            </label>
-          </div>
-          {archivos.length > 0 && (
-            <ul className="mt-3 space-y-1">
-              {archivos.map((f, i) => (
-                <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
-                  <span className="truncate">{f.name}</span>
-                  <button type="button" onClick={() => onArchivos(archivos.filter((_, j) => j !== i))} className="text-xs font-medium text-error hover:underline">
-                    {th.quitar}
-                  </button>
-                </li>
-              ))}
-            </ul>
+          <SubirFotos archivos={archivos} onArchivos={onArchivos} />
+        </div>
+      );
+    case "numerica":
+    case "numerica_desarrollo":
+      return (
+        <div className="space-y-3">
+          {ej.tipo === "numerica_desarrollo" && (
+            <div>
+              <p className="mb-2 text-xs text-slate-500">{th.numericaDesarrollo}</p>
+              <SubirFotos archivos={archivos} onArchivos={onArchivos} />
+            </div>
           )}
+          <label className="block text-sm font-medium text-slate-700">
+            {th.resultado}
+            <input
+              value={sel[0] ?? ""}
+              onChange={(e) => onCambiar({ seleccion: [e.target.value] })}
+              inputMode="decimal"
+              maxLength={40}
+              placeholder={th.resultadoEjemplo}
+              className="mt-1 block w-48 rounded-lg border border-slate-300 px-3 py-2 text-base tabular-nums outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100"
+            />
+            <span className="mt-1 block text-xs font-normal text-slate-500">{th.resultadoAyuda}</span>
+          </label>
         </div>
       );
     default:
       return null;
   }
+}
+
+/** Botones para tomar la foto del procedimiento o elegir el archivo (iPad, PDF), con la lista. */
+function SubirFotos({ archivos, onArchivos }: { archivos: File[]; onArchivos: (f: File[]) => void }) {
+  const th = useTextos().t.autoestudio.hacer;
+  const agregar = (fs: FileList | null) => onArchivos([...archivos, ...Array.from(fs ?? [])].slice(0, MAX_FOTOS_EJERCICIO));
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-tinta-600 px-3 py-2 text-sm font-medium text-white hover:bg-tinta-700">
+          📷 {th.tomarFoto}
+          <input type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => agregar(e.target.files)} />
+        </label>
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
+          📎 {th.elegirArchivo}
+          <input type="file" accept="image/*,application/pdf" multiple className="sr-only" onChange={(e) => agregar(e.target.files)} />
+        </label>
+      </div>
+      {archivos.length > 0 && (
+        <ul className="mt-3 space-y-1">
+          {archivos.map((f, i) => (
+            <li key={i} className="flex items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-1.5 text-sm">
+              <span className="truncate">{f.name}</span>
+              <button type="button" onClick={() => onArchivos(archivos.filter((_, j) => j !== i))} className="text-xs font-medium text-error hover:underline">
+                {th.quitar}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
 }
 
 /** Enunciado de completar con un campo en cada espacio (___). */
@@ -214,6 +249,7 @@ function Completar({ ej, valor, onCambiar }: { ej: EjercicioAlumno; valor: Respu
 
 function contestado(ej: EjercicioAlumno, v: Respuesta | undefined, archivos: File[] | undefined) {
   if (ej.tipo === "manuscrito") return Boolean(archivos?.length);
+  if (ej.tipo === "numerica_desarrollo") return Boolean(archivos?.length) && Boolean(v?.seleccion?.[0]?.trim());
   if (ej.tipo === "texto") return Boolean(v?.texto?.trim());
   return Boolean(v?.seleccion?.some((x) => x?.trim()));
 }
@@ -363,7 +399,7 @@ export function HacerAutoactividad({
     }
   }
 
-  const conIA = ejercicios.some((e) => e.tipo === "texto" || e.tipo === "manuscrito");
+  const conIA = ejercicios.some((e) => e.tipo === "texto" || e.tipo === "manuscrito" || e.tipo === "numerica_desarrollo");
   return (
     <div className="space-y-4">
       {contenido}

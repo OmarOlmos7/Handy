@@ -2,7 +2,7 @@
 // de un tema y las resuelve por su cuenta. Aquí van las reglas que no dependen de Next ni de la
 // IA: calificación por código, límites, costo en créditos, estado de ánimo del compañero de
 // estudio, sus sugerencias y el resumen que ve el profesor. Funciones puras para poder probarlas.
-import { letras, opcion, pares } from "./calificar";
+import { letras, margenNumerico, opcion, pares, primerNumero } from "./calificar";
 import { PRECISION_PREDETERMINADA, creditosPorPagina, sumarCreditos } from "./configuracion";
 import { estadoEnvio } from "./periodo";
 import type { Actividad, Autoactividad, EjercicioAuto, Entrega, ResultadoAuto, TipoAutoactividad, TipoEjercicio } from "./tipos";
@@ -10,7 +10,11 @@ import type { Actividad, Autoactividad, EjercicioAuto, Entrega, ResultadoAuto, T
 export const TIPOS_AUTOACTIVIDAD: TipoAutoactividad[] = ["practica", "manuscrita", "videos", "lectura", "tarjetas"];
 
 /** Tipos de ejercicio que el alumno puede elegir en la práctica en pantalla. */
-export const TIPOS_EJERCICIO_PRACTICA: TipoEjercicio[] = ["opcion", "multirespuesta", "verdadero_falso", "completar", "relacion", "relacion_imagenes", "texto"];
+export const TIPOS_EJERCICIO_PRACTICA: TipoEjercicio[] = ["opcion", "multirespuesta", "verdadero_falso", "completar", "relacion", "relacion_imagenes", "numerica", "numerica_desarrollo", "texto"];
+/** Tipos de ejercicio de la práctica con respuesta manuscrita. */
+export const TIPOS_EJERCICIO_MANUSCRITA: TipoEjercicio[] = ["manuscrito", "numerica_desarrollo"];
+/** En la numérica con desarrollo, cuánto vale el resultado; el resto es el procedimiento. */
+export const PESO_RESULTADO_NUMERICO = 0.5;
 
 /** Actividades que un alumno puede crear en 24 horas (en todos sus cursos). */
 export const LIMITE_DIARIO = 5;
@@ -114,7 +118,21 @@ export function espaciosCompletar(enunciado: string): number {
 
 /** true si el ejercicio lo califica la IA (respuesta escrita o desarrollo en foto). */
 export function vaALaIA(tipo: TipoEjercicio) {
-  return tipo === "texto" || tipo === "manuscrito";
+  return tipo === "texto" || tipo === "manuscrito" || tipo === "numerica_desarrollo";
+}
+
+/** 1 si el número que escribió el alumno cae dentro del margen del resultado; si no, 0. */
+export function logroNumerico(ej: Pick<EjercicioAuto, "respuesta" | "tolerancia">, texto: string): number {
+  const clave = primerNumero(ej.respuesta);
+  const alumno = primerNumero(texto ?? "");
+  if (clave === null || alumno === null) return 0;
+  return Math.abs(alumno - clave) <= margenNumerico(ej, clave) + 1e-9 ? 1 : 0;
+}
+
+/** Numérica con desarrollo: el resultado (por código) y el procedimiento (lo lee la IA), en cuartos. */
+export function logroConDesarrollo(resultado: number, procedimiento: number): number {
+  const p = PESO_RESULTADO_NUMERICO;
+  return cuartos(resultado * p + Math.max(0, Math.min(1, procedimiento)) * (1 - p));
 }
 
 /**
@@ -122,9 +140,11 @@ export function vaALaIA(tipo: TipoEjercicio) {
  * califica la IA. `seleccion`: letras elegidas, "V"/"F", la letra elegida para cada elemento de la
  * columna A (relación) o la palabra de cada espacio (completar).
  */
-export function logroEjercicio(ej: Pick<EjercicioAuto, "tipo" | "respuesta">, seleccion: string[]): number | null {
+export function logroEjercicio(ej: Pick<EjercicioAuto, "tipo" | "respuesta" | "tolerancia">, seleccion: string[]): number | null {
   const sel = seleccion.map((x) => (x ?? "").trim());
   switch (ej.tipo) {
+    case "numerica":
+      return logroNumerico(ej, sel[0] ?? "");
     case "opcion":
     case "verdadero_falso":
       return sel[0] && opcion(sel[0]) === opcion(ej.respuesta) ? 1 : 0;

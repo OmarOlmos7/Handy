@@ -5,7 +5,7 @@
 // temas) y, debajo, el formulario para pedirle una actividad diseñada con IA.
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CANTIDAD_MAX, CANTIDAD_MIN, CANTIDAD_PREDETERMINADA, LARGO_PETICION, TIPOS_AUTOACTIVIDAD, TIPOS_EJERCICIO_PRACTICA, type Animo } from "@/lib/autoestudio";
+import { CANTIDAD_MAX, CANTIDAD_MIN, CANTIDAD_PREDETERMINADA, LARGO_PETICION, TIPOS_AUTOACTIVIDAD, TIPOS_EJERCICIO_MANUSCRITA, TIPOS_EJERCICIO_PRACTICA, type Animo } from "@/lib/autoestudio";
 import { formato } from "@/lib/i18n/idiomas";
 import type { CursoCompanero } from "@/lib/companero";
 import type { TipoAutoactividad, TipoEjercicio } from "@/lib/tipos";
@@ -70,6 +70,8 @@ export function CompaneroEstudio({
   const [peticion, setPeticion] = useState("");
   const [cantidad, setCantidad] = useState(CANTIDAD_PREDETERMINADA);
   const [tipos, setTipos] = useState<TipoEjercicio[]>([]);
+  const opcionesEjercicio = tipo === "manuscrita" ? TIPOS_EJERCICIO_MANUSCRITA : TIPOS_EJERCICIO_PRACTICA;
+  const elegidos = tipos.filter((x) => opcionesEjercicio.includes(x));
   const [estado, setEstado] = useState<"listo" | "creando">("listo");
   const [error, setError] = useState("");
 
@@ -97,7 +99,7 @@ export function CompaneroEstudio({
       const r = await fetch("/api/autoestudio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ grupoId, tipo, tema: tema.trim(), peticion: peticion.trim(), cantidad, tiposEjercicio: tipos }),
+        body: JSON.stringify({ grupoId, tipo, tema: tema.trim(), peticion: peticion.trim(), cantidad, tiposEjercicio: elegidos }),
       });
       const j = await r.json().catch(() => ({}));
       if (j.bloqueado) {
@@ -210,14 +212,14 @@ export function CompaneroEstudio({
                   ))}
                 </div>
               )}
-              {tipo === "practica" && (
+              {(tipo === "practica" || tipo === "manuscrita") && (
                 <fieldset className="mt-3">
                   <legend className="text-sm font-medium text-slate-700">{ta.alta.tiposEjercicio}</legend>
                   <div className="mt-1 flex flex-wrap gap-1.5">
-                    <button type="button" aria-pressed={tipos.length === 0} onClick={() => setTipos([])} className={`rounded-full px-3 py-1 text-xs ring-1 ${tipos.length === 0 ? "bg-tinta-600 text-white ring-tinta-600" : "bg-white text-slate-700 ring-slate-300"}`}>
+                    <button type="button" aria-pressed={elegidos.length === 0} onClick={() => setTipos([])} className={`rounded-full px-3 py-1 text-xs ring-1 ${elegidos.length === 0 ? "bg-tinta-600 text-white ring-tinta-600" : "bg-white text-slate-700 ring-slate-300"}`}>
                       {ta.alta.mezclar}
                     </button>
-                    {TIPOS_EJERCICIO_PRACTICA.map((x) => {
+                    {opcionesEjercicio.map((x) => {
                       const activo = tipos.includes(x);
                       return (
                         <button
