@@ -343,6 +343,9 @@ const profesor: Diccionario["profesor"] = {
     fecha: "Data de aplicação",
     tituloActividad: "Título da atividade",
     ejemploTitulo: "Ex. Leis de Newton",
+    tipoActividad: "Tipo de atividade",
+    ejemploTipo: "Ex. Tarefa, Prova, Projeto",
+    tipoActividadTexto: "Agrupa a atividade no caderno de notas e define qual porcentagem do plano de avaliação ela recebe. Escolha um ou escreva outro.",
     queActividad: "Que atividade você quer? Indique os tipos de questões, os pesos e os temas",
     tiposDisponibles:
       "Tipos disponíveis: múltipla escolha, verdadeiro ou falso, relacionar colunas, completar com a letra, problemas com desenvolvimento e perguntas abertas. Você pode pedir o nível, o número de questões e quantos pontos vale cada uma.",

@@ -343,6 +343,9 @@ const profesor: Diccionario["profesor"] = {
     fecha: "Datum der Aufgabe",
     tituloActividad: "Titel der Aufgabe",
     ejemploTitulo: "z. B. Newtonsche Gesetze",
+    tipoActividad: "Art der Aufgabe",
+    ejemploTipo: "z. B. Hausaufgabe, Prüfung, Projekt",
+    tipoActividadTexto: "Gruppiert die Aufgabe im Notenbuch und legt fest, welcher Anteil des Bewertungsplans auf sie entfällt. Wähle eine aus oder gib eine andere ein.",
     queActividad: "Welche Aufgabe möchtest du? Gib Fragetypen, Gewichtung und Themen an",
     tiposDisponibles:
       "Verfügbare Typen: Multiple Choice, wahr oder falsch, Zuordnung, Buchstaben eintragen, Rechenaufgaben und offene Fragen. Du kannst Niveau, Anzahl der Fragen und Punkte pro Frage angeben.",

@@ -341,6 +341,9 @@ const profesor = {
     fecha: "Fecha de aplicación",
     tituloActividad: "Título de la actividad",
     ejemploTitulo: "Ej. Leyes de Newton",
+    tipoActividad: "Tipo de actividad",
+    ejemploTipo: "Ej. Tarea, Examen, Proyecto",
+    tipoActividadTexto: "Agrupa la actividad en el cuaderno de calificaciones y define qué porcentaje del plan de evaluación le toca. Elige uno o escribe otro.",
     queActividad: "¿Qué actividad quieres? Indica el tipo de reactivos, las ponderaciones y los temas",
     tiposDisponibles:
       "Tipos disponibles: opción múltiple, verdadero o falso, relación de columnas, paréntesis, problemas de desarrollo y preguntas abiertas. Puedes pedir el nivel, el número de reactivos y cuántos puntos vale cada uno.",

@@ -343,6 +343,9 @@ const profesor: Diccionario["profesor"] = {
     fecha: "実施日",
     tituloActividad: "課題のタイトル",
     ejemploTitulo: "例：ニュートンの法則",
+    tipoActividad: "課題の種類",
+    ejemploTipo: "例：宿題、試験、プロジェクト",
+    tipoActividadTexto: "成績表で課題をまとめ、評価計画のどの割合に入るかを決めます。選ぶか、別の種類を入力してください。",
     queActividad: "どんな課題にしますか？ 問題の種類、配点、テーマを書いてください",
     tiposDisponibles:
       "使える種類：選択式、正誤、組み合わせ、記号記入、記述式（計算）、自由記述。レベル、問題数、各問題の配点も指定できます。",

@@ -343,6 +343,9 @@ const profesor: Diccionario["profesor"] = {
     fecha: "Date given",
     tituloActividad: "Activity title",
     ejemploTitulo: "e.g. Newton's laws",
+    tipoActividad: "Activity type",
+    ejemploTipo: "e.g. Homework, Exam, Project",
+    tipoActividadTexto: "Groups the activity in the gradebook and sets which share of the grading plan it counts toward. Pick one or type another.",
     queActividad: "What activity do you want? Give the question types, weights and topics",
     tiposDisponibles:
       "Available types: multiple choice, true or false, matching, fill in the letter, worked problems and open-ended questions. You can ask for the level, the number of questions and how many points each one is worth.",
