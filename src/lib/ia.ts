@@ -939,6 +939,41 @@ export async function recomendarEstudio(act: Actividad, resultados: ResultadoRea
   };
 }
 
+// ---------- Plan de evaluación del curso ----------
+
+const EsquemaPlan = z.object({
+  pesos: z.array(z.object({ etiqueta: z.string(), porcentaje: z.number() })),
+  notas: z.string(),
+});
+
+const SISTEMA_PLAN = `Eres un asistente para profesores de secundaria y bachillerato en México.
+El profesor describe con sus palabras cómo quiere ponderar la calificación final de su curso por tipo de actividad (por ejemplo: "exámenes 50%, tareas 30% y proyecto 20%").
+Recibes también la lista de tipos de actividad (etiquetas) que ya existen en el curso.
+Devuelve el plan de evaluación:
+- pesos: un elemento por tipo de actividad con su porcentaje de la calificación final.
+  Usa exactamente el nombre de la etiqueta del curso cuando el profesor se refiera a ella, aunque lo escriba distinto (singular o plural, mayúsculas, sinónimos claros como "parciales" para "Examen").
+  Si menciona un tipo que aún no existe en el curso, inclúyelo con el nombre que usó, en singular y con mayúscula inicial.
+  Para las actividades sin etiqueta usa el nombre "" (cadena vacía), solo si el profesor las menciona.
+  Los porcentajes deben sumar 100. Si el profesor da pesos que no suman 100 o da proporciones ("el doble que las tareas"), conviértelos a porcentajes que sumen 100. Si no da un número para algún tipo que menciona, reparte lo que falte en partes iguales.
+  No incluyas tipos que el profesor no mencionó.
+- notas: una o dos oraciones en español que expliquen cómo interpretaste las instrucciones (por ejemplo, qué etiqueta usaste para cada cosa o cómo ajustaste los porcentajes). Cadena vacía si no hubo nada que aclarar.`;
+
+/** Convierte las instrucciones de ponderación del profesor en porcentajes por tipo de actividad (sin datos de alumnos). */
+export async function generarPlanEvaluacion(instrucciones: string, etiquetas: string[], uso: UsoIA): Promise<{ pesos: { etiqueta: string; porcentaje: number }[]; notas: string }> {
+  return pedir({
+    tipo: "plan",
+    uso: { ...uso, precision: uso.precision ?? { motor: "medio", esfuerzo: "bajo" } },
+    system: SISTEMA_PLAN,
+    esquema: EsquemaPlan,
+    contenido: [
+      {
+        type: "text",
+        text: `Tipos de actividad del curso: ${JSON.stringify(etiquetas)}\nInstrucciones del profesor:\n${instrucciones}`,
+      },
+    ],
+  });
+}
+
 // ---------- Videos y lecturas con enlaces reales (búsqueda web) ----------
 
 const EsquemaRecursos = z.object({

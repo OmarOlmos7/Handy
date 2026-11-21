@@ -7,7 +7,8 @@ import { cambiarCalificacion } from "@/app/acciones";
 import { ORDENES, ordenarFilas, type Celda, type Columna, type Cuaderno, type Orden } from "@/lib/cuaderno";
 import { formatoCal, nivelDe, type Nivel } from "@/lib/estadisticas";
 import type { InfoCuaderno } from "@/lib/exportar-cuaderno";
-import type { Escala } from "@/lib/tipos";
+import type { Escala, PlanEvaluacion } from "@/lib/tipos";
+import { pesoDe } from "@/lib/plan-evaluacion";
 import { DescargarCuaderno } from "./descargar-cuaderno";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
@@ -140,7 +141,13 @@ function CeldaEditable({ celda, columna, matricula, nombre }: { celda: Celda; co
   );
 }
 
-export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: InfoCuaderno }) {
+/** Nota final calculada en el servidor con el plan de evaluación (por matrícula). */
+export interface NotaFinalTabla {
+  porAlumno: Record<string, number | null>;
+  promedioGrupo: number | null;
+}
+
+export function TablaCuaderno({ cuaderno, info, plan, final }: { cuaderno: Cuaderno; info: InfoCuaderno; plan?: PlanEvaluacion; final?: NotaFinalTabla }) {
   const tq = useTextos().t.profesor.cuaderno;
   const tc = useTextos().t.profesor.comun;
   const [orden, setOrden] = useState<Orden>("apellido");
@@ -204,12 +211,23 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
                   className="border-b border-l border-slate-200 bg-slate-50 px-3 py-2 text-center text-slate-700"
                 >
                   {g.etiqueta}
+                  {plan && (
+                    <span className="mt-0.5 block text-[11px] font-semibold normal-case tracking-normal text-tinta-700">
+                      {pesoDe(plan, g.clave) !== undefined ? formato(tq.plan.porcentajeTipo, { n: pesoDe(plan, g.clave)! }) : tq.plan.sinPeso}
+                    </span>
+                  )}
                 </th>
               ))}
               <th rowSpan={2} className="border-b border-l border-slate-200 bg-slate-50 px-3 py-2 text-center text-slate-700">
                 {tq.promedio}
                 <span className="block text-[10px] font-normal normal-case">{formato(tq.sobre, { n: cuaderno.escala })}</span>
               </th>
+              {final && (
+                <th rowSpan={2} className="border-b border-l border-slate-200 bg-tinta-50 px-3 py-2 text-center text-tinta-800">
+                  {tq.plan.notaFinal}
+                  <span className="block text-[10px] font-normal normal-case">{formato(tq.sobre, { n: cuaderno.escala })}</span>
+                </th>
+              )}
             </tr>
             <tr>
               {columnas.map((c) => (
@@ -240,6 +258,11 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
                 <td className="border-b border-l border-slate-100 border-l-slate-200 px-3 py-1.5 text-center">
                   <Promedio valor={f.promedio} escala={cuaderno.escala} fuerte />
                 </td>
+                {final && (
+                  <td className="border-b border-l border-slate-100 border-l-slate-200 bg-tinta-50/40 px-3 py-1.5 text-center">
+                    <Promedio valor={final.porAlumno[f.matricula] ?? null} escala={cuaderno.escala} fuerte />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -256,6 +279,11 @@ export function TablaCuaderno({ cuaderno, info }: { cuaderno: Cuaderno; info: In
               <td className="border-l border-slate-200 px-3 py-2.5 text-center">
                 <Promedio valor={cuaderno.promedioGrupo} escala={cuaderno.escala} fuerte />
               </td>
+              {final && (
+                <td className="border-l border-slate-200 bg-tinta-50/60 px-3 py-2.5 text-center">
+                  <Promedio valor={final.promedioGrupo} escala={cuaderno.escala} fuerte />
+                </td>
+              )}
             </tr>
           </tfoot>
         </table>

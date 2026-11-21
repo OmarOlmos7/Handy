@@ -96,6 +96,7 @@ export const NOMBRE_TIPO_CONSUMO: Record<TipoConsumoIA, string> = {
   resolver: "Resolver actividad",
   estudio: "Recomendaciones de estudio",
   recursos: "Búsqueda de videos y lecturas",
+  plan: "Plan de evaluación",
 };
 
 export interface TotalTokens {
