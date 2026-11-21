@@ -859,7 +859,7 @@ const profesor: Diccionario["profesor"] = {
       notaFinal: "最終成績",
       porcentajeTipo: "成績の{n}%",
       sinPeso: "計画に割合なし",
-      parcial: "暫定の最終成績：現時点では計画の{n}%分の種類で計算しています。{tipos}はまだ成績がないため、その割合は他の種類に配分されます。",
+      parcial: "累積の最終成績：各種類の平均×割合を合計します。現在、計画の{n}%が採点済みです。{tipos}はまだ成績がなく、成績が付くまで0として扱います。",
       errores: {
         sinInstrucciones: "配分の指示を書いてください。",
         noEncontrado: "コースが見つかりません。",

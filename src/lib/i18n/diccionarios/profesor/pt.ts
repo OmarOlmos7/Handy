@@ -859,7 +859,7 @@ const profesor: Diccionario["profesor"] = {
       notaFinal: "Nota final",
       porcentajeTipo: "{n}% da nota",
       sinPeso: "Sem % no plano",
-      parcial: "Nota final parcial: por enquanto contam tipos que somam {n}% do plano. {tipos} ainda não tem notas; sua porcentagem é dividida entre os demais até que tenha.",
+      parcial: "Nota final acumulada: soma a média de cada tipo multiplicada pela sua porcentagem. Já foram avaliados {n}% do plano; {tipos} ainda não tem notas e soma 0 até ter.",
       errores: {
         sinInstrucciones: "Escreva as instruções de ponderação.",
         noEncontrado: "Curso não encontrado.",

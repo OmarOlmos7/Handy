@@ -61,42 +61,31 @@ export interface NotaFinal {
   porAlumno: Map<string, number | null>;
   /** Promedio de las notas finales del grupo. */
   promedioGrupo: number | null;
-  /** Porcentaje del plan que ya tiene calificaciones (los tipos sin calificaciones aún no cuentan). */
+  /** Porcentaje del plan que ya tiene calificaciones (es el máximo que puede llevar acumulado la nota final). */
   ponderacionActual: number;
   /** Tipos del plan sin actividades calificadas todavía. */
   sinCalificar: string[];
 }
 
 /**
- * Nota final del curso con el plan: promedio de cada tipo de actividad (lo no entregado cuenta 0,
- * igual que en el cuaderno) multiplicado por su porcentaje. Mientras un tipo no tenga actividades
- * calificadas, su porcentaje se reparte en proporción entre los que sí tienen.
+ * Nota final según el plan de evaluación: cada tipo aporta su promedio por su porcentaje
+ * (Σ promedio del tipo × % / 100). Es una nota acumulada: un tipo del plan que aún no tiene
+ * calificaciones aporta 0 hasta que las tenga, igual que un trabajo no entregado.
+ * Los tipos del cuaderno que no están en el plan no cuentan.
  */
 export function notaFinal(cuaderno: Cuaderno, plan: PlanEvaluacion): NotaFinal {
   const tipos = cuaderno.grupos
-    .map((g) => ({ g, peso: pesoDe(plan, g.clave) ?? 0, columnas: g.columnas.filter((c) => c.cuenta) }))
-    .filter((x) => x.peso > 0 && x.columnas.length > 0);
+    .map((g) => ({ g, peso: pesoDe(plan, g.clave) ?? 0 }))
+    .filter((x) => x.peso > 0 && x.g.columnas.some((c) => c.cuenta));
   const ponderacionActual = r1(tipos.reduce((s, x) => s + x.peso, 0));
   const conCalif = new Set(tipos.map((x) => normal(x.g.clave)));
   const sinCalificar = plan.pesos.filter((p) => !conCalif.has(normal(p.etiqueta))).map((p) => p.etiqueta);
 
   const porAlumno = new Map<string, number | null>();
   for (const f of cuaderno.filas) {
-    let suma = 0;
-    let pesos = 0;
-    for (const { peso, columnas } of tipos) {
-      const valores = columnas
-        .map((c) => {
-          const v = f.celdas[c.id]?.valor;
-          return v === null || v === undefined ? null : (v / c.escala) * cuaderno.escala;
-        })
-        .filter((v): v is number => v !== null);
-      const p = prom(valores);
-      if (p === null) continue;
-      suma += p * peso;
-      pesos += peso;
-    }
-    porAlumno.set(f.matricula, pesos > 0 ? r1(suma / pesos) : null);
+    const promedios = tipos.map(({ g, peso }) => ({ p: g.promedios[f.matricula] ?? null, peso }));
+    // Sin ninguna calificación todavía no hay nota final.
+    porAlumno.set(f.matricula, promedios.some((x) => x.p !== null) ? r1(promedios.reduce((s, x) => s + (x.p ?? 0) * x.peso, 0) / 100) : null);
   }
   const finales = [...porAlumno.values()].filter((v): v is number => v !== null);
   const pg = prom(finales);
