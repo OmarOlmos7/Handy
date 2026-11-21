@@ -160,6 +160,7 @@ const alumno: Diccionario["alumno"] = {
     yaExiste: "このメールアドレスのアカウントはすでにあります。アクセスキーでログインしてください。",
     credenciales: "メールアドレスまたはアクセスキーが正しくありません。",
     clavesDistintas: "2 つのアクセスキーが一致しません。",
+    aceptacion: "アカウントを作成するには、利用規約とプライバシー通知を読んで同意してください。",
     actividadNoEncontrada: "課題が見つかりません",
     entregasSuspendidas: "先生がこの課題の提出を停止しています。再開の時期は先生に確認してください。",
     sinArchivos: "写真か PDF を 1 つ以上追加してください",

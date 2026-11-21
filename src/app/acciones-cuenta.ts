@@ -6,6 +6,7 @@ import { leer, modificar } from "@/lib/almacen";
 import { adoptarSinDueno, correoValido, cuentaAlumnoPorCorreo, hashContrasena, normalizarCorreo, verificarContrasena } from "@/lib/cuentas";
 import { LARGO_MINIMO_CLAVE, crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
 import { correoConfigurado, enviarCorreo } from "@/lib/correo";
+import { aceptacionDeFormulario } from "@/lib/legal/aceptacion";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
 import { urlBase } from "@/lib/qr";
@@ -29,13 +30,15 @@ export async function registrarProfesor(form: FormData) {
   if (contrasena.length < 8) volver("/registro", "contrasenaCorta");
   const codigoRequerido = process.env.REGISTRO_CODIGO;
   if (codigoRequerido && invitacion !== codigoRequerido) volver("/registro", "invitacion");
+  const aceptacion = aceptacionDeFormulario(form);
+  if (!aceptacion) volver("/registro", "aceptacion");
 
   const id = `p-${crypto.randomBytes(6).toString("hex")}`;
   const contrasenaHash = hashContrasena(contrasena);
   const creado = modificar((db) => {
     if (db.profesores.some((p) => p.correo === correo)) return false;
     const primero = db.profesores.length === 0;
-    db.profesores.push({ id, nombre, correo, contrasena: contrasenaHash, creadoEn: new Date().toISOString() });
+    db.profesores.push({ id, nombre, correo, contrasena: contrasenaHash, creadoEn: new Date().toISOString(), aceptacion });
     if (primero) adoptarSinDueno(db, id);
     if (CREDITOS_INICIALES > 0) {
       db.movimientos.unshift({
@@ -85,6 +88,7 @@ export async function registrarAlumno(form: FormData) {
     matricula: String(form.get("matricula") ?? ""),
     correo: String(form.get("correo") ?? ""),
     clave,
+    aceptacion: aceptacionDeFormulario(form),
   });
   if (!r.ok) volver("/alumno?crear=1", r.error);
   await iniciarSesionAlumno(r.cuenta.id);

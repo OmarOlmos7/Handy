@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { registrarProfesor } from "@/app/acciones-cuenta";
+import { AceptarAvisos } from "@/components/aceptar-avisos";
 import { TarjetaCuenta, campoCuenta } from "@/components/tarjeta-cuenta";
 import { Boton } from "@/components/ui";
 import { textoError } from "@/lib/i18n/cuenta";
+import { datosResponsable } from "@/lib/legal/documentos";
 import { textos } from "@/lib/i18n/servidor";
 import { profesorActual } from "@/lib/sesion";
 
@@ -43,6 +45,7 @@ export default async function Registro({ searchParams }: PageProps<"/registro">)
             <span className="mt-1 block text-xs text-slate-500">{c.invitacionNota}</span>
           </label>
         )}
+        <AceptarAvisos t={t.legal} tipo="profesor" correo={datosResponsable(process.env).correo} />
         <Boton type="submit" className="w-full">
           {c.crearCuenta}
         </Boton>

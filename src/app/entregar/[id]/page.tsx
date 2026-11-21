@@ -5,6 +5,7 @@ import { Logo } from "@/components/ui";
 import { actividadDe, grupoDe, leer } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
 import { textos } from "@/lib/i18n/servidor";
+import { datosResponsable } from "@/lib/legal/documentos";
 import { primeraEntrega } from "@/lib/reenvio";
 import { letrasVersiones, versionValida } from "@/lib/versiones";
 import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
@@ -55,6 +56,7 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
           <EntregarForm
             actividadId={id}
             titulo={actividad.titulo}
+            correoPrivacidad={datosResponsable(process.env).correo}
             modo={comoProfesor ? "profesor" : alumno ? "sesion" : "nuevo"}
             automatica={Boolean(actividad.rubricaConfirmada)}
             matriculaInicial={typeof m === "string" ? m : undefined}

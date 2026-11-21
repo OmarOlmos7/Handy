@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ingresarAlumno, registrarAlumno } from "@/app/acciones-cuenta";
+import { AceptarAvisos } from "@/components/aceptar-avisos";
+import { datosResponsable } from "@/lib/legal/documentos";
 import { InstalarApp } from "@/components/instalar-app";
 import { Boton, Encabezado, Insignia, campo, colorCalificacion, fechaLarga } from "@/components/ui";
 import { leer } from "@/lib/almacen";
@@ -54,6 +56,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
               {tc.repiteClave}
               <input name="clave2" type="password" required minLength={6} autoComplete="new-password" className={campo} />
             </label>
+            <AceptarAvisos t={t.legal} tipo="alumno" correo={datosResponsable(process.env).correo} />
             {typeof error === "string" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{errorAlumno(t, error)}</p>}
             <Boton type="submit" className="w-full">
               {tp.crearCuenta}

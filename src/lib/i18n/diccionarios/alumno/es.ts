@@ -160,6 +160,7 @@ const alumno = {
     yaExiste: "Ya existe una cuenta con ese correo. Entra con tu clave de acceso.",
     credenciales: "Correo o clave de acceso incorrectos.",
     clavesDistintas: "Las dos claves de acceso no coinciden.",
+    aceptacion: "Para crear tu cuenta, lee y acepta los términos y los avisos de privacidad.",
     actividadNoEncontrada: "Actividad no encontrada",
     entregasSuspendidas: "El profesor suspendió las entregas de esta actividad. Pregúntale cuándo se vuelven a abrir.",
     sinArchivos: "Agrega al menos una foto o un PDF",

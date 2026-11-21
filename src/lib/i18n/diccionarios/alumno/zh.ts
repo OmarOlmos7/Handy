@@ -158,6 +158,7 @@ const alumno: Diccionario["alumno"] = {
     yaExiste: "该邮箱已有账户。请用访问密钥登录。",
     credenciales: "邮箱或访问密钥不正确。",
     clavesDistintas: "两次输入的访问密钥不一致。",
+    aceptacion: "要创建账户，请阅读并同意使用条款和隐私声明。",
     actividadNoEncontrada: "找不到该作业",
     entregasSuspendidas: "老师已暂停本作业的提交。请向老师询问何时重新开放。",
     sinArchivos: "请至少添加一张照片或一个 PDF",

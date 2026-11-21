@@ -331,6 +331,14 @@ export interface Profesor {
   creadoEn: string;
   /** Preferencias del profesor (rangos de calificación y precisión de la IA). */
   config?: ConfiguracionProfesor;
+  /** Términos y avisos de privacidad aceptados al crear la cuenta. */
+  aceptacion?: AceptacionLegal;
+}
+
+/** Versión de los textos legales que aceptó una cuenta y cuándo (ISO, UTC). */
+export interface AceptacionLegal {
+  version: string;
+  fecha: string;
 }
 
 /** Motor de IA: Rápido (Haiku), Medio (Sonnet) o Preciso (Opus). */
@@ -369,6 +377,8 @@ export interface CuentaAlumno {
   /** scrypt: "sal:hash" en hexadecimal. */
   contrasena: string;
   creadoEn: string;
+  /** Términos y avisos de privacidad aceptados al crear la cuenta. */
+  aceptacion?: AceptacionLegal;
 }
 
 /** Sesión abierta. Se guarda solo el hash SHA-256 del token de la cookie. */

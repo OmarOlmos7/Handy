@@ -3,6 +3,7 @@ import { versionValida } from "@/lib/versiones";
 import { actividadDe, borrarCarpeta, grupoDe, guardarArchivo, leer, modificar } from "@/lib/almacen";
 import { alumnoEnGrupo, esDelProfesor, normalizarCorreo, normalizarMatricula } from "@/lib/cuentas";
 import { crearCuentaAlumno, verificarAlumno } from "@/lib/cuentas-alumno";
+import { aceptacionDeFormulario } from "@/lib/legal/aceptacion";
 import { evaluarYGuardar, marcarEnFila } from "@/lib/evaluacion";
 import { errorAlumno } from "@/lib/i18n/alumno";
 import { textos } from "@/lib/i18n/servidor";
@@ -59,7 +60,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
       const correo = String(form.get("correo") ?? "");
       const clave = String(form.get("clave") ?? "");
       if (form.get("modo") === "crear") {
-        const r = crearCuentaAlumno({ nombre: String(form.get("nombre") ?? ""), matricula: String(form.get("matricula") ?? ""), correo, clave });
+        const r = crearCuentaAlumno({
+          nombre: String(form.get("nombre") ?? ""),
+          matricula: String(form.get("matricula") ?? ""),
+          correo,
+          clave,
+          aceptacion: aceptacionDeFormulario(form),
+        });
         if (!r.ok) return error(r.error, 400);
         cuenta = { ...r.cuenta, cursos: [] };
       } else {
