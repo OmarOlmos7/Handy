@@ -391,6 +391,8 @@ export interface CuentaAlumno {
   creadoEn: string;
   /** Términos y avisos de privacidad aceptados al crear la cuenta. */
   aceptacion?: AceptacionLegal;
+  /** Color que el alumno eligió para la tarjeta de cada curso (id del grupo → clave de la paleta). */
+  colores?: Record<string, string>;
 }
 
 /** Sesión abierta. Se guarda solo el hash SHA-256 del token de la cookie. */
