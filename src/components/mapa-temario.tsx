@@ -12,6 +12,7 @@ import {
   acomodoGeneral,
   acomodoUnidadConAfines,
   colorAvance,
+  colorProgreso,
   colorUnidad,
   nodosTemario,
   relacionesDeUnidades,
@@ -36,6 +37,8 @@ export function MapaTemario({
   rutaInicial = [],
   grupoId,
   relacionesIA,
+  escala = "calificacion",
+  indicadores,
 }: {
   asignatura: Pick<Asignatura, "id" | "nombre" | "unidades">;
   relaciones: RelacionTemario[];
@@ -48,6 +51,10 @@ export function MapaTemario({
   grupoId?: string;
   /** true si las relaciones ya las propuso la IA. */
   relacionesIA?: boolean;
+  /** "progreso": el color es el avance (rojo, amarillo, verde, azul) y no se editan relaciones. */
+  escala?: "calificacion" | "progreso";
+  /** Porcentaje de avance de cada unidad (por nombre): minipie bajo el nombre de la unidad. */
+  indicadores?: Record<string, number | null>;
 }) {
   const { t } = useTextos();
   const tm = t.profesor.mapa;
@@ -61,7 +68,13 @@ export function MapaTemario({
   const [ocupado, iniciar] = useTransition();
   const [instrucciones, setInstrucciones] = useState("");
 
-  const general = useMemo(() => acomodoGeneral(asignatura, relaciones), [asignatura, relaciones]);
+  const progreso = escala === "progreso";
+  const colorNodo = progreso ? colorProgreso : colorAvance;
+  const editable = modo === "profesor" && !progreso;
+  const general = useMemo(
+    () => acomodoGeneral(asignatura, relaciones, indicadores ? { espacio: 100, arriba: 62 } : {}),
+    [asignatura, relaciones, indicadores],
+  );
   // Unidades relacionadas por completo: se unen de centro a centro, sin las líneas de cada tema.
   const completas = useMemo(() => relacionesDeUnidades(asignatura, relaciones).filter((x) => x.completa), [asignatura, relaciones]);
   const paresCompletos = useMemo(
@@ -178,7 +191,7 @@ export function MapaTemario({
 
   const nombreTipo = (n: NodoTemario) => (n.tipo === "unidad" ? tm.unidad : n.tipo === "tema" ? tm.tema : tm.subtema);
   const textoAvance = (p: number | null | undefined) =>
-    p === null || p === undefined ? tm.sinActividades : p >= 80 ? tm.dominado : p >= 60 ? tm.enProceso : tm.porReforzar;
+    p === null || p === undefined ? tm.sinActividades : progreso ? tm.avance : p >= 80 ? tm.dominado : p >= 60 ? tm.enProceso : tm.porReforzar;
 
   return (
     // A todo el ancho de la ventana (fuera del ancho máximo de la página), centrado.
@@ -212,14 +225,14 @@ export function MapaTemario({
             </button>
           ))}
         </nav>
-        {modo === "profesor" && (
+        {editable && (
           <button type="button" onClick={relacionar} disabled={ocupado} className="rounded-lg px-3 py-1.5 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200 hover:bg-tinta-50 disabled:opacity-60">
             {ocupado ? tm.relacionando : relacionesIA ? tm.volverRelacionar : tm.relacionar}
           </button>
         )}
       </div>
       {/* Instrucciones para la IA: mejora las relaciones actuales */}
-      {modo === "profesor" && (
+      {editable && (
         <form
           className="flex flex-col gap-2 sm:flex-row"
           onSubmit={(e) => {
@@ -273,8 +286,9 @@ export function MapaTemario({
                   >
                     {capa === null && <title>{`${g.nombre} — ${tm.abrirUnidad}`}</title>}
                   </circle>
+                  {capa === null && indicadores && <MiniPie x={g.x} y={g.y - g.r - 18} p={indicadores[g.clave] ?? null} />}
                   {capa === null && (
-                    <text x={g.x} y={g.y - g.r - 10} textAnchor="middle" className="cursor-pointer fill-slate-700 text-[15px] font-semibold" onClick={() => setCapa(g.unidad)}>
+                    <text x={g.x} y={g.y - g.r - (indicadores ? 40 : 10)} textAnchor="middle" className="cursor-pointer fill-slate-700 text-[15px] font-semibold" onClick={() => setCapa(g.unidad)}>
                       {corto(g.nombre, 34)}
                     </text>
                   )}
@@ -433,7 +447,7 @@ export function MapaTemario({
                 <g key={n.clave} className="cursor-pointer" onClick={() => elegir(n.clave)}>
                   <title>{n.nombre}</title>
                   {activo && <circle cx={p.x} cy={p.y} r={r + 9} fill="#0f172a" fillOpacity={0.12} />}
-                  <circle cx={p.x} cy={p.y} r={r + 3.5} fill="none" stroke={colorAvance(av?.promedio)} strokeWidth={av?.actividades.length ? 3.5 : 0} />
+                  <circle cx={p.x} cy={p.y} r={r + 3.5} fill="none" stroke={colorNodo(av?.promedio)} strokeWidth={av?.actividades.length ? 3.5 : 0} />
                   <circle cx={p.x} cy={p.y} r={r} fill={c.nodo} stroke="#fff" strokeWidth={activo ? 3 : 1.5} />
                   {av && av.actividades.length > 0 && (
                     <text x={p.x} y={p.y + 3.5} textAnchor="middle" className="pointer-events-none fill-white text-[10px] font-bold">
@@ -473,7 +487,7 @@ export function MapaTemario({
                     <g key={`c${g.clave}`} className="cursor-pointer" onClick={() => elegir(g.clave)}>
                       <title>{`${g.nombre} — ${tm.relacionUnidades}`}</title>
                       {activo && <circle cx={g.x} cy={g.y} r={30} fill="#0f172a" fillOpacity={0.12} />}
-                      <circle cx={g.x} cy={g.y} r={22} fill="none" stroke={colorAvance(av?.promedio)} strokeWidth={av?.actividades.length ? 4 : 0} />
+                      <circle cx={g.x} cy={g.y} r={22} fill="none" stroke={colorNodo(av?.promedio)} strokeWidth={av?.actividades.length ? 4 : 0} />
                       <circle cx={g.x} cy={g.y} r={18} fill={c.nodo} stroke="#fff" strokeWidth={activo ? 3.5 : 2.5} />
                       <text x={g.x} y={g.y + 5} textAnchor="middle" className="pointer-events-none fill-white text-[14px] font-bold">
                         {formato(tm.unidadCorta, { n: g.unidad + 1 })}
@@ -483,14 +497,23 @@ export function MapaTemario({
                 })}
           </svg>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
-            {[
-              [80, tm.dominado],
-              [65, tm.enProceso],
-              [10, tm.porReforzar],
-              [null, tm.sinActividades],
-            ].map(([p, texto]) => (
+            {(progreso
+              ? [
+                  [100, "100 %"],
+                  [90, "80–99 %"],
+                  [65, "51–79 %"],
+                  [20, "0–50 %"],
+                  [null, tm.sinActividades],
+                ]
+              : [
+                  [80, tm.dominado],
+                  [65, tm.enProceso],
+                  [10, tm.porReforzar],
+                  [null, tm.sinActividades],
+                ]
+            ).map(([p, texto]) => (
               <span key={String(texto)} className="flex items-center gap-1.5">
-                <span className="h-3 w-3 rounded-full border-[3px]" style={{ borderColor: colorAvance(p as number | null) }} />
+                <span className="h-3 w-3 rounded-full border-[3px]" style={{ borderColor: colorNodo(p as number | null) }} />
                 {texto}
               </span>
             ))}
@@ -514,7 +537,7 @@ export function MapaTemario({
               </svg>
               {tm.secuencia}
             </span>
-            <span>{modo === "alumno" ? tm.numeroAlumno : tm.numeroProfesor}</span>
+            <span>{modo === "alumno" ? tm.numeroAlumno : progreso ? tm.numeroAvance : tm.numeroProfesor}</span>
           </div>
         </div>
 
@@ -536,7 +559,7 @@ export function MapaTemario({
                   {sel.tipo === "subtema" && sel.padre && <p className="text-xs text-slate-500">{porClave.get(sel.padre)?.nombre}</p>}
                 </div>
                 <p className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full" style={{ background: colorAvance(avanceSel?.promedio) }} />
+                  <span className="h-3 w-3 rounded-full" style={{ background: colorNodo(avanceSel?.promedio) }} />
                   <span className="font-medium">{textoAvance(avanceSel?.promedio)}</span>
                   {avanceSel?.promedio !== null && avanceSel?.promedio !== undefined && <span className="text-slate-500">· {avanceSel.promedio} %</span>}
                 </p>
@@ -553,7 +576,7 @@ export function MapaTemario({
                           ) : (
                             <span className="truncate text-slate-700">{a.titulo}</span>
                           )}
-                          <span className="shrink-0 text-xs font-semibold" style={{ color: colorAvance(a.porcentaje) }}>
+                          <span className="shrink-0 text-xs font-semibold" style={{ color: colorNodo(a.porcentaje) }}>
                             {a.porcentaje !== null ? `${a.porcentaje} %` : modo === "alumno" && a.entregada ? tm.entregada : tm.pendiente}
                           </span>
                         </li>
@@ -633,7 +656,7 @@ export function MapaTemario({
                           </button>
                         </td>
                         <td className="px-2 py-1.5 text-center text-xs text-slate-500">{av?.actividades.length || "–"}</td>
-                        <td className="px-4 py-1.5 text-right text-xs font-semibold" style={{ color: colorAvance(av?.promedio) }}>
+                        <td className="px-4 py-1.5 text-right text-xs font-semibold" style={{ color: colorNodo(av?.promedio) }}>
                           {av?.promedio !== null && av?.promedio !== undefined ? `${av.promedio} %` : "–"}
                         </td>
                       </tr>
@@ -663,7 +686,7 @@ export function MapaTemario({
                         <button type="button" onClick={() => irA(c)} className="min-w-0 flex-1 truncate text-left text-slate-800 hover:underline" title={n.nombre}>
                           {n.nombre}
                         </button>
-                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: colorAvance(avance[c]?.promedio) }} />
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: colorNodo(avance[c]?.promedio) }} />
                         <button type="button" aria-label={tm.subir} onClick={() => mover(i, -1)} className="px-1 text-slate-400 hover:text-slate-700">
                           ▲
                         </button>
@@ -685,5 +708,29 @@ export function MapaTemario({
           )}
       </div>
     </div>
+  );
+}
+
+/** Pastel pequeño con el porcentaje de avance a un costado, centrado en x. */
+function MiniPie({ x, y, p }: { x: number; y: number; p: number | null }) {
+  const R = 10;
+  const cx = x - 24;
+  const color = colorProgreso(p);
+  const f = Math.max(0, Math.min(1, (p ?? 0) / 100));
+  const ang = f * 2 * Math.PI - Math.PI / 2;
+  const fin = { x: cx + R * Math.cos(ang), y: y + R * Math.sin(ang) };
+  return (
+    <g className="pointer-events-none">
+      <circle cx={cx} cy={y} r={R} fill="#e2e8f0" stroke="#fff" strokeWidth={1.5} />
+      {f >= 1 ? (
+        <circle cx={cx} cy={y} r={R} fill={color} />
+      ) : (
+        f > 0 && <path d={`M ${cx} ${y} L ${cx} ${y - R} A ${R} ${R} 0 ${f > 0.5 ? 1 : 0} 1 ${fin.x} ${fin.y} Z`} fill={color} />
+      )}
+      <circle cx={cx} cy={y} r={R} fill="none" stroke={color} strokeWidth={1.5} />
+      <text x={cx + R + 5} y={y + 5} className="text-[15px] font-bold" fill={color === "#eab308" ? "#a16207" : color}>
+        {p === null ? "–" : `${Math.round(p)} %`}
+      </text>
+    </g>
   );
 }

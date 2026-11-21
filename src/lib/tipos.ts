@@ -559,4 +559,22 @@ export interface BaseDeDatos {
   asignaturas?: Asignatura[];
   /** Rutas de estudio de los alumnos en el mapa de cada asignatura. */
   rutas?: RutaAlumno[];
+  /** Tiempo que cada alumno tiene abierta cada actividad (para las analíticas de avance). */
+  tiempos?: TiempoActividad[];
+}
+
+/**
+ * Tiempo que un alumno pasó con una actividad abierta (contestándola o revisando su
+ * retroalimentación). Solo cuenta mientras la pestaña está visible y el alumno la usa.
+ */
+export interface TiempoActividad {
+  actividadId: string;
+  matricula: string;
+  segundos: number;
+  /** Segundos por hora del día (0-23, hora del centro de México). */
+  porHora: number[];
+  /** Segundos por día de la semana (0 domingo … 6 sábado). */
+  porDia: number[];
+  primeraVez: string;
+  ultimaVez: string;
 }
