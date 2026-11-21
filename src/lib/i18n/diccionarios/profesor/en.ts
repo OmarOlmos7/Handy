@@ -392,6 +392,10 @@ const profesor: Diccionario["profesor"] = {
     guardando: "Saving…",
     guardado: "Changes saved.",
     sinGuardar: "You have unsaved changes.",
+    cancelar: "Cancel",
+    siQuitar: "Yes, remove",
+    siBorrar: "Yes, delete",
+    borrando: "Deleting…",
     borrar: "Delete subject",
     confirmarBorrar: "Delete the subject \"{n}\"? Activities keep the topics they already have.",
     temasActividad: "Activity topics",
@@ -405,6 +409,7 @@ const profesor: Diccionario["profesor"] = {
     sinAsignaturasAlta: "To choose the activity's topics, load your subject's syllabus in Subjects.",
     crearAsignatura: "Create subject",
     errores: {
+      recargar: "This couldn't be completed. Reload the page (the app was updated) and try again.",
       sinSesion: "Sign in",
       sinArchivo: "Choose the syllabus file.",
       archivoGrande: "The file is larger than 15 MB.",

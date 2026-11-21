@@ -392,6 +392,10 @@ const profesor: Diccionario["profesor"] = {
     guardando: "Wird gespeichert…",
     guardado: "Änderungen gespeichert.",
     sinGuardar: "Es gibt ungespeicherte Änderungen.",
+    cancelar: "Abbrechen",
+    siQuitar: "Ja, entfernen",
+    siBorrar: "Ja, löschen",
+    borrando: "Wird gelöscht…",
     borrar: "Fach löschen",
     confirmarBorrar: "Fach „{n}“ löschen? Die Aufgaben behalten ihre Themen.",
     temasActividad: "Themen der Aufgabe",
@@ -405,6 +409,7 @@ const profesor: Diccionario["profesor"] = {
     sinAsignaturasAlta: "Um die Themen der Aufgabe zu wählen, lade den Lehrplan deines Fachs unter Fächer.",
     crearAsignatura: "Fach anlegen",
     errores: {
+      recargar: "Das hat nicht geklappt. Lade die Seite neu (die App wurde aktualisiert) und versuche es noch einmal.",
       sinSesion: "Melde dich an",
       sinArchivo: "Wähle die Datei mit dem Lehrplan.",
       archivoGrande: "Die Datei ist größer als 15 MB.",

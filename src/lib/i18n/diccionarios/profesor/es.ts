@@ -390,6 +390,10 @@ const profesor = {
     guardando: "Guardando…",
     guardado: "Cambios guardados.",
     sinGuardar: "Hay cambios sin guardar.",
+    cancelar: "Cancelar",
+    siQuitar: "Sí, quitar",
+    siBorrar: "Sí, borrar",
+    borrando: "Borrando…",
     borrar: "Borrar asignatura",
     confirmarBorrar: "¿Borrar la asignatura \"{n}\"? Las actividades conservan los temas que ya tienen.",
     temasActividad: "Temas de la actividad",
@@ -403,6 +407,7 @@ const profesor = {
     sinAsignaturasAlta: "Para elegir los temas de la actividad, carga el temario de tu materia en Asignaturas.",
     crearAsignatura: "Crear asignatura",
     errores: {
+      recargar: "No se pudo completar. Recarga la página (la app se actualizó) e intenta de nuevo.",
       sinSesion: "Inicia sesión",
       sinArchivo: "Elige el archivo del temario.",
       archivoGrande: "El archivo pesa más de 15 MB.",

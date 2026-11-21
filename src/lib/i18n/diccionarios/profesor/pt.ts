@@ -392,6 +392,10 @@ const profesor: Diccionario["profesor"] = {
     guardando: "Salvando…",
     guardado: "Alterações salvas.",
     sinGuardar: "Há alterações não salvas.",
+    cancelar: "Cancelar",
+    siQuitar: "Sim, remover",
+    siBorrar: "Sim, excluir",
+    borrando: "Excluindo…",
     borrar: "Excluir disciplina",
     confirmarBorrar: "Excluir a disciplina \"{n}\"? As atividades mantêm os temas que já têm.",
     temasActividad: "Temas da atividade",
@@ -405,6 +409,7 @@ const profesor: Diccionario["profesor"] = {
     sinAsignaturasAlta: "Para escolher os temas da atividade, carregue a ementa da sua disciplina em Disciplinas.",
     crearAsignatura: "Criar disciplina",
     errores: {
+      recargar: "Não foi possível concluir. Recarregue a página (o app foi atualizado) e tente de novo.",
       sinSesion: "Entre na sua conta",
       sinArchivo: "Escolha o arquivo da ementa.",
       archivoGrande: "O arquivo tem mais de 15 MB.",

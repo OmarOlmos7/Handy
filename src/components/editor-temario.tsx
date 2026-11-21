@@ -26,6 +26,8 @@ export function EditorTemario({ asignatura }: { asignatura: Asignatura }) {
   const [guardado, setGuardado] = useState(() => JSON.stringify([asignatura.nombre, asignatura.nivel ?? "", aEditable(asignatura)]));
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
   const [guardando, iniciar] = useTransition();
+  // Confirmación dentro de la página (en algunas apps y vistas web el aviso del navegador no aparece).
+  const [confirmando, setConfirmando] = useState<"borrar" | number | null>(null);
   const sinGuardar = JSON.stringify([nombre, nivel, unidades]) !== guardado;
 
   const cambiarUnidad = (i: number, cambio: (u: UnidadEditable) => UnidadEditable) => {
@@ -36,16 +38,36 @@ export function EditorTemario({ asignatura }: { asignatura: Asignatura }) {
     cambiarUnidad(i, (u) => ({ ...u, temas: u.temas.map((tm, k) => (k === j ? { ...tm, ...cambio } : tm)) }));
 
   function guardar() {
+    setAviso(null);
     iniciar(async () => {
       const datos = unidades.map((u) => ({
         nombre: u.nombre,
         temas: u.temas.map((tm) => ({ nombre: tm.nombre, subtemas: tm.subtemas.split("\n") })),
       }));
-      const r = await guardarAsignatura(asignatura.id, { nombre, nivel, unidades: datos }).catch(() => ({ error: "noSeGuardo" as const }));
-      if ("ok" in r) {
-        setGuardado(JSON.stringify([nombre, nivel, unidades]));
-        setAviso({ ok: true, texto: ta.guardado });
-      } else setAviso({ ok: false, texto: ta.errores[r.error] });
+      try {
+        const r = await guardarAsignatura(asignatura.id, { nombre, nivel, unidades: datos });
+        if ("ok" in r) {
+          setGuardado(JSON.stringify([nombre, nivel, unidades]));
+          setAviso({ ok: true, texto: ta.guardado });
+        } else setAviso({ ok: false, texto: ta.errores[r.error] });
+      } catch {
+        // Por ejemplo, la página quedó abierta desde antes de una actualización del servidor.
+        setAviso({ ok: false, texto: ta.errores.recargar });
+      }
+    });
+  }
+
+  function borrar() {
+    setAviso(null);
+    iniciar(async () => {
+      try {
+        await borrarAsignatura(asignatura.id);
+      } catch (e) {
+        // La redirección al terminar también llega como excepción: se deja pasar.
+        if (e && typeof e === "object" && "digest" in e && String((e as { digest: unknown }).digest).startsWith("NEXT_REDIRECT")) throw e;
+        setConfirmando(null);
+        setAviso({ ok: false, texto: ta.errores.recargar });
+      }
     });
   }
 
@@ -76,14 +98,33 @@ export function EditorTemario({ asignatura }: { asignatura: Asignatura }) {
               type="button"
               title={ta.quitarUnidad}
               aria-label={ta.quitarUnidad}
-              onClick={() => {
-                if (window.confirm(formato(ta.confirmarQuitarUnidad, { n: u.nombre }))) setUnidades((us) => us.filter((_, k) => k !== i));
-              }}
+              onClick={() => setConfirmando(confirmando === i ? null : i)}
               className="rounded-md p-1.5 text-slate-400 hover:bg-error-suave hover:text-error"
             >
               <IconoBasura />
             </button>
           </div>
+          {confirmando === i && (
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-error-suave px-4 py-2 text-sm text-error">
+              <span>{formato(ta.confirmarQuitarUnidad, { n: u.nombre })}</span>
+              <span className="flex gap-2">
+                <button type="button" onClick={() => setConfirmando(null)} className="rounded-lg bg-white px-3 py-1 font-medium text-slate-700 ring-1 ring-slate-300">
+                  {ta.cancelar}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmando(null);
+                    setAviso(null);
+                    setUnidades((us) => us.filter((_, k) => k !== i));
+                  }}
+                  className="rounded-lg bg-error px-3 py-1 font-medium text-white"
+                >
+                  {ta.siQuitar}
+                </button>
+              </span>
+            </div>
+          )}
           <table className="w-full text-sm">
             <thead className="text-left text-xs text-slate-500">
               <tr>
@@ -147,24 +188,41 @@ export function EditorTemario({ asignatura }: { asignatura: Asignatura }) {
         + {ta.agregarUnidad}
       </button>
 
-      <div className="sticky bottom-3 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white/95 p-3 shadow-lg ring-1 ring-slate-200 backdrop-blur">
-        <p className={`text-sm ${aviso ? (aviso.ok ? "text-acierto" : "text-error") : "text-slate-500"}`}>
-          {aviso?.texto ?? (sinGuardar ? ta.sinGuardar : "")}
-        </p>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              if (window.confirm(formato(ta.confirmarBorrar, { n: asignatura.nombre }))) iniciar(() => borrarAsignatura(asignatura.id));
-            }}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-error hover:bg-error-suave"
-          >
-            {ta.borrar}
-          </button>
-          <Boton type="button" onClick={guardar} disabled={guardando || !sinGuardar}>
-            {guardando ? ta.guardando : ta.guardar}
-          </Boton>
-        </div>
+      <div className="sticky bottom-3 z-10 rounded-2xl bg-white/95 p-3 shadow-lg ring-1 ring-slate-200 backdrop-blur">
+        {confirmando === "borrar" ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-medium text-error">{formato(ta.confirmarBorrar, { n: asignatura.nombre })}</p>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => setConfirmando(null)} disabled={guardando} className="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
+                {ta.cancelar}
+              </button>
+              <button type="button" onClick={borrar} disabled={guardando} className="rounded-lg bg-error px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
+                {guardando ? ta.borrando : ta.siBorrar}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p role="status" className={`text-sm font-medium ${aviso ? (aviso.ok ? "text-acierto" : "text-error") : sinGuardar ? "text-aviso" : "text-slate-500"}`}>
+              {aviso ? `${aviso.ok ? "✓ " : ""}${aviso.texto}` : sinGuardar ? ta.sinGuardar : ""}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAviso(null);
+                  setConfirmando("borrar");
+                }}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-error hover:bg-error-suave"
+              >
+                {ta.borrar}
+              </button>
+              <Boton type="button" onClick={guardar} disabled={guardando}>
+                {guardando ? ta.guardando : ta.guardar}
+              </Boton>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
