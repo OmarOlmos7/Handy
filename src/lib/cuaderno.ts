@@ -31,6 +31,8 @@ export interface Columna {
 
 export interface GrupoColumnas {
   etiqueta: string;
+  /** Etiqueta tal como está en las actividades ("" si no tienen); con ella se busca su peso en el plan. */
+  clave: string;
   columnas: Columna[];
 }
 
@@ -100,6 +102,7 @@ export function cuadernoCurso(grupo: Grupo, actividades: Actividad[], entregas: 
 
   const grupos = agruparPorEtiqueta(porFecha).map(({ etiqueta, items }) => ({
     etiqueta: etiqueta ?? sinEtiqueta,
+    clave: etiqueta ?? "",
     columnas: items.map(columna),
   }));
 

@@ -28,8 +28,10 @@ import { textos } from "@/lib/i18n/servidor";
 import { listaParaRubrica } from "@/lib/modalidad";
 import { conPuntaje } from "@/lib/modalidad";
 import { formato } from "@/lib/i18n/idiomas";
+import { leerFiltro, leerOrden, ordenarEntregas } from "@/lib/listas";
+import { OrdenLista } from "@/components/orden-lista";
 
-export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
+export default async function EntregasActividad({ params, searchParams }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
   const { db, profesor } = await datosProfesor();
   const actividad = actividadDe(db, id);
@@ -58,6 +60,11 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
   const tc = t.profesor.comun;
   const ta = t.profesor.actividad;
   const nombre = (m: string) => grupo.alumnos.find((a) => a.matricula === m)?.nombre ?? m;
+  const busqueda = await searchParams;
+  const orden = leerOrden(busqueda.orden);
+  const filtro = leerFiltro(busqueda.ver);
+  const lista = ordenarEntregas(entregas, nombre, orden, filtro);
+  const conteos = { todas: entregas.length, entregadas: recibidas.length, sin_entregar: entregas.length - recibidas.length };
 
   return (
     <>
@@ -197,6 +204,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
         </Tarjeta>
       </div>
 
+      <OrdenLista orden={orden} filtro={filtro} conteos={conteos} />
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
@@ -214,7 +222,14 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {entregas.map((e) => {
+            {lista.length === 0 && (
+              <tr>
+                <td colSpan={20} className="px-4 py-6 text-center text-slate-500">
+                  {t.profesor.lista.vacio}
+                </td>
+              </tr>
+            )}
+            {lista.map((e) => {
               const cal = calificacion(actividad, e);
               const baja = e.resultados.filter((r) => r.confianza === "baja").length;
               const evaluada = calificada(e);

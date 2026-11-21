@@ -13,9 +13,11 @@ import { fechaHoraLarga } from "@/lib/resultados";
 import { datosProfesor } from "@/lib/sesion";
 import { textos } from "@/lib/i18n/servidor";
 import { formato } from "@/lib/i18n/idiomas";
+import { leerFiltro, leerOrden, ordenarEntregas } from "@/lib/listas";
+import { OrdenLista } from "@/components/orden-lista";
 
 /** Paso 4 del flujo: quién ya entregó, el QR para entregar (proyectable) y las acciones sobre cada entrega. */
-export default async function Entregas({ params }: PageProps<"/profesor/actividades/[id]/entregas">) {
+export default async function Entregas({ params, searchParams }: PageProps<"/profesor/actividades/[id]/entregas">) {
   const { id } = await params;
   const { db } = await datosProfesor();
   const actividad = actividadDe(db, id);
@@ -31,6 +33,11 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
   const tc = t.profesor.comun;
   const te = t.profesor.entregas;
   const nombre = (m: string) => grupo.alumnos.find((a) => a.matricula === m)?.nombre ?? m;
+  const busqueda = await searchParams;
+  const orden = leerOrden(busqueda.orden);
+  const filtro = leerFiltro(busqueda.ver);
+  const lista = ordenarEntregas(entregas, nombre, orden, filtro);
+  const conteos = { todas: entregas.length, entregadas: recibidas.length, sin_entregar: entregas.length - recibidas.length };
 
   return (
     <>
@@ -89,6 +96,7 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
           <QrEntregas qr={qr} enlace={enlace} titulo={actividad.titulo} suspendidas={Boolean(actividad.entregasSuspendidas)} />
         </div>
 
+        <OrdenLista orden={orden} filtro={filtro} conteos={conteos} />
         <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
@@ -105,7 +113,14 @@ export default async function Entregas({ params }: PageProps<"/profesor/activida
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {entregas.map((e) => {
+              {lista.length === 0 && (
+                <tr>
+                  <td colSpan={20} className="px-4 py-6 text-center text-slate-500">
+                    {t.profesor.lista.vacio}
+                  </td>
+                </tr>
+              )}
+              {lista.map((e) => {
                 const entrego = e.estado !== "sin_entregar";
                 return (
                   <tr key={e.matricula} className="hover:bg-slate-50">

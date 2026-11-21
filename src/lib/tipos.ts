@@ -64,6 +64,24 @@ export interface Grupo {
   /** Color de la tarjeta en el panel (clave de la paleta en lib/colores). */
   color?: string;
   alumnos: Alumno[];
+  /** Ponderación de cada tipo de actividad para la nota final del curso. */
+  planEvaluacion?: PlanEvaluacion;
+}
+
+/** Peso de un tipo de actividad (etiqueta) en la nota final. "" es el de las actividades sin etiqueta. */
+export interface PesoTipo {
+  etiqueta: string;
+  porcentaje: number;
+}
+
+/** Plan de evaluación del curso: porcentaje de cada tipo de actividad (suman 100). */
+export interface PlanEvaluacion {
+  /** Instrucciones que escribió el profesor (si el plan se generó con IA). */
+  instrucciones?: string;
+  pesos: PesoTipo[];
+  /** Notas de la IA sobre cómo interpretó las instrucciones. */
+  notas?: string;
+  actualizadoEn: string;
 }
 
 export type EstadoActividad =
@@ -414,7 +432,7 @@ export interface Sesion {
 }
 
 /** Para qué se llamó a la IA (para el panel de administración). */
-export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio" | "recursos";
+export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio" | "recursos" | "plan";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {
