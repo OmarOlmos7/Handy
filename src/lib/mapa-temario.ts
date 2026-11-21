@@ -605,7 +605,7 @@ export function acomodoUnidadConAfines(a: Pick<Asignatura, "unidades">, unidad: 
   });
   const visibles = new Set(afines.flatMap((g) => g.nodos));
   // Lienzo que abarca todo, con lugar para los nombres.
-  const cajas = [{ x: c, y: c, r: R }, ...afines.map((g) => ({ x: g.x, y: g.y - 14, r: g.r + 30 }))];
+  const cajas = [{ x: c, y: c, r: R }, ...afines.map((g) => ({ x: g.x, y: g.y - 26, r: g.r + 42 }))];
   const x0 = Math.min(...cajas.map((b) => b.x - b.r)) - 20;
   const y0 = Math.min(...cajas.map((b) => b.y - b.r)) - 10;
   const x1 = Math.max(...cajas.map((b) => b.x + b.r)) + 20;

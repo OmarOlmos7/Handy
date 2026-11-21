@@ -189,6 +189,8 @@ export function MapaTemario({
   // Puntos de la ruta en la capa actual (en la general, cada subtema en su tema).
   const puntosRuta = ruta.map((c) => ({ clave: c, p: capa === null || porClave.get(c)?.unidad === capa ? punto(c) : undefined })).filter((x) => x.p);
 
+  // En la capa de unidad, el nombre de los temas de la mitad de abajo va arriba del nodo.
+  const arriba = (n: NodoTemario, p: Punto) => capa !== null && n.tipo === "tema" && p.y > (acomodo.posiciones[unidadCapa?.nombre ?? ""]?.y ?? acomodo.alto / 2) + 1;
   const nombreTipo = (n: NodoTemario) => (n.tipo === "unidad" ? tm.unidad : n.tipo === "tema" ? tm.tema : tm.subtema);
   const textoAvance = (p: number | null | undefined) =>
     p === null || p === undefined ? tm.sinActividades : progreso ? tm.avance : p >= 80 ? tm.dominado : p >= 60 ? tm.enProceso : tm.porReforzar;
@@ -263,8 +265,13 @@ export function MapaTemario({
       <div className={capa === null ? "relative space-y-4" : "grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start"}>
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
           {unidadCapa && (
-            <p className="border-b border-slate-100 px-4 py-2 text-sm font-semibold" style={{ color: colorUnidad(capa!).nodo }}>
+            <p className="flex items-center gap-3 border-b border-slate-100 px-4 py-2 text-sm font-semibold" style={{ color: colorUnidad(capa!).nodo }}>
               {unidadCapa.nombre}
+              {indicadores && (
+                <svg width="80" height="24" aria-hidden>
+                  <MiniPie x={34} y={12} p={indicadores[unidadCapa.nombre] ?? null} />
+                </svg>
+              )}
             </p>
           )}
           <svg viewBox={`0 0 ${acomodo.ancho} ${acomodo.alto}`} className="mx-auto block h-auto max-h-[82vh] w-full select-none" role="img" aria-label={tm.titulo}>
@@ -386,7 +393,8 @@ export function MapaTemario({
                   <circle cx={g.x} cy={g.y} r={g.r} fill={c.fondo} fillOpacity={0.7} stroke={c.borde} strokeWidth={1.5} className="cursor-pointer" onClick={() => irA(g.clave)}>
                     <title>{`${g.nombre} — ${tm.abrirUnidad}`}</title>
                   </circle>
-                  <text x={g.x} y={g.y - g.r - 8} textAnchor="middle" className="cursor-pointer fill-slate-700 text-[17px] font-semibold" onClick={() => irA(g.clave)}>
+                  {indicadores && <MiniPie x={g.x} y={g.y - g.r - 14} p={indicadores[g.nombre] ?? null} />}
+                  <text x={g.x} y={g.y - g.r - (indicadores ? 34 : 8)} textAnchor="middle" className="cursor-pointer fill-slate-700 text-[17px] font-semibold" onClick={() => irA(g.clave)}>
                     {corto(g.nombre, 24)}
                   </text>
                   {g.nodos.map((clave) => {
@@ -462,9 +470,12 @@ export function MapaTemario({
                       </text>
                     </g>
                   )}
+                  {indicadores && capa !== null && n.tipo === "tema" && (
+                    <MiniPie x={p.x} y={arriba(n, p) ? p.y - r - 32 : p.y + r + 32} p={indicadores[n.clave] ?? null} chico />
+                  )}
                   <text
                     x={p.x}
-                    y={capa !== null && n.tipo === "tema" && p.y > (acomodo.posiciones[unidadCapa?.nombre ?? ""]?.y ?? acomodo.alto / 2) + 1 ? p.y - r - 7 : p.y + r + 14}
+                    y={arriba(n, p) ? p.y - r - 7 : p.y + r + 14}
                     textAnchor="middle"
                     className={`pointer-events-none ${n.tipo === "tema" ? `fill-slate-800 font-semibold ${capa === null ? "text-[11px]" : "text-[15px]"}` : "fill-slate-600 text-[12px]"}`}
                     style={{ paintOrder: "stroke", stroke: "rgba(255,255,255,0.85)", strokeWidth: 3 }}
@@ -712,9 +723,9 @@ export function MapaTemario({
 }
 
 /** Pastel pequeño con el porcentaje de avance a un costado, centrado en x. */
-function MiniPie({ x, y, p }: { x: number; y: number; p: number | null }) {
-  const R = 10;
-  const cx = x - 24;
+function MiniPie({ x, y, p, chico }: { x: number; y: number; p: number | null; chico?: boolean }) {
+  const R = chico ? 8 : 10;
+  const cx = x - (chico ? 20 : 24);
   const color = colorProgreso(p);
   const f = Math.max(0, Math.min(1, (p ?? 0) / 100));
   const ang = f * 2 * Math.PI - Math.PI / 2;
@@ -728,7 +739,7 @@ function MiniPie({ x, y, p }: { x: number; y: number; p: number | null }) {
         f > 0 && <path d={`M ${cx} ${y} L ${cx} ${y - R} A ${R} ${R} 0 ${f > 0.5 ? 1 : 0} 1 ${fin.x} ${fin.y} Z`} fill={color} />
       )}
       <circle cx={cx} cy={y} r={R} fill="none" stroke={color} strokeWidth={1.5} />
-      <text x={cx + R + 5} y={y + 5} className="text-[15px] font-bold" fill={color === "#eab308" ? "#a16207" : color}>
+      <text x={cx + R + 5} y={y + (chico ? 4.5 : 5)} className={chico ? "text-[13px] font-bold" : "text-[15px] font-bold"} fill={color === "#eab308" ? "#a16207" : color} style={{ paintOrder: "stroke", stroke: "rgba(255,255,255,0.9)", strokeWidth: 3 }}>
         {p === null ? "–" : `${Math.round(p)} %`}
       </text>
     </g>
