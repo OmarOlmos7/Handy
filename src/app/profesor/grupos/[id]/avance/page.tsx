@@ -79,7 +79,11 @@ export default async function AvanceTemarioGrupo({ params }: PageProps<"/profeso
   // El grafo: color de cada tema = % del grupo que realizó sus actividades.
   const ligadas = db.actividades.filter((a) => a.id in ag.porActividad);
   const avance = avanceTemario(asignatura, ligadas, (actId) => ({ porcentaje: ag.porActividad[actId] ?? null }));
-  const indicadores = Object.fromEntries(ag.unidades.map((u) => [u.nombre, u.avance]));
+  // Minipies: % de avance de cada unidad y de cada tema (null si no tiene actividades).
+  const indicadores = Object.fromEntries([
+    ...ag.unidades.map((u) => [u.nombre, u.avance] as const),
+    ...ag.temas.map((x) => [x.clave, x.actividades ? x.avance : null] as const),
+  ]);
 
   const orden = [...ag.alumnos].sort((a, b) => b.avance - a.avance || (b.promedio ?? 0) - (a.promedio ?? 0) || b.segundos - a.segundos);
   const top = orden.slice(0, 5);
