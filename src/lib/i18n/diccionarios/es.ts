@@ -396,6 +396,21 @@ const es = {
     alto: { nombre: "Alto", descripcion: "Revisa con más cuidado los procedimientos y la redacción. Para desarrollos largos con letra clara." },
     avanzado: { nombre: "Avanzado", descripcion: "La lectura más cuidadosa de procedimientos largos, gráficas y letra difícil. Es el que más tokens consume." },
   },
+  usoEscala: {
+    titulo: "Recomendado para",
+    tiempo: "Tiempo por hoja: ≈ {a} a {b} s",
+    tiempoAlto: "Tiempo por hoja: el mayor de la escala",
+    puntos: {
+      "rapido-bajo": "Reactivos cerrados (opción múltiple, verdadero o falso, relacionar) con letra clara. Es lo más barato.",
+      "rapido-medio": "Cerrados y respuestas cortas o de completar. Cuesta lo mismo que Rápido.",
+      "rapido-alto": "Respuestas cortas con cuentas sencillas de uno o dos pasos.",
+      "medio-bajo": "La mayoría de las actividades: problemas de pocos pasos y desarrollos cortos. Es el más rápido en responder.",
+      "medio-medio": "Procedimientos de varios pasos y redacción breve. Cuesta lo mismo que Medio.",
+      "medio-alto": "Procedimientos largos, ensayos o letra difícil de leer.",
+      "preciso-bajo": "Gráficas, diagramas, tablas y letra muy difícil.",
+      "preciso-medio": "Exámenes o actividades donde un error cuesta mucho. Úsalo solo en casos difíciles.",
+    },
+  },
   configuracion: {
     titulo: "Configuración",
     subtitulo: "Personaliza tu cuenta, tu idioma, tus reportes y la forma en que la IA trabaja en tus actividades.",

@@ -394,6 +394,21 @@ const en: Diccionario = {
     alto: { nombre: "High", descripcion: "Checks procedures and writing more carefully. For long work with clear handwriting." },
     avanzado: { nombre: "Advanced", descripcion: "The most careful reading of long procedures, graphs and hard-to-read handwriting. It uses the most tokens." },
   },
+  usoEscala: {
+    titulo: "Recommended for",
+    tiempo: "Time per sheet: ≈ {a} to {b} s",
+    tiempoAlto: "Time per sheet: the longest on the scale",
+    puntos: {
+      "rapido-bajo": "Closed items (multiple choice, true or false, matching) with clear handwriting. The cheapest option.",
+      "rapido-medio": "Closed items and short or fill-in answers. Same cost as Fast.",
+      "rapido-alto": "Short answers with simple one- or two-step calculations.",
+      "medio-bajo": "Most assignments: few-step problems and short work. The fastest to respond.",
+      "medio-medio": "Multi-step procedures and brief writing. Same cost as Medium.",
+      "medio-alto": "Long procedures, essays or hard-to-read handwriting.",
+      "preciso-bajo": "Graphs, diagrams, tables and very difficult handwriting.",
+      "preciso-medio": "Exams or assignments where a mistake is costly. Use it only for difficult cases.",
+    },
+  },
   configuracion: {
     titulo: "Settings",
     subtitulo: "Customize your account, your language, your reports and how the AI works on your assignments.",
