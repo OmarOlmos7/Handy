@@ -1,28 +1,46 @@
-import type { Metadata } from "next";
-import { Caveat, Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Caveat, Geist, Geist_Mono, Inter } from "next/font/google";
+import { ProveedorTextos } from "@/components/proveedor-textos";
+import { idiomaActual, textos, textosPublicos } from "@/lib/i18n/servidor";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 // Letra manuscrita para simular la escritura del alumno en la vista previa de hojas.
 const caveat = Caveat({ variable: "--font-caveat", subsets: ["latin"] });
+// Letra de las hojas de actividad impresas (Inter con tamaño óptico para los títulos).
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"], axes: ["opsz"], style: ["normal", "italic"] });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Retroalimenta · Evaluación de actividades impresas con IA",
-    template: "%s · Retroalimenta",
-  },
-  description:
-    "Tus alumnos fotografían su hoja, tú subes la solución y la IA sugiere calificación, correcciones en rojo y verde, reportes y el Excel para Canvas.",
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return {
+    title: { default: t.meta.titulo, template: "%s · iEureka-Grader" },
+    description: t.meta.descripcion,
+    applicationName: "iEureka-Grader",
+    // Al agregarla a la pantalla de inicio en iPhone o iPad abre como app, sin la barra de Safari.
+    appleWebApp: { capable: true, title: "iEureka-Grader", statusBarStyle: "default" },
+  };
+}
+
+export const viewport: Viewport = {
+  themeColor: "#2554e8",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Las vistas de trabajo ponen su propio proveedor de textos (con el idioma del profesor);
+  // aquí van los de las páginas públicas porque este layout no se vuelve a dibujar al navegar.
+  const { idioma, t, locale } = await textosPublicos();
   return (
     <html
-      lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} h-full antialiased`}
+      lang={await idiomaActual()}
+      className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full flex flex-col font-sans">
+        <ProveedorTextos valor={{ idioma, t, locale }}>{children}</ProveedorTextos>
+      </body>
     </html>
   );
 }

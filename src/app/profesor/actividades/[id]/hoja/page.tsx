@@ -1,35 +1,168 @@
+import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
+import { ResumenAlta } from "@/components/resumen-alta";
 import { BotonImprimir } from "@/components/boton-imprimir";
+import { EditarHoja } from "@/components/editar-hoja";
 import { Hoja } from "@/components/hoja";
-import { Encabezado } from "@/components/ui";
-import { actividadDe, grupoDe, leer } from "@/lib/almacen";
+import { HojaActividad } from "@/components/hoja-actividad";
+import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
+import { actividadDe, grupoDe } from "@/lib/almacen";
+import { datosProfesor } from "@/lib/sesion";
 import { qrDataUrl, urlBase } from "@/lib/qr";
+import { versionesCompletas } from "@/lib/versiones";
+import { textos, textosDeActividad } from "@/lib/i18n/servidor";
+import { ProveedorTextos } from "@/components/proveedor-textos";
+import { ResponderActividad } from "@/components/responder-actividad";
+import { esPlataforma, reactivosParaAlumno } from "@/lib/plataforma";
+import { formato } from "@/lib/i18n/idiomas";
 
 export default async function HojaImprimible({ params }: PageProps<"/profesor/actividades/[id]/hoja">) {
   const { id } = await params;
-  const db = await leer();
+  const { db } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
-  const qr = await qrDataUrl(`${await urlBase()}/entregar/${id}`);
+  const { t } = await textos();
+  const impreso = await textosDeActividad(actividad);
+  const th = t.profesor.hoja;
+  const curso = `${grupo.materia} · ${grupo.nombre}`;
+  const base = await urlBase();
+  const qr = await qrDataUrl(`${base}/entregar/${id}`);
+  // Con varias versiones, cada hoja lleva su letra y su propio QR (la entrega queda con su versión).
+  const versiones = actividad.versiones?.length
+    ? await Promise.all(versionesCompletas(actividad).map(async (v) => ({ ...v, qr: await qrDataUrl(`${base}/entregar/${id}?v=${v.letra}`) })))
+    : undefined;
+  const siguiente = actividad.sinSolucion ? (
+    <BotonLink href={`/profesor/actividades/${id}/rubrica`} variante="secundario">
+      {th.irRubrica}
+    </BotonLink>
+  ) : actividad.reactivos.some((r) => r.respuesta.trim()) ? null : (
+    <BotonLink href={`/profesor/actividades/${id}/solucion`} variante="secundario">
+      {th.siguiente}
+    </BotonLink>
+  );
+  const resumen = <ResumenAlta actividad={actividad} grupo={grupo} />;
+  const migas = [
+    { texto: t.profesor.comun.panel, href: "/profesor" },
+    { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
+    { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
+  ];
+
+  // En plataforma no hay hoja impresa: el profesor ve la actividad como la contestará el alumno.
+  if (esPlataforma(actividad)) {
+    const enlace = `${base}/entregar/${id}`;
+    const lista = versionesCompletas(actividad);
+    return (
+      <>
+        <Encabezado migas={migas} titulo={th.plataformaTitulo} subtitulo={th.plataformaTexto} acciones={siguiente} />
+        <ConFlujo vista={1} db={db} actividad={actividad}>
+          <div className="mx-auto max-w-2xl space-y-6">
+            {resumen}
+            <EditarHoja
+              actividadId={id}
+              puedeDeshacer={!!actividad.hojaAnterior}
+              bloqueada={db.entregas.some((e) => e.actividadId === id && e.estado !== "sin_entregar")}
+            />
+            <Tarjeta className="flex flex-col items-center gap-4 p-5 sm:flex-row">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={qr} alt="QR" className="h-32 w-32 shrink-0" />
+              <div className="min-w-0 text-sm">
+                <p className="font-semibold text-slate-800">{th.enlaceAlumnos}</p>
+                <a href={enlace} target="_blank" className="mt-1 block break-all font-medium text-tinta-700 hover:underline">
+                  {enlace}
+                </a>
+                {lista.length > 1 && <p className="mt-2 text-xs text-slate-500">{th.plataformaVersiones}</p>}
+              </div>
+            </Tarjeta>
+            <ProveedorTextos valor={impreso}>
+              {lista.map((v) => (
+                <section key={v.letra} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:p-6">
+                  {lista.length > 1 && <h2 className="mb-3 text-sm font-semibold text-slate-500">{formato(th.versionN, { v: v.letra })}</h2>}
+                  <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(v.actividad)} instrucciones={v.actividad.instruccionesAlumno} vistaPrevia />
+                </section>
+              ))}
+            </ProveedorTextos>
+          </div>
+        </ConFlujo>
+      </>
+    );
+  }
+
+  if (actividad.origen === "escaneada") {
+    return (
+      <>
+        <Encabezado
+          migas={migas}
+          titulo={th.titulo}
+          subtitulo={th.escaneadaTexto}
+          acciones={
+            <>
+              <BotonLink href={`/api/hoja/${id}`} target="_blank">
+                {th.descargar}
+              </BotonLink>
+              {siguiente}
+            </>
+          }
+        />
+        <ConFlujo vista={1} db={db} actividad={actividad}>
+          {resumen}
+          <Tarjeta className="mx-auto max-w-3xl p-2">
+            <iframe src={`/api/hoja/${id}`} title={th.titulo} className="h-[80vh] w-full rounded-lg" />
+          </Tarjeta>
+        </ConFlujo>
+      </>
+    );
+  }
+
   return (
     <>
+      <div className="no-imprimir">
       <Encabezado
-        migas={[
-          { texto: "Panel", href: "/profesor" },
-          { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
-        ]}
-        titulo="Hoja imprimible"
-        subtitulo="Cada página lleva el código QR de entrega: el alumno lo escanea con su celular, toma las fotos de sus hojas y las envía."
-        acciones={<BotonImprimir texto={`Imprimir ${actividad.paginas} páginas`} />}
+        migas={migas}
+        titulo={th.titulo}
+        subtitulo={th.texto}
+        acciones={
+          <>
+            <BotonImprimir texto={th.imprimir} />
+            {siguiente}
+          </>
+        }
       />
-      <div className="mx-auto max-w-3xl space-y-6">
-        {Array.from({ length: actividad.paginas }, (_, i) => (
-          <div key={i} className="break-after-page">
-            <Hoja actividad={actividad} pagina={i + 1} modo="en_blanco" qrSrc={qr} grupoTexto={`${grupo.materia} · ${grupo.nombre}`} />
-          </div>
-        ))}
       </div>
+      <ConFlujo vista={1} db={db} actividad={actividad}>
+      {resumen}
+      <ProveedorTextos valor={impreso}>
+      {actividad.origen === "ia" ? (
+        <>
+          <EditarHoja
+            actividadId={id}
+            puedeDeshacer={!!actividad.hojaAnterior}
+            bloqueada={db.entregas.some((e) => e.actividadId === id && e.estado !== "sin_entregar")}
+          />
+          {versiones ? (
+            <>
+              <p className="no-imprimir mx-auto mb-4 max-w-[8.5in] rounded-lg bg-tinta-50 px-4 py-3 text-sm text-tinta-700">{th.versionesTexto}</p>
+              {versiones.map((v, i) => (
+                <div key={v.letra} className={i > 0 ? "mt-8 break-before-page" : ""}>
+                  <HojaActividad actividad={v.actividad} curso={curso} qrSrc={v.qr} version={v.letra} />
+                </div>
+              ))}
+            </>
+          ) : (
+            <HojaActividad actividad={actividad} curso={curso} qrSrc={qr} />
+          )}
+        </>
+      ) : (
+        <div className="mx-auto max-w-3xl space-y-6">
+          {Array.from({ length: actividad.paginas }, (_, i) => (
+            <div key={i} className="break-after-page">
+              <Hoja actividad={actividad} pagina={i + 1} modo="en_blanco" qrSrc={qr} grupoTexto={curso} />
+            </div>
+          ))}
+        </div>
+      )}
+      </ProveedorTextos>
+      </ConFlujo>
     </>
   );
 }
