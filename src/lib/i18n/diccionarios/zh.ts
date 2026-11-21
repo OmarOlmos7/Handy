@@ -1,5 +1,5 @@
 import type { Diccionario } from "../diccionario";
-import autoestudio from "./autoestudio/es";
+import autoestudio from "./autoestudio/zh";
 import alumno from "./alumno/zh";
 import profesor from "./profesor/zh";
 

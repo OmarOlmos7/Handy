@@ -12,8 +12,7 @@ import { actividadesVisibles, seccionesAlumno, type SeccionActividad } from "@/l
 import { alumnoActual } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t, locale } = await textos();
-  const ta = t.autoestudio;
+  const { t } = await textos();
   return { title: t.alumno.cursos.misCursos };
 }
 

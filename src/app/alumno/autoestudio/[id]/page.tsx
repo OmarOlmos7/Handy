@@ -145,6 +145,7 @@ export default async function PaginaAutoactividad({ params }: PageProps<"/alumno
     </>
   ) : undefined;
   // Mientras no termina, el alumno no recibe las claves ni las explicaciones.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const sinClave: EjercicioAlumno[] = (act.ejercicios ?? []).map(({ respuesta: _r, explicacion: _e, ...resto }) => resto);
 
   return (

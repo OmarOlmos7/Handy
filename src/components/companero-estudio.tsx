@@ -24,15 +24,20 @@ const ICONO: Record<TipoAutoactividad, string> = { practica: "📝", manuscrita:
 
 /** Escribe el texto letra por letra, como si el compañero lo estuviera diciendo. */
 function useEscritura(texto: string) {
-  const [n, setN] = useState(0);
+  // El avance se guarda junto con el texto: al cambiar el texto, vuelve a empezar sin efectos extra.
+  const [estado, setEstado] = useState({ texto, n: 0 });
+  const n = estado.texto === texto ? estado.n : 0;
   useEffect(() => {
     const reducido = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    if (reducido) {
-      setN(texto.length);
-      return;
-    }
-    setN(0);
-    const t = setInterval(() => setN((x) => (x >= texto.length ? x : x + 2)), 22);
+    const t = setInterval(
+      () =>
+        setEstado((e) => {
+          const actual = e.texto === texto ? e.n : 0;
+          if (actual >= texto.length) return e;
+          return { texto, n: reducido ? texto.length : actual + 2 };
+        }),
+      reducido ? 0 : 22,
+    );
     return () => clearInterval(t);
   }, [texto]);
   return texto.slice(0, n);
