@@ -8,6 +8,7 @@ import { FechasActividad } from "./fechas-actividad";
 import { MAX_VERSIONES, letraVersion } from "@/lib/versiones";
 import { OpcionEstilo, OpcionSolucion } from "./opcion-solucion";
 import { Boton, BotonLink, campo } from "./ui";
+import { LARGO_ETIQUETA } from "@/lib/etiquetas";
 import { IDIOMAS, NOMBRE_IDIOMA, formato, type Idioma } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 
@@ -21,6 +22,7 @@ export function NuevaActividad({
   motorInicial = "medio",
   esfuerzos = { rapido: "bajo", medio: "medio", preciso: "medio" },
   idiomaInicial = "es",
+  etiquetasCurso = {},
 }: {
   grupos: Pick<Grupo, "id" | "materia" | "nombre">[];
   hoy: string;
@@ -30,9 +32,14 @@ export function NuevaActividad({
   esfuerzos?: Record<MotorIA, EsfuerzoIA>;
   /** Idioma con el que arranca "Idioma de la actividad" (el oficial del país del profesor). */
   idiomaInicial?: Idioma;
+  /** Tipos de actividad que ya usa cada curso, para sugerirlos. */
+  etiquetasCurso?: Record<string, string[]>;
 }) {
   const router = useRouter();
-  const tn = useTextos().t.profesor.nuevaActividad;
+  const { t } = useTextos();
+  const tn = t.profesor.nuevaActividad;
+  const [grupoSel, setGrupoSel] = useState(grupos.some((g) => g.id === grupoInicial) ? grupoInicial! : (grupos[0]?.id ?? ""));
+  const [etiqueta, setEtiqueta] = useState("");
   const [modo, setModo] = useState<Modo>("ia");
   const [archivos, setArchivos] = useState<File[]>([]);
   const [sinSolucion, setSinSolucion] = useState(false);
@@ -50,6 +57,11 @@ export function NuevaActividad({
       </div>
     );
   }
+
+  // Primero los tipos que ya usa el curso (y su plan de evaluación), luego los de siempre.
+  const tiposSugeridos = [...(etiquetasCurso[grupoSel] ?? []), ...t.profesor.etiquetas.sugeridas].filter(
+    (e, i, xs) => xs.findIndex((x) => x.toLowerCase() === e.toLowerCase()) === i,
+  );
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -103,7 +115,7 @@ export function NuevaActividad({
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm font-medium text-slate-700">
             {tn.curso}
-            <select name="grupo" className={campo} required defaultValue={grupos.some((g) => g.id === grupoInicial) ? grupoInicial : undefined}>
+            <select name="grupo" className={campo} required value={grupoSel} onChange={(e) => setGrupoSel(e.target.value)}>
               {grupos.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.materia} · {g.nombre}
@@ -131,6 +143,44 @@ export function NuevaActividad({
           {tn.tituloActividad}
           <input name="titulo" required className={campo} placeholder={tn.ejemploTitulo} />
         </label>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            {tn.tipoActividad}
+            <input
+              name="etiqueta"
+              value={etiqueta}
+              onChange={(e) => setEtiqueta(e.target.value)}
+              maxLength={LARGO_ETIQUETA}
+              list="tipos-actividad"
+              className={campo}
+              placeholder={tn.ejemploTipo}
+            />
+          </label>
+          <datalist id="tipos-actividad">
+            {tiposSugeridos.map((e) => (
+              <option key={e} value={e} />
+            ))}
+          </datalist>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {tiposSugeridos.map((e) => {
+              const activo = etiqueta.trim().toLowerCase() === e.toLowerCase();
+              return (
+                <button
+                  key={e}
+                  type="button"
+                  aria-pressed={activo}
+                  onClick={() => setEtiqueta(activo ? "" : e)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    activo ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  {e}
+                </button>
+              );
+            })}
+          </div>
+          <span className="mt-1 block text-xs text-slate-500">{tn.tipoActividadTexto}</span>
+        </div>
 
         {modo === "ia" ? (
           <>

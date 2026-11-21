@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { NuevaActividad } from "@/components/nueva-actividad";
 import { Encabezado } from "@/components/ui";
 import { configuracionDe } from "@/lib/configuracion";
+import { etiquetasPorGrupo } from "@/lib/etiquetas";
 import { datosProfesor } from "@/lib/sesion";
 import { idiomaPublico, textos } from "@/lib/i18n/servidor";
 
@@ -27,6 +28,7 @@ export default async function Nueva({ searchParams }: PageProps<"/profesor/activ
         motorInicial={conf.motor}
         esfuerzos={conf.esfuerzos}
         idiomaInicial={await idiomaPublico()}
+        etiquetasCurso={etiquetasPorGrupo(db.grupos, db.actividades)}
       />
       </ConFlujo>
     </>

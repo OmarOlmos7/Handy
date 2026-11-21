@@ -9,6 +9,7 @@ import type { Actividad } from "@/lib/tipos";
 import { leerFechas, type FechasActividad } from "@/lib/periodo";
 import { detectarIdioma } from "@/lib/i18n/detectar";
 import { esIdioma } from "@/lib/i18n/idiomas";
+import { limpiarEtiqueta } from "@/lib/etiquetas";
 
 export const maxDuration = 300;
 
@@ -62,6 +63,8 @@ export async function POST(req: Request) {
     sinSolucion: form.get("sinSolucion") === "1" || undefined,
     estiloCorreccion: form.get("estiloCorreccion") === "subrayado" ? "subrayado" : "margen",
     idioma: esIdioma(idiomaElegido) ? idiomaElegido : undefined,
+    // Tipo de actividad: agrupa la actividad en el cuaderno y en el plan de evaluación.
+    etiqueta: limpiarEtiqueta(form.get("etiqueta")),
   };
 
   if (modo === "ia") {
