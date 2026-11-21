@@ -45,6 +45,8 @@ const alumno: Diccionario["alumno"] = {
     vacioSeccion: "このセクションに課題はありません。",
     analiticas: "分析",
     cuaderno: "成績表",
+    mapa: "シラバスマップ",
+    sinMapa: "先生はまだこの科目のシラバスを登録していません。",
     sinActividadesCurso: "このコースにはまだ課題がありません。",
     resumen: "{a} · {b}",
     evaluadas1: "採点済み1件",

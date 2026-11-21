@@ -164,3 +164,17 @@ export function temarioComoTexto(t: TemarioActividad | undefined) {
   if (!t) return "";
   return `Unidad del temario: ${t.unidad}.${t.temas.length ? ` Temas que debe cubrir la actividad: ${t.temas.join("; ")}.` : ""}`;
 }
+
+/**
+ * Asignatura del curso para el mapa del alumno: la que usan sus actividades; si ninguna tiene
+ * temas, la del profesor con el mismo nombre que la materia.
+ */
+export function asignaturaDelCurso(
+  db: { asignaturas?: Asignatura[]; actividades: { grupoId: string; temario?: TemarioActividad }[] },
+  grupo: Pick<Grupo, "id" | "materia" | "profesorId">,
+): Asignatura | undefined {
+  const delProfesor = (db.asignaturas ?? []).filter((a) => a.profesorId === grupo.profesorId);
+  const usadas = db.actividades.filter((a) => a.grupoId === grupo.id && a.temario).map((a) => a.temario!.asignaturaId);
+  const masUsada = [...new Set(usadas)].sort((x, y) => usadas.filter((u) => u === y).length - usadas.filter((u) => u === x).length)[0];
+  return delProfesor.find((a) => a.id === masUsada) ?? asignaturaDeGrupo(delProfesor, grupo);
+}

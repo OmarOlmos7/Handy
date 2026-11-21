@@ -45,6 +45,8 @@ const alumno: Diccionario["alumno"] = {
     vacioSeccion: "Aucun devoir dans cette section.",
     analiticas: "Analyses",
     cuaderno: "Carnet de notes",
+    mapa: "Carte du programme",
+    sinMapa: "Votre enseignant n’a pas encore chargé le programme de cette matière.",
     sinActividadesCurso: "Ce cours n'a pas encore de devoirs.",
     resumen: "{a} · {b}",
     evaluadas1: "1 évalué",

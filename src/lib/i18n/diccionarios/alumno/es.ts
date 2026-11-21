@@ -45,6 +45,8 @@ const alumno = {
     vacioSeccion: "No hay actividades en esta sección.",
     analiticas: "Analíticas",
     cuaderno: "Cuaderno de calificaciones",
+    mapa: "Mapa del temario",
+    sinMapa: "Tu profesor aún no ha cargado el temario de esta materia.",
     sinActividadesCurso: "Este curso aún no tiene actividades.",
     resumen: "{a} · {b}",
     evaluadas1: "1 evaluada",
