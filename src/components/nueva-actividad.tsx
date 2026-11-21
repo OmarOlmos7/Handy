@@ -11,6 +11,7 @@ import { Boton, BotonLink, campo } from "./ui";
 import { LARGO_ETIQUETA } from "@/lib/etiquetas";
 import { IDIOMAS, NOMBRE_IDIOMA, formato, type Idioma } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
+import { SelectorTemario, type AsignaturaParaAlta } from "./selector-temario";
 
 type Modo = "ia" | "escaneada";
 type Formato = "manuscrita" | "plataforma";
@@ -24,6 +25,7 @@ export function NuevaActividad({
   esfuerzos = { rapido: "bajo", medio: "medio", preciso: "medio" },
   idiomaInicial = "es",
   etiquetasCurso = {},
+  asignaturas = [],
 }: {
   grupos: Pick<Grupo, "id" | "materia" | "nombre">[];
   hoy: string;
@@ -35,6 +37,8 @@ export function NuevaActividad({
   idiomaInicial?: Idioma;
   /** Tipos de actividad que ya usa cada curso, para sugerirlos. */
   etiquetasCurso?: Record<string, string[]>;
+  /** Asignaturas (syllabus) del profesor para elegir la unidad y los temas. */
+  asignaturas?: AsignaturaParaAlta[];
 }) {
   const router = useRouter();
   const { t } = useTextos();
@@ -212,6 +216,8 @@ export function NuevaActividad({
           </div>
           <span className="mt-1 block text-xs text-slate-500">{tn.tipoActividadTexto}</span>
         </div>
+
+        <SelectorTemario asignaturas={asignaturas} materia={grupos.find((g) => g.id === grupoSel)?.materia} />
 
         {modo === "ia" ? (
           <>

@@ -21,6 +21,7 @@ const pt: Diccionario = {
       "Seus alunos fotografam a folha, você envia a solução e a IA sugere a nota, as correções em vermelho e verde, os relatórios e o Excel para o Canvas.",
   },
   barra: {
+    asignaturas: "Disciplinas",
     panel: "Painel",
     nuevaActividad: "Nova atividade",
     nuevoCurso: "Novo curso",

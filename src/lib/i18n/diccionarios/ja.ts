@@ -21,6 +21,7 @@ const ja: Diccionario = {
       "生徒が答案を撮影し、先生が解答をアップロードすると、AIが点数、赤と緑の添削、レポート、Canvas用のExcelを提案します。",
   },
   barra: {
+    asignaturas: "科目",
     panel: "ダッシュボード",
     nuevaActividad: "新しい課題",
     nuevoCurso: "新しいコース",

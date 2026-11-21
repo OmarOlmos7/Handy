@@ -1206,6 +1206,48 @@ export async function generarPlanEvaluacion(instrucciones: string, etiquetas: st
   });
 }
 
+// ---------- Temario (syllabus) de una asignatura ----------
+
+const EsquemaTemario = z.object({
+  nombre: z.string(),
+  nivel: z.string(),
+  unidades: z.array(z.object({ nombre: z.string(), temas: z.array(z.object({ nombre: z.string(), subtemas: z.array(z.string()) })) })),
+});
+
+export type TemarioGenerado = z.infer<typeof EsquemaTemario>;
+
+const SISTEMA_TEMARIO = `Eres un asistente para profesores de secundaria, bachillerato y universidad.
+Arma el temario (syllabus) de una asignatura en tres niveles: unidades, temas de cada unidad y subtemas de cada tema.
+- Si recibes un documento o un texto con el programa de la materia, transcribe fielmente sus unidades, temas y subtemas, en el orden en que aparecen. No inventes temas que no están, no resumas y conserva la numeración del documento si la tiene (por ejemplo "Unidad 2. Dinámica", "2.1 Leyes de Newton"). Ignora lo que no es temario: objetivos, criterios de evaluación, bibliografía, horarios y datos de la escuela o del profesor.
+- Si recibes indicaciones del profesor (unidades, temas y nivel), propón un temario completo y bien ordenado para ese nivel, con nombres breves y claros. Respeta el número de unidades y los temas que pida.
+- nombre: el nombre de la asignatura (del documento o de las indicaciones; cadena vacía si no se sabe).
+- nivel: el nivel o grado si se menciona (por ejemplo "2.º de secundaria"); cadena vacía si no.
+- Cada unidad debe tener al menos un tema. Un tema puede no tener subtemas.`;
+
+/** Temario desde un PDF, desde el texto de un documento o desde las indicaciones del profesor. Sin datos de alumnos. */
+export async function generarTemario(
+  entrada: { pdf?: Buffer; texto?: string; indicaciones?: string; nombre?: string; nivel?: string },
+  uso: UsoIA,
+): Promise<TemarioGenerado> {
+  const contenido: Anthropic.Beta.BetaContentBlockParam[] = [];
+  if (entrada.pdf) contenido.push({ type: "document", source: { type: "base64", media_type: "application/pdf", data: entrada.pdf.toString("base64") } });
+  const datos = [
+    entrada.nombre && `Asignatura: ${entrada.nombre}`,
+    entrada.nivel && `Nivel: ${entrada.nivel}`,
+    entrada.texto && `Texto del documento del profesor:\n${entrada.texto}`,
+    entrada.indicaciones && `Indicaciones del profesor:\n${entrada.indicaciones}`,
+    entrada.pdf && "Transcribe el temario del documento adjunto.",
+  ].filter(Boolean);
+  contenido.push({ type: "text", text: datos.join("\n\n") });
+  return pedir({
+    tipo: "temario",
+    uso: { ...uso, precision: uso.precision ?? { motor: "medio", esfuerzo: "bajo" } },
+    system: SISTEMA_TEMARIO,
+    esquema: EsquemaTemario,
+    contenido,
+  });
+}
+
 // ---------- Videos y lecturas con enlaces reales (búsqueda web) ----------
 
 const EsquemaRecursos = z.object({

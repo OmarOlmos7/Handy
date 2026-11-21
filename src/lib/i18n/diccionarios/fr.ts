@@ -21,6 +21,7 @@ const fr: Diccionario = {
       "Vos élèves photographient leur feuille, vous téléversez la solution et l'IA propose la note, les corrections en rouge et vert, les rapports et le fichier Excel pour Canvas.",
   },
   barra: {
+    asignaturas: "Matières",
     panel: "Tableau de bord",
     nuevaActividad: "Nouveau devoir",
     nuevoCurso: "Nouveau cours",

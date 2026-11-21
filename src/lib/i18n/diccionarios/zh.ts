@@ -20,6 +20,7 @@ const zh: Diccionario = {
     descripcion: "学生拍下作业纸，你上传答案，AI 给出建议分数、红绿批注、报告以及可导入 Canvas 的 Excel。",
   },
   barra: {
+    asignaturas: "课程",
     panel: "主页",
     nuevaActividad: "新建作业",
     nuevoCurso: "新建课程",

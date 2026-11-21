@@ -29,6 +29,7 @@ export default async function Nueva({ searchParams }: PageProps<"/profesor/activ
         esfuerzos={conf.esfuerzos}
         idiomaInicial={await idiomaPublico()}
         etiquetasCurso={etiquetasPorGrupo(db.grupos, db.actividades)}
+        asignaturas={(db.asignaturas ?? []).map((a) => ({ id: a.id, nombre: a.nombre, unidades: a.unidades }))}
       />
       </ConFlujo>
     </>
