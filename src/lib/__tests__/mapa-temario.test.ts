@@ -119,4 +119,19 @@ describe("mapa del temario", () => {
       }
     expect(ac.enlaces.every((e) => ac.posiciones[e.a] && ac.posiciones[e.b])).toBe(true);
   });
+  it("en la vista por unidad une de centro a centro las unidades relacionadas por completo", () => {
+    const unidades = ["U1", "U2", "U3"].map((u) => ({ nombre: u, temas: [1, 2, 3].map((j) => ({ nombre: `${u}.${j}`, subtemas: [] })) }));
+    const relaciones = [
+      // Los tres temas de U2 se relacionan con U1: completa.
+      ...[1, 2, 3].map((j) => ({ a: claveTema("U2", `U2.${j}`), b: claveTema("U1", "U1.1") })),
+      { a: claveTema("U1", "U1.2"), b: claveTema("U3", "U3.1") },
+    ];
+    const ac = acomodoUnidadConAfines({ unidades }, 0, relaciones);
+    expect(ac.afines.find((g) => g.nombre === "U2")?.completa).toBe(true);
+    expect(ac.afines.find((g) => g.nombre === "U3")?.completa).toBe(false);
+    expect(ac.enlaces.filter((e) => e.completa)).toEqual([{ a: "U1", b: "U2", motivo: undefined, completa: true }]);
+    expect(ac.enlaces.some((e) => !e.completa && e.b.startsWith("U2"))).toBe(false);
+    expect(ac.enlaces.some((e) => e.b === claveTema("U3", "U3.1"))).toBe(true);
+    expect(ac.ancho).toBeGreaterThan(ac.alto);
+  });
 });

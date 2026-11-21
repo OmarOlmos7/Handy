@@ -1123,6 +1123,9 @@ const profesor: Diccionario["profesor"] = {
     ayuda: "Sert à générer, résoudre et corriger cette activité. Plus d'effort vérifie plus soigneusement et consomme plus de jetons.",
   },
   mapa: {
+    instrucciones: "Instructions pour l’IA",
+    instruccionesEjemplo: "Ex. : relie l’unité 4 aux vecteurs et aux mesures ; retire les liens avec les présentations",
+    sugerirRelaciones: "Appliquer et suggérer des liens",
     temasDeUnidad: "Thèmes de l’unité",
     avance: "Progression",
     relacionUnidades: "Lien avec toute l’unité",

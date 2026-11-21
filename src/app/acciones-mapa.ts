@@ -2,19 +2,38 @@
 
 import { revalidatePath } from "next/cache";
 import { leer, modificar } from "@/lib/almacen";
-import { ErrorIA, iaDisponible, relacionarTemario } from "@/lib/ia";
+import { ErrorIA, iaDisponible, relacionarTemario, type PosTemario } from "@/lib/ia";
 import { claveSubtema, claveTema, claveUnidad, limpiarRuta, relacionesValidas } from "@/lib/mapa-temario";
 import { alumnoActual, requerirProfesor } from "@/lib/sesion";
 import { asignaturaDelCurso } from "@/lib/asignaturas";
 
-/** El profesor pide a la IA los temas afines de su asignatura (no consume créditos). */
-export async function detectarRelaciones(asignaturaId: string): Promise<{ ok: true; n: number } | { error: string }> {
+/**
+ * El profesor pide a la IA los temas afines de su asignatura. Con instrucciones, la IA mejora las
+ * relaciones actuales siguiéndolas (por ejemplo "relaciona la unidad 4 con vectores").
+ */
+export async function detectarRelaciones(asignaturaId: string, instrucciones = ""): Promise<{ ok: true; n: number } | { error: string }> {
   const profesor = await requerirProfesor();
   const asig = (await leer()).asignaturas?.find((a) => a.id === asignaturaId && a.profesorId === profesor.id);
   if (!asig) return { error: "noEncontrada" };
   if (!iaDisponible()) return { error: "sinIA" };
   try {
-    const pares = await relacionarTemario(asig.unidades, { profesorId: profesor.id });
+    // Clave del mapa → posición (unidad, tema, subtema), para mandar las relaciones actuales.
+    const posicion = (clave: string): PosTemario | undefined => {
+      const [nu, nt, ns] = clave.split(" › ");
+      const u = asig.unidades.findIndex((x) => x.nombre === nu);
+      if (u < 0) return undefined;
+      if (nt === undefined) return { u };
+      const t = asig.unidades[u].temas.findIndex((x) => x.nombre === nt);
+      if (t < 0) return undefined;
+      if (ns === undefined) return { u, t };
+      const s = asig.unidades[u].temas[t].subtemas.indexOf(ns);
+      return s < 0 ? undefined : { u, t, s };
+    };
+    const texto = typeof instrucciones === "string" ? instrucciones.trim().slice(0, 800) : "";
+    const actuales = relacionesValidas(asig)
+      .map((r) => ({ a: posicion(r.a), b: posicion(r.b), motivo: r.motivo }))
+      .filter((r): r is { a: PosTemario; b: PosTemario; motivo: string | undefined } => Boolean(r.a && r.b));
+    const pares = await relacionarTemario(asig.unidades, { profesorId: profesor.id }, texto ? { instrucciones: texto, actuales } : undefined);
     const clave = (p: { u: number; t?: number; s?: number }) => {
       const u = asig.unidades[p.u];
       if (u && p.t === undefined) return claveUnidad(u.nombre);

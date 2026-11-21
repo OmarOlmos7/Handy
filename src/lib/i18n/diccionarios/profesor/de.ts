@@ -1123,6 +1123,9 @@ const profesor: Diccionario["profesor"] = {
     ayuda: "Wird zum Erstellen, Lösen und Bewerten dieser Aufgabe verwendet. Mehr Aufwand prüft gründlicher und verbraucht mehr Tokens.",
   },
   mapa: {
+    instrucciones: "Anweisungen für die KI",
+    instruccionesEjemplo: "Z. B.: Verbinde Einheit 4 mit Vektoren und Messungen; entferne Beziehungen zu Präsentationen",
+    sugerirRelaciones: "Anwenden und Beziehungen vorschlagen",
     temasDeUnidad: "Themen der Einheit",
     avance: "Fortschritt",
     relacionUnidades: "Beziehung zur ganzen Einheit",

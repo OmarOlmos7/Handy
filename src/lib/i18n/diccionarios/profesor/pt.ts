@@ -1123,6 +1123,9 @@ const profesor: Diccionario["profesor"] = {
     ayuda: "Usado para gerar, resolver e corrigir esta atividade. Mais esforço revisa com mais cuidado e consome mais tokens.",
   },
   mapa: {
+    instrucciones: "Instruções para a IA",
+    instruccionesEjemplo: "Ex.: relacione a unidade 4 com vetores e medições; tire as relações com apresentações",
+    sugerirRelaciones: "Aplicar e sugerir relações",
     temasDeUnidad: "Temas da unidade",
     avance: "Progresso",
     relacionUnidades: "Relação com a unidade inteira",

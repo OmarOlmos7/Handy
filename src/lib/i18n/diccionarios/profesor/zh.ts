@@ -1112,6 +1112,9 @@ const profesor: Diccionario["profesor"] = {
     ayuda: "用于生成、解答和批改本作业。推理强度越高，检查越仔细，消耗的令牌也越多。",
   },
   mapa: {
+    instrucciones: "给 AI 的指示",
+    instruccionesEjemplo: "例：把单元 4 与向量和测量关联；删除与展示的关联",
+    sugerirRelaciones: "应用并建议关联",
     temasDeUnidad: "本单元主题",
     avance: "进度",
     relacionUnidades: "与整个单元相关",
