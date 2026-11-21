@@ -394,6 +394,21 @@ const fr: Diccionario = {
     alto: { nombre: "Élevé", descripcion: "Vérifie plus attentivement les démarches et la rédaction. Pour les développements longs avec une écriture claire." },
     avanzado: { nombre: "Avancé", descripcion: "La lecture la plus attentive des démarches longues, des graphiques et de l'écriture difficile. C'est celui qui consomme le plus de jetons." },
   },
+  usoEscala: {
+    titulo: "Recommandé pour",
+    tiempo: "Temps par feuille : ≈ {a} à {b} s",
+    tiempoAlto: "Temps par feuille : le plus long de l'échelle",
+    puntos: {
+      "rapido-bajo": "Questions fermées (QCM, vrai ou faux, association) avec une écriture claire. Le moins cher.",
+      "rapido-medio": "Questions fermées et réponses courtes ou à compléter. Même coût que Rapide.",
+      "rapido-alto": "Réponses courtes avec des calculs simples en une ou deux étapes.",
+      "medio-bajo": "La plupart des devoirs : problèmes en peu d'étapes et développements courts. Le plus rapide à répondre.",
+      "medio-medio": "Démarches en plusieurs étapes et rédaction brève. Même coût que Moyen.",
+      "medio-alto": "Démarches longues, rédactions ou écriture difficile à lire.",
+      "preciso-bajo": "Graphiques, schémas, tableaux et écriture très difficile.",
+      "preciso-medio": "Examens ou devoirs où une erreur coûte cher. À réserver aux cas difficiles.",
+    },
+  },
   configuracion: {
     titulo: "Paramètres",
     subtitulo: "Personnalisez votre compte, votre langue, vos rapports et la façon dont l'IA travaille sur vos devoirs.",

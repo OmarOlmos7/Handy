@@ -137,6 +137,15 @@ export const COSTO_HOJA_USD: Record<MotorIA, Record<EsfuerzoIA, number>> = {
   preciso: { bajo: 0.0572, medio: 0.0718, alto: 0.0876 },
 };
 
+/**
+ * Segundos que tardó en evaluarse una hoja completa, por motor (mínimo y máximo de las corridas
+ * del 20-nov-2026). Haiku escribe mucho más y tarda más que Sonnet; Opus no se cronometró.
+ */
+export const TIEMPO_HOJA_SEG: Partial<Record<MotorIA, [number, number]>> = {
+  rapido: [25, 50],
+  medio: [10, 25],
+};
+
 /** Créditos por hoja: costo medido más el margen de riesgo, entre el costo de un crédito, hacia arriba a décimas. */
 export function creditosDeCosto(costoUsd: number): number {
   return Math.ceil(Math.round(((costoUsd * (1 + MARGEN_RIESGO)) / COSTO_CREDITO_USD) * 1000) / 100) / 10;

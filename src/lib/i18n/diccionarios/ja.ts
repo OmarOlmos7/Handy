@@ -394,6 +394,21 @@ const ja: Diccionario = {
     alto: { nombre: "高", descripcion: "解答過程や文章をより丁寧に確認します。読みやすい字の長い記述に。" },
     avanzado: { nombre: "上級", descripcion: "長い解答過程、グラフ、読みにくい字を最も丁寧に読み取ります。トークンの消費が最も多いレベルです。" },
   },
+  usoEscala: {
+    titulo: "おすすめの用途",
+    tiempo: "1枚あたりの時間：約{a}〜{b}秒",
+    tiempoAlto: "1枚あたりの時間：スケールで最も長い",
+    puntos: {
+      "rapido-bajo": "字がきれいな選択式・正誤・組み合わせ問題。最も安価です。",
+      "rapido-medio": "選択式と短答・穴埋め。「高速」と同じ費用です。",
+      "rapido-alto": "1〜2段階の簡単な計算を含む短答。",
+      "medio-bajo": "ほとんどの課題：手順の少ない問題や短い記述。応答が最も速いレベルです。",
+      "medio-medio": "複数段階の解き方や短い作文。「標準」と同じ費用です。",
+      "medio-alto": "長い解き方、作文、読みにくい字。",
+      "preciso-bajo": "グラフ、図、表、非常に読みにくい字。",
+      "preciso-medio": "ミスの影響が大きい試験や課題。難しい場合だけ使ってください。",
+    },
+  },
   configuracion: {
     titulo: "設定",
     subtitulo: "アカウント、言語、レポート、課題でのAIの動作をカスタマイズします。",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ESCALA, INFO_MOTOR, PUNTO_PREDETERMINADO, gruposEscala, indiceEscala } from "@/lib/configuracion";
+import { ESCALA, INFO_MOTOR, PUNTO_PREDETERMINADO, TIEMPO_HOJA_SEG, gruposEscala, indiceEscala } from "@/lib/configuracion";
 import { formato } from "@/lib/i18n/idiomas";
 import type { EsfuerzoIA, MotorIA, PrecisionIA } from "@/lib/tipos";
 import { useTextos } from "./proveedor-textos";
@@ -21,6 +21,8 @@ function BarraPrecision({ inicial, leyenda, onCambio }: { inicial: number; leyen
   };
   const e = ESCALA[indice];
   const modelo = `${INFO_MOTOR[e.precision.motor].nombreCorto} - ${t.esfuerzos[e.precision.esfuerzo]}`;
+  const rango = TIEMPO_HOJA_SEG[e.precision.motor];
+  const tiempo = rango ? formato(t.usoEscala.tiempo, { a: rango[0], b: rango[1] }) : t.usoEscala.tiempoAlto;
   const creditos = e.creditos === 1 ? c.creditoPagina : formato(c.creditosPagina, { n: e.creditos.toLocaleString(locale) });
   return (
     <fieldset>
@@ -62,6 +64,13 @@ function BarraPrecision({ inicial, leyenda, onCambio }: { inicial: number; leyen
         <span className="text-slate-700">
           {c.consumo}: <span className="font-medium">≈ {creditos}</span>
         </span>
+      </div>
+      <div className="mt-2 rounded-lg bg-tinta-50/60 px-3 py-2 text-sm ring-1 ring-tinta-100" aria-live="polite">
+        <p>
+          <span className="font-medium text-tinta-800">{t.usoEscala.titulo}:</span>{" "}
+          <span className="text-slate-700">{t.usoEscala.puntos[e.clave as keyof typeof t.usoEscala.puntos]}</span>
+        </p>
+        <p className="mt-0.5 text-xs text-slate-500">{tiempo}</p>
       </div>
     </fieldset>
   );

@@ -379,6 +379,21 @@ const zh: Diccionario = {
     alto: { nombre: "高", descripcion: "更仔细地检查解题过程和书写。适合字迹清晰的较长解答。" },
     avanzado: { nombre: "进阶", descripcion: "对长篇解题过程、图表和难以辨认的字迹读取最仔细。令牌消耗最多。" },
   },
+  usoEscala: {
+    titulo: "推荐用于",
+    tiempo: "每页用时：约 {a}–{b} 秒",
+    tiempoAlto: "每页用时：所有等级中最长",
+    puntos: {
+      "rapido-bajo": "字迹清楚的客观题（选择、判断、连线）。最省点数。",
+      "rapido-medio": "客观题以及简答或填空。点数与“快速”相同。",
+      "rapido-alto": "含一两步简单计算的简答题。",
+      "medio-bajo": "大多数作业：步骤较少的题目和简短的解题过程。响应最快。",
+      "medio-medio": "多步骤的解题过程和简短写作。点数与“标准”相同。",
+      "medio-alto": "较长的解题过程、作文或难以辨认的字迹。",
+      "preciso-bajo": "图表、示意图、表格以及非常难认的字迹。",
+      "preciso-medio": "出错代价高的考试或作业。仅在困难情况下使用。",
+    },
+  },
   configuracion: {
     titulo: "设置",
     subtitulo: "自定义你的账号、语言、报告以及 AI 处理作业的方式。",

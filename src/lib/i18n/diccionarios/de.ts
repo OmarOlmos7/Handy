@@ -394,6 +394,21 @@ const de: Diccionario = {
     alto: { nombre: "Hoch", descripcion: "Prüft Lösungswege und Texte sorgfältiger. Für lange Lösungen mit klarer Schrift." },
     avanzado: { nombre: "Fortgeschritten", descripcion: "Das sorgfältigste Lesen langer Lösungswege, Grafiken und schwer lesbarer Schrift. Verbraucht die meisten Tokens." },
   },
+  usoEscala: {
+    titulo: "Empfohlen für",
+    tiempo: "Zeit pro Blatt: ≈ {a} bis {b} s",
+    tiempoAlto: "Zeit pro Blatt: die längste der Skala",
+    puntos: {
+      "rapido-bajo": "Geschlossene Aufgaben (Multiple Choice, richtig oder falsch, Zuordnung) mit klarer Schrift. Am günstigsten.",
+      "rapido-medio": "Geschlossene Aufgaben und kurze Antworten oder Lückentexte. Kostet so viel wie Schnell.",
+      "rapido-alto": "Kurze Antworten mit einfachen Rechnungen in ein bis zwei Schritten.",
+      "medio-bajo": "Die meisten Aufgaben: Probleme mit wenigen Schritten und kurze Rechenwege. Antwortet am schnellsten.",
+      "medio-medio": "Rechenwege mit mehreren Schritten und kurze Texte. Kostet so viel wie Mittel.",
+      "medio-alto": "Lange Rechenwege, Aufsätze oder schwer lesbare Schrift.",
+      "preciso-bajo": "Diagramme, Skizzen, Tabellen und sehr schwierige Schrift.",
+      "preciso-medio": "Prüfungen oder Aufgaben, bei denen ein Fehler teuer ist. Nur für schwierige Fälle.",
+    },
+  },
   configuracion: {
     titulo: "Einstellungen",
     subtitulo: "Passen Sie Ihr Konto, Ihre Sprache, Ihre Berichte und die Arbeitsweise der KI bei Ihren Aufgaben an.",

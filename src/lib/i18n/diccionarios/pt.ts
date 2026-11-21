@@ -394,6 +394,21 @@ const pt: Diccionario = {
     alto: { nombre: "Alto", descripcion: "Revisa com mais cuidado os procedimentos e a redação. Para desenvolvimentos longos com letra clara." },
     avanzado: { nombre: "Avançado", descripcion: "A leitura mais cuidadosa de procedimentos longos, gráficos e letra difícil. É o que mais consome tokens." },
   },
+  usoEscala: {
+    titulo: "Recomendado para",
+    tiempo: "Tempo por folha: ≈ {a} a {b} s",
+    tiempoAlto: "Tempo por folha: o maior da escala",
+    puntos: {
+      "rapido-bajo": "Questões fechadas (múltipla escolha, verdadeiro ou falso, associação) com letra clara. É o mais barato.",
+      "rapido-medio": "Fechadas e respostas curtas ou de completar. Custa o mesmo que Rápido.",
+      "rapido-alto": "Respostas curtas com contas simples de um ou dois passos.",
+      "medio-bajo": "A maioria das atividades: problemas de poucos passos e desenvolvimentos curtos. É o mais rápido para responder.",
+      "medio-medio": "Procedimentos de vários passos e redação breve. Custa o mesmo que Médio.",
+      "medio-alto": "Procedimentos longos, redações ou letra difícil de ler.",
+      "preciso-bajo": "Gráficos, diagramas, tabelas e letra muito difícil.",
+      "preciso-medio": "Provas ou atividades em que um erro custa caro. Use só em casos difíceis.",
+    },
+  },
   configuracion: {
     titulo: "Configurações",
     subtitulo: "Personalize sua conta, seu idioma, seus relatórios e a forma como a IA trabalha nas suas atividades.",
