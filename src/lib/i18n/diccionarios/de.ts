@@ -29,6 +29,7 @@ const de: Diccionario = {
     misActividades: "Meine Aufgaben",
     alumno: "Schüler",
     sinSesion: "Nicht angemeldet",
+    tipos: { alumno: "Schüler/in", profesor: "Lehrkraft", administrador: "Administrator" },
   },
   inicio: {
     nav: { comoFunciona: "So funktioniert's", queRecibes: "Was Sie erhalten", precios: "Preise", privacidad: "Datenschutz" },
@@ -191,6 +192,10 @@ const de: Diccionario = {
     instalarIos: "Zur Nutzung als App auf iPhone oder iPad: Tippen Sie auf {compartir} und dann auf {agregar}.",
     compartir: "Teilen",
     agregarInicio: "Zum Home-Bildschirm",
+    tipoPerfil: "Profiltyp",
+    perfilProfesor: "Bearbeiter: erstellt und bewertet Aufgaben",
+    perfilAlumno: "Abgeben und Ergebnisse sehen",
+    registroAlumnoTitulo: "Erstelle dein Schülerkonto",
     errores: {
       datosRegistro: "Geben Sie Ihren Namen und eine gültige E-Mail ein.",
       contrasenaCorta: "Das Passwort muss mindestens 8 Zeichen lang sein.",

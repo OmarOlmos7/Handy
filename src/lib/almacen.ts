@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { connection } from "next/server";
 import { sumarCreditos } from "./configuracion";
+import { asignarTipos } from "./admin";
 import { migrar } from "./cuentas";
 import { semilla } from "./datos-ejemplo";
 import type { Actividad, BaseDeDatos, Entrega, EstadoActividad, Grupo } from "./tipos";
@@ -20,7 +21,7 @@ function leerDisco(): BaseDeDatos {
     escribirDisco(inicial);
     return inicial;
   }
-  return migrar(JSON.parse(fs.readFileSync(ARCHIVO_DB, "utf8")) as BaseDeDatos);
+  return asignarTipos(migrar(JSON.parse(fs.readFileSync(ARCHIVO_DB, "utf8")) as BaseDeDatos));
 }
 
 function escribirDisco(db: BaseDeDatos) {

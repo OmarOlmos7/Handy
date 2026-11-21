@@ -29,6 +29,7 @@ const en: Diccionario = {
     misActividades: "My assignments",
     alumno: "Student",
     sinSesion: "Not signed in",
+    tipos: { alumno: "Student", profesor: "Teacher", administrador: "Administrator" },
   },
   inicio: {
     nav: { comoFunciona: "How it works", queRecibes: "What you get", precios: "Pricing", privacidad: "Privacy" },
@@ -191,6 +192,10 @@ const en: Diccionario = {
     instalarIos: "To use it as an app on your iPhone or iPad: tap {compartir} and then {agregar}.",
     compartir: "Share",
     agregarInicio: "Add to Home Screen",
+    tipoPerfil: "Profile type",
+    perfilProfesor: "Editor: create and grade assignments",
+    perfilAlumno: "Submit and see your results",
+    registroAlumnoTitulo: "Create your student account",
     errores: {
       datosRegistro: "Enter your name and a valid email.",
       contrasenaCorta: "The password must be at least 8 characters long.",

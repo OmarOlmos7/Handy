@@ -29,6 +29,7 @@ const fr: Diccionario = {
     misActividades: "Mes devoirs",
     alumno: "Élève",
     sinSesion: "Non connecté",
+    tipos: { alumno: "Élève", profesor: "Enseignant", administrador: "Administrateur" },
   },
   inicio: {
     nav: { comoFunciona: "Fonctionnement", queRecibes: "Ce que vous obtenez", precios: "Tarifs", privacidad: "Confidentialité" },
@@ -191,6 +192,10 @@ const fr: Diccionario = {
     instalarIos: "Pour l'utiliser comme application sur iPhone ou iPad : touchez {compartir} puis {agregar}.",
     compartir: "Partager",
     agregarInicio: "Sur l'écran d'accueil",
+    tipoPerfil: "Type de profil",
+    perfilProfesor: "Éditeur : crée et corrige les devoirs",
+    perfilAlumno: "Rendez et consultez vos résultats",
+    registroAlumnoTitulo: "Créez votre compte élève",
     errores: {
       datosRegistro: "Saisissez votre nom et un e-mail valide.",
       contrasenaCorta: "Le mot de passe doit contenir au moins 8 caractères.",

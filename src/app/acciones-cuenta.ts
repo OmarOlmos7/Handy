@@ -1,5 +1,6 @@
 "use server";
 
+import { tipoDeProfesor } from "@/lib/admin";
 import crypto from "node:crypto";
 import { redirect } from "next/navigation";
 import { leer, modificar } from "@/lib/almacen";
@@ -38,7 +39,7 @@ export async function registrarProfesor(form: FormData) {
   const creado = modificar((db) => {
     if (db.profesores.some((p) => p.correo === correo)) return false;
     const primero = db.profesores.length === 0;
-    db.profesores.push({ id, nombre, correo, contrasena: contrasenaHash, creadoEn: new Date().toISOString(), aceptacion });
+    db.profesores.push({ id, tipo: tipoDeProfesor(correo), nombre, correo, contrasena: contrasenaHash, creadoEn: new Date().toISOString(), aceptacion });
     if (primero) adoptarSinDueno(db, id);
     if (CREDITOS_INICIALES > 0) {
       db.movimientos.unshift({

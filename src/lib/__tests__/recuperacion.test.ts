@@ -7,8 +7,8 @@ import type { BaseDeDatos } from "../tipos";
 function base(): BaseDeDatos {
   return {
     version: 3,
-    profesores: [{ id: "p1", nombre: "Laura Méndez", correo: "laura@escuela.mx", contrasena: hashContrasena("anterior1"), creadoEn: "" }],
-    cuentasAlumno: [{ id: "a1", nombre: "Ana López", matricula: "A01", correo: "ana@escuela.mx", contrasena: hashContrasena("vieja1"), creadoEn: "" }],
+    profesores: [{ id: "p1", tipo: "profesor", nombre: "Laura Méndez", correo: "laura@escuela.mx", contrasena: hashContrasena("anterior1"), creadoEn: "" }],
+    cuentasAlumno: [{ id: "a1", tipo: "alumno", nombre: "Ana López", matricula: "A01", correo: "ana@escuela.mx", contrasena: hashContrasena("vieja1"), creadoEn: "" }],
     sesiones: [
       { token: "x", expira: "2099-01-01", profesorId: "p1" },
       { token: "y", expira: "2099-01-01", alumnoId: "a1" },

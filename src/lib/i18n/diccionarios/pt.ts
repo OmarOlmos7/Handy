@@ -29,6 +29,7 @@ const pt: Diccionario = {
     misActividades: "Minhas atividades",
     alumno: "Aluno",
     sinSesion: "Sem sessão",
+    tipos: { alumno: "Aluno", profesor: "Professor", administrador: "Administrador" },
   },
   inicio: {
     nav: { comoFunciona: "Como funciona", queRecibes: "O que você recebe", precios: "Preços", privacidad: "Privacidade" },
@@ -191,6 +192,10 @@ const pt: Diccionario = {
     instalarIos: "Para usar como app no iPhone ou iPad: toque em {compartir} e depois em {agregar}.",
     compartir: "Compartilhar",
     agregarInicio: "Adicionar à Tela de Início",
+    tipoPerfil: "Tipo de perfil",
+    perfilProfesor: "Editor: cria e corrige atividades",
+    perfilAlumno: "Entregue e veja seus resultados",
+    registroAlumnoTitulo: "Crie sua conta de aluno",
     errores: {
       datosRegistro: "Escreva seu nome e um e-mail válido.",
       contrasenaCorta: "A senha deve ter pelo menos 8 caracteres.",

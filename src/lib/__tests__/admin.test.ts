@@ -1,15 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { consumoDeRespuesta, correosAdmin, costoUSD, creditosDe, esAdmin, estatusPago, movimientoAjuste, resumenAdmin } from "../admin";
+import { asignarTipos, consumoDeRespuesta, correosAdmin, tipoDeProfesor, costoUSD, creditosDe, esAdmin, estatusPago, movimientoAjuste, resumenAdmin } from "../admin";
 import type { BaseDeDatos } from "../tipos";
 
 function base(): BaseDeDatos {
   return {
     version: 3,
     profesores: [
-      { id: "p1", nombre: "Ana Ruiz", correo: "ana@escuela.mx", contrasena: "x", creadoEn: "2026-11-01T10:00:00Z" },
-      { id: "p2", nombre: "Beto Paz", correo: "beto@escuela.mx", contrasena: "x", creadoEn: "2026-11-02T10:00:00Z" },
+      { id: "p1", tipo: "profesor", nombre: "Ana Ruiz", correo: "ana@escuela.mx", contrasena: "x", creadoEn: "2026-11-01T10:00:00Z" },
+      { id: "p2", tipo: "profesor", nombre: "Beto Paz", correo: "beto@escuela.mx", contrasena: "x", creadoEn: "2026-11-02T10:00:00Z" },
     ],
-    cuentasAlumno: [{ id: "c1", correo: "luz@alumnos.mx", nombre: "Luz", matricula: "A1", contrasena: "x", creadoEn: "2026-11-03T10:00:00Z" }],
+    cuentasAlumno: [{ id: "c1", tipo: "alumno", correo: "luz@alumnos.mx", nombre: "Luz", matricula: "A1", contrasena: "x", creadoEn: "2026-11-03T10:00:00Z" }],
     sesiones: [
       { token: "t1", expira: "2026-12-12T18:00:00Z", profesorId: "p1" },
       { token: "t2", expira: "2026-11-01T00:00:00Z", profesorId: "p2" },
@@ -135,5 +135,21 @@ describe("resumen del panel", () => {
     expect(r.alumnos).toEqual([
       { id: "c1", nombre: "Luz", correo: "luz@alumnos.mx", creadoEn: "2026-11-03T10:00:00Z", cursos: 1, entregas: 1, sesionActiva: true },
     ]);
+  });
+});
+
+describe("tipo de usuario", () => {
+  it("asigna alumno, profesor o administrador según la cuenta y ADMIN_CORREOS", () => {
+    const db = {
+      profesores: [
+        { id: "p1", nombre: "Ana", correo: "ana@escuela.mx", contrasena: "x", creadoEn: "" },
+        { id: "p2", tipo: "administrador", nombre: "Beto", correo: "beto@escuela.mx", contrasena: "x", creadoEn: "" },
+      ],
+      cuentasAlumno: [{ id: "c1", correo: "luz@alumnos.mx", nombre: "Luz", matricula: "A1", contrasena: "x", creadoEn: "" }],
+    } as unknown as BaseDeDatos;
+    asignarTipos(db, "ANA@escuela.mx");
+    expect(db.profesores.map((p) => p.tipo)).toEqual(["administrador", "profesor"]);
+    expect(db.cuentasAlumno[0].tipo).toBe("alumno");
+    expect(tipoDeProfesor("otro@escuela.mx", "ana@escuela.mx")).toBe("profesor");
   });
 });

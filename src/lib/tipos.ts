@@ -328,8 +328,13 @@ export interface Movimiento {
   cantidad: number;
 }
 
+/** Tipo de usuario de una cuenta. El administrador es un profesor con correo en ADMIN_CORREOS. */
+export type TipoUsuario = "alumno" | "profesor" | "administrador";
+
 export interface Profesor {
   id: string;
+  /** Profesor (editor de actividades) o administrador. */
+  tipo: "profesor" | "administrador";
   nombre: string;
   correo: string;
   /** scrypt: "sal:hash" en hexadecimal. Nunca la contraseña en claro. */
@@ -377,6 +382,7 @@ export interface ConfiguracionProfesor {
 /** Cuenta del alumno: entra con su correo y su clave de acceso para ver solo sus resultados. */
 export interface CuentaAlumno {
   id: string;
+  tipo: "alumno";
   correo: string;
   nombre: string;
   matricula: string;

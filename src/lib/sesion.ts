@@ -58,7 +58,7 @@ export const profesorActual = cache(async () => {
   const db = await leer();
   const sesion = await sesionDe(COOKIE_PROFESOR, db);
   const p = sesion?.profesorId ? db.profesores.find((x) => x.id === sesion.profesorId) : undefined;
-  return p ? { id: p.id, nombre: p.nombre, correo: p.correo, config: p.config } : undefined;
+  return p ? { id: p.id, tipo: p.tipo, nombre: p.nombre, correo: p.correo, config: p.config } : undefined;
 });
 
 /** Exige sesión de profesor; si no hay, manda a /ingresar. */
@@ -86,6 +86,7 @@ export async function datosProfesor() {
 
 export interface AlumnoConSesion {
   id: string;
+  tipo: "alumno";
   nombre: string;
   correo: string;
   matricula: string;
@@ -99,7 +100,7 @@ export const alumnoActual = cache(async (): Promise<AlumnoConSesion | undefined>
   const sesion = await sesionDe(COOKIE_ALUMNO, db);
   const cuenta = sesion?.alumnoId ? db.cuentasAlumno.find((c) => c.id === sesion.alumnoId) : undefined;
   if (!cuenta) return undefined;
-  return { id: cuenta.id, nombre: cuenta.nombre, correo: cuenta.correo, matricula: cuenta.matricula, cursos: cursosDeAlumno(db, cuenta) };
+  return { id: cuenta.id, tipo: cuenta.tipo, nombre: cuenta.nombre, correo: cuenta.correo, matricula: cuenta.matricula, cursos: cursosDeAlumno(db, cuenta) };
 });
 
 /** Matrícula con que el alumno con sesión aparece en el curso, si está inscrito. */
