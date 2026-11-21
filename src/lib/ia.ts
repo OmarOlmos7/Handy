@@ -1254,8 +1254,10 @@ const EsquemaRelaciones = z.object({
   relaciones: z.array(z.object({ a: z.string(), b: z.string(), motivo: z.string() })),
 });
 
-const SISTEMA_RELACIONES = `Eres un asistente para profesores. Recibes el temario de una asignatura: cada tema y subtema tiene un código (por ejemplo "2.3" es el tema 3 de la unidad 2 y "2.3.1" su primer subtema).
+const SISTEMA_RELACIONES = `Eres un asistente para profesores. Recibes el temario de una asignatura: cada unidad, tema y subtema tiene un código (por ejemplo "2" es la unidad 2, "2.3" su tema 3 y "2.3.1" el primer subtema de ese tema).
 Encuentra los temas y subtemas afines: los que se necesitan uno al otro (prerrequisito), se aplican juntos o tratan la misma idea desde otra unidad.
+- Cuando una unidad completa es base de otra unidad completa (por ejemplo, unidades y mediciones, o vectores, para toda la dinámica), relaciona las dos unidades con sus códigos de unidad ("1" y "4") en lugar de muchos temas sueltos.
+- Si una unidad es herramienta de todas las demás (como mediciones o vectores en física), relaciónala con cada una de esas unidades.
 - Da prioridad a las relaciones entre unidades distintas; dentro de una misma unidad solo las que no sean obvias por el orden.
 - No relaciones un subtema con su propio tema.
 - Devuelve de 8 a 40 relaciones, las más útiles para que el alumno vea cómo se conecta el temario.
@@ -1263,10 +1265,11 @@ Encuentra los temas y subtemas afines: los que se necesitan uno al otro (prerreq
 
 /** Propone temas y subtemas afines del temario. Solo recibe nombres de temas (sin datos de alumnos). */
 export async function relacionarTemario(unidades: { nombre: string; temas: { nombre: string; subtemas: string[] }[] }[], uso: UsoIA) {
-  const codigos = new Map<string, { u: number; t: number; s?: number }>();
+  const codigos = new Map<string, { u: number; t?: number; s?: number }>();
   const lineas: string[] = [];
   unidades.forEach((u, i) => {
-    lineas.push(`Unidad ${i + 1}: ${u.nombre}`);
+    codigos.set(`${i + 1}`, { u: i });
+    lineas.push(`${i + 1} Unidad: ${u.nombre}`);
     u.temas.forEach((t, j) => {
       const ct = `${i + 1}.${j + 1}`;
       codigos.set(ct, { u: i, t: j });
@@ -1287,7 +1290,7 @@ export async function relacionarTemario(unidades: { nombre: string; temas: { nom
   });
   return r.relaciones
     .map((x) => ({ a: codigos.get(x.a.trim()), b: codigos.get(x.b.trim()), motivo: x.motivo.trim().slice(0, 120) }))
-    .filter((x): x is { a: { u: number; t: number; s?: number }; b: { u: number; t: number; s?: number }; motivo: string } => Boolean(x.a && x.b));
+    .filter((x): x is { a: { u: number; t?: number; s?: number }; b: { u: number; t?: number; s?: number }; motivo: string } => Boolean(x.a && x.b));
 }
 
 // ---------- Videos y lecturas con enlaces reales (búsqueda web) ----------
