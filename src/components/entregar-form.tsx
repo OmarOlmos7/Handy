@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formato } from "@/lib/i18n/idiomas";
+import { CAMPO_ACEPTACION, VERSION_LEGAL } from "@/lib/legal/aceptacion";
 import { MINUTOS_REENVIO } from "@/lib/reenvio";
 import { ZONA_HORARIA } from "@/lib/resultados";
+import { AceptarAvisos } from "./aceptar-avisos";
 import { useTextos } from "./proveedor-textos";
 import { Boton } from "./ui";
 
@@ -50,6 +52,7 @@ interface Pagina {
 export function EntregarForm({
   actividadId,
   titulo,
+  correoPrivacidad,
   modo,
   automatica,
   matriculaInicial,
@@ -60,6 +63,8 @@ export function EntregarForm({
 }: {
   actividadId: string;
   titulo: string;
+  /** Correo para ejercer los derechos de privacidad (se muestra al crear la cuenta). */
+  correoPrivacidad: string;
   /** profesor: sube las hojas de un alumno; sesion: el alumno ya entró; nuevo: pide correo y clave. */
   modo: "profesor" | "sesion" | "nuevo";
   /** true si la rúbrica ya está confirmada y la entrega se evalúa sola. */
@@ -82,6 +87,7 @@ export function EntregarForm({
   const [cuenta, setCuenta] = useState<"crear" | "entrar">("crear");
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
+  const [acepta, setAcepta] = useState(false);
   const pideDatos = modo === "profesor" || (modo === "nuevo" && cuenta === "crear");
   const datosListos =
     modo === "sesion" ||
@@ -89,7 +95,7 @@ export function EntregarForm({
     (modo === "nuevo" &&
       correo.includes("@") &&
       clave.length >= 6 &&
-      (cuenta === "entrar" || (matricula.trim().length >= 3 && nombre.trim().length >= 3)));
+      (cuenta === "entrar" || (matricula.trim().length >= 3 && nombre.trim().length >= 3 && acepta)));
   const router = useRouter();
   const [paginas, setPaginas] = useState<Pagina[]>([]);
   const [tipo, setTipo] = useState<"foto" | "pdf">("foto");
@@ -128,6 +134,7 @@ export function EntregarForm({
     datos.append("nombre", nombre);
     datos.append("correo", correo);
     datos.append("clave", clave);
+    if (modo === "nuevo" && cuenta === "crear" && acepta) datos.append(CAMPO_ACEPTACION, VERSION_LEGAL);
     if (versiones?.length) datos.append("version", version);
     if (tipo === "pdf" && pdf) datos.append("pdf", pdf);
     else paginas.forEach((p) => datos.append("fotos", p.archivo));
@@ -308,6 +315,11 @@ export function EntregarForm({
               <p className="mt-2 text-xs text-slate-500">
                 {cuenta === "crear" ? tf.ayudaCrear : tf.ayudaEntrar}
               </p>
+              {cuenta === "crear" && (
+                <div className="mt-3">
+                  <AceptarAvisos t={t.legal} tipo="alumno" correo={correoPrivacidad} marcado={acepta} alCambiar={setAcepta} />
+                </div>
+              )}
               {cuenta === "entrar" && (
                 <Link
                   href={`/recuperar?tipo=alumno&volver=${encodeURIComponent(`/entregar/${actividadId}`)}`}

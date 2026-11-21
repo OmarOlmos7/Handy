@@ -160,6 +160,7 @@ const alumno: Diccionario["alumno"] = {
     yaExiste: "An account with that email already exists. Sign in with your access key.",
     credenciales: "Incorrect email or access key.",
     clavesDistintas: "The two access keys do not match.",
+    aceptacion: "To create your account, read and accept the terms and the privacy notices.",
     actividadNoEncontrada: "Activity not found",
     entregasSuspendidas: "Your teacher has paused submissions for this activity. Ask them when they will reopen.",
     sinArchivos: "Add at least one photo or a PDF",

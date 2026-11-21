@@ -201,7 +201,9 @@ export default async function Inicio() {
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <Logo />
           <div className="flex flex-wrap items-center gap-4">
-            <Link href="#privacidad">{i.avisoPrivacidad}</Link>
+            <Link href="/aviso-de-privacidad">{t.legal.avisoPrivacidad}</Link>
+            <Link href="/politica-de-datos">{t.legal.politicaDatos}</Link>
+            <Link href="/terminos">{t.legal.terminos}</Link>
             <Link href="/precios">{t.comun.precios}</Link>
             <Link href="/ingresar">{t.comun.ingresar}</Link>
             <SelectorIdioma actual={idioma} etiqueta={t.comun.idioma} />

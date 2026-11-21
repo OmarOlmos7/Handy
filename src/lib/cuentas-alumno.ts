@@ -3,12 +3,12 @@ import "server-only";
 import crypto from "node:crypto";
 import { modificar } from "./almacen";
 import { correoValido, cuentaAlumnoPorCorreo, hashContrasena, normalizarCorreo, normalizarMatricula, verificarContrasena } from "./cuentas";
-import type { BaseDeDatos, CuentaAlumno } from "./tipos";
+import type { AceptacionLegal, BaseDeDatos, CuentaAlumno } from "./tipos";
 
 export const LARGO_MINIMO_CLAVE = 6;
 
 /** Error de cuenta: clave de alumno.errores del diccionario (se traduce al mostrarlo). */
-export type ErrorCuentaAlumno = "nombre" | "matricula" | "correo" | "claveCorta" | "yaExiste";
+export type ErrorCuentaAlumno = "nombre" | "matricula" | "correo" | "claveCorta" | "aceptacion" | "yaExiste";
 
 export type ResultadoCuenta = { ok: true; cuenta: CuentaAlumno } | { ok: false; error: ErrorCuentaAlumno };
 
@@ -18,8 +18,17 @@ export function verificarAlumno(db: BaseDeDatos, correo: string, clave: string):
   return cuenta && verificarContrasena(clave, cuenta.contrasena) ? cuenta : undefined;
 }
 
-/** Crea la cuenta del alumno. Falla si el correo ya existe o faltan datos. */
-export function crearCuentaAlumno(datos: { nombre: string; matricula: string; correo: string; clave: string }): ResultadoCuenta {
+/**
+ * Crea la cuenta del alumno. Falla si el correo ya existe, faltan datos o no aceptó los términos
+ * y avisos de privacidad (aceptacion: versión y fecha que se guardan en la cuenta).
+ */
+export function crearCuentaAlumno(datos: {
+  nombre: string;
+  matricula: string;
+  correo: string;
+  clave: string;
+  aceptacion: AceptacionLegal | undefined;
+}): ResultadoCuenta {
   const nombre = datos.nombre.replace(/\s+/g, " ").trim().slice(0, 120);
   const matricula = normalizarMatricula(datos.matricula);
   const correo = normalizarCorreo(datos.correo);
@@ -27,6 +36,7 @@ export function crearCuentaAlumno(datos: { nombre: string; matricula: string; co
   if (!/^[A-Z0-9-]{3,20}$/.test(matricula)) return { ok: false, error: "matricula" };
   if (!correoValido(correo)) return { ok: false, error: "correo" };
   if (datos.clave.length < LARGO_MINIMO_CLAVE) return { ok: false, error: "claveCorta" };
+  if (!datos.aceptacion) return { ok: false, error: "aceptacion" };
   const cuenta: CuentaAlumno = {
     id: `al-${crypto.randomBytes(6).toString("hex")}`,
     correo,
@@ -34,6 +44,7 @@ export function crearCuentaAlumno(datos: { nombre: string; matricula: string; co
     matricula,
     contrasena: hashContrasena(datos.clave),
     creadoEn: new Date().toISOString(),
+    aceptacion: datos.aceptacion,
   };
   const creada = modificar((db) => {
     if (cuentaAlumnoPorCorreo(db, correo)) return false;

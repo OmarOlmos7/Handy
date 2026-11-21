@@ -160,6 +160,7 @@ const alumno: Diccionario["alumno"] = {
     yaExiste: "Un compte existe déjà avec cet e-mail. Connecte-toi avec ta clé d’accès.",
     credenciales: "E-mail ou clé d’accès incorrects.",
     clavesDistintas: "Les deux clés d’accès ne correspondent pas.",
+    aceptacion: "Pour créer ton compte, lis et accepte les conditions et les avis de confidentialité.",
     actividadNoEncontrada: "Activité introuvable",
     entregasSuspendidas: "Votre enseignant a suspendu les rendus de cette activité. Demandez-lui quand ils rouvriront.",
     sinArchivos: "Ajoute au moins une photo ou un PDF",
