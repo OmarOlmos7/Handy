@@ -6,8 +6,12 @@ import { actividadDe, grupoDe, leerAhora, modificar } from "./almacen";
 import { creditosPorPagina, sumarCreditos } from "./configuracion";
 import { actividadDeVersion } from "./versiones";
 import { saldoDe } from "./cuentas";
-import { ErrorIA, buscarRecursos, evaluarEntrega, recomendarEstudio, temasDe } from "./ia";
+import { ErrorIA, buscarRecursos, evaluarEntrega, evaluarRespuestasPlataforma, recomendarEstudio, temasDe } from "./ia";
 import { imagenesParaIA } from "./imagenes";
+import { diccionarioDe } from "./i18n/diccionario";
+import { idiomaDeActividad } from "./i18n/detectar";
+import { calificarSinIA, creditosPlataforma, esPlataforma } from "./plataforma";
+import type { Actividad, Entrega, Grupo } from "./tipos";
 
 export type ResultadoEvaluacion = { ok: true } | { ok: false; error: string; status: number };
 
@@ -41,6 +45,11 @@ async function evaluarAhora(actividadId: string, matricula: string, reevaluar = 
     return { ok: false, error: "Primero confirma la rúbrica", status: 409 };
   }
   const entrega = db.entregas.find((e) => e.actividadId === actividadId && e.matricula === matricula);
+  if (esPlataforma(actividad)) {
+    if (!entrega?.respuestas) return { ok: false, error: "Esta entrega no tiene respuestas", status: 400 };
+    if (reevaluar ? entrega.estado === "sin_entregar" : entrega.estado !== "entregada") return { ok: true };
+    return evaluarPlataforma(actividad, grupo, entrega, reevaluar);
+  }
   if (!entrega?.imagenes?.length) return { ok: false, error: "Esta entrega no tiene fotos", status: 400 };
   if (reevaluar ? entrega.estado === "sin_entregar" : entrega.estado !== "entregada") return { ok: true };
   const paginas = entrega.imagenes.length;
@@ -82,6 +91,70 @@ async function evaluarAhora(actividadId: string, matricula: string, reevaluar = 
     marcar(actividadId, matricula, { evaluandoDesde: undefined, error });
     return { ok: false, error, status: 502 };
   }
+}
+
+/**
+ * Entrega en plataforma: los reactivos cerrados se califican por código, sin créditos; solo las
+ * respuestas escritas y los desarrollos con archivo van a la IA y cuestan créditos.
+ */
+async function evaluarPlataforma(actividad: Actividad, grupo: Grupo, entrega: Entrega, reevaluar: boolean): Promise<ResultadoEvaluacion> {
+  const { actividadId, matricula } = entrega;
+  const respuestas = entrega.respuestas ?? [];
+  const version = actividadDeVersion(actividad, entrega.version);
+  const fijos = diccionarioDe(idiomaDeActividad(actividad) ?? "es").alumno.correccion;
+  const { resultados, paraIA } = calificarSinIA(version, respuestas, fijos);
+  const costo = creditosPlataforma(version, respuestas);
+  const db = leerAhora();
+  if (paraIA.length && (!grupo.profesorId || saldoDe(db, grupo.profesorId) < costo)) {
+    const error = "No hay créditos suficientes para evaluar. Compra créditos y vuelve a intentar.";
+    marcar(actividadId, matricula, { evaluandoDesde: undefined, error });
+    return { ok: false, error, status: 402 };
+  }
+  const nombre = grupo.alumnos.find((a) => a.matricula === matricula)?.nombre ?? matricula;
+  const enviadas = entrega.entregadaEn;
+  let positivos: string[] = [];
+  let mejoras: string[] = [];
+  if (paraIA.length) {
+    marcar(actividadId, matricula, { evaluandoDesde: new Date().toISOString(), error: undefined });
+    try {
+      // A la IA solo van la rúbrica, los textos y las fotos: nunca el nombre ni la matrícula.
+      const ia = await evaluarRespuestasPlataforma(
+        version,
+        paraIA.map((r) => {
+          const resp = respuestas.find((x) => x.numero === r.numero);
+          return r.tipo === "desarrollo" ? { numero: r.numero, imagenes: imagenesParaIA(resp?.archivos ?? []) } : { numero: r.numero, texto: resp?.texto ?? "" };
+        }),
+        { profesorId: grupo.profesorId, actividadId },
+      );
+      resultados.push(...ia.resultados);
+      positivos = ia.positivos;
+      mejoras = ia.mejoras;
+    } catch (e) {
+      const error = e instanceof ErrorIA ? e.message : "No se pudo evaluar la entrega.";
+      console.error(e);
+      marcar(actividadId, matricula, { evaluandoDesde: undefined, error });
+      return { ok: false, error, status: 502 };
+    }
+  }
+  resultados.sort((a, b) => a.numero - b.numero);
+  modificar((d) => {
+    const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
+    // Si el alumno volvió a entregar mientras se evaluaba, no se pisa su entrega nueva.
+    if (!e || (!reevaluar && e.estado !== "entregada") || e.entregadaEn !== enviadas) return;
+    Object.assign(e, { resultados, positivos, mejoras, estado: "aprobada", evaluadaEn: new Date().toISOString(), error: undefined, evaluandoDesde: undefined });
+    if (reevaluar) e.calificacionManual = undefined;
+    if (paraIA.length && costo > 0) {
+      d.movimientos.unshift({
+        profesorId: grupo.profesorId,
+        fecha: new Date().toISOString().slice(0, 10),
+        concepto: `${reevaluar ? "Re-evaluación" : "Evaluación"} · ${actividad.titulo} · ${nombre}`,
+        cantidad: -costo,
+      });
+    }
+  });
+  // Las recomendaciones de estudio usan la IA: solo se piden si la entrega ya pasó por ella.
+  if (paraIA.length) await generarEstudio(actividadId, matricula);
+  return { ok: true };
 }
 
 /**
@@ -159,7 +232,7 @@ export function marcarEnFila(actividadId: string, matriculas: string[], enFila =
 /** Entregas con fotos que esperan evaluación y no están ya en curso. */
 export function entregasPorEvaluar(actividadId: string): string[] {
   return leerAhora()
-    .entregas.filter((e) => e.actividadId === actividadId && e.estado === "entregada" && e.imagenes?.length && !evaluandoAhora(e.evaluandoDesde))
+    .entregas.filter((e) => e.actividadId === actividadId && e.estado === "entregada" && (e.imagenes?.length || e.respuestas) && !evaluandoAhora(e.evaluandoDesde))
     .map((e) => e.matricula);
 }
 

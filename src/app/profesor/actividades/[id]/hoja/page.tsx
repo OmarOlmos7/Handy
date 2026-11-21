@@ -13,6 +13,9 @@ import { qrDataUrl, urlBase } from "@/lib/qr";
 import { versionesCompletas } from "@/lib/versiones";
 import { textos, textosDeActividad } from "@/lib/i18n/servidor";
 import { ProveedorTextos } from "@/components/proveedor-textos";
+import { ResponderActividad } from "@/components/responder-actividad";
+import { esPlataforma, reactivosParaAlumno } from "@/lib/plataforma";
+import { formato } from "@/lib/i18n/idiomas";
 
 export default async function HojaImprimible({ params }: PageProps<"/profesor/actividades/[id]/hoja">) {
   const { id } = await params;
@@ -54,6 +57,45 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
     { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
     { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
   ];
+
+  // En plataforma no hay hoja impresa: el profesor ve la actividad como la contestará el alumno.
+  if (esPlataforma(actividad)) {
+    const enlace = `${base}/entregar/${id}`;
+    const lista = versionesCompletas(actividad);
+    return (
+      <>
+        <Encabezado migas={migas} titulo={th.plataformaTitulo} subtitulo={th.plataformaTexto} acciones={<>{editar}{siguiente}</>} />
+        <ConFlujo vista={1} db={db} actividad={actividad}>
+          <div className="mx-auto max-w-2xl space-y-6">
+            <EditarHoja
+              actividadId={id}
+              puedeDeshacer={!!actividad.hojaAnterior}
+              bloqueada={db.entregas.some((e) => e.actividadId === id && e.estado !== "sin_entregar")}
+            />
+            <Tarjeta className="flex flex-col items-center gap-4 p-5 sm:flex-row">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={qr} alt="QR" className="h-32 w-32 shrink-0" />
+              <div className="min-w-0 text-sm">
+                <p className="font-semibold text-slate-800">{th.enlaceAlumnos}</p>
+                <a href={enlace} target="_blank" className="mt-1 block break-all font-medium text-tinta-700 hover:underline">
+                  {enlace}
+                </a>
+                {lista.length > 1 && <p className="mt-2 text-xs text-slate-500">{th.plataformaVersiones}</p>}
+              </div>
+            </Tarjeta>
+            <ProveedorTextos valor={impreso}>
+              {lista.map((v) => (
+                <section key={v.letra} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:p-6">
+                  {lista.length > 1 && <h2 className="mb-3 text-sm font-semibold text-slate-500">{formato(th.versionN, { v: v.letra })}</h2>}
+                  <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(v.actividad)} instrucciones={v.actividad.instruccionesAlumno} vistaPrevia />
+                </section>
+              ))}
+            </ProveedorTextos>
+          </div>
+        </ConFlujo>
+      </>
+    );
+  }
 
   if (actividad.origen === "escaneada") {
     return (

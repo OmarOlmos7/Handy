@@ -7,7 +7,39 @@ export type TipoReactivo =
   | "relacion_columnas"
   | "parentesis"
   | "desarrollo"
-  | "abierto";
+  | "abierto"
+  // Solo en actividades en plataforma (el alumno responde en la app):
+  | "seleccion_multiple"
+  | "numerica"
+  | "si_no"
+  | "orden"
+  | "relacion_imagenes"
+  | "seleccion_imagenes";
+
+/**
+ * Cómo responde el alumno: "manuscrita" (hoja impresa que entrega con fotos, lo de siempre) o
+ * "plataforma" (responde los reactivos en su vista de la app, web o celular).
+ */
+export type FormatoActividad = "manuscrita" | "plataforma";
+
+/** Imagen de un reactivo en plataforma (dibujo en SVG) con su descripción para la IA y la accesibilidad. */
+export interface ImagenReactivo {
+  svg: string;
+  descripcion: string;
+}
+
+/**
+ * Respuesta del alumno a un reactivo en plataforma. `seleccion`: letras elegidas (opción,
+ * selección múltiple, imágenes), la secuencia elegida (orden), "V"/"F" o "Sí"/"No", o la letra
+ * elegida para cada elemento de la columna A (relaciones). `texto`: respuesta escrita o numérica.
+ * `archivos`: fotos o archivos del desarrollo (rutas relativas a la carpeta de datos).
+ */
+export interface RespuestaPlataforma {
+  numero: number;
+  texto?: string;
+  seleccion?: string[];
+  archivos?: string[];
+}
 
 export type Confianza = "alta" | "media" | "baja";
 
@@ -44,6 +76,10 @@ export interface Reactivo {
   ilustracion?: string;
   /** Dónde va el dibujo: a la derecha del texto (por defecto) o abajo, más grande (gráficas). */
   ubicacionIlustracion?: "derecha" | "abajo";
+  /** Imágenes con letra (a, b, c…) para relacionar o seleccionar (solo en plataforma). */
+  imagenes?: ImagenReactivo[];
+  /** Respuesta numérica: margen aceptado (±) en las mismas unidades; sin valor, 1 % del resultado. */
+  tolerancia?: number;
 }
 
 export interface Alumno {
@@ -116,6 +152,8 @@ export interface Actividad {
   color?: string;
   /** Etiqueta para agrupar: Tarea, Actividad, Quiz, Examen, Ensayo u otra que escriba el profesor. */
   etiqueta?: string;
+  /** Cómo responde el alumno; sin valor, manuscrita (actividades anteriores). */
+  formato?: FormatoActividad;
   /** Cómo se creó: generada con IA o cargada desde un escaneo del profesor. */
   origen?: OrigenActividad;
   /** Lo que pidió el profesor para generar la actividad con IA. */
@@ -281,6 +319,8 @@ export interface Entrega {
   mejoras: string[];
   /** Fotos de las hojas del alumno, en orden (rutas relativas a la carpeta de datos). */
   imagenes?: string[];
+  /** Respuestas en la app (actividades en plataforma), una por reactivo contestado. */
+  respuestas?: RespuestaPlataforma[];
   /** Versión de la hoja que respondió el alumno (A, B, C…); sin valor, la A. */
   version?: string;
   entregadaEn?: string;

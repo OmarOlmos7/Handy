@@ -51,7 +51,7 @@ export default async function Editar({ params }: PageProps<"/profesor/actividade
             enunciado: r.enunciado,
             tema: r.tema,
             puntos: r.puntos,
-            opciones: r.tipo === "opcion_multiple" ? (r.opciones ?? []) : undefined,
+            opciones: ["opcion_multiple", "seleccion_multiple", "orden"].includes(r.tipo) ? (r.opciones ?? []) : undefined,
           })),
         }}
       />

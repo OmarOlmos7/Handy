@@ -19,6 +19,37 @@ export function opcion(s: string) {
   return m ? m[1] : t.replace(/[^a-z0-9]/g, "");
 }
 
+/** "Sí" / "si" / "yes" → "si"; "No" → "no". */
+export function siNo(s: string) {
+  const t = limpiar(s);
+  if (/^(si|s|yes|y|oui|ja|sim|是|はい)\b/.test(t) || t === "是" || t === "はい") return "si";
+  if (/^(no|n|non|nein|nao|不|いいえ)\b/.test(t) || t === "不是" || t === "いいえ") return "no";
+  return t;
+}
+
+/** Letras sueltas de una respuesta: "a, c" → ["a","c"]; "(b) y (d)" → ["b","d"]. */
+export function letras(s: string) {
+  // "a y c", "a and c": la conjunción no es una opción.
+  const t = limpiar(s).replace(/\s+(y|and|et|und)\s+/g, ", ");
+  return [...t.matchAll(/(?:^|[^a-z])([a-z])(?=$|[^a-z])/g)].map((m) => m[1]);
+}
+
+/** Primer número de un texto, con coma o punto decimal ("9,8 m/s²" → 9.8); null si no hay. */
+export function primerNumero(s: string): number | null {
+  const m = s.replace(/(\d),(\d{3})(?!\d)/g, "$1$2").replace(/(\d),(\d)/g, "$1.$2").replace(/[−–]/g, "-").match(/-?\d+(?:\.\d+)?(?:e-?\d+)?/i);
+  return m ? Number(m[0]) : null;
+}
+
+/** Margen aceptado de una respuesta numérica: el del reactivo o, sin él, 1 % del resultado (mínimo 0.01). */
+export function margenNumerico(r: Pick<Reactivo, "tolerancia">, clave: number) {
+  return r.tolerancia !== undefined && r.tolerancia >= 0 ? r.tolerancia : Math.max(0.01, Math.abs(clave) * 0.01);
+}
+
+/** Tipos que solo existen en actividades en plataforma (el alumno responde en la app). */
+export const TIPOS_PLATAFORMA = ["seleccion_multiple", "numerica", "si_no", "orden", "relacion_imagenes", "seleccion_imagenes"] as const;
+
+const esDePlataforma = (tipo: string) => (TIPOS_PLATAFORMA as readonly string[]).includes(tipo);
+
 /** Pares de una relación de columnas o secuencia de paréntesis: "1-c, 2-a" → ["1c","2a"]; "(b)(a)(c)" → ["b","a","c"]. */
 export function pares(s: string) {
   const t = limpiar(s);
@@ -60,7 +91,7 @@ export function puntosReactivoCerrado(r: Reactivo, leida: string): number | null
     return r.tipo === "desarrollo" || r.tipo === "abierto" ? null : 0;
   }
   // Elegir la palabra correcta en cada renglón: se compara la palabra completa, no su inicial.
-  const clavePalabras = esCerrado(r) ? palabrasNumeradas(r.respuesta) : null;
+  const clavePalabras = esCerrado(r) && !esDePlataforma(r.tipo) ? palabrasNumeradas(r.respuesta) : null;
   if (clavePalabras) {
     const alumno = palabrasNumeradas(leida) ?? new Map<number, string>();
     const aciertos = [...clavePalabras].filter(([n, v]) => alumno.get(n) === v).length;
@@ -78,6 +109,33 @@ export function puntosCerradoPorLetra(r: Reactivo, leida: string): number | null
     case "verdadero_falso":
     case "opcion_multiple":
       return opcion(leida) === opcion(r.respuesta) ? r.puntos : 0;
+    case "si_no":
+      return siNo(leida) === siNo(r.respuesta) ? r.puntos : 0;
+    case "numerica": {
+      const clave = primerNumero(r.respuesta);
+      const alumno = primerNumero(leida);
+      if (clave === null || alumno === null) return 0;
+      return Math.abs(alumno - clave) <= margenNumerico(r, clave) + 1e-9 ? r.puntos : 0;
+    }
+    case "seleccion_multiple":
+    case "seleccion_imagenes": {
+      // Cada correcta elegida suma y cada incorrecta elegida resta (sin bajar de 0).
+      const clave = new Set(letras(r.respuesta));
+      if (clave.size === 0) return 0;
+      const elegidas = new Set(letras(leida));
+      const aciertos = [...elegidas].filter((l) => clave.has(l)).length;
+      const errores = elegidas.size - aciertos;
+      return Math.round((Math.max(0, aciertos - errores) / clave.size) * r.puntos * 4) / 4;
+    }
+    case "orden": {
+      // Crédito por cada posición en su lugar.
+      const clave = letras(r.respuesta);
+      if (clave.length === 0) return 0;
+      const alumno = letras(leida);
+      const aciertos = clave.filter((l, i) => alumno[i] === l).length;
+      return Math.round((aciertos / clave.length) * r.puntos * 4) / 4;
+    }
+    case "relacion_imagenes":
     case "relacion_columnas":
     case "parentesis": {
       const clave = pares(r.respuesta);

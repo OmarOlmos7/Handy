@@ -13,6 +13,7 @@ import { IDIOMAS, NOMBRE_IDIOMA, formato, type Idioma } from "@/lib/i18n/idiomas
 import { useTextos } from "./proveedor-textos";
 
 type Modo = "ia" | "escaneada";
+type Formato = "manuscrita" | "plataforma";
 
 /** Paso 1: crear la actividad con IA o cargarla escaneada. */
 export function NuevaActividad({
@@ -40,7 +41,11 @@ export function NuevaActividad({
   const tn = t.profesor.nuevaActividad;
   const [grupoSel, setGrupoSel] = useState(grupos.some((g) => g.id === grupoInicial) ? grupoInicial! : (grupos[0]?.id ?? ""));
   const [etiqueta, setEtiqueta] = useState("");
-  const [modo, setModo] = useState<Modo>("ia");
+  const [formatoAct, setFormatoAct] = useState<Formato>("manuscrita");
+  const [modoElegido, setModo] = useState<Modo>("ia");
+  // En plataforma la actividad siempre la arma la IA (los reactivos se contestan en la app).
+  const enPlataforma = formatoAct === "plataforma";
+  const modo: Modo = enPlataforma ? "ia" : modoElegido;
   const [archivos, setArchivos] = useState<File[]>([]);
   const [sinSolucion, setSinSolucion] = useState(false);
   const [estilo, setEstilo] = useState<EstiloCorreccion>("margen");
@@ -67,6 +72,7 @@ export function NuevaActividad({
     e.preventDefault();
     const datos = new FormData(e.currentTarget);
     datos.set("modo", modo);
+    datos.set("formato", formatoAct);
     datos.set("sinSolucion", sinSolucion ? "1" : "");
     datos.delete("solucion");
     datos.set("estiloCorreccion", estilo);
@@ -106,10 +112,35 @@ export function NuevaActividad({
 
   return (
     <form onSubmit={enviar} className="mx-auto max-w-3xl space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2">
-        {opcion("ia", tn.conIA, tn.conIATexto, "✨")}
-        {opcion("escaneada", tn.escaneada, tn.escaneadaTexto, "📄")}
-      </div>
+      <fieldset>
+        <legend className="text-sm font-medium text-slate-700">{tn.formato}</legend>
+        <div className="mt-1 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 sm:inline-grid sm:w-96" role="radiogroup">
+          {(["manuscrita", "plataforma"] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              role="radio"
+              aria-checked={formatoAct === f}
+              onClick={() => setFormatoAct(f)}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                formatoAct === f ? "bg-white text-tinta-700 shadow-sm ring-1 ring-slate-200" : "text-slate-600 hover:text-slate-800"
+              }`}
+            >
+              <span aria-hidden className="mr-1.5">
+                {f === "manuscrita" ? "✍️" : "📱"}
+              </span>
+              {f === "manuscrita" ? tn.manuscrita : tn.enPlataforma}
+            </button>
+          ))}
+        </div>
+        <span className="mt-1 block text-xs text-slate-500">{enPlataforma ? tn.enPlataformaTexto : tn.manuscritaTexto}</span>
+      </fieldset>
+      {!enPlataforma && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {opcion("ia", tn.conIA, tn.conIATexto, "✨")}
+          {opcion("escaneada", tn.escaneada, tn.escaneadaTexto, "📄")}
+        </div>
+      )}
 
       <div className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -186,9 +217,10 @@ export function NuevaActividad({
           <>
             <label className="block text-sm font-medium text-slate-700">
               {tn.queActividad}
-              <textarea name="prompt" rows={7} required minLength={10} className={campo} placeholder={tn.ejemploPrompt} />
+              <textarea name="prompt" rows={7} required minLength={10} className={campo} placeholder={enPlataforma ? tn.ejemploPromptPlataforma : tn.ejemploPrompt} />
               <span className="mt-1 block text-xs font-normal text-slate-500">
-                {tn.tiposDisponibles}
+                {enPlataforma ? tn.tiposPlataforma : tn.tiposDisponibles}
+                {!enPlataforma && (
                 <span className="mt-1 block">
                   <strong className="font-semibold text-slate-600">{tn.ilustraciones}</strong>
                   {tn.ilustracionesAntes}
@@ -197,13 +229,16 @@ export function NuevaActividad({
                   <em>{tn.abajo}</em>
                   {tn.ilustracionesDespues}
                 </span>
+                )}
               </span>
             </label>
             <div className="flex flex-wrap items-start gap-4">
-              <label className="block w-40 text-sm font-medium text-slate-700">
-                {tn.paginas}
-                <input name="paginas" type="number" min={1} max={10} defaultValue={1} className={campo} />
-              </label>
+              {!enPlataforma && (
+                <label className="block w-40 text-sm font-medium text-slate-700">
+                  {tn.paginas}
+                  <input name="paginas" type="number" min={1} max={10} defaultValue={1} className={campo} />
+                </label>
+              )}
               {!sinSolucion && (
                 <label className="block min-w-0 flex-1 text-sm font-medium text-slate-700 sm:max-w-md">
                   {tn.versiones}
@@ -243,7 +278,7 @@ export function NuevaActividad({
             setEstilo(v ? "subrayado" : "margen");
           }}
         />
-        <OpcionEstilo estilo={estilo} onCambio={setEstilo} />
+        {!enPlataforma && <OpcionEstilo estilo={estilo} onCambio={setEstilo} />}
 
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">{tn.calificarSobre}</legend>

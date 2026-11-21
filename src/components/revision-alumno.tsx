@@ -7,6 +7,8 @@ import type { Actividad, Alumno, Entrega, ResultadoReactivo } from "@/lib/tipos"
 import { calificacionCalculada, escalaDe, formatoCal, puntosTotales } from "@/lib/estadisticas";
 import { archivarFotosDesde } from "@/lib/retencion";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
+import { RespuestasEntrega } from "./respuestas-entrega";
+import { esPlataforma } from "@/lib/plataforma";
 import { Boton, Insignia, colorCalificacion } from "./ui";
 import { sinLatex } from "./texto-mat";
 import { formato } from "@/lib/i18n/idiomas";
@@ -93,6 +95,12 @@ export function RevisionAlumno({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
+      {esPlataforma(actividad) ? (
+        // En plataforma: las respuestas del alumno, con los puntos y comentarios que se editan a la derecha.
+        <div>
+          <RespuestasEntrega actividad={actividad} entrega={entrega} t={t} puntaje={!actividad.sinPuntaje} />
+        </div>
+      ) : (
       <div className="lg:sticky lg:top-4 lg:self-start">
         <div className="mb-3 flex items-center gap-2">
           {Array.from({ length: paginasDe(actividad, entregaInicial) }, (_, i) => (
@@ -115,6 +123,7 @@ export function RevisionAlumno({
           modoProfesor
         />
       </div>
+      )}
 
       <aside className="space-y-4">
         <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">

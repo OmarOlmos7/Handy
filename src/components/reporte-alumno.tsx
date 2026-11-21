@@ -11,6 +11,8 @@ import { fechaHoraLarga } from "@/lib/resultados";
 import type { Actividad, Alumno, Entrega, Grupo } from "@/lib/tipos";
 import { calificacion, escalaDe, formatoCal, puntosObtenidos, puntosTotales } from "@/lib/estadisticas";
 import { HojaEntrega, paginasDe } from "./hoja-entrega";
+import { RespuestasEntrega } from "./respuestas-entrega";
+import { esPlataforma } from "@/lib/plataforma";
 import { TextoMat } from "./texto-mat";
 import { colorCalificacion, fechaLarga } from "./ui";
 import { textos } from "@/lib/i18n/servidor";
@@ -98,7 +100,14 @@ export async function ReporteAlumno({
         </dl>
       </section>
 
-      {/* 2. La hoja entregada, con las anotaciones junto a cada respuesta */}
+      {/* 2. En plataforma: cada respuesta con sus puntos y comentario */}
+      {esPlataforma(actividad) ? (
+        <section>
+          <h2 className={`mb-3 ${titulo}`}>{tr.respuestasCalificadas}</h2>
+          <RespuestasEntrega actividad={actividad} entrega={entrega} t={t} puntaje={puntaje} />
+        </section>
+      ) : (
+      /* 2. La hoja entregada, con las anotaciones junto a cada respuesta */
       <section>
         <h2 className={`mb-3 ${titulo}`}>{tr.corregida}</h2>
         <p className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
@@ -148,6 +157,7 @@ export async function ReporteAlumno({
           </ul>
         </div>
       </section>
+      )}
 
       {/* 3. Resumen del desempeño */}
       <section className={tarjeta}>

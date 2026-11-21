@@ -293,7 +293,7 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
       if (n.enunciado.trim()) r.enunciado = n.enunciado.trim().slice(0, 2000);
       r.tema = n.tema.trim().slice(0, 80);
       if (Number.isFinite(n.puntos) && n.puntos > 0) r.puntos = Math.min(1000, n.puntos);
-      if (n.opciones && r.tipo === "opcion_multiple") r.opciones = n.opciones.map((x) => x.trim()).filter(Boolean).slice(0, 8);
+      if (n.opciones && CON_OPCIONES.includes(r.tipo)) r.opciones = n.opciones.map((x) => x.trim()).filter(Boolean).slice(0, 8);
     }
     // Actividad escaneada cuyo texto cambió: el PDF anterior ya no coincide. Se borra y la hoja se
     // vuelve a generar con los textos nuevos (hoja de la app con QR, editable también con IA).
@@ -310,6 +310,9 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
   revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
   revalidatePath("/profesor", "layout");
 }
+
+/** Reactivos con opciones editables a mano (las de plataforma también). */
+const CON_OPCIONES: string[] = ["opcion_multiple", "seleccion_multiple", "orden"];
 
 /** Antes de re-evaluar: guarda el nivel de precisión y las indicaciones para la IA de la actividad. */
 export async function prepararReevaluacion(actividadId: string, motor: string, indicaciones: string, esfuerzo = "") {

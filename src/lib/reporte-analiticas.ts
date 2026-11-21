@@ -314,6 +314,12 @@ export function nombreTipoReactivo(tipo: string, tx: TextosReportePdf = profesor
     parentesis: tx.tipoParentesis,
     desarrollo: tx.tipoDesarrollo,
     abierto: tx.tipoAbierto,
+    seleccion_multiple: tx.tipoSeleccionMultiple,
+    numerica: tx.tipoNumerica,
+    si_no: tx.tipoSiNo,
+    orden: tx.tipoOrden,
+    relacion_imagenes: tx.tipoRelacionImagenes,
+    seleccion_imagenes: tx.tipoSeleccionImagenes,
   };
   return nombres[tipo] ?? tipo;
 }
