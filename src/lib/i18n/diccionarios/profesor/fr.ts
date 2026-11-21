@@ -392,6 +392,10 @@ const profesor: Diccionario["profesor"] = {
     guardando: "Enregistrement…",
     guardado: "Modifications enregistrées.",
     sinGuardar: "Des modifications ne sont pas enregistrées.",
+    cancelar: "Annuler",
+    siQuitar: "Oui, retirer",
+    siBorrar: "Oui, supprimer",
+    borrando: "Suppression…",
     borrar: "Supprimer la matière",
     confirmarBorrar: "Supprimer la matière « {n} » ? Les activités gardent les thèmes qu’elles ont déjà.",
     temasActividad: "Thèmes de l’activité",
@@ -405,6 +409,7 @@ const profesor: Diccionario["profesor"] = {
     sinAsignaturasAlta: "Pour choisir les thèmes de l’activité, chargez le programme de votre matière dans Matières.",
     crearAsignatura: "Créer une matière",
     errores: {
+      recargar: "Impossible de terminer. Rechargez la page (l’app a été mise à jour) et réessayez.",
       sinSesion: "Connectez-vous",
       sinArchivo: "Choisissez le fichier du programme.",
       archivoGrande: "Le fichier dépasse 15 Mo.",

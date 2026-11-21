@@ -25,7 +25,7 @@ export default async function PaginaAsignatura({ params }: PageProps<"/profesor/
         subtitulo={`${asignatura.nivel ? `${asignatura.nivel} · ` : ""}${formato(ta.resumen, { u: r.unidades, t: r.temas, s: r.subtemas })}. ${ta.editarAyuda}`}
       />
       <div className="mx-auto max-w-4xl">
-        <EditorTemario key={asignatura.actualizadaEn} asignatura={asignatura} />
+        <EditorTemario key={asignatura.id} asignatura={asignatura} />
       </div>
     </>
   );

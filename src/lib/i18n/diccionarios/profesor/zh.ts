@@ -387,6 +387,10 @@ const profesor: Diccionario["profesor"] = {
     guardando: "正在保存…",
     guardado: "已保存更改。",
     sinGuardar: "有未保存的更改。",
+    cancelar: "取消",
+    siQuitar: "确定删除",
+    siBorrar: "确定删除课程",
+    borrando: "正在删除…",
     borrar: "删除课程",
     confirmarBorrar: "删除课程“{n}”？已有活动会保留其主题。",
     temasActividad: "活动主题",
@@ -400,6 +404,7 @@ const profesor: Diccionario["profesor"] = {
     sinAsignaturasAlta: "要选择活动主题，请先在“课程”中导入课程大纲。",
     crearAsignatura: "创建课程",
     errores: {
+      recargar: "未能完成。请刷新页面（应用已更新）后重试。",
       sinSesion: "请登录",
       sinArchivo: "请选择课程大纲文件。",
       archivoGrande: "文件超过 15 MB。",

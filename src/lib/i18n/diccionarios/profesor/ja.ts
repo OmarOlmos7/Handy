@@ -392,6 +392,10 @@ const profesor: Diccionario["profesor"] = {
     guardando: "保存中…",
     guardado: "変更を保存しました。",
     sinGuardar: "保存していない変更があります。",
+    cancelar: "キャンセル",
+    siQuitar: "はい、削除",
+    siBorrar: "はい、削除する",
+    borrando: "削除中…",
     borrar: "科目を削除",
     confirmarBorrar: "科目「{n}」を削除しますか？課題に設定済みのテーマはそのまま残ります。",
     temasActividad: "課題のテーマ",
@@ -405,6 +409,7 @@ const profesor: Diccionario["profesor"] = {
     sinAsignaturasAlta: "課題のテーマを選ぶには、「科目」で科目のシラバスを読み込んでください。",
     crearAsignatura: "科目を作成",
     errores: {
+      recargar: "完了できませんでした。ページを再読み込みして（アプリが更新されました）、もう一度お試しください。",
       sinSesion: "ログインしてください",
       sinArchivo: "シラバスのファイルを選んでください。",
       archivoGrande: "ファイルが15MBを超えています。",
