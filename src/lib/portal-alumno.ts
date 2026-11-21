@@ -6,6 +6,7 @@ import { cuadernoCurso, type Celda, type Cuaderno } from "./cuaderno";
 import { calificacion, calificada, escalaDe } from "./estadisticas";
 import { conPuntaje } from "./modalidad";
 import { notaFinal, pesoDe } from "./plan-evaluacion";
+import { notaConAutoestudio } from "./autoestudio";
 import { actividadVisible, estadoEnvio } from "./periodo";
 import { resultadosDisponibles } from "./resultados";
 import type { Actividad, Entrega, Escala, Grupo } from "./tipos";
@@ -93,6 +94,8 @@ export function cuadernoAlumno(
   matricula: string,
   ahora: Date = new Date(),
   sinEtiqueta?: string,
+  /** Promedio (sobre 100) de sus actividades autoasignadas en el curso, si el profesor les da peso. */
+  autoestudio100: number | null = null,
 ): CuadernoAlumno {
   const visibles = actividadesVisibles(actividades, grupo.id, ahora).filter((a) => resultadosDisponibles(a, ahora));
   const ids = new Set(visibles.map((a) => a.id));
@@ -105,6 +108,7 @@ export function cuadernoAlumno(
   const comparable = c.filas.filter((f) => f.promedio !== null).length >= MINIMO_COMPARACION;
   const plan = grupo.planEvaluacion;
   const nf = plan ? notaFinal(c, plan) : undefined;
+  const peso = grupo.pesoAutoestudio ?? 0;
   return {
     escala: c.escala,
     grupos: c.grupos.map((g) => ({
@@ -124,12 +128,21 @@ export function cuadernoAlumno(
     })),
     promedio: fila?.promedio ?? null,
     promedioGrupo: comparable ? c.promedioGrupo : null,
-    final: nf && {
-      nota: nf.porAlumno.get(matricula) ?? null,
-      promedioGrupo: comparable ? nf.promedioGrupo : null,
-      ponderacionActual: nf.ponderacionActual,
-      sinCalificar: nf.sinCalificar,
-    },
+    final:
+      peso > 0
+        ? {
+            // Con autoestudio, la nota final mezcla la del curso con el promedio de sus autoasignadas.
+            nota: notaConAutoestudio(nf ? (nf.porAlumno.get(matricula) ?? null) : (fila?.promedio ?? null), autoestudio100, peso, c.escala),
+            promedioGrupo: null,
+            ponderacionActual: nf?.ponderacionActual ?? 100,
+            sinCalificar: nf?.sinCalificar ?? [],
+          }
+        : nf && {
+            nota: nf.porAlumno.get(matricula) ?? null,
+            promedioGrupo: comparable ? nf.promedioGrupo : null,
+            ponderacionActual: nf.ponderacionActual,
+            sinCalificar: nf.sinCalificar,
+          },
   };
 }
 

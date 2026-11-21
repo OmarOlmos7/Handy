@@ -7,6 +7,7 @@ import { grupoDe } from "@/lib/almacen";
 import { cuadernoCurso } from "@/lib/cuaderno";
 import { PlanEvaluacionCurso } from "@/components/plan-evaluacion";
 import { notaFinal } from "@/lib/plan-evaluacion";
+import { notaConAutoestudio, resumenAutoestudio } from "@/lib/autoestudio";
 import { datosProfesor } from "@/lib/sesion";
 import { textos } from "@/lib/i18n/servidor";
 import { formato } from "@/lib/i18n/idiomas";
@@ -31,6 +32,15 @@ export default async function CuadernoCurso({ params }: PageProps<"/profesor/gru
   const plan = grupo.planEvaluacion;
   const nf = plan ? notaFinal(cuaderno, plan) : undefined;
   const tp = tq.plan;
+  // Actividades autoasignadas por los alumnos: su promedio por alumno y su peso en la nota final.
+  const autoactividades = (db.autoactividades ?? []).filter((a) => a.grupoId === grupo.id);
+  const peso = grupo.pesoAutoestudio ?? 0;
+  const auto = Object.fromEntries(grupo.alumnos.map((al) => [al.matricula, resumenAutoestudio(autoactividades, grupo.id, al.matricula)]));
+  const base = (m: string) => (nf ? (nf.porAlumno.get(m) ?? null) : (cuaderno.filas.find((f) => f.matricula === m)?.promedio ?? null));
+  const finales = Object.fromEntries(grupo.alumnos.map((al) => [al.matricula, notaConAutoestudio(base(al.matricula), auto[al.matricula].promedio, peso, cuaderno.escala)]));
+  const valoresFinales = Object.values(finales).filter((v): v is number => v !== null);
+  const promedioFinal = valoresFinales.length ? Math.round((valoresFinales.reduce((s, v) => s + v, 0) / valoresFinales.length) * 10) / 10 : null;
+  const final = nf || peso > 0 ? { porAlumno: finales, promedioGrupo: peso > 0 ? promedioFinal : (nf?.promedioGrupo ?? null) } : undefined;
   const etiquetas = [...new Set(actividades.map((a) => a.etiqueta?.trim()).filter((e): e is string => !!e))].sort((a, b) => a.localeCompare(b, "es"));
   const nombreTipo = (e: string) => e || t.profesor.calculo.sinEtiqueta;
 
@@ -81,7 +91,12 @@ export default async function CuadernoCurso({ params }: PageProps<"/profesor/gru
           cuaderno={cuaderno}
           info={{ materia: grupo.materia, grupo: grupo.nombre, ciclo: grupo.ciclo }}
           plan={plan}
-          final={nf && { porAlumno: Object.fromEntries(nf.porAlumno), promedioGrupo: nf.promedioGrupo }}
+          final={final}
+          autoestudio={{
+            grupoId: grupo.id,
+            peso,
+            porAlumno: Object.fromEntries(Object.entries(auto).map(([m, r]) => [m, { promedio: r.promedio, total: r.total, alertas: r.alertas }])),
+          }}
         />
       )}
     </>

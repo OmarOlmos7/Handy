@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { CompaneroDelAlumno } from "@/components/companero-servidor";
 import { FilaActividadAlumno } from "@/components/fila-actividad-alumno";
+import { TablaAutoestudio } from "@/components/tabla-autoestudio";
 import { IconoCuaderno, IconoGrafica, IconoMapa } from "@/components/iconos";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { leer } from "@/lib/almacen";
@@ -22,7 +24,8 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
   const curso = alumno.cursos.find((c) => c.grupo.id === id);
   if (!curso) notFound();
   const { grupo, alumno: enCurso } = curso;
-  const { t } = await textos();
+  const { t, locale } = await textos();
+  const ta = t.autoestudio;
   const tc = t.alumno.cursos;
   const db = await leer();
   const ahora = new Date();
@@ -31,6 +34,9 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
     actividades.map((a) => ({ actividad: a, entrega: db.entregas.find((e) => e.actividadId === a.id && e.matricula === enCurso.matricula) })),
     ahora,
   );
+  const propias = (db.autoactividades ?? [])
+    .filter((a) => a.alumnoId === alumno.id && a.grupoId === grupo.id)
+    .sort((a, b) => (b.completadaEn ?? b.creadaEn).localeCompare(a.completadaEn ?? a.creadaEn));
   const evaluadas = secciones.entregadas.filter((x) => x.entrega?.estado === "aprobada").length;
   const orden: { clave: SeccionActividad; titulo: string; nota: string }[] = [
     { clave: "por_entregar", titulo: tc.porEntregar, nota: tc.porEntregarNota },
@@ -59,9 +65,13 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
             <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/mapa`}>
               <IconoMapa /> {tc.mapa}
             </BotonLink>
+            <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/autoestudio`}>
+              ✨ {ta.tabla.ver}
+            </BotonLink>
           </>
         }
       />
+      <CompaneroDelAlumno db={db} alumno={alumno} grupoId={grupo.id} />
       {actividades.length === 0 ? (
         <Tarjeta className="text-sm text-slate-600">{tc.sinActividadesCurso}</Tarjeta>
       ) : (
@@ -86,6 +96,14 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
           ))}
         </div>
       )}
+      <section aria-labelledby="seccion-autoestudio" className="mt-6">
+        <h2 id="seccion-autoestudio" className="mb-2 flex items-baseline gap-2 text-base font-semibold text-slate-800">
+          {ta.tabla.seccion}
+          <span className="rounded-full bg-violet-100 px-2 text-xs font-medium text-violet-800">{propias.length}</span>
+          <span className="text-sm font-normal text-slate-500">{ta.tabla.seccionNota}</span>
+        </h2>
+        <TablaAutoestudio lista={propias.slice(0, 5)} t={t} locale={locale} enlaces />
+      </section>
     </>
   );
 }

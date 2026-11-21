@@ -28,7 +28,7 @@ export function iaDisponible() {
   return Boolean(LLAVE_ALTERNA || process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 }
 
-function cliente() {
+export function cliente() {
   if (!iaDisponible()) {
     throw new ErrorIA(
       "Falta la llave de la API de Claude. Agrega ANTHROPIC_API_KEY en el archivo .env.local y reinicia el servidor.",
@@ -115,7 +115,7 @@ function precisionDe(uso: UsoIA): PrecisionIA | undefined {
 }
 
 /** Anota los tokens de la llamada para el panel de administración; si falla, no detiene la llamada. */
-function anotarConsumo(tipo: TipoConsumoIA, uso: UsoIA, respuesta: { model: string; usage: Anthropic.Beta.BetaUsage }, ok: boolean) {
+export function anotarConsumo(tipo: TipoConsumoIA, uso: UsoIA, respuesta: { model: string; usage: Anthropic.Beta.BetaUsage }, ok: boolean) {
   try {
     const consumo = consumoDeRespuesta(tipo, uso, respuesta, ok);
     modificar((db) => {
@@ -126,7 +126,7 @@ function anotarConsumo(tipo: TipoConsumoIA, uso: UsoIA, respuesta: { model: stri
   }
 }
 
-async function pedir<T>(params: {
+export async function pedir<T>(params: {
   tipo: TipoConsumoIA;
   uso: UsoIA;
   system: string;
@@ -1333,7 +1333,7 @@ Responde únicamente con un bloque JSON con esta forma:
 {"temas":[{"tema":"<tema tal como lo recibiste>","recursos":[{"tipo":"khan|video|openstax","titulo":"...","url":"https://...","fuente":"canal, sitio o libro y sección"}]}]}`;
 
 /** Confirma con oEmbed que el video de YouTube existe (sin llave). Si no hay red, no lo descarta. */
-async function videoExiste(url: string): Promise<boolean> {
+export async function videoExiste(url: string): Promise<boolean> {
   try {
     const r = await fetch(`https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(6000) });
     return r.ok || r.status >= 500;
@@ -1346,7 +1346,12 @@ async function videoExiste(url: string): Promise<boolean> {
  * Busca en la web videos de Khan Academy, videos populares de YouTube y secciones de OpenStax
  * para los temas de la actividad. Solo van el título y los temas (nunca datos del alumno).
  */
-export async function buscarRecursos(datos: { titulo: string; materia: string; temas: string[] }, uso: UsoIA): Promise<Record<string, RecursoEstudio[]>> {
+export async function buscarRecursos(
+  datos: { titulo: string; materia: string; temas: string[] },
+  uso: UsoIA,
+  /** Búsquedas permitidas; sin valor, 3 por tema (hasta 12). */
+  maxBusquedas?: number,
+): Promise<Record<string, RecursoEstudio[]>> {
   const modelo = "claude-sonnet-5-5";
   const mensajes: Anthropic.Beta.BetaMessageParam[] = [
     {
@@ -1363,7 +1368,7 @@ export async function buscarRecursos(datos: { titulo: string; materia: string; t
         max_tokens: 8000,
         output_config: { effort: "low" },
         system: SISTEMA_RECURSOS + indicacionIdioma(idiomaDe(uso)),
-        tools: [{ type: "web_search_20260209", name: "web_search", max_uses: Math.min(12, datos.temas.length * 3), allowed_domains: DOMINIOS_RECURSOS }],
+        tools: [{ type: "web_search_20260209", name: "web_search", max_uses: maxBusquedas ?? Math.min(12, datos.temas.length * 3), allowed_domains: DOMINIOS_RECURSOS }],
         messages: mensajes,
       });
     } catch (e) {

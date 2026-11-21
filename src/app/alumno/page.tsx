@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CompaneroDelAlumno } from "@/components/companero-servidor";
 import { InstalarApp } from "@/components/instalar-app";
 import { Encabezado, colorCalificacion } from "@/components/ui";
 import { num } from "@/components/tablero";
@@ -58,6 +59,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
         titulo={tp.titulo}
         subtitulo={`${alumno.nombre} · ${alumno.correo}. ${tp.subtituloSesion}`}
       />
+      <CompaneroDelAlumno db={db} alumno={alumno} />
       {tarjetas.length === 0 ? (
         <p className="rounded-xl bg-white px-5 py-4 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">{tp.sinActividades}</p>
       ) : (

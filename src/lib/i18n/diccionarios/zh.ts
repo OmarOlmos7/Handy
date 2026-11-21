@@ -1,4 +1,5 @@
 import type { Diccionario } from "../diccionario";
+import autoestudio from "./autoestudio/zh";
 import alumno from "./alumno/zh";
 import profesor from "./profesor/zh";
 
@@ -467,6 +468,7 @@ const zh: Diccionario = {
   },
   profesor,
   alumno,
+  autoestudio,
 };
 
 export default zh;
