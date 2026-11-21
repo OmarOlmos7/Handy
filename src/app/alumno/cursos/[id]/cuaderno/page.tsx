@@ -6,6 +6,7 @@ import { leer } from "@/lib/almacen";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
 import { cuadernoAlumno } from "@/lib/portal-alumno";
+import { resumenAutoestudio } from "@/lib/autoestudio";
 import { alumnoActual } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -24,7 +25,8 @@ export default async function CuadernoAlumno({ params }: PageProps<"/alumno/curs
   const { t } = await textos();
   const tq = t.alumno.cuaderno;
   const db = await leer();
-  const c = cuadernoAlumno(grupo, db.actividades, db.entregas, curso.alumno.matricula, new Date(), t.profesor.calculo.sinEtiqueta);
+  const auto = resumenAutoestudio(db.autoactividades ?? [], grupo.id, curso.alumno.matricula);
+  const c = cuadernoAlumno(grupo, db.actividades, db.entregas, curso.alumno.matricula, new Date(), t.profesor.calculo.sinEtiqueta, auto.promedio);
   const nombreCurso = `${grupo.materia} · ${grupo.nombre}`;
   const actividades = c.grupos.reduce((n, g) => n + g.columnas.length, 0);
   const tc = t.profesor.comun;
@@ -44,6 +46,11 @@ export default async function CuadernoAlumno({ params }: PageProps<"/alumno/curs
           e: c.escala,
         })}
       />
+      {(grupo.pesoAutoestudio ?? 0) > 0 && (
+        <p className="mb-3 rounded-lg bg-violet-50 px-4 py-2 text-sm text-violet-900">
+          ✨ {formato(t.autoestudio.tabla.peso, { n: grupo.pesoAutoestudio! })} {t.autoestudio.profesor.promedio}: {auto.promedio ?? "—"}
+        </p>
+      )}
       {actividades === 0 ? (
         <Tarjeta className="text-sm text-slate-600">{tq.vacio}</Tarjeta>
       ) : (

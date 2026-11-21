@@ -50,3 +50,59 @@ body {
     break-inside: avoid;
   }
 }
+
+/* Compañero de estudio: parpadeo, lágrimas, flotación y tarjetas que se voltean. */
+.ojito-parpadeo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ojito-parpadeo 4.8s infinite;
+}
+@keyframes ojito-parpadeo {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.08); }
+}
+.ojito-lagrima {
+  animation: ojito-lagrima 1.6s ease-in infinite;
+}
+.ojito-lagrima-2 {
+  animation-delay: 0.8s;
+}
+@keyframes ojito-lagrima {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(26px); opacity: 0; }
+}
+.ojitos {
+  animation: ojitos-flota 5s ease-in-out infinite;
+}
+@keyframes ojitos-flota {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.tarjeta-estudio {
+  perspective: 1200px;
+}
+.tarjeta-estudio-cara {
+  transition: transform 500ms;
+  transform-style: preserve-3d;
+}
+.tarjeta-estudio-volteada .tarjeta-estudio-cara {
+  transform: rotateY(180deg);
+}
+.tarjeta-estudio-frente,
+.tarjeta-estudio-reverso {
+  backface-visibility: hidden;
+}
+.tarjeta-estudio-reverso {
+  transform: rotateY(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ojito-parpadeo,
+  .ojito-lagrima,
+  .ojitos {
+    animation: none;
+  }
+  .tarjeta-estudio-cara {
+    transition: none;
+  }
+}

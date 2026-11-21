@@ -1,4 +1,5 @@
 import type { Diccionario } from "../diccionario";
+import autoestudio from "./autoestudio/es";
 import alumno from "./alumno/ja";
 import profesor from "./profesor/ja";
 
@@ -486,6 +487,7 @@ const ja: Diccionario = {
   },
   profesor,
   alumno,
+  autoestudio,
 };
 
 export default ja;

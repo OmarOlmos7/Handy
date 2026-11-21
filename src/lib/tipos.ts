@@ -102,6 +102,11 @@ export interface Grupo {
   alumnos: Alumno[];
   /** Ponderación de cada tipo de actividad para la nota final del curso. */
   planEvaluacion?: PlanEvaluacion;
+  /**
+   * Porcentaje de la nota final que aportan las actividades autoasignadas por los alumnos
+   * (0 a 100). Sin valor, 0 %: no cuentan hasta que el profesor lo ajuste.
+   */
+  pesoAutoestudio?: number;
 }
 
 /** Peso de un tipo de actividad (etiqueta) en la nota final. "" es el de las actividades sin etiqueta. */
@@ -474,7 +479,19 @@ export interface Sesion {
 }
 
 /** Para qué se llamó a la IA (para el panel de administración). */
-export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio" | "recursos" | "plan" | "temario" | "relaciones";
+export type TipoConsumoIA =
+  | "evaluacion"
+  | "rubrica"
+  | "generar"
+  | "editar"
+  | "resolver"
+  | "estudio"
+  | "recursos"
+  | "plan"
+  | "temario"
+  | "relaciones"
+  | "autoestudio"
+  | "autoestudio_evaluar";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {
@@ -561,6 +578,126 @@ export interface BaseDeDatos {
   rutas?: RutaAlumno[];
   /** Tiempo que cada alumno tiene abierta cada actividad (para las analíticas de avance). */
   tiempos?: TiempoActividad[];
+  /** Actividades que cada alumno se asignó a sí mismo (generadas con IA). */
+  autoactividades?: Autoactividad[];
+}
+
+// ---------- Actividades autoasignadas por el alumno ----------
+
+/**
+ * Tipos de actividad que el alumno puede pedirle a la IA:
+ * - practica: ejercicios que se contestan en pantalla (cerrados, completar, relación y texto).
+ * - manuscrita: ejercicios que resuelve a mano y sube en foto (o escritos en iPad/tableta).
+ * - videos: videos de YouTube del tema y unas preguntas para comprobar lo aprendido.
+ * - lectura: lectura del tema con resumen, conceptos, ecuaciones, ejemplos e ilustraciones,
+ *   con fuentes de sitios educativos de alta reputación.
+ * - tarjetas: tarjetas de estudio; el alumno escribe lo que recuerda y luego compara.
+ */
+export type TipoAutoactividad = "practica" | "manuscrita" | "videos" | "lectura" | "tarjetas";
+
+export type TipoEjercicio =
+  | "opcion"
+  | "multirespuesta"
+  | "verdadero_falso"
+  | "completar"
+  | "relacion"
+  | "relacion_imagenes"
+  | "texto"
+  | "manuscrito";
+
+export interface EjercicioAuto {
+  numero: number;
+  tipo: TipoEjercicio;
+  /** En "completar", cada espacio va marcado con ___ (tres guiones bajos). */
+  enunciado: string;
+  opciones?: string[];
+  columnaA?: string[];
+  columnaB?: string[];
+  /** Dibujos con letra (a, b, c…) para relacionar con imágenes. */
+  imagenes?: ImagenReactivo[];
+  /** Dibujo de apoyo del enunciado (SVG). */
+  ilustracion?: string;
+  /**
+   * Clave: letra ("b"), letras ("a, c"), "V"/"F", pares ("1-b, 2-a"), palabras de cada espacio
+   * separadas por " | " (completar) o la respuesta modelo (texto y manuscrito).
+   */
+  respuesta: string;
+  /** Explicación breve que el alumno ve al terminar. */
+  explicacion: string;
+}
+
+export interface TarjetaEstudio {
+  /** Lo que se pide recordar ("¿Qué dice la segunda ley de Newton?"). */
+  frente: string;
+  /** La respuesta para comparar. */
+  reverso: string;
+  pista?: string;
+}
+
+export interface FuenteLectura {
+  titulo: string;
+  url: string;
+  sitio: string;
+}
+
+export interface LecturaAuto {
+  introduccion: string;
+  /** Resumen en secciones cortas, cada una con su ilustración opcional (SVG). */
+  secciones: { titulo: string; texto: string; ilustracion?: string; pie?: string }[];
+  conceptos: { termino: string; definicion: string }[];
+  ecuaciones: { formula: string; descripcion: string }[];
+  ejemplos: { enunciado: string; solucion: string }[];
+  /** Páginas de sitios educativos de alta reputación de donde sale el contenido. */
+  fuentes: FuenteLectura[];
+}
+
+/** Lo que logró el alumno en un ejercicio o tarjeta (0 a 1) y lo que respondió. */
+export interface ResultadoAuto {
+  numero: number;
+  logro: number;
+  respuesta: string;
+  comentario?: string;
+}
+
+export type EstadoAutoactividad = "pendiente" | "evaluando" | "completada";
+
+export interface Autoactividad {
+  id: string;
+  /** Cuenta del alumno que la pidió. */
+  alumnoId: string;
+  grupoId: string;
+  /** Matrícula con que el alumno aparece en el curso (para el cuaderno del profesor). */
+  matricula: string;
+  tipo: TipoAutoactividad;
+  titulo: string;
+  tema: string;
+  /** Lo que escribió el alumno al pedirla (opcional). */
+  peticion?: string;
+  /** Idioma en que se generó. */
+  idioma?: string;
+  creadaEn: string;
+  ejercicios?: EjercicioAuto[];
+  tarjetas?: TarjetaEstudio[];
+  lectura?: LecturaAuto;
+  videos?: RecursoEstudio[];
+  estado: EstadoAutoactividad;
+  /** Sobre 100, calculada por código. */
+  calificacion?: number;
+  resultados?: ResultadoAuto[];
+  /** Tiempo activo que tardó en resolverla. */
+  segundos?: number;
+  completadaEn?: string;
+  /** Cómo se sintió al hacerla (opcional). */
+  sentir?: string;
+  /** Carita que eligió al terminar. */
+  animo?: string;
+  /** true si su comentario tiene señales de agresión, tristeza profunda, enojo o violencia. */
+  alerta?: boolean;
+  /** Fotos del desarrollo (ejercicios manuscritos), rutas relativas a la carpeta de datos. */
+  archivos?: string[];
+  /** Créditos que costó (generar y evaluar). */
+  creditos?: number;
+  error?: string;
 }
 
 /**

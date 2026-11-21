@@ -33,6 +33,9 @@ export async function FilaActividadAlumno({ actividad: a, entrega: e, ahora }: {
         <p className="font-medium">
           {a.titulo}
           {a.etiqueta && <span className="ml-2 rounded-md bg-slate-100 px-1.5 py-0.5 align-middle text-xs font-normal text-slate-600">{a.etiqueta}</span>}
+          <span className="ml-2 rounded-md bg-sky-100 px-1.5 py-0.5 align-middle text-[11px] font-semibold text-sky-800">
+            {formato(t.autoestudio.asignadaPor, { quien: t.autoestudio.quienProfesor })}
+          </span>
         </p>
         <p className="text-sm text-slate-500">{fechaLarga(a.fechaAplicacion, locale)}</p>
         <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs font-medium">

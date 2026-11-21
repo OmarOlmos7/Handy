@@ -25,7 +25,8 @@ export function TextoMat({ texto, negritas = "font-semibold text-slate-900" }: {
         if (parte.startsWith("**") && parte.endsWith("**") && parte.length > 4) {
           return (
             <strong key={i} className={negritas}>
-              {parte.slice(2, -2)}
+              {/* Una fórmula dentro de negritas ("**$v = at$**") también se dibuja. */}
+              {parte.includes("$") ? <TextoMat texto={parte.slice(2, -2)} negritas={negritas} /> : parte.slice(2, -2)}
             </strong>
           );
         }

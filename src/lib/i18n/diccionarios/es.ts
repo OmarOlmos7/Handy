@@ -1,5 +1,6 @@
 // Textos de la interfaz en español (idioma base). Los demás diccionarios tienen la misma forma;
 // TypeScript avisa si a alguno le falta un texto.
+import autoestudio from "./autoestudio/es";
 import alumno from "./alumno/es";
 import profesor from "./profesor/es";
 
@@ -489,6 +490,7 @@ const es = {
   },
   profesor,
   alumno,
+  autoestudio,
 };
 
 export default es;

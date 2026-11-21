@@ -87,6 +87,7 @@ export function datosDeProfesor(db: BaseDeDatos, profesorId: string): BaseDeDato
     movimientos: db.movimientos.filter((m) => m.profesorId === profesorId),
     asignaturas: (db.asignaturas ?? []).filter((a) => a.profesorId === profesorId),
     tiempos: (db.tiempos ?? []).filter((x) => idsActividades.has(x.actividadId)),
+    autoactividades: (db.autoactividades ?? []).filter((a) => idsGrupos.has(a.grupoId)),
   };
 }
 
