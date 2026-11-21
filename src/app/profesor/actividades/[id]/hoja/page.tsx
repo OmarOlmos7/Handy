@@ -1,7 +1,6 @@
 import { ConFlujo } from "@/components/flujo-actividad";
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { IconoLapiz } from "@/components/iconos";
+import { ResumenAlta } from "@/components/resumen-alta";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { EditarHoja } from "@/components/editar-hoja";
 import { Hoja } from "@/components/hoja";
@@ -42,16 +41,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
       {th.siguiente}
     </BotonLink>
   );
-  const editar = (
-    <Link
-      href={`/profesor/actividades/${id}/editar`}
-      title={th.modificar}
-      aria-label={th.modificar}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-600 ring-1 ring-slate-300 transition hover:bg-tinta-50 hover:text-tinta-700"
-    >
-      <IconoLapiz />
-    </Link>
-  );
+  const resumen = <ResumenAlta actividad={actividad} grupo={grupo} />;
   const migas = [
     { texto: t.profesor.comun.panel, href: "/profesor" },
     { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
@@ -64,9 +54,10 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
     const lista = versionesCompletas(actividad);
     return (
       <>
-        <Encabezado migas={migas} titulo={th.plataformaTitulo} subtitulo={th.plataformaTexto} acciones={<>{editar}{siguiente}</>} />
+        <Encabezado migas={migas} titulo={th.plataformaTitulo} subtitulo={th.plataformaTexto} acciones={siguiente} />
         <ConFlujo vista={1} db={db} actividad={actividad}>
           <div className="mx-auto max-w-2xl space-y-6">
+            {resumen}
             <EditarHoja
               actividadId={id}
               puedeDeshacer={!!actividad.hojaAnterior}
@@ -109,12 +100,12 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
               <BotonLink href={`/api/hoja/${id}`} target="_blank">
                 {th.descargar}
               </BotonLink>
-              {editar}
               {siguiente}
             </>
           }
         />
         <ConFlujo vista={1} db={db} actividad={actividad}>
+          {resumen}
           <Tarjeta className="mx-auto max-w-3xl p-2">
             <iframe src={`/api/hoja/${id}`} title={th.titulo} className="h-[80vh] w-full rounded-lg" />
           </Tarjeta>
@@ -133,13 +124,13 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
         acciones={
           <>
             <BotonImprimir texto={th.imprimir} />
-            {editar}
             {siguiente}
           </>
         }
       />
       </div>
       <ConFlujo vista={1} db={db} actividad={actividad}>
+      {resumen}
       <ProveedorTextos valor={impreso}>
       {actividad.origen === "ia" ? (
         <>

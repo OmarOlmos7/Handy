@@ -5,7 +5,10 @@ import { FechasActividad } from "./fechas-actividad";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { modificarActividad } from "@/app/acciones";
-import type { EstiloCorreccion, TipoReactivo } from "@/lib/tipos";
+import type { EsfuerzoIA, EstiloCorreccion, MotorIA, TemarioActividad, TipoReactivo } from "@/lib/tipos";
+import { LARGO_ETIQUETA } from "@/lib/etiquetas";
+import { DeslizadorPrecision } from "./precision-ia";
+import { SelectorTemario, type AsignaturaParaAlta } from "./selector-temario";
 import { IDIOMAS, NOMBRE_IDIOMA, formato, type Idioma } from "@/lib/i18n/idiomas";
 import { OpcionEstilo, OpcionSolucion } from "./opcion-solucion";
 import { useTextos } from "./proveedor-textos";
@@ -25,6 +28,11 @@ export function EditarActividad({
   id,
   recibidas,
   escaneada = false,
+  tiposSugeridos = [],
+  asignaturas = [],
+  materia,
+  esfuerzos,
+  noCambia,
   inicial,
 }: {
   id: string;
@@ -32,6 +40,14 @@ export function EditarActividad({
   recibidas: number;
   /** Actividad hecha con un escaneo: al cambiar el texto, el PDF se reemplaza por una hoja nueva. */
   escaneada?: boolean;
+  /** Tipos de actividad que ya usa el curso y los de siempre, para elegir uno. */
+  tiposSugeridos?: string[];
+  /** Asignaturas del profesor, para cambiar la unidad y los temas. */
+  asignaturas?: AsignaturaParaAlta[];
+  materia?: string;
+  esfuerzos: Record<MotorIA, EsfuerzoIA>;
+  /** Lo que no se cambia al reeditar (formato, cómo se creó y curso), ya escrito. */
+  noCambia: string;
   inicial: {
     titulo: string;
     fecha: string;
@@ -45,6 +61,10 @@ export function EditarActividad({
     estiloCorreccion: EstiloCorreccion;
     idioma?: Idioma;
     instruccionesAlumno?: string[];
+    etiqueta: string;
+    temario?: TemarioActividad;
+    motor: MotorIA;
+    esfuerzo: EsfuerzoIA;
     reactivos: ReactivoEditable[];
   };
 }) {
@@ -56,6 +76,9 @@ export function EditarActividad({
   const [sinSolucion, setSinSolucion] = useState(inicial.sinSolucion);
   const [estilo, setEstilo] = useState(inicial.estiloCorreccion);
   const [reactivos, setReactivos] = useState(inicial.reactivos);
+  const [etiqueta, setEtiqueta] = useState(inicial.etiqueta);
+  // Con entregas, los alumnos ya contestaron sobre el texto: enunciados, opciones e instrucciones quedan fijos.
+  const fijo = recibidas > 0;
   const [error, setError] = useState("");
   const [guardando, iniciar] = useTransition();
 
@@ -92,7 +115,12 @@ export function EditarActividad({
           sinSolucion,
           estiloCorreccion: estilo,
           idioma: String(d.get("idioma") ?? ""),
-          instruccionesAlumno: inicial.instruccionesAlumno ? String(d.get("instrucciones") ?? "").split("\n") : undefined,
+          instruccionesAlumno: inicial.instruccionesAlumno && !fijo ? String(d.get("instrucciones") ?? "").split("\n") : undefined,
+          etiqueta,
+          // Sin asignaturas no hay selector de temario: se deja el que tenía.
+          temario: d.has("temario") ? String(d.get("temario") ?? "") : undefined,
+          motor: String(d.get("motor") ?? ""),
+          esfuerzo: String(d.get("esfuerzo") ?? ""),
           reactivos,
         });
         router.push(`/profesor/actividades/${id}/hoja`);
@@ -105,6 +133,7 @@ export function EditarActividad({
 
   return (
     <form onSubmit={guardar} className="mx-auto max-w-3xl space-y-5">
+      <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600 ring-1 ring-slate-200">{noCambia}</p>
       {escaneada && (
         <p className="rounded-lg bg-tinta-50 p-3 text-sm text-tinta-900 ring-1 ring-tinta-200">{te.avisoEscaneada}</p>
       )}
@@ -136,6 +165,43 @@ export function EditarActividad({
             <input name="fecha" type="date" required defaultValue={inicial.fecha} className={campo} />
           </label>
         </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700">
+            {tn.tipoActividad}
+            <input
+              value={etiqueta}
+              onChange={(e) => setEtiqueta(e.target.value)}
+              maxLength={LARGO_ETIQUETA}
+              list="tipos-actividad"
+              className={campo}
+              placeholder={tn.ejemploTipo}
+            />
+          </label>
+          <datalist id="tipos-actividad">
+            {tiposSugeridos.map((e) => (
+              <option key={e} value={e} />
+            ))}
+          </datalist>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {tiposSugeridos.map((e) => {
+              const activo = etiqueta.trim().toLowerCase() === e.toLowerCase();
+              return (
+                <button
+                  key={e}
+                  type="button"
+                  aria-pressed={activo}
+                  onClick={() => setEtiqueta(activo ? "" : e)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                    activo ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  {e}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <SelectorTemario asignaturas={asignaturas} materia={materia} inicial={inicial.temario} />
         <FechasActividad inicial={inicial} />
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">{tn.calificarSobre}</legend>
@@ -160,10 +226,11 @@ export function EditarActividad({
           }}
         />
         <OpcionEstilo estilo={estilo} onCambio={setEstilo} />
+        <DeslizadorPrecision inicial={inicial.motor} esfuerzoInicial={inicial.esfuerzo} esfuerzos={esfuerzos} />
         {inicial.instruccionesAlumno && (
           <label className="block text-sm font-medium text-slate-700">
             {te.instrucciones}
-            <textarea name="instrucciones" rows={4} defaultValue={inicial.instruccionesAlumno.join("\n")} className={campo} />
+            <textarea name="instrucciones" rows={4} readOnly={fijo} defaultValue={inicial.instruccionesAlumno.join("\n")} className={`${campo} ${fijo ? "bg-slate-50 text-slate-500" : ""}`} />
             <span className="mt-1 block text-xs font-normal text-slate-500">{te.instruccionesAyuda}</span>
           </label>
         )}
@@ -172,7 +239,7 @@ export function EditarActividad({
       {reactivos.length > 0 && (
         <div className="space-y-3 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
           <h2 className="font-semibold">{te.reactivos}</h2>
-          <p className="text-xs text-slate-500">{te.reactivosAyuda}</p>
+          <p className="text-xs text-slate-500">{fijo ? te.reactivosAyudaFijo : te.reactivosAyuda}</p>
           {reactivos.map((r) => (
             <div key={r.numero} className="space-y-2 rounded-lg p-4 ring-1 ring-slate-200">
               <p className="text-xs font-medium text-slate-500">
@@ -182,8 +249,9 @@ export function EditarActividad({
                 aria-label={formato(te.enunciadoDe, { n: r.numero })}
                 rows={3}
                 value={r.enunciado}
+                readOnly={fijo}
                 onChange={(e) => cambiar(r.numero, { enunciado: e.target.value })}
-                className={campo}
+                className={`${campo} ${fijo ? "bg-slate-50 text-slate-500" : ""}`}
               />
               {r.opciones && (
                 <label className="block text-xs font-medium text-slate-500">
@@ -191,8 +259,9 @@ export function EditarActividad({
                   <textarea
                     rows={Math.max(3, r.opciones.length)}
                     value={r.opciones.join("\n")}
+                    readOnly={fijo}
                     onChange={(e) => cambiar(r.numero, { opciones: e.target.value.split("\n") })}
-                    className={campo}
+                    className={`${campo} ${fijo ? "bg-slate-50 text-slate-500" : ""}`}
                   />
                 </label>
               )}
