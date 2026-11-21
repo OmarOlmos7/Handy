@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  logroConDesarrollo,
+  logroNumerico,
   animoCompanero,
   calificacionAuto,
   clavesCompletar,
@@ -76,6 +78,26 @@ describe("calificación por código", () => {
     expect(calificacionAuto([{ logro: 1 }, { logro: 0.5 }, { logro: 0 }, { logro: 1 }])).toBe(63);
     expect(calificacionAuto([{ logro: 1 }], 4)).toBe(25);
     expect(calificacionAuto([])).toBe(0);
+  });
+});
+
+describe("reactivos numéricos", () => {
+  it("acepta el resultado dentro del margen, con coma o con unidades", () => {
+    const ej = { tipo: "numerica" as const, respuesta: "12.5 m/s", tolerancia: 0.05 };
+    expect(logroEjercicio(ej, ["12.5"])).toBe(1);
+    expect(logroEjercicio(ej, ["12,54 m/s"])).toBe(1);
+    expect(logroEjercicio(ej, ["12.6"])).toBe(0);
+    expect(logroEjercicio(ej, [""])).toBe(0);
+  });
+  it("sin tolerancia usa el 1 % del resultado", () => {
+    expect(logroNumerico({ respuesta: "200 N" }, "201.5")).toBe(1);
+    expect(logroNumerico({ respuesta: "200 N" }, "203")).toBe(0);
+  });
+  it("con desarrollo suma resultado y procedimiento en cuartos", () => {
+    expect(logroConDesarrollo(1, 1)).toBe(1);
+    expect(logroConDesarrollo(1, 0)).toBe(0.5);
+    expect(logroConDesarrollo(0, 0.75)).toBe(0.5);
+    expect(logroConDesarrollo(0, 0)).toBe(0);
   });
 });
 

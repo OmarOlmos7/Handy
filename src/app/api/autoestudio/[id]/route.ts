@@ -5,7 +5,9 @@ import {
   MAX_FOTOS_EJERCICIO,
   calificacionAuto,
   costoEvaluar,
+  logroConDesarrollo,
   logroEjercicio,
+  logroNumerico,
   senalesDeRiesgo,
   vaALaIA,
   type AutoevaluacionTarjeta,
@@ -71,6 +73,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/autoestudio/[id
   const crudas = leerJson("respuestas") as { numero?: number; seleccion?: unknown; texto?: unknown }[];
   const paraIA: RespuestaAutoIA[] = [];
   const fotos: Record<number, string[]> = {};
+  // Numérica con desarrollo: logro del resultado (por código), para sumarle el del procedimiento.
+  const resultadoNumerico: Record<number, number> = {};
   const carpeta = `autoestudio/${act.id}`;
   for (const ej of ejercicios) {
     const c = crudas.find((x) => Number(x?.numero) === ej.numero);
@@ -97,7 +101,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/autoestudio/[id
       }
       continue;
     }
-    // Manuscrito: fotos o un PDF de su procedimiento.
+    // Manuscrito (y numérica con desarrollo): fotos o un PDF de su procedimiento.
     const archivos = form.getAll(`archivo-${ej.numero}`).filter((f): f is File => f instanceof File && f.size > 0);
     if (archivos.length > MAX_FOTOS_EJERCICIO) return Response.json({ error: formato(te.maxFotos, { max: MAX_FOTOS_EJERCICIO }) }, { status: 400 });
     const jpgs: Buffer[] = [];
@@ -113,10 +117,17 @@ export async function POST(req: Request, ctx: RouteContext<"/api/autoestudio/[id
     }
     if (jpgs.length > MAX_FOTOS_EJERCICIO * 2) return Response.json({ error: formato(te.maxFotos, { max: MAX_FOTOS_EJERCICIO }) }, { status: 400 });
     fotos[ej.numero] = jpgs.map((_, i) => `${carpeta}/r${ej.numero}-${i + 1}.jpg`);
-    if (jpgs.length) {
-      paraIA.push({ numero: ej.numero, imagenes: jpgs.map((j) => ({ base64: j.toString("base64"), mediaType: "image/jpeg" as const })) });
-      jpgs.forEach((j, i) => guardarArchivo(fotos[ej.numero][i], j));
+    const imagenes = jpgs.map((j) => ({ base64: j.toString("base64"), mediaType: "image/jpeg" as const }));
+    jpgs.forEach((j, i) => guardarArchivo(fotos[ej.numero][i], j));
+    if (ej.tipo === "numerica_desarrollo") {
+      const escrito = (seleccion[0] ?? "").slice(0, 40);
+      resultadoNumerico[ej.numero] = logroNumerico(ej, escrito);
+      if (jpgs.length) paraIA.push({ numero: ej.numero, texto: escrito, imagenes });
+      const respuesta = [escrito, jpgs.length ? "📷" : ""].filter(Boolean).join(" · ");
+      resultados.push({ numero: ej.numero, logro: logroConDesarrollo(resultadoNumerico[ej.numero], 0), respuesta });
+      continue;
     }
+    if (jpgs.length) paraIA.push({ numero: ej.numero, imagenes });
     resultados.push({ numero: ej.numero, logro: 0, respuesta: jpgs.length ? "📷" : "" });
   }
 
@@ -124,14 +135,16 @@ export async function POST(req: Request, ctx: RouteContext<"/api/autoestudio/[id
   let costo = 0;
   if (paraIA.length) {
     const nFotos = paraIA.reduce((s, r) => s + (r.imagenes?.length ?? 0), 0);
-    const nTextos = paraIA.filter((r) => r.texto !== undefined).length;
+    const nTextos = paraIA.filter((r) => r.texto !== undefined && !r.imagenes?.length).length;
     costo = costoEvaluar(nTextos, nFotos);
     if (!grupo?.profesorId || saldoDe(db, grupo.profesorId) < costo) return Response.json({ error: te.sinCreditos }, { status: 402 });
     try {
       const ia = await evaluarAutoRespuestas(ejercicios, paraIA, { profesorId: grupo.profesorId, idioma: esIdioma(act.idioma) ? act.idioma : undefined });
       for (const r of ia) {
         const res = resultados.find((x) => x.numero === r.numero);
-        if (res) Object.assign(res, { logro: r.logro, comentario: r.comentario });
+        if (!res) continue;
+        const logro = r.numero in resultadoNumerico ? logroConDesarrollo(resultadoNumerico[r.numero], r.logro) : r.logro;
+        Object.assign(res, { logro, comentario: r.comentario });
       }
     } catch (e) {
       console.error(e);

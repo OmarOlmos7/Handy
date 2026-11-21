@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { grupoDe, leer, modificar } from "@/lib/almacen";
-import { LARGO_PETICION, TIPOS_EJERCICIO_PRACTICA, cantidadValida, costoGenerar, esTipoAutoactividad, restantesHoy, senalesDeRiesgo, sinDatosPersonales } from "@/lib/autoestudio";
+import { LARGO_PETICION, TIPOS_EJERCICIO_MANUSCRITA, TIPOS_EJERCICIO_PRACTICA, cantidadValida, costoGenerar, esTipoAutoactividad, restantesHoy, senalesDeRiesgo, sinDatosPersonales } from "@/lib/autoestudio";
 import { sumarCreditos } from "@/lib/configuracion";
 import { saldoDe } from "@/lib/cuentas";
 import { ErrorIA, iaDisponible } from "@/lib/ia";
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   // Textos agresivos, de tristeza profunda, enojo o violencia: no se responden ni se mandan a la IA.
   if (senalesDeRiesgo(tema) || senalesDeRiesgo(peticionCruda)) return Response.json({ bloqueado: true });
   const tiposEjercicio = (Array.isArray(datos.tiposEjercicio) ? datos.tiposEjercicio : []).filter((x): x is TipoEjercicio =>
-    (TIPOS_EJERCICIO_PRACTICA as string[]).includes(String(x)),
+    (tipo === "manuscrita" ? TIPOS_EJERCICIO_MANUSCRITA : TIPOS_EJERCICIO_PRACTICA).includes(x as TipoEjercicio),
   );
 
   const db = await leer();

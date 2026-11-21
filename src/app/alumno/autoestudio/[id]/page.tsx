@@ -109,6 +109,11 @@ function Resultados({ act, t }: { act: Autoactividad; t: Diccionario }) {
               <p className="whitespace-pre-line">
                 <TextoMat texto={formato(th.respuestaCorrecta, { r: claveLegible(ej, t) })} />
               </p>
+              {ej.procedimiento && (
+                <p className="mt-1 whitespace-pre-line text-slate-700">
+                  <TextoMat texto={ej.procedimiento} />
+                </p>
+              )}
               {ej.explicacion && (
                 <p className="mt-1 text-slate-700">
                   <TextoMat texto={ej.explicacion} />
@@ -146,7 +151,7 @@ export default async function PaginaAutoactividad({ params }: PageProps<"/alumno
   ) : undefined;
   // Mientras no termina, el alumno no recibe las claves ni las explicaciones.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const sinClave: EjercicioAlumno[] = (act.ejercicios ?? []).map(({ respuesta: _r, explicacion: _e, ...resto }) => resto);
+  const sinClave: EjercicioAlumno[] = (act.ejercicios ?? []).map(({ respuesta: _r, explicacion: _e, procedimiento: _p, tolerancia: _t, ...resto }) => resto);
 
   return (
     <>

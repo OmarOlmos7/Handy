@@ -603,7 +603,11 @@ export type TipoEjercicio =
   | "relacion"
   | "relacion_imagenes"
   | "texto"
-  | "manuscrito";
+  | "manuscrito"
+  /** Solo el resultado numérico (lo califica el código, con tolerancia). */
+  | "numerica"
+  /** Resultado numérico en pantalla más la foto del procedimiento a mano. */
+  | "numerica_desarrollo";
 
 export interface EjercicioAuto {
   numero: number;
@@ -619,9 +623,14 @@ export interface EjercicioAuto {
   ilustracion?: string;
   /**
    * Clave: letra ("b"), letras ("a, c"), "V"/"F", pares ("1-b, 2-a"), palabras de cada espacio
-   * separadas por " | " (completar) o la respuesta modelo (texto y manuscrito).
+   * separadas por " | " (completar), la respuesta modelo (texto y manuscrito) o el resultado con
+   * unidades (numérica y numérica con desarrollo).
    */
   respuesta: string;
+  /** Margen aceptado (±) del resultado numérico; sin él, 1 % del resultado. */
+  tolerancia?: number;
+  /** Procedimiento modelo paso a paso (numérica con desarrollo); el alumno lo ve al terminar. */
+  procedimiento?: string;
   /** Explicación breve que el alumno ve al terminar. */
   explicacion: string;
 }
