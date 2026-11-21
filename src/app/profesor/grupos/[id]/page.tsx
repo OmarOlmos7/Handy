@@ -77,6 +77,8 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
                         titulo={a.titulo}
                         fecha={a.fechaAplicacion}
                         resultadosDesde={a.resultadosDesde}
+                        envioDesde={a.envioDesde}
+                        envioHasta={a.envioHasta}
                         paginas={a.paginas}
                         entregas={formato(tc.entregas, { n: rep.entregadas, total: grupo.alumnos.length })}
                         promedio={rep.entregadas > 0 && conPuntaje(a) ? `${rep.promedio} / ${rep.escala}` : undefined}

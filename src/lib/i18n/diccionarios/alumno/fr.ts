@@ -21,6 +21,14 @@ const alumno: Diccionario["alumno"] = {
     evaluando: "Correction en cours",
     entregarFotos: "Rendre des photos",
     revisada: "Corrigée",
+    recepcion: "Rendus : du {desde} au {hasta}",
+    recepcionDesde: "Rendus à partir du {desde}",
+    recepcionHasta: "Rendus jusqu'au {hasta}",
+    abierta: "Rendus ouverts",
+    abre: "Ouvre le {f}",
+    cerrada: "Rendus clos",
+    enviado: "Envoyé",
+    solucionRetro: "Solution et commentaires",
   },
   campos: {
     nombre: "Nom complet",
@@ -45,6 +53,9 @@ const alumno: Diccionario["alumno"] = {
     suspendidas: "Votre enseignant a suspendu les rendus de cette activité. Demandez-lui quand ils rouvriront.",
     entregasComo: "Tu rends en tant que",
     noEresTu: "Ce n’est pas toi ? Se déconnecter",
+    proximo: "Les rendus de ce devoir ouvrent le {f} (heure de Mexico).",
+    cerrado: "Les rendus de ce devoir ont fermé le {f}. Si vous devez rendre, parlez à votre enseignant.",
+    hasta: "Rendus acceptés jusqu'au {f} (heure de Mexico).",
   },
   formulario: {
     errorEnviar: "Erreur lors de l’envoi",
@@ -180,6 +191,8 @@ const alumno: Diccionario["alumno"] = {
     sinEvaluadas: "Aucun rendu corrigé pour l’instant",
     sinHoja: "Cette activité n’a pas de feuille numérisée",
     noAutorizado: "Non autorisé",
+    envioProximo: "Les rendus de ce devoir ouvrent le {f} (heure de Mexico).",
+    envioCerrado: "Les rendus de ce devoir ont fermé le {f}. Si vous devez rendre, parlez à votre enseignant.",
   },
 };
 

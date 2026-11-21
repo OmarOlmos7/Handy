@@ -21,6 +21,14 @@ const alumno: Diccionario["alumno"] = {
     evaluando: "Grading",
     entregarFotos: "Hand in photos",
     revisada: "Reviewed",
+    recepcion: "Submissions: {desde} to {hasta}",
+    recepcionDesde: "Submissions from {desde}",
+    recepcionHasta: "Submissions until {hasta}",
+    abierta: "Submissions open",
+    abre: "Opens {f}",
+    cerrada: "Submissions closed",
+    enviado: "Submitted",
+    solucionRetro: "Solution and feedback",
   },
   campos: {
     nombre: "Full name",
@@ -45,6 +53,9 @@ const alumno: Diccionario["alumno"] = {
     suspendidas: "Your teacher has paused submissions for this activity. Ask them when they will reopen.",
     entregasComo: "Handing in as",
     noEresTu: "Not you? Sign out",
+    proximo: "Submissions for this assignment open on {f} (Mexico City time).",
+    cerrado: "Submissions for this assignment closed on {f}. If you need to submit, talk to your teacher.",
+    hasta: "Accepting submissions until {f} (Mexico City time).",
   },
   formulario: {
     errorEnviar: "Error while sending",
@@ -180,6 +191,8 @@ const alumno: Diccionario["alumno"] = {
     sinEvaluadas: "There are no graded submissions yet",
     sinHoja: "This activity has no scanned sheet",
     noAutorizado: "Not authorized",
+    envioProximo: "Submissions for this assignment open on {f} (Mexico City time).",
+    envioCerrado: "Submissions for this assignment closed on {f}. If you need to submit, talk to your teacher.",
   },
 };
 

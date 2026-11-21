@@ -1,5 +1,7 @@
 "use client";
 
+import { leerFechas } from "@/lib/periodo";
+import { FechasActividad } from "./fechas-actividad";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { modificarActividad } from "@/app/acciones";
@@ -33,6 +35,9 @@ export function EditarActividad({
   inicial: {
     titulo: string;
     fecha: string;
+    visibleDesde: string;
+    envioDesde: string;
+    envioHasta: string;
     resultadosDesde: string;
     escala: 10 | 100;
     sinPuntaje: boolean;
@@ -61,11 +66,26 @@ export function EditarActividad({
     e.preventDefault();
     const d = new FormData(e.currentTarget);
     setError("");
+    // Revisa el orden de las fechas aquí: en producción el mensaje de un error del servidor no llega.
+    try {
+      leerFechas({
+        visibleDesde: String(d.get("visibleDesde") ?? ""),
+        envioDesde: String(d.get("envioDesde") ?? ""),
+        envioHasta: String(d.get("envioHasta") ?? ""),
+        resultadosDesde: String(d.get("resultadosDesde") ?? ""),
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
     iniciar(async () => {
       try {
         await modificarActividad(id, {
           titulo: String(d.get("titulo") ?? ""),
           fecha: String(d.get("fecha") ?? ""),
+          visibleDesde: String(d.get("visibleDesde") ?? ""),
+          envioDesde: String(d.get("envioDesde") ?? ""),
+          envioHasta: String(d.get("envioHasta") ?? ""),
           resultadosDesde: String(d.get("resultadosDesde") ?? ""),
           escala: d.get("escala") === "10" ? 10 : 100,
           sinPuntaje: d.get("escala") === "sin",
@@ -115,11 +135,8 @@ export function EditarActividad({
             {tn.fecha}
             <input name="fecha" type="date" required defaultValue={inicial.fecha} className={campo} />
           </label>
-          <label className="block text-sm font-medium text-slate-700">
-            {tn.resultadosDesde}
-            <input name="resultadosDesde" type="datetime-local" defaultValue={inicial.resultadosDesde} className={campo} />
-          </label>
         </div>
+        <FechasActividad inicial={inicial} />
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">{tn.calificarSobre}</legend>
           <div className="mt-1 inline-flex gap-1 rounded-xl bg-slate-100 p-1">

@@ -1,3 +1,4 @@
+import { estadoEnvio } from "@/lib/periodo";
 import { IconoGrafica } from "@/components/iconos";
 import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
@@ -70,6 +71,18 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           <span className="flex flex-wrap items-center gap-2">
             {formato(tc.aplicada, { f: fechaLarga(actividad.fechaAplicacion, locale) })}
             <InsigniaActividad estado={estadoActividad(db, actividad)} />
+            {actividad.visibleDesde && (
+              <Insignia tono="azul">{formato(ta.altaDesde, { f: fechaHoraLarga(actividad.visibleDesde, locale) })}</Insignia>
+            )}
+            {(actividad.envioDesde || actividad.envioHasta) && (
+              <Insignia tono={estadoEnvio(actividad) === "cerrado" ? "rojo" : "azul"}>
+                {actividad.envioDesde && actividad.envioHasta
+                  ? formato(ta.recepcion, { desde: fechaHoraLarga(actividad.envioDesde, locale), hasta: fechaHoraLarga(actividad.envioHasta, locale) })
+                  : actividad.envioHasta
+                    ? formato(ta.recepcionHasta, { hasta: fechaHoraLarga(actividad.envioHasta, locale) })
+                    : formato(ta.recepcionDesde, { desde: fechaHoraLarga(actividad.envioDesde!, locale) })}
+              </Insignia>
+            )}
             {actividad.resultadosDesde && (
               <Insignia tono={resultadosDisponibles(actividad) ? "verde" : "ambar"}>
                 {formato(ta.resultadosVisibles, { f: fechaHoraLarga(actividad.resultadosDesde, locale) })}

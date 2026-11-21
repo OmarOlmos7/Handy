@@ -35,6 +35,9 @@ export default async function Editar({ params }: PageProps<"/profesor/actividade
         inicial={{
           titulo: actividad.titulo,
           fecha: actividad.fechaAplicacion,
+          visibleDesde: aCampoFechaHora(actividad.visibleDesde),
+          envioDesde: aCampoFechaHora(actividad.envioDesde),
+          envioHasta: aCampoFechaHora(actividad.envioHasta),
           resultadosDesde: aCampoFechaHora(actividad.resultadosDesde),
           escala: actividad.escala === 10 ? 10 : 100,
           sinPuntaje: !!actividad.sinPuntaje,

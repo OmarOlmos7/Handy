@@ -6,7 +6,7 @@ import { guardarSubidos } from "@/lib/imagenes";
 import { precisionPara } from "@/lib/configuracion";
 import { profesorActual } from "@/lib/sesion";
 import type { Actividad } from "@/lib/tipos";
-import { deCampoFechaHora } from "@/lib/resultados";
+import { leerFechas, type FechasActividad } from "@/lib/periodo";
 import { detectarIdioma } from "@/lib/i18n/detectar";
 import { esIdioma } from "@/lib/i18n/idiomas";
 
@@ -26,11 +26,17 @@ export async function POST(req: Request) {
   const fecha = String(form.get("fecha") || new Date().toISOString().slice(0, 10));
   const instrucciones = String(form.get("instrucciones") ?? "").trim();
   const grupo = (await leer()).grupos.find((g) => g.id === grupoId && g.profesorId === profesor.id);
-  let resultadosDesde: string | undefined;
+  let fechas: FechasActividad;
   try {
-    resultadosDesde = deCampoFechaHora(String(form.get("resultadosDesde") ?? ""));
-  } catch {
-    return Response.json({ error: "La fecha y hora de los resultados no es válida" }, { status: 400 });
+    fechas = leerFechas({
+      visibleDesde: String(form.get("visibleDesde") ?? ""),
+      envioDesde: String(form.get("envioDesde") ?? ""),
+      envioHasta: String(form.get("envioHasta") ?? ""),
+      resultadosDesde: String(form.get("resultadosDesde") ?? ""),
+    });
+  } catch (e) {
+    const motivo = e instanceof Error && e.message !== "Fecha y hora no válidas" ? e.message : "Una de las fechas y horas no es válida";
+    return Response.json({ error: motivo }, { status: 400 });
   }
   if (!titulo || !grupo) return Response.json({ error: "Escribe el título y elige el grupo" }, { status: 400 });
 
@@ -50,7 +56,7 @@ export async function POST(req: Request) {
     escala: form.get("escala") === "10" ? 10 : 100,
     // "Sin puntos": rúbrica sin puntaje (solo aciertos y elementos a corregir).
     sinPuntaje: form.get("escala") === "sin" || undefined,
-    resultadosDesde,
+    ...fechas,
     precision: precisionPara(form.get("motor"), profesor.config, form.get("esfuerzo")),
     // Ensayos, producciones escritas o análisis: no requieren solución.
     sinSolucion: form.get("sinSolucion") === "1" || undefined,

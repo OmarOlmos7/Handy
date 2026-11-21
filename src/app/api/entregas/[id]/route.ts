@@ -1,3 +1,5 @@
+import { aperturaEnvio, estadoEnvio } from "@/lib/periodo";
+import { fechaHoraLarga } from "@/lib/resultados";
 import { after } from "next/server";
 import { versionValida } from "@/lib/versiones";
 import { actividadDe, borrarCarpeta, grupoDe, guardarArchivo, leer, modificar } from "@/lib/almacen";
@@ -22,7 +24,7 @@ export const maxDuration = 300;
 export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">) {
   const { id } = await ctx.params;
   // Los errores llegan al alumno en su idioma.
-  const { t } = await textos();
+  const { t, locale } = await textos();
   const error = (clave: string, status = 400, valores: Record<string, string | number> = {}) =>
     Response.json({ error: errorAlumno(t, clave, valores) }, { status });
   const db = await leer();
@@ -54,6 +56,10 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
   } else {
     // Con las entregas suspendidas solo el profesor puede subir hojas.
     if (actividad.entregasSuspendidas) return error("entregasSuspendidas", 423);
+    // Fuera del periodo de recepción (antes del inicio o después del cierre) tampoco.
+    const recepcion = estadoEnvio(actividad);
+    if (recepcion === "proximo") return error("envioProximo", 423, { f: fechaHoraLarga(aperturaEnvio(actividad)!, locale) });
+    if (recepcion === "cerrado") return error("envioCerrado", 423, { f: fechaHoraLarga(actividad.envioHasta!, locale) });
     let cuenta = (await alumnoActual()) ?? undefined;
     let abrirSesion = false;
     if (!cuenta) {

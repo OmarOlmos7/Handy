@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import type { EsfuerzoIA, EstiloCorreccion, Grupo, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
+import { FechasActividad } from "./fechas-actividad";
 import { MAX_VERSIONES, letraVersion } from "@/lib/versiones";
 import { OpcionEstilo, OpcionSolucion } from "./opcion-solucion";
 import { Boton, BotonLink, campo } from "./ui";
@@ -214,13 +215,7 @@ export function NuevaActividad({
 
         <DeslizadorPrecision inicial={motorInicial} esfuerzos={esfuerzos} />
 
-        <label className="block max-w-sm text-sm font-medium text-slate-700">
-          {tn.resultadosDesde}
-          <input name="resultadosDesde" type="datetime-local" className={campo} />
-          <span className="mt-1 block text-xs font-normal text-slate-500">
-            {tn.resultadosAyuda}
-          </span>
-        </label>
+        <FechasActividad />
 
         {estado === "enviando" && (
           <p className="rounded-lg bg-tinta-50 p-3 text-sm text-tinta-700" role="status">

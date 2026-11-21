@@ -1,5 +1,6 @@
 "use client";
 
+import { leerFechas } from "@/lib/periodo";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
@@ -22,6 +23,8 @@ export function FilaActividad({
   titulo,
   fecha,
   resultadosDesde,
+  envioDesde,
+  envioHasta,
   paginas,
   entregas,
   promedio,
@@ -37,6 +40,9 @@ export function FilaActividad({
   fecha: string;
   /** Desde cuándo ven los alumnos sus resultados (ISO). */
   resultadosDesde?: string;
+  /** Recepción de entregas de la actividad (ISO), para revisar la liberación de resultados. */
+  envioDesde?: string;
+  envioHasta?: string;
   paginas: number;
   entregas: string;
   promedio?: string;
@@ -59,6 +65,12 @@ export function FilaActividad({
     e.preventDefault();
     const datos = new FormData(e.currentTarget);
     setError("");
+    try {
+      leerFechas({ envioDesde: aCampoFechaHora(envioDesde), envioHasta: aCampoFechaHora(envioHasta), resultadosDesde: String(datos.get("resultadosDesde") ?? "") });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      return;
+    }
     iniciar(async () => {
       try {
         await editarDatosActividad(id, String(datos.get("titulo")), String(datos.get("fecha")), String(datos.get("resultadosDesde") ?? ""));

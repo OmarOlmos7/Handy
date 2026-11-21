@@ -11,7 +11,8 @@ import { COLORES } from "@/lib/colores";
 import { esMotor, precisionPara } from "@/lib/configuracion";
 import { requerirProfesor } from "@/lib/sesion";
 import type { BaseDeDatos, EstiloCorreccion, Reactivo, ResultadoReactivo } from "@/lib/tipos";
-import { deCampoFechaHora } from "@/lib/resultados";
+import { aCampoFechaHora, deCampoFechaHora } from "@/lib/resultados";
+import { leerFechas } from "@/lib/periodo";
 
 /** Corre el cambio solo si la actividad es de un curso del profesor con sesión. */
 async function enActividadPropia<T>(actividadId: string, cambio: (db: BaseDeDatos) => T) {
@@ -148,6 +149,8 @@ export async function editarDatosActividad(actividadId: string, titulo: string, 
   const desde = deCampoFechaHora(resultadosDesde);
   await enActividadPropia(actividadId, (db) => {
     const a = actividadDe(db, actividadId)!;
+    // Revisa la liberación de resultados contra las fechas de entrega que ya tiene la actividad.
+    leerFechas({ envioDesde: aCampoFechaHora(a.envioDesde), envioHasta: aCampoFechaHora(a.envioHasta), resultadosDesde });
     a.titulo = t;
     a.fechaAplicacion = fecha;
     a.resultadosDesde = desde;
@@ -237,6 +240,9 @@ export async function cambiarCalificacion(actividadId: string, matricula: string
 export interface CambiosActividad {
   titulo: string;
   fecha: string;
+  visibleDesde?: string;
+  envioDesde?: string;
+  envioHasta?: string;
   resultadosDesde: string;
   escala: 10 | 100;
   /** Rúbrica sin puntaje ("Sin puntos" en la escala). */
@@ -262,14 +268,17 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
   const titulo = c.titulo.trim().slice(0, 120);
   if (!titulo) throw new Error("Escribe el título");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(c.fecha)) throw new Error("Fecha no válida");
-  const desde = deCampoFechaHora(c.resultadosDesde);
+  const fechas = leerFechas(c);
   let carpetaVieja: string | undefined;
   await enActividadPropia(actividadId, (db) => {
     const a = actividadDe(db, actividadId)!;
     const textoAntes = textoImpreso(a.reactivos);
     a.titulo = titulo;
     a.fechaAplicacion = c.fecha;
-    a.resultadosDesde = desde;
+    a.visibleDesde = fechas.visibleDesde;
+    a.envioDesde = fechas.envioDesde;
+    a.envioHasta = fechas.envioHasta;
+    a.resultadosDesde = fechas.resultadosDesde;
     a.escala = c.escala === 10 ? 10 : 100;
     if (c.sinPuntaje !== undefined) a.sinPuntaje = c.sinPuntaje || undefined;
     a.sinSolucion = c.sinSolucion || undefined;
