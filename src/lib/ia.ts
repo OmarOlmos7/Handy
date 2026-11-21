@@ -1248,6 +1248,48 @@ export async function generarTemario(
   });
 }
 
+// ---------- Mapa del temario: temas afines ----------
+
+const EsquemaRelaciones = z.object({
+  relaciones: z.array(z.object({ a: z.string(), b: z.string(), motivo: z.string() })),
+});
+
+const SISTEMA_RELACIONES = `Eres un asistente para profesores. Recibes el temario de una asignatura: cada tema y subtema tiene un código (por ejemplo "2.3" es el tema 3 de la unidad 2 y "2.3.1" su primer subtema).
+Encuentra los temas y subtemas afines: los que se necesitan uno al otro (prerrequisito), se aplican juntos o tratan la misma idea desde otra unidad.
+- Da prioridad a las relaciones entre unidades distintas; dentro de una misma unidad solo las que no sean obvias por el orden.
+- No relaciones un subtema con su propio tema.
+- Devuelve de 8 a 40 relaciones, las más útiles para que el alumno vea cómo se conecta el temario.
+- a y b: los códigos exactamente como aparecen. motivo: de 3 a 8 palabras (por ejemplo "la aceleración se usa en la segunda ley").`;
+
+/** Propone temas y subtemas afines del temario. Solo recibe nombres de temas (sin datos de alumnos). */
+export async function relacionarTemario(unidades: { nombre: string; temas: { nombre: string; subtemas: string[] }[] }[], uso: UsoIA) {
+  const codigos = new Map<string, { u: number; t: number; s?: number }>();
+  const lineas: string[] = [];
+  unidades.forEach((u, i) => {
+    lineas.push(`Unidad ${i + 1}: ${u.nombre}`);
+    u.temas.forEach((t, j) => {
+      const ct = `${i + 1}.${j + 1}`;
+      codigos.set(ct, { u: i, t: j });
+      lineas.push(`  ${ct} ${t.nombre}`);
+      t.subtemas.forEach((sub, k) => {
+        const cs = `${ct}.${k + 1}`;
+        codigos.set(cs, { u: i, t: j, s: k });
+        lineas.push(`    ${cs} ${sub}`);
+      });
+    });
+  });
+  const r = await pedir({
+    tipo: "relaciones",
+    uso: { ...uso, precision: uso.precision ?? { motor: "medio", esfuerzo: "bajo" } },
+    system: SISTEMA_RELACIONES,
+    esquema: EsquemaRelaciones,
+    contenido: [{ type: "text", text: lineas.join("\n") }],
+  });
+  return r.relaciones
+    .map((x) => ({ a: codigos.get(x.a.trim()), b: codigos.get(x.b.trim()), motivo: x.motivo.trim().slice(0, 120) }))
+    .filter((x): x is { a: { u: number; t: number; s?: number }; b: { u: number; t: number; s?: number }; motivo: string } => Boolean(x.a && x.b));
+}
+
 // ---------- Videos y lecturas con enlaces reales (búsqueda web) ----------
 
 const EsquemaRecursos = z.object({

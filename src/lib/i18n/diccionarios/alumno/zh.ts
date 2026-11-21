@@ -44,6 +44,8 @@ const alumno: Diccionario["alumno"] = {
     vacioSeccion: "此部分没有作业。",
     analiticas: "分析",
     cuaderno: "成绩册",
+    mapa: "课程大纲图",
+    sinMapa: "老师还没有上传这门课的大纲。",
     sinActividadesCurso: "本课程还没有作业。",
     resumen: "{a} · {b}",
     evaluadas1: "已评分 1 项",

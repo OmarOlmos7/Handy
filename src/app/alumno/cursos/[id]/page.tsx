@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { FilaActividadAlumno } from "@/components/fila-actividad-alumno";
-import { IconoCuaderno, IconoGrafica } from "@/components/iconos";
+import { IconoCuaderno, IconoGrafica, IconoMapa } from "@/components/iconos";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { leer } from "@/lib/almacen";
 import { formato } from "@/lib/i18n/idiomas";
@@ -55,6 +55,9 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
             </BotonLink>
             <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/cuaderno`}>
               <IconoCuaderno /> {tc.cuaderno}
+            </BotonLink>
+            <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/mapa`}>
+              <IconoMapa /> {tc.mapa}
             </BotonLink>
           </>
         }

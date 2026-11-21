@@ -474,7 +474,7 @@ export interface Sesion {
 }
 
 /** Para qué se llamó a la IA (para el panel de administración). */
-export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio" | "recursos" | "plan" | "temario";
+export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio" | "recursos" | "plan" | "temario" | "relaciones";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {
@@ -514,6 +514,24 @@ export interface Asignatura {
   origen: "archivo" | "texto" | "ia";
   creadaEn: string;
   actualizadaEn: string;
+  /** Temas o subtemas afines entre sí (para el mapa), por su clave "Unidad › Tema › Subtema". */
+  relaciones?: RelacionTemario[];
+}
+
+export interface RelacionTemario {
+  a: string;
+  b: string;
+  /** Por qué se relacionan, en pocas palabras. */
+  motivo?: string;
+}
+
+/** Ruta de estudio que arma el alumno en el mapa del temario. */
+export interface RutaAlumno {
+  alumnoId: string;
+  asignaturaId: string;
+  /** Claves de los temas y subtemas, en el orden de la ruta. */
+  nodos: string[];
+  actualizadaEn: string;
 }
 
 /** Temas del syllabus que cubre una actividad. */
@@ -539,4 +557,6 @@ export interface BaseDeDatos {
   consumoIA?: ConsumoIA[];
   /** Asignaturas (syllabus) de los profesores. */
   asignaturas?: Asignatura[];
+  /** Rutas de estudio de los alumnos en el mapa de cada asignatura. */
+  rutas?: RutaAlumno[];
 }

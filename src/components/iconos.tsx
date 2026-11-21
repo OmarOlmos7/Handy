@@ -20,6 +20,18 @@ export function IconoLapiz() {
   );
 }
 
+/** Mapa de nodos unidos (mapa del temario). */
+export function IconoMapa() {
+  return (
+    <svg {...base}>
+      <circle cx="6" cy="6" r="2.5" />
+      <circle cx="18" cy="8" r="2.5" />
+      <circle cx="10" cy="18" r="2.5" />
+      <path d="M8.3 7.1 15.6 7.6M7.2 8.2l1.9 7.5M16.6 10.1l-5 6" />
+    </svg>
+  );
+}
+
 export function IconoGrafica() {
   return (
     <svg {...base}>
