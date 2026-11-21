@@ -10,10 +10,11 @@ import { detectarRelaciones, guardarRuta } from "@/app/acciones-mapa";
 import { formato } from "@/lib/i18n/idiomas";
 import {
   acomodoGeneral,
-  acomodoUnidad,
+  acomodoUnidadConAfines,
   colorAvance,
   colorUnidad,
   nodosTemario,
+  relacionesDeUnidades,
   temaDe,
   unidadDe,
   type AvanceNodo,
@@ -59,8 +60,15 @@ export function MapaTemario({
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
   const [ocupado, iniciar] = useTransition();
 
-  const general = useMemo(() => acomodoGeneral(asignatura), [asignatura]);
-  const deUnidad = useMemo(() => (capa === null ? null : acomodoUnidad(asignatura, capa)), [asignatura, capa]);
+  const general = useMemo(() => acomodoGeneral(asignatura, relaciones), [asignatura, relaciones]);
+  // Unidades relacionadas por completo: se unen de centro a centro, sin las líneas de cada tema.
+  const completas = useMemo(() => relacionesDeUnidades(asignatura, relaciones).filter((x) => x.completa), [asignatura, relaciones]);
+  const paresCompletos = useMemo(
+    () => new Set(completas.flatMap((x) => [`${asignatura.unidades[x.a].nombre}|${asignatura.unidades[x.b].nombre}`, `${asignatura.unidades[x.b].nombre}|${asignatura.unidades[x.a].nombre}`])),
+    [asignatura, completas],
+  );
+  const conCentro = new Set(completas.flatMap((x) => [x.a, x.b]));
+  const deUnidad = useMemo(() => (capa === null ? null : acomodoUnidadConAfines(asignatura, capa, relaciones)), [asignatura, capa, relaciones]);
   const acomodo = deUnidad ?? general;
   const unidadCapa = capa === null ? null : asignatura.unidades[capa];
 
@@ -84,6 +92,7 @@ export function MapaTemario({
       let a = r.a;
       let b = r.b;
       if (capa === null) {
+        if (!a.includes(" › ") || !b.includes(" › ") || paresCompletos.has(`${unidadDe(a)}|${unidadDe(b)}`)) continue;
         a = temaDe(a);
         b = temaDe(b);
       } else if (unidadDe(a) !== unidadCapa?.nombre || unidadDe(b) !== unidadCapa?.nombre) continue;
@@ -94,36 +103,21 @@ export function MapaTemario({
       l.push({ a, b, tipo: "afin", motivo: r.motivo });
     }
     return l;
-  }, [asignatura, relaciones, capa, unidadCapa]);
-
-  // En la capa de una unidad: temas afines de otras unidades, en el borde del lienzo.
-  const externos = useMemo(() => {
-    if (capa === null || !deUnidad || !unidadCapa) return [];
-    const c = deUnidad.ancho / 2;
-    const fuera: { propio: string; ajeno: string; p: Punto; motivo?: string }[] = [];
-    for (const r of relaciones) {
-      const enA = unidadDe(r.a) === unidadCapa.nombre;
-      const enB = unidadDe(r.b) === unidadCapa.nombre;
-      if (enA === enB) continue;
-      const propio = enA ? r.a : r.b;
-      const ajeno = enA ? r.b : r.a;
-      const p = deUnidad.posiciones[propio];
-      if (!p) continue;
-      const ang = Math.atan2(p.y - c, p.x - c) + fuera.length * 0.07;
-      fuera.push({ propio, ajeno, motivo: r.motivo, p: { x: c + (c - 28) * Math.cos(ang), y: c + (c - 28) * Math.sin(ang) } });
-    }
-    return fuera.slice(0, 24);
-  }, [capa, deUnidad, unidadCapa, relaciones]);
+  }, [asignatura, relaciones, capa, unidadCapa, paresCompletos]);
 
   const visibles = nodos.filter((n) => (capa === null ? n.tipo === "tema" : n.unidad === capa && n.tipo !== "unidad"));
   const sel = seleccion ? porClave.get(seleccion) : undefined;
   const avanceSel = seleccion ? avance[seleccion] : undefined;
-  const afines = seleccion
-    ? relaciones
+  const afines = !seleccion
+    ? []
+    : sel?.tipo === "unidad"
+    ? completas
+        .filter((x) => x.a === sel.unidad || x.b === sel.unidad)
+        .map((x) => ({ clave: asignatura.unidades[x.a === sel.unidad ? x.b : x.a].nombre, motivo: x.motivo }))
+    : relaciones
         .filter((r) => r.a === seleccion || r.b === seleccion || (sel?.tipo === "tema" && (temaDe(r.a) === seleccion || temaDe(r.b) === seleccion)))
         .map((r) => ({ clave: r.a === seleccion || temaDe(r.a) === seleccion ? r.b : r.a, motivo: r.motivo }))
-        .filter((x, i, xs) => x.clave !== seleccion && porClave.has(x.clave) && xs.findIndex((y) => y.clave === x.clave) === i)
-    : [];
+        .filter((x, i, xs) => x.clave !== seleccion && porClave.has(x.clave) && xs.findIndex((y) => y.clave === x.clave) === i);
 
   const elegir = (clave: string) => {
     setSeleccion(clave);
@@ -185,7 +179,8 @@ export function MapaTemario({
     p === null || p === undefined ? tm.sinActividades : p >= 80 ? tm.dominado : p >= 60 ? tm.enProceso : tm.porReforzar;
 
   return (
-    <div className="space-y-3">
+    // A todo el ancho de la ventana (fuera del ancho máximo de la página), centrado.
+    <div className="relative left-1/2 w-[calc(100vw-2.5rem)] max-w-[1900px] -translate-x-1/2 space-y-3">
       {/* Barra: capa actual, leyenda y acciones */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <nav className="flex flex-wrap items-center gap-1 text-sm" aria-label={tm.capas}>
@@ -222,7 +217,10 @@ export function MapaTemario({
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <p className="text-sm text-slate-500">{capa === null ? tm.ayudaGeneral : tm.ayudaUnidad}</p>
+      {aviso && <p className={`text-sm font-medium ${aviso.ok ? "text-acierto" : "text-error"}`}>{aviso.texto}</p>}
+
+      <div className={capa === null ? "relative space-y-4" : "grid gap-4 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-start"}>
         <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
           {unidadCapa && (
             <p className="border-b border-slate-100 px-4 py-2 text-sm font-semibold" style={{ color: colorUnidad(capa!).nodo }}>
@@ -280,16 +278,98 @@ export function MapaTemario({
               );
             })}
 
-            {/* Temas afines de otras unidades (capa de unidad) */}
-            {externos.map((e, i) => {
-              const a = deUnidad!.posiciones[e.propio];
-              const otro = porClave.get(e.ajeno);
-              if (!otro) return null;
+            {/* Unidades relacionadas por completo: de centro a centro */}
+            {capa === null &&
+              completas.map((x) => {
+                const ga = acomodo.grupos[x.a];
+                const gb = acomodo.grupos[x.b];
+                if (!ga || !gb) return null;
+                const claveA = asignatura.unidades[x.a].nombre;
+                const claveB = asignatura.unidades[x.b].nombre;
+                const resaltada = seleccion === claveA || seleccion === claveB;
+                return (
+                  <line
+                    key={`u${x.a}-${x.b}`}
+                    x1={ga.x}
+                    y1={ga.y}
+                    x2={gb.x}
+                    y2={gb.y}
+                    stroke="#1e293b"
+                    strokeOpacity={resaltada ? 0.9 : 0.5}
+                    strokeWidth={resaltada ? 7 : 5}
+                    strokeLinecap="round"
+                  >
+                    <title>{`${claveA} ↔ ${claveB}: ${tm.relacionUnidades}${x.motivo ? ` — ${x.motivo}` : ""}`}</title>
+                  </line>
+                );
+              })}
+
+            {/* Unidades afines alrededor de la unidad abierta: las más relacionadas, más cerca */}
+            {deUnidad?.enlaces.map((e, i) => {
+              const a = deUnidad.posiciones[e.a];
+              const b = deUnidad.posiciones[e.b];
+              const otro = porClave.get(e.b);
+              if (!a || !b || !otro) return null;
+              const resaltada = seleccion === e.a || seleccion === e.b;
               return (
-                <g key={i} className="cursor-pointer" onClick={() => irA(e.ajeno)}>
-                  <line x1={a.x} y1={a.y} x2={e.p.x} y2={e.p.y} stroke={colorUnidad(otro.unidad).borde} strokeWidth={1.3} strokeDasharray="2 4" />
-                  <circle cx={e.p.x} cy={e.p.y} r={8} fill={colorUnidad(otro.unidad).nodo} stroke="#fff" strokeWidth={2} />
-                  <title>{`${otro.nombre} (${unidadDe(e.ajeno)})${e.motivo ? ` — ${e.motivo}` : ""}`}</title>
+                <line
+                  key={`e${i}`}
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
+                  stroke={colorUnidad(otro.unidad).borde}
+                  strokeWidth={resaltada ? 2.4 : 1.3}
+                  strokeOpacity={resaltada ? 1 : 0.75}
+                  strokeDasharray="3 4"
+                >
+                  {e.motivo && <title>{e.motivo}</title>}
+                </line>
+              );
+            })}
+            {/* Nodo de la unidad abierta, si se relaciona completa con otra */}
+            {deUnidad && unidadCapa && deUnidad.enlaces.some((e) => e.a === unidadCapa.nombre) && (
+              <g className="cursor-pointer" onClick={() => elegir(unidadCapa.nombre)}>
+                <title>{`${unidadCapa.nombre} — ${tm.relacionUnidades}`}</title>
+                <circle cx={deUnidad.posiciones[unidadCapa.nombre].x} cy={deUnidad.posiciones[unidadCapa.nombre].y} r={18} fill={colorUnidad(capa!).nodo} stroke="#fff" strokeWidth={2.5} />
+                <text x={deUnidad.posiciones[unidadCapa.nombre].x} y={deUnidad.posiciones[unidadCapa.nombre].y + 5} textAnchor="middle" className="pointer-events-none fill-white text-[14px] font-bold">
+                  {formato(tm.unidadCorta, { n: capa! + 1 })}
+                </text>
+              </g>
+            )}
+            {deUnidad?.afines.map((g) => {
+              const c = colorUnidad(g.unidad);
+              return (
+                <g key={`a${g.clave}`}>
+                  <circle cx={g.x} cy={g.y} r={g.r} fill={c.fondo} fillOpacity={0.7} stroke={c.borde} strokeWidth={1.5} className="cursor-pointer" onClick={() => irA(g.clave)}>
+                    <title>{`${g.nombre} — ${tm.abrirUnidad}`}</title>
+                  </circle>
+                  <text x={g.x} y={g.y - g.r - 8} textAnchor="middle" className="cursor-pointer fill-slate-700 text-[13px] font-semibold" onClick={() => irA(g.clave)}>
+                    {corto(g.nombre, 24)}
+                  </text>
+                  {g.nodos.map((clave) => {
+                    const p = deUnidad.posiciones[clave];
+                    const n = porClave.get(clave);
+                    if (!p || !n) return null;
+                    const activo = seleccion === clave;
+                    return (
+                      <g key={clave} className="cursor-pointer" onClick={() => elegir(clave)}>
+                        <title>{n.nombre}</title>
+                        <circle cx={p.x} cy={p.y} r={n.tipo === "unidad" ? 14 : 9} fill={c.nodo} stroke="#fff" strokeWidth={activo ? 3 : 1.5} />
+                        {n.tipo !== "unidad" && (
+                          <text
+                            x={p.x}
+                            y={p.y + 21}
+                            textAnchor="middle"
+                            className="pointer-events-none fill-slate-600 text-[10px]"
+                            style={{ paintOrder: "stroke", stroke: "rgba(255,255,255,0.85)", strokeWidth: 3 }}
+                          >
+                            {corto(n.nombre, 20)}
+                          </text>
+                        )}
+                      </g>
+                    );
+                  })}
                 </g>
               );
             })}
@@ -337,7 +417,7 @@ export function MapaTemario({
                   )}
                   <text
                     x={p.x}
-                    y={capa !== null && n.tipo === "tema" && p.y > acomodo.alto / 2 + 1 ? p.y - r - 7 : p.y + r + 14}
+                    y={capa !== null && n.tipo === "tema" && p.y > (acomodo.posiciones[unidadCapa?.nombre ?? ""]?.y ?? acomodo.alto / 2) + 1 ? p.y - r - 7 : p.y + r + 14}
                     textAnchor="middle"
                     className={`pointer-events-none ${n.tipo === "tema" ? "fill-slate-800 text-[11px] font-semibold" : "fill-slate-600 text-[10px]"}`}
                     style={{ paintOrder: "stroke", stroke: "rgba(255,255,255,0.85)", strokeWidth: 3 }}
@@ -347,6 +427,27 @@ export function MapaTemario({
                 </g>
               );
             })}
+
+            {/* Nodo central de las unidades con relación completa */}
+            {capa === null &&
+              acomodo.grupos
+                .filter((g) => conCentro.has(g.unidad))
+                .map((g) => {
+                  const c = colorUnidad(g.unidad);
+                  const av = avance[g.clave];
+                  const activo = seleccion === g.clave;
+                  return (
+                    <g key={`c${g.clave}`} className="cursor-pointer" onClick={() => elegir(g.clave)}>
+                      <title>{`${g.nombre} — ${tm.relacionUnidades}`}</title>
+                      {activo && <circle cx={g.x} cy={g.y} r={30} fill="#0f172a" fillOpacity={0.12} />}
+                      <circle cx={g.x} cy={g.y} r={22} fill="none" stroke={colorAvance(av?.promedio)} strokeWidth={av?.actividades.length ? 4 : 0} />
+                      <circle cx={g.x} cy={g.y} r={18} fill={c.nodo} stroke="#fff" strokeWidth={activo ? 3.5 : 2.5} />
+                      <text x={g.x} y={g.y + 5} textAnchor="middle" className="pointer-events-none fill-white text-[14px] font-bold">
+                        {formato(tm.unidadCorta, { n: g.unidad + 1 })}
+                      </text>
+                    </g>
+                  );
+                })}
           </svg>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-100 px-4 py-2 text-xs text-slate-500">
             {[
@@ -366,6 +467,14 @@ export function MapaTemario({
               </svg>
               {tm.afines}
             </span>
+            {completas.length > 0 && capa === null && (
+              <span className="flex items-center gap-1.5">
+                <svg width="22" height="8" aria-hidden>
+                  <line x1="2" y1="4" x2="20" y2="4" stroke="#1e293b" strokeOpacity="0.6" strokeWidth="5" strokeLinecap="round" />
+                </svg>
+                {tm.relacionUnidades}
+              </span>
+            )}
             <span className="flex items-center gap-1.5">
               <svg width="22" height="6" aria-hidden>
                 <line x1="0" y1="3" x2="22" y2="3" stroke="#64748b" strokeWidth="1.2" strokeDasharray="4 4" />
@@ -376,13 +485,16 @@ export function MapaTemario({
           </div>
         </div>
 
-        {/* Panel lateral: detalle del nodo y ruta */}
-        <aside className="space-y-4">
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            {!sel ? (
-              <p className="text-sm text-slate-500">{capa === null ? tm.ayudaGeneral : tm.ayudaUnidad}</p>
-            ) : (
+        {/* Capa general: detalle del nodo sobre el mapa, a la derecha. Capa de unidad: columna a la
+            derecha con el detalle y la tabla de temas. En pantallas chicas, debajo del mapa. */}
+        {(sel || unidadCapa) && (
+          <div className={capa === null ? "lg:absolute lg:right-3 lg:top-3 lg:max-h-[calc(100%-1.5rem)] lg:w-80 lg:overflow-y-auto lg:rounded-2xl lg:shadow-lg" : "space-y-4"}>
+        {sel && (
+          <aside className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
               <div className="space-y-3 text-sm">
+                <button type="button" onClick={() => setSeleccion(null)} aria-label={tm.cerrar} className="float-right -mr-1 -mt-1 rounded px-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+                  ✕
+                </button>
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide" style={{ color: colorUnidad(sel.unidad).nodo }}>
                     {nombreTipo(sel)} · {formato(tm.unidadN, { n: sel.unidad + 1 })}
@@ -420,7 +532,7 @@ export function MapaTemario({
                 </div>
                 {afines.length > 0 && (
                   <div>
-                    <p className="text-xs font-medium text-slate-500">{tm.temasAfines}</p>
+                    <p className="text-xs font-medium text-slate-500">{sel.tipo === "unidad" ? tm.unidadesAfines : tm.temasAfines}</p>
                     <ul className="mt-1 space-y-1">
                       {afines.slice(0, 8).map((x) => {
                         const n = porClave.get(x.clave)!;
@@ -440,7 +552,7 @@ export function MapaTemario({
                   </div>
                 )}
                 <div className="flex flex-wrap gap-2">
-                  {capa === null && (
+                  {(capa === null || sel.tipo === "unidad" || sel.unidad !== capa) && (
                     <button type="button" onClick={() => irA(sel.clave)} className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
                       {tm.verSubtemas}
                     </button>
@@ -456,8 +568,51 @@ export function MapaTemario({
                   )}
                 </div>
               </div>
-            )}
+          </aside>
+        )}
+        {unidadCapa && (
+          <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <p className="border-b border-slate-100 px-4 py-2 text-sm font-semibold text-slate-800">{tm.temasDeUnidad}</p>
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-left text-xs text-slate-500">
+                <tr>
+                  <th className="px-4 py-1.5 font-medium">{tm.tema}</th>
+                  <th className="px-2 py-1.5 text-center font-medium">{tm.actividades}</th>
+                  <th className="px-4 py-1.5 text-right font-medium">{tm.avance}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {unidadCapa.temas.flatMap((t) => {
+                  const ct = `${unidadCapa.nombre} › ${t.nombre}`;
+                  return [ct, ...t.subtemas.map((x) => `${ct} › ${x}`)].map((clave) => {
+                    const n = porClave.get(clave);
+                    if (!n) return null;
+                    const av = avance[clave];
+                    const esTema = n.tipo === "tema";
+                    return (
+                      <tr key={clave} className={`${esTema ? "border-t border-slate-100" : ""} ${seleccion === clave ? "bg-tinta-50" : "hover:bg-slate-50"}`}>
+                        <td className={`py-1.5 ${esTema ? "px-4 font-medium text-slate-800" : "pl-8 pr-4 text-xs text-slate-600"}`}>
+                          <button type="button" onClick={() => elegir(clave)} className="flex items-center gap-2 text-left hover:underline">
+                            {enRuta(clave) >= 0 && (
+                              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-tinta-600 text-[9px] font-bold text-white">{enRuta(clave) + 1}</span>
+                            )}
+                            {n.nombre}
+                          </button>
+                        </td>
+                        <td className="px-2 py-1.5 text-center text-xs text-slate-500">{av?.actividades.length || "–"}</td>
+                        <td className="px-4 py-1.5 text-right text-xs font-semibold" style={{ color: colorAvance(av?.promedio) }}>
+                          {av?.promedio !== null && av?.promedio !== undefined ? `${av.promedio} %` : "–"}
+                        </td>
+                      </tr>
+                    );
+                  });
+                })}
+              </tbody>
+            </table>
           </div>
+        )}
+          </div>
+        )}
 
           {modo === "alumno" && (
             <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
@@ -495,8 +650,6 @@ export function MapaTemario({
               </Boton>
             </div>
           )}
-          {aviso && <p className={`text-sm font-medium ${aviso.ok ? "text-acierto" : "text-error"}`}>{aviso.texto}</p>}
-        </aside>
       </div>
     </div>
   );

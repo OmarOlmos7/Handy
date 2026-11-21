@@ -85,9 +85,11 @@ export function relacionesPorPalabras(a: Pick<Asignatura, "unidades">, max = 30)
 
 /** Relaciones válidas (las dos claves existen y son distintas), sin repetir. */
 export function relacionesValidas(a: Pick<Asignatura, "unidades" | "relaciones">): RelacionTemario[] {
-  const claves = new Set(nodosTemario(a).filter((n) => n.tipo !== "unidad").map((n) => n.clave));
+  const claves = new Set(nodosTemario(a).map((n) => n.clave));
   const vistas = new Set<string>();
-  const propias = (a.relaciones ?? []).filter((r) => claves.has(r.a) && claves.has(r.b) && r.a !== r.b);
+  // Una relación con una unidad completa solo vale entre unidades distintas.
+  const conUnidad = (r: RelacionTemario) => !r.a.includes(SEP) || !r.b.includes(SEP);
+  const propias = (a.relaciones ?? []).filter((r) => claves.has(r.a) && claves.has(r.b) && r.a !== r.b && (!conUnidad(r) || unidadDe(r.a) !== unidadDe(r.b)));
   return [...propias, ...relacionesPorPalabras(a)].filter((r) => {
     const k = [r.a, r.b].sort().join("|");
     if (vistas.has(k)) return false;
@@ -103,6 +105,47 @@ export function temaDe(clave: string) {
 }
 export function unidadDe(clave: string) {
   return clave.split(SEP)[0];
+}
+
+export interface RelacionUnidades {
+  /** Índices de las dos unidades (a < b). */
+  a: number;
+  b: number;
+  /** Relaciones entre temas o subtemas de las dos unidades. */
+  n: number;
+  /**
+   * true si la relación es con la unidad completa: la IA la propuso así, o todos los temas de una de
+   * las dos unidades (al menos dos) tienen un tema afín en la otra. Se dibuja de centro a centro.
+   */
+  completa: boolean;
+  motivo?: string;
+}
+
+/** Relaciones entre pares de unidades, a partir de las relaciones entre temas y unidades. */
+export function relacionesDeUnidades(a: Pick<Asignatura, "unidades">, relaciones: RelacionTemario[]): RelacionUnidades[] {
+  const indice = new Map(a.unidades.map((u, i) => [u.nombre, i]));
+  const pares = new Map<string, RelacionUnidades & { temas: [Set<string>, Set<string>] }>();
+  for (const r of relaciones) {
+    const ia = indice.get(unidadDe(r.a));
+    const ib = indice.get(unidadDe(r.b));
+    if (ia === undefined || ib === undefined || ia === ib) continue;
+    const [x, y, cx, cy] = ia < ib ? [ia, ib, r.a, r.b] : [ib, ia, r.b, r.a];
+    const k = `${x}|${y}`;
+    const par = pares.get(k) ?? { a: x, b: y, n: 0, completa: false, temas: [new Set<string>(), new Set<string>()] };
+    pares.set(k, par);
+    if (!cx.includes(SEP) || !cy.includes(SEP)) {
+      par.completa = true;
+      par.motivo ??= r.motivo;
+      continue;
+    }
+    par.n++;
+    par.temas[0].add(temaDe(cx));
+    par.temas[1].add(temaDe(cy));
+  }
+  return [...pares.values()].map(({ temas, ...par }) => {
+    const cubre = (i: number, t: Set<string>) => a.unidades[i].temas.length >= 2 && t.size >= a.unidades[i].temas.length;
+    return { ...par, completa: par.completa || cubre(par.a, temas[0]) || cubre(par.b, temas[1]) };
+  });
 }
 
 // ---------- Avance por tema ----------
@@ -214,55 +257,178 @@ export interface Acomodo {
 /** Puntos repartidos en anillos dentro de un círculo de radio r (el primero, al centro si hay muchos). */
 function anillos(n: number, cx: number, cy: number, r: number, giro = -Math.PI / 2): Punto[] {
   if (n === 0) return [];
-  if (n === 1) return [{ x: cx, y: cy }];
+  if (n === 1) return [{ x: cx + r * 0.6 * Math.cos(giro), y: cy + r * 0.6 * Math.sin(giro) }];
   const puntos: Punto[] = [];
-  // Hasta 7 en un anillo; si son más, un anillo interior.
-  const exterior = n <= 7 ? n : Math.ceil(n * 0.62);
+  // Hasta 7 en un anillo; si son más, un anillo interior. El centro queda libre para el nodo de la unidad.
+  let exterior = n <= 7 ? n : Math.ceil(n * 0.62);
+  if (n - exterior === 1) exterior = n;
   const interior = n - exterior;
   for (let i = 0; i < exterior; i++) {
     const ang = giro + (2 * Math.PI * i) / exterior;
     puntos.push({ x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang) });
   }
-  if (interior === 1) puntos.push({ x: cx, y: cy });
-  else
-    for (let i = 0; i < interior; i++) {
-      const ang = giro + Math.PI / interior + (2 * Math.PI * i) / interior;
-      puntos.push({ x: cx + r * 0.45 * Math.cos(ang), y: cy + r * 0.45 * Math.sin(ang) });
-    }
+  for (let i = 0; i < interior; i++) {
+    const ang = giro + Math.PI / interior + (2 * Math.PI * i) / interior;
+    puntos.push({ x: cx + r * 0.5 * Math.cos(ang), y: cy + r * 0.5 * Math.sin(ang) });
+  }
   return puntos;
 }
 
-/** Primera capa: cada unidad es un círculo de color con sus temas adentro. */
-export function acomodoGeneral(a: Pick<Asignatura, "unidades">): Acomodo {
+/**
+ * Primera capa: cada unidad es un círculo de color con sus temas adentro. Las unidades se acomodan
+ * como un sistema de resortes: las que tienen más temas afines quedan más cerca, ninguna se encima,
+ * y el conjunto se extiende a lo ancho. Dentro de cada unidad, los temas con afines en otra unidad
+ * miran hacia ella. Siempre da el mismo resultado para el mismo temario.
+ */
+export function acomodoGeneral(a: Pick<Asignatura, "unidades">, relaciones: RelacionTemario[] = []): Acomodo {
   const n = a.unidades.length;
-  const radios = a.unidades.map((u) => 90 + 26 * Math.sqrt(Math.max(1, u.temas.length)));
-  const rMax = Math.max(...radios, 90);
-  const celda = rMax * 2 + 70;
-  // Tres unidades en triángulo, como el diagrama de agrupamientos; más, en filas alternadas.
-  const columnas = n <= 2 ? Math.max(1, n) : n === 3 ? 2 : n <= 8 ? Math.ceil(n / 2) : Math.ceil(Math.sqrt(n * 1.6));
-  const filas = Math.ceil(n / columnas);
-  const centros: Punto[] = [];
-  for (let i = 0; i < n; i++) {
-    const fila = Math.floor(i / columnas);
-    const col = i % columnas;
-    const enFila = Math.min(columnas, n - fila * columnas);
-    // Fila incompleta: centrada; filas impares completas: media celda a la derecha.
-    const corrimiento = enFila < columnas ? ((columnas - enFila) * celda) / 2 : fila % 2 === 1 ? celda / 2 : 0;
-    centros.push({ x: col * celda + celda / 2 + corrimiento, y: fila * celda * 0.88 + celda / 2 });
+  const radios = a.unidades.map((u) => 80 + 26 * Math.sqrt(Math.max(1, u.temas.length)) + 6 * Math.max(0, u.temas.length - 7));
+  const ESPACIO = 70; // entre círculos, para los nombres de las unidades
+  const porUnidades = relacionesDeUnidades(a, relaciones);
+  const peso = (x: RelacionUnidades) => x.n + (x.completa ? 4 : 0);
+
+  // Posición inicial: una elipse ancha en el orden del temario.
+  const total = radios.reduce((s, r) => s + r, 0);
+  const pos = radios.map((_, i) => {
+    const ang = (2 * Math.PI * i) / Math.max(1, n) - Math.PI / 2;
+    return { x: total * 0.55 * Math.cos(ang), y: total * 0.28 * Math.sin(ang) };
+  });
+  const maxPeso = Math.max(1, ...porUnidades.map(peso));
+  for (let paso = 0; paso < 500; paso++) {
+    const calor = 1 - paso / 500;
+    const mov = pos.map(() => ({ x: 0, y: 0 }));
+    // Resortes entre unidades relacionadas.
+    for (const par of porUnidades) {
+      const p = pos[par.a];
+      const q = pos[par.b];
+      const dx = q.x - p.x;
+      const dy = q.y - p.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const ideal = radios[par.a] + radios[par.b] + ESPACIO;
+      const f = (0.04 + (0.1 * peso(par)) / maxPeso) * (d - ideal);
+      mov[par.a].x += (f * dx) / d;
+      mov[par.a].y += (f * dy) / d;
+      mov[par.b].x -= (f * dx) / d;
+      mov[par.b].y -= (f * dy) / d;
+    }
+    // Las unidades sin relación se alejan un poco; gravedad hacia el centro, más fuerte en vertical.
+    for (let i = 0; i < n; i++) {
+      for (let k = i + 1; k < n; k++) {
+        const dx = pos[k].x - pos[i].x;
+        const dy = pos[k].y - pos[i].y;
+        const d = Math.hypot(dx, dy) || 1;
+        const lejos = (radios[i] + radios[k] + ESPACIO) * 1.5;
+        if (d < lejos) {
+          const f = (0.03 * (lejos - d)) / d;
+          mov[i].x -= f * dx;
+          mov[i].y -= f * dy;
+          mov[k].x += f * dx;
+          mov[k].y += f * dy;
+        }
+      }
+      mov[i].x -= pos[i].x * 0.004;
+      mov[i].y -= pos[i].y * 0.02;
+    }
+    pos.forEach((p, i) => {
+      p.x += mov[i].x * (0.3 + 0.7 * calor);
+      p.y += mov[i].y * (0.3 + 0.7 * calor);
+    });
+    separar(pos, radios, ESPACIO);
   }
-  const ancho = columnas * celda + (filas > 1 && n !== 3 && n % columnas === 0 ? celda / 2 : 0);
-  const alto = (filas - 1) * celda * 0.88 + celda;
+  // Más ancho que alto, para ocupar el ancho de la página.
+  const caja = () => {
+    const xs = pos.map((p, i) => [p.x - radios[i], p.x + radios[i]]).flat();
+    const ys = pos.map((p, i) => [p.y - radios[i], p.y + radios[i]]).flat();
+    return { x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+  };
+  let c = caja();
+  const proporcion = (c.x1 - c.x0) / Math.max(1, c.y1 - c.y0);
+  if (n > 2 && proporcion < 1.8) {
+    const f = Math.min(1.6, 1.8 / proporcion);
+    const mx = pos.reduce((s, p) => s + p.x, 0) / n;
+    pos.forEach((p) => (p.x = mx + (p.x - mx) * f));
+    c = caja();
+  }
+  const MARGEN = 30;
+  const ARRIBA = 34; // nombre de la unidad
+  const centros = pos.map((p) => ({ x: p.x - c.x0 + MARGEN, y: p.y - c.y0 + MARGEN + ARRIBA }));
+  const ancho = c.x1 - c.x0 + MARGEN * 2;
+  const alto = c.y1 - c.y0 + MARGEN * 2 + ARRIBA;
+
+  // Dirección preferida de cada tema: hacia las unidades donde tiene temas afines.
+  const indice = new Map(a.unidades.map((u, i) => [u.nombre, i]));
+  const hacia = new Map<string, Punto>();
+  for (const r of relaciones) {
+    const ia = indice.get(unidadDe(r.a));
+    const ib = indice.get(unidadDe(r.b));
+    if (ia === undefined || ib === undefined || ia === ib || !r.a.includes(SEP) || !r.b.includes(SEP)) continue;
+    for (const [clave, de, a2] of [
+      [temaDe(r.a), ia, ib],
+      [temaDe(r.b), ib, ia],
+    ] as const) {
+      const v = hacia.get(clave) ?? { x: 0, y: 0 };
+      const dx = centros[a2].x - centros[de].x;
+      const dy = centros[a2].y - centros[de].y;
+      const d = Math.hypot(dx, dy) || 1;
+      hacia.set(clave, { x: v.x + dx / d, y: v.y + dy / d });
+    }
+  }
+
   const grupos: Agrupamiento[] = [];
   const posiciones: Record<string, Punto> = {};
   a.unidades.forEach((u, i) => {
     const { x, y } = centros[i];
     grupos.push({ clave: claveUnidad(u.nombre), nombre: u.nombre, unidad: i, x, y, r: radios[i] });
     posiciones[claveUnidad(u.nombre)] = { x, y };
-    anillos(u.temas.length, x, y, radios[i] * 0.62, -Math.PI / 2 + i).forEach((p, j) => {
-      posiciones[claveTema(u.nombre, u.temas[j].nombre)] = p;
+    const lugares = anillos(u.temas.length, x, y, radios[i] * (u.temas.length > 7 ? 0.72 : 0.64));
+    const libres = lugares.map((_, k) => k);
+    const asignado = new Array<number>(u.temas.length).fill(-1);
+    // Primero los temas con más afines afuera: cada uno toma el lugar que más mira hacia ellos.
+    const conDireccion = u.temas
+      .map((t, j) => ({ j, v: hacia.get(claveTema(u.nombre, t.nombre)) }))
+      .filter((t): t is { j: number; v: Punto } => Boolean(t.v && Math.hypot(t.v.x, t.v.y) > 0.01))
+      .sort((p, q) => Math.hypot(q.v.x, q.v.y) - Math.hypot(p.v.x, p.v.y));
+    for (const { j, v } of conDireccion) {
+      let mejor = -1;
+      let valor = -Infinity;
+      for (const k of libres) {
+        const dx = lugares[k].x - x;
+        const dy = lugares[k].y - y;
+        const val = (dx * v.x + dy * v.y) / ((Math.hypot(dx, dy) || 1) * Math.hypot(v.x, v.y)) + Math.hypot(dx, dy) / radios[i];
+        if (val > valor) {
+          valor = val;
+          mejor = k;
+        }
+      }
+      asignado[j] = mejor;
+      libres.splice(libres.indexOf(mejor), 1);
+    }
+    u.temas.forEach((t, j) => {
+      if (asignado[j] < 0) asignado[j] = libres.shift()!;
+      posiciones[claveTema(u.nombre, t.nombre)] = lugares[asignado[j]];
     });
   });
   return { ancho: Math.max(ancho, 300), alto: Math.max(alto, 300), grupos, posiciones };
+}
+
+/** Separa los círculos que se enciman (con un espacio mínimo entre ellos). */
+function separar(pos: Punto[], radios: number[], espacio: number) {
+  for (let vuelta = 0; vuelta < 4; vuelta++)
+    for (let i = 0; i < pos.length; i++)
+      for (let k = i + 1; k < pos.length; k++) {
+        const dx = pos[k].x - pos[i].x;
+        const dy = pos[k].y - pos[i].y;
+        const d = Math.hypot(dx, dy);
+        const minimo = radios[i] + radios[k] + espacio;
+        if (d >= minimo) continue;
+        // Si coinciden, se separan en una dirección fija (resultado estable).
+        const [ux, uy] = d > 0.001 ? [dx / d, dy / d] : [Math.cos(i + k), Math.sin(i + k)];
+        const falta = (minimo - d) / 2;
+        pos[i].x -= ux * falta;
+        pos[i].y -= uy * falta;
+        pos[k].x += ux * falta;
+        pos[k].y += uy * falta;
+      }
 }
 
 /** Segunda capa: una unidad con sus temas en círculo y los subtemas alrededor de cada tema. */
@@ -293,6 +459,135 @@ export function acomodoUnidad(a: Pick<Asignatura, "unidades">, unidad: number): 
     });
   });
   return { ancho: lado, alto: lado, grupos, posiciones };
+}
+
+export interface UnidadAfin extends Agrupamiento {
+  /** Temas de esa unidad que se relacionan con la unidad abierta (o la unidad misma si es completa). */
+  nodos: string[];
+  /** Relaciones con la unidad abierta (para ordenar: las más relacionadas, más cerca). */
+  peso: number;
+}
+
+export interface AcomodoConAfines extends Acomodo {
+  afines: UnidadAfin[];
+  /** Líneas de un tema (o subtema) de la unidad abierta a un tema de otra unidad. */
+  enlaces: { a: string; b: string; motivo?: string }[];
+}
+
+/**
+ * Segunda capa con las unidades afines alrededor: cada unidad relacionada es un agrupamiento pequeño
+ * con sus temas afines, del lado donde están los temas con los que se relaciona. Las que tienen más
+ * relaciones quedan más cerca.
+ */
+export function acomodoUnidadConAfines(a: Pick<Asignatura, "unidades">, unidad: number, relaciones: RelacionTemario[], max = 8): AcomodoConAfines {
+  const base = acomodoUnidad(a, unidad);
+  const u = a.unidades[unidad];
+  if (!u) return { ...base, afines: [], enlaces: [] };
+  const indice = new Map(a.unidades.map((x, i) => [x.nombre, i]));
+  const c = base.ancho / 2;
+  const posiciones: Record<string, Punto> = { ...base.posiciones, [claveUnidad(u.nombre)]: { x: c, y: c } };
+  // Radio que ocupa la unidad abierta (hasta el nodo más lejano).
+  const R = Math.max(80, ...base.grupos.map((g) => Math.hypot(g.x - c, g.y - c) + g.r), ...Object.values(base.posiciones).map((p) => Math.hypot(p.x - c, p.y - c) + 20)) + 10;
+
+  const porUnidad = new Map<number, { nodos: string[]; peso: number; dx: number; dy: number }>();
+  const enlaces: AcomodoConAfines["enlaces"] = [];
+  for (const r of relaciones) {
+    const enA = unidadDe(r.a) === u.nombre;
+    const enB = unidadDe(r.b) === u.nombre;
+    if (enA === enB) continue;
+    const propio = enA ? r.a : r.b;
+    const ajenoCrudo = enA ? r.b : r.a;
+    const otra = indice.get(unidadDe(ajenoCrudo));
+    if (otra === undefined) continue;
+    const ajeno = ajenoCrudo.includes(SEP) ? temaDe(ajenoCrudo) : ajenoCrudo;
+    const g = porUnidad.get(otra) ?? { nodos: [], peso: 0, dx: 0, dy: 0 };
+    porUnidad.set(otra, g);
+    g.peso++;
+    if (!g.nodos.includes(ajeno)) g.nodos.push(ajeno);
+    const p = posiciones[propio];
+    if (p && (p.x !== c || p.y !== c)) {
+      const d = Math.hypot(p.x - c, p.y - c) || 1;
+      g.dx += (p.x - c) / d;
+      g.dy += (p.y - c) / d;
+    }
+    enlaces.push({ a: propio, b: ajeno, motivo: r.motivo });
+  }
+  const elegidas = [...porUnidad.entries()].sort((x, y) => y[1].peso - x[1].peso || x[0] - y[0]).slice(0, max);
+  // Ángulo preferido de cada una; si no hay dirección (relación con toda la unidad), se reparten.
+  const items = elegidas.map(([otra, g], k) => {
+    const nodos = g.nodos.slice(0, 6);
+    const r = 46 + 20 * Math.sqrt(nodos.length);
+    const ang = Math.hypot(g.dx, g.dy) > 0.01 ? Math.atan2(g.dy, g.dx) : -Math.PI / 2 + (2 * Math.PI * k) / Math.max(1, elegidas.length);
+    return { otra, nodos, peso: g.peso, r, ang, dist: R + r + 30 + k * 18 };
+  });
+  // Posición preferida de cada una; luego se separan entre sí y de la unidad abierta, sin alejarse
+  // de más de su lugar preferido.
+  const pref = items.map((it) => ({ x: c + it.dist * Math.cos(it.ang), y: c + it.dist * Math.sin(it.ang) }));
+  const pos = pref.map((p) => ({ ...p }));
+  for (let vuelta = 0; vuelta < 260; vuelta++) {
+    // Las últimas vueltas solo separan.
+    if (vuelta < 200)
+      pos.forEach((p, k) => {
+        p.x += (pref[k].x - p.x) * 0.05;
+        p.y += (pref[k].y - p.y) * 0.05;
+      });
+    for (let k = 0; k < items.length; k++) {
+      for (let m = k + 1; m < items.length; m++) {
+        const dx = pos[m].x - pos[k].x;
+        const dy = pos[m].y - pos[k].y;
+        const d = Math.hypot(dx, dy);
+        const minimo = items[k].r + items[m].r + 50;
+        if (d >= minimo) continue;
+        const [ux, uy] = d > 0.001 ? [dx / d, dy / d] : [Math.cos(k + m), Math.sin(k + m)];
+        const falta = (minimo - d) / 2;
+        pos[k].x -= ux * falta;
+        pos[k].y -= uy * falta;
+        pos[m].x += ux * falta;
+        pos[m].y += uy * falta;
+      }
+      // Fuera de la unidad abierta.
+      const dx = pos[k].x - c;
+      const dy = pos[k].y - c;
+      const d = Math.hypot(dx, dy) || 1;
+      const minimo = R + items[k].r + 30;
+      if (d < minimo) {
+        pos[k].x = c + (dx / d) * minimo;
+        pos[k].y = c + (dy / d) * minimo;
+      }
+    }
+  }
+  items.forEach((it, k) => {
+    it.ang = Math.atan2(pos[k].y - c, pos[k].x - c);
+    it.dist = Math.hypot(pos[k].x - c, pos[k].y - c);
+  });
+  const afines: UnidadAfin[] = items
+    .sort((x, y) => y.peso - x.peso)
+    .map((it) => {
+      const x = c + it.dist * Math.cos(it.ang);
+      const y = c + it.dist * Math.sin(it.ang);
+      const temas = it.nodos.filter((n) => n.includes(SEP));
+      anillos(temas.length, x, y, it.r * 0.55, it.ang + Math.PI).forEach((p, j) => (posiciones[temas[j]] = p));
+      for (const n of it.nodos) if (!n.includes(SEP)) posiciones[n] = { x, y };
+      const otra = a.unidades[it.otra];
+      return { clave: claveUnidad(otra.nombre), nombre: otra.nombre, unidad: it.otra, x, y, r: it.r, nodos: it.nodos, peso: it.peso };
+    });
+  const visibles = new Set(afines.flatMap((g) => g.nodos));
+  // Lienzo que abarca todo, con lugar para los nombres.
+  const cajas = [{ x: c, y: c, r: Math.max(R, c - 10) }, ...afines.map((g) => ({ x: g.x, y: g.y - 14, r: g.r + 30 }))];
+  const x0 = Math.min(...cajas.map((b) => b.x - b.r));
+  const y0 = Math.min(...cajas.map((b) => b.y - b.r));
+  const x1 = Math.max(...cajas.map((b) => b.x + b.r));
+  const y1 = Math.max(...cajas.map((b) => b.y + b.r));
+  const mover = (p: Punto) => ({ x: p.x - x0, y: p.y - y0 });
+  for (const k of Object.keys(posiciones)) posiciones[k] = mover(posiciones[k]);
+  return {
+    ancho: x1 - x0,
+    alto: y1 - y0,
+    grupos: base.grupos.map((g) => ({ ...g, ...mover(g) })),
+    posiciones,
+    afines: afines.map((g) => ({ ...g, ...mover(g) })),
+    enlaces: enlaces.filter((e) => visibles.has(e.b) && posiciones[e.a]),
+  };
 }
 
 /** Colores de las unidades (relleno claro del agrupamiento y color del nodo). */
