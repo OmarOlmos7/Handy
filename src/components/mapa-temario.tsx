@@ -59,6 +59,7 @@ export function MapaTemario({
   const [rutaGuardada, setRutaGuardada] = useState(JSON.stringify(rutaInicial));
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null);
   const [ocupado, iniciar] = useTransition();
+  const [instrucciones, setInstrucciones] = useState("");
 
   const general = useMemo(() => acomodoGeneral(asignatura, relaciones), [asignatura, relaciones]);
   // Unidades relacionadas por completo: se unen de centro a centro, sin las líneas de cada tema.
@@ -163,7 +164,8 @@ export function MapaTemario({
   function relacionar() {
     iniciar(async () => {
       try {
-        const r = await detectarRelaciones(asignatura.id);
+        const r = await detectarRelaciones(asignatura.id, instrucciones);
+        if ("ok" in r) setInstrucciones("");
         setAviso("ok" in r ? { ok: true, texto: formato(tm.relacionesListas, { n: r.n }) } : { ok: false, texto: r.error === "sinIA" ? tm.sinIA : r.error === "noEncontrada" || r.error === "fallaIA" ? tm.noSeRelaciono : r.error });
       } catch {
         setAviso({ ok: false, texto: tm.noSeRelaciono });
@@ -216,6 +218,31 @@ export function MapaTemario({
           </button>
         )}
       </div>
+      {/* Instrucciones para la IA: mejora las relaciones actuales */}
+      {modo === "profesor" && (
+        <form
+          className="flex flex-col gap-2 sm:flex-row"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (instrucciones.trim()) relacionar();
+          }}
+        >
+          <label htmlFor="instrucciones-mapa" className="sr-only">
+            {tm.instrucciones}
+          </label>
+          <input
+            id="instrucciones-mapa"
+            value={instrucciones}
+            onChange={(e) => setInstrucciones(e.target.value)}
+            maxLength={800}
+            placeholder={tm.instruccionesEjemplo}
+            className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-tinta-500 focus:outline-none focus:ring-2 focus:ring-tinta-200"
+          />
+          <button type="submit" disabled={ocupado || !instrucciones.trim()} className="rounded-lg bg-tinta-600 px-4 py-2 text-sm font-semibold text-white hover:bg-tinta-700 disabled:opacity-50">
+            {ocupado ? tm.relacionando : tm.sugerirRelaciones}
+          </button>
+        </form>
+      )}
 
       <p className="text-sm text-slate-500">{capa === null ? tm.ayudaGeneral : tm.ayudaUnidad}</p>
       {aviso && <p className={`text-sm font-medium ${aviso.ok ? "text-acierto" : "text-error"}`}>{aviso.texto}</p>}
@@ -227,7 +254,7 @@ export function MapaTemario({
               {unidadCapa.nombre}
             </p>
           )}
-          <svg viewBox={`0 0 ${acomodo.ancho} ${acomodo.alto}`} className="block h-auto w-full select-none" role="img" aria-label={tm.titulo}>
+          <svg viewBox={`0 0 ${acomodo.ancho} ${acomodo.alto}`} className="mx-auto block h-auto max-h-[82vh] w-full select-none" role="img" aria-label={tm.titulo}>
             {/* Agrupamientos: unidades (capa general) o temas con sus subtemas (capa de unidad) */}
             {acomodo.grupos.map((g) => {
               const c = colorUnidad(g.unidad);
@@ -318,10 +345,11 @@ export function MapaTemario({
                   y1={a.y}
                   x2={b.x}
                   y2={b.y}
-                  stroke={colorUnidad(otro.unidad).borde}
-                  strokeWidth={resaltada ? 2.4 : 1.3}
-                  strokeOpacity={resaltada ? 1 : 0.75}
-                  strokeDasharray="3 4"
+                  stroke={e.completa ? "#1e293b" : colorUnidad(otro.unidad).borde}
+                  strokeWidth={e.completa ? (resaltada ? 7 : 5) : resaltada ? 2.4 : 1.3}
+                  strokeOpacity={e.completa ? (resaltada ? 0.9 : 0.55) : resaltada ? 1 : 0.75}
+                  strokeLinecap="round"
+                  strokeDasharray={e.completa ? undefined : "3 4"}
                 >
                   {e.motivo && <title>{e.motivo}</title>}
                 </line>
@@ -344,7 +372,7 @@ export function MapaTemario({
                   <circle cx={g.x} cy={g.y} r={g.r} fill={c.fondo} fillOpacity={0.7} stroke={c.borde} strokeWidth={1.5} className="cursor-pointer" onClick={() => irA(g.clave)}>
                     <title>{`${g.nombre} — ${tm.abrirUnidad}`}</title>
                   </circle>
-                  <text x={g.x} y={g.y - g.r - 8} textAnchor="middle" className="cursor-pointer fill-slate-700 text-[13px] font-semibold" onClick={() => irA(g.clave)}>
+                  <text x={g.x} y={g.y - g.r - 8} textAnchor="middle" className="cursor-pointer fill-slate-700 text-[17px] font-semibold" onClick={() => irA(g.clave)}>
                     {corto(g.nombre, 24)}
                   </text>
                   {g.nodos.map((clave) => {
@@ -355,13 +383,18 @@ export function MapaTemario({
                     return (
                       <g key={clave} className="cursor-pointer" onClick={() => elegir(clave)}>
                         <title>{n.nombre}</title>
-                        <circle cx={p.x} cy={p.y} r={n.tipo === "unidad" ? 14 : 9} fill={c.nodo} stroke="#fff" strokeWidth={activo ? 3 : 1.5} />
+                        <circle cx={p.x} cy={p.y} r={n.tipo === "unidad" ? 17 : 9} fill={c.nodo} stroke="#fff" strokeWidth={activo ? 3 : n.tipo === "unidad" ? 2.5 : 1.5} />
+                        {n.tipo === "unidad" && (
+                          <text x={p.x} y={p.y + 5} textAnchor="middle" className="pointer-events-none fill-white text-[13px] font-bold">
+                            {formato(tm.unidadCorta, { n: n.unidad + 1 })}
+                          </text>
+                        )}
                         {n.tipo !== "unidad" && (
                           <text
                             x={p.x}
-                            y={p.y + 21}
+                            y={p.y + 24}
                             textAnchor="middle"
-                            className="pointer-events-none fill-slate-600 text-[10px]"
+                            className="pointer-events-none fill-slate-700 text-[13px]"
                             style={{ paintOrder: "stroke", stroke: "rgba(255,255,255,0.85)", strokeWidth: 3 }}
                           >
                             {corto(n.nombre, 20)}
@@ -419,7 +452,7 @@ export function MapaTemario({
                     x={p.x}
                     y={capa !== null && n.tipo === "tema" && p.y > (acomodo.posiciones[unidadCapa?.nombre ?? ""]?.y ?? acomodo.alto / 2) + 1 ? p.y - r - 7 : p.y + r + 14}
                     textAnchor="middle"
-                    className={`pointer-events-none ${n.tipo === "tema" ? "fill-slate-800 text-[11px] font-semibold" : "fill-slate-600 text-[10px]"}`}
+                    className={`pointer-events-none ${n.tipo === "tema" ? `fill-slate-800 font-semibold ${capa === null ? "text-[11px]" : "text-[15px]"}` : "fill-slate-600 text-[12px]"}`}
                     style={{ paintOrder: "stroke", stroke: "rgba(255,255,255,0.85)", strokeWidth: 3 }}
                   >
                     {corto(n.nombre, capa === null ? 18 : n.tipo === "tema" ? 28 : 24)}
@@ -467,7 +500,7 @@ export function MapaTemario({
               </svg>
               {tm.afines}
             </span>
-            {completas.length > 0 && capa === null && (
+            {(capa === null ? completas.length > 0 : Boolean(deUnidad?.enlaces.some((e) => e.completa))) && (
               <span className="flex items-center gap-1.5">
                 <svg width="22" height="8" aria-hidden>
                   <line x1="2" y1="4" x2="20" y2="4" stroke="#1e293b" strokeOpacity="0.6" strokeWidth="5" strokeLinecap="round" />

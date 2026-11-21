@@ -1123,6 +1123,9 @@ const profesor: Diccionario["profesor"] = {
     ayuda: "Used to generate, solve and grade this activity. More effort checks more carefully and uses more tokens.",
   },
   mapa: {
+    instrucciones: "Instructions for the AI",
+    instruccionesEjemplo: "E.g.: relate unit 4 with vectors and measurements; remove relations with presentations",
+    sugerirRelaciones: "Apply and suggest relations",
     temasDeUnidad: "Topics in this unit",
     avance: "Progress",
     relacionUnidades: "Relation with the whole unit",

@@ -1123,6 +1123,9 @@ const profesor: Diccionario["profesor"] = {
     ayuda: "この課題の作成、解答、採点に使います。推論を深くするほど丁寧に確認し、トークンを多く消費します。",
   },
   mapa: {
+    instrucciones: "AIへの指示",
+    instruccionesEjemplo: "例：単元4をベクトルと測定に関連づけ、発表との関連は外す",
+    sugerirRelaciones: "適用して関連を提案",
     temasDeUnidad: "単元のトピック",
     avance: "進捗",
     relacionUnidades: "単元全体との関連",

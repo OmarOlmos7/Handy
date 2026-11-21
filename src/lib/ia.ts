@@ -1260,12 +1260,20 @@ Encuentra los temas y subtemas afines: los que se necesitan uno al otro (prerreq
 - Si una unidad es herramienta de todas las demás (como mediciones o vectores en física), relaciónala con cada una de esas unidades.
 - Da prioridad a las relaciones entre unidades distintas; dentro de una misma unidad solo las que no sean obvias por el orden.
 - No relaciones un subtema con su propio tema.
+- Si recibes instrucciones del profesor, síguelas aunque cambien estas reglas (por ejemplo, más relaciones o solo ciertas unidades), siempre que se refieran a relacionar el temario.
 - Devuelve de 8 a 40 relaciones, las más útiles para que el alumno vea cómo se conecta el temario.
 - a y b: los códigos exactamente como aparecen. motivo: de 3 a 8 palabras (por ejemplo "la aceleración se usa en la segunda ley").`;
 
 /** Propone temas y subtemas afines del temario. Solo recibe nombres de temas (sin datos de alumnos). */
-export async function relacionarTemario(unidades: { nombre: string; temas: { nombre: string; subtemas: string[] }[] }[], uso: UsoIA) {
-  const codigos = new Map<string, { u: number; t?: number; s?: number }>();
+export type PosTemario = { u: number; t?: number; s?: number };
+
+export async function relacionarTemario(
+  unidades: { nombre: string; temas: { nombre: string; subtemas: string[] }[] }[],
+  uso: UsoIA,
+  /** Instrucciones del profesor y relaciones actuales, para mejorarlas en lugar de empezar de cero. */
+  mejora?: { instrucciones: string; actuales: { a: PosTemario; b: PosTemario; motivo?: string }[] },
+) {
+  const codigos = new Map<string, PosTemario>();
   const lineas: string[] = [];
   unidades.forEach((u, i) => {
     codigos.set(`${i + 1}`, { u: i });
@@ -1281,6 +1289,17 @@ export async function relacionarTemario(unidades: { nombre: string; temas: { nom
       });
     });
   });
+  const codigo = (p: PosTemario) => [p.u + 1, p.t === undefined ? undefined : p.t + 1, p.s === undefined ? undefined : p.s + 1].filter((x) => x !== undefined).join(".");
+  if (mejora?.instrucciones.trim()) {
+    lineas.push("", "Relaciones actuales:");
+    for (const x of mejora.actuales) lineas.push(`- ${codigo(x.a)} ↔ ${codigo(x.b)}${x.motivo ? ` (${x.motivo})` : ""}`);
+    if (!mejora.actuales.length) lineas.push("(ninguna)");
+    lineas.push(
+      "",
+      "Instrucciones del profesor (aplícalas sobre las relaciones actuales y devuelve la lista completa ya mejorada: conserva las que sigan siendo útiles, quita las que pida quitar y agrega las nuevas):",
+      `<instrucciones>${mejora.instrucciones.trim().slice(0, 800)}</instrucciones>`,
+    );
+  }
   const r = await pedir({
     tipo: "relaciones",
     uso: { ...uso, precision: uso.precision ?? { motor: "medio", esfuerzo: "bajo" } },
@@ -1290,7 +1309,7 @@ export async function relacionarTemario(unidades: { nombre: string; temas: { nom
   });
   return r.relaciones
     .map((x) => ({ a: codigos.get(x.a.trim()), b: codigos.get(x.b.trim()), motivo: x.motivo.trim().slice(0, 120) }))
-    .filter((x): x is { a: { u: number; t?: number; s?: number }; b: { u: number; t?: number; s?: number }; motivo: string } => Boolean(x.a && x.b));
+    .filter((x): x is { a: PosTemario; b: PosTemario; motivo: string } => Boolean(x.a && x.b));
 }
 
 // ---------- Videos y lecturas con enlaces reales (búsqueda web) ----------

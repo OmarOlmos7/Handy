@@ -1121,6 +1121,9 @@ const profesor = {
     ayuda: "Se usa para generar, resolver y evaluar esta actividad. Más esfuerzo revisa con más cuidado y consume más tokens.",
   },
   mapa: {
+    instrucciones: "Instrucciones para la IA",
+    instruccionesEjemplo: "Ej.: relaciona la unidad 4 con vectores y con mediciones; quita las relaciones con presentaciones",
+    sugerirRelaciones: "Aplicar y sugerir relaciones",
     temasDeUnidad: "Temas de la unidad",
     avance: "Avance",
     relacionUnidades: "Relación con toda la unidad",
