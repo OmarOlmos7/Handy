@@ -280,10 +280,15 @@ function anillos(n: number, cx: number, cy: number, r: number, giro = -Math.PI /
  * y el conjunto se extiende a lo ancho. Dentro de cada unidad, los temas con afines en otra unidad
  * miran hacia ella. Siempre da el mismo resultado para el mismo temario.
  */
-export function acomodoGeneral(a: Pick<Asignatura, "unidades">, relaciones: RelacionTemario[] = []): Acomodo {
+export function acomodoGeneral(
+  a: Pick<Asignatura, "unidades">,
+  relaciones: RelacionTemario[] = [],
+  /** Espacio extra entre unidades y arriba de cada una (p. ej. para el indicador de avance). */
+  opciones: { espacio?: number; arriba?: number } = {},
+): Acomodo {
   const n = a.unidades.length;
   const radios = a.unidades.map((u) => 80 + 26 * Math.sqrt(Math.max(1, u.temas.length)) + 6 * Math.max(0, u.temas.length - 7));
-  const ESPACIO = 70; // entre círculos, para los nombres de las unidades
+  const ESPACIO = opciones.espacio ?? 70; // entre círculos, para los nombres de las unidades
   const porUnidades = relacionesDeUnidades(a, relaciones);
   const peso = (x: RelacionUnidades) => x.n + (x.completa ? 4 : 0);
 
@@ -350,7 +355,7 @@ export function acomodoGeneral(a: Pick<Asignatura, "unidades">, relaciones: Rela
     c = caja();
   }
   const MARGEN = 30;
-  const ARRIBA = 34; // nombre de la unidad
+  const ARRIBA = opciones.arriba ?? 34; // nombre de la unidad
   const centros = pos.map((p) => ({ x: p.x - c.x0 + MARGEN, y: p.y - c.y0 + MARGEN + ARRIBA }));
   const ancho = c.x1 - c.x0 + MARGEN * 2;
   const alto = c.y1 - c.y0 + MARGEN * 2 + ARRIBA;
@@ -631,6 +636,16 @@ export const COLORES_UNIDAD = [
 export const colorUnidad = (i: number) => COLORES_UNIDAD[i % COLORES_UNIDAD.length];
 
 /** Color del avance: verde (dominado), ámbar (en proceso), rojo (por reforzar) o gris (sin actividades). */
+/** Color del avance: rojo hasta 50 %, amarillo hasta 79 %, verde hasta 99 % y azul al 100 %. */
+export function colorProgreso(p: number | null | undefined) {
+  if (p === null || p === undefined) return "#94a3b8";
+  const r = Math.round(p);
+  if (r >= 100) return "#2563eb";
+  if (r >= 80) return "#16a34a";
+  if (r >= 51) return "#eab308";
+  return "#dc2626";
+}
+
 export function colorAvance(p: number | null | undefined) {
   if (p === null || p === undefined) return "#94a3b8";
   if (p >= 80) return "#16a34a";

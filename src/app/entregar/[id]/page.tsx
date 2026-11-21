@@ -16,6 +16,7 @@ import { formato } from "@/lib/i18n/idiomas";
 import { actividadDeVersion, letrasVersiones, versionValida } from "@/lib/versiones";
 import { esPlataforma, reactivosParaAlumno, versionDeAlumno } from "@/lib/plataforma";
 import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
+import { CronometroActividad } from "@/components/cronometro-actividad";
 
 // Página pública del QR. El alumno entra con su correo y clave de acceso (o crea su cuenta
 // aquí la primera vez) y la entrega queda en el curso del profesor dueño de la actividad.
@@ -150,6 +151,7 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
           </p>
         )}
         <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(suya)} instrucciones={suya.instruccionesAlumno} version={actividad.versiones?.length ? (version ?? "A") : undefined} />
+        {matricula && <CronometroActividad actividadId={id} />}
       </div>
     );
   }

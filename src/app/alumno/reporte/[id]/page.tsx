@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { CronometroActividad } from "@/components/cronometro-actividad";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { ReporteAlumno } from "@/components/reporte-alumno";
 import { IconoGrafica } from "@/components/iconos";
@@ -41,6 +42,7 @@ export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/rep
   }
   return (
     <>
+      <CronometroActividad actividadId={id} />
       <Encabezado
         migas={migas}
         titulo={tr.titulo}
