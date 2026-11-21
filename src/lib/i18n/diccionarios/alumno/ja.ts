@@ -21,6 +21,14 @@ const alumno: Diccionario["alumno"] = {
     evaluando: "採点中",
     entregarFotos: "写真を提出",
     revisada: "添削済み",
+    recepcion: "受付：{desde}〜{hasta}",
+    recepcionDesde: "受付開始：{desde}",
+    recepcionHasta: "受付締め切り：{hasta}",
+    abierta: "受付中",
+    abre: "{f}に受付開始",
+    cerrada: "受付終了",
+    enviado: "提出済み",
+    solucionRetro: "解答とフィードバック",
   },
   campos: {
     nombre: "氏名",
@@ -45,6 +53,9 @@ const alumno: Diccionario["alumno"] = {
     suspendidas: "先生がこの課題の提出を停止しています。再開の時期は先生に確認してください。",
     entregasComo: "提出者：",
     noEresTu: "本人ではありませんか？ログアウト",
+    proximo: "この課題の提出受付は{f}に始まります（メキシコシティ時間）。",
+    cerrado: "この課題の提出受付は{f}に終了しました。提出が必要な場合は先生に相談してください。",
+    hasta: "{f}まで提出を受け付けます（メキシコシティ時間）。",
   },
   formulario: {
     errorEnviar: "送信中にエラーが発生しました",
@@ -180,6 +191,8 @@ const alumno: Diccionario["alumno"] = {
     sinEvaluadas: "採点済みの提出はまだありません",
     sinHoja: "この課題にはスキャンした用紙がありません",
     noAutorizado: "権限がありません",
+    envioProximo: "この課題の提出受付は{f}に始まります（メキシコシティ時間）。",
+    envioCerrado: "この課題の提出受付は{f}に終了しました。提出が必要な場合は先生に相談してください。",
   },
 };
 

@@ -21,6 +21,14 @@ const alumno: Diccionario["alumno"] = {
     evaluando: "Corrigindo",
     entregarFotos: "Entregar fotos",
     revisada: "Corrigida",
+    recepcion: "Recebimento: {desde} a {hasta}",
+    recepcionDesde: "Recebimento a partir de {desde}",
+    recepcionHasta: "Recebimento até {hasta}",
+    abierta: "Recebimento aberto",
+    abre: "Abre em {f}",
+    cerrada: "Envio encerrado",
+    enviado: "Enviado",
+    solucionRetro: "Solução e feedback",
   },
   campos: {
     nombre: "Nome completo",
@@ -45,6 +53,9 @@ const alumno: Diccionario["alumno"] = {
     suspendidas: "O professor suspendeu as entregas desta atividade. Pergunte quando elas serão reabertas.",
     entregasComo: "Você está entregando como",
     noEresTu: "Não é você? Sair",
+    proximo: "O recebimento de entregas desta atividade abre em {f} (horário da Cidade do México).",
+    cerrado: "O recebimento de entregas desta atividade encerrou em {f}. Se precisar entregar, fale com seu professor.",
+    hasta: "Recebe entregas até {f} (horário da Cidade do México).",
   },
   formulario: {
     errorEnviar: "Erro ao enviar",
@@ -180,6 +191,8 @@ const alumno: Diccionario["alumno"] = {
     sinEvaluadas: "Ainda não há entregas corrigidas",
     sinHoja: "Esta atividade não tem folha digitalizada",
     noAutorizado: "Não autorizado",
+    envioProximo: "O recebimento de entregas desta atividade abre em {f} (horário da Cidade do México).",
+    envioCerrado: "O recebimento de entregas desta atividade encerrou em {f}. Se precisar entregar, fale com seu professor.",
   },
 };
 

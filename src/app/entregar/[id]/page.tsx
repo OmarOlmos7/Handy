@@ -7,6 +7,9 @@ import { esDelProfesor } from "@/lib/cuentas";
 import { textos } from "@/lib/i18n/servidor";
 import { datosResponsable } from "@/lib/legal/documentos";
 import { primeraEntrega } from "@/lib/reenvio";
+import { aperturaEnvio, estadoEnvio } from "@/lib/periodo";
+import { fechaHoraLarga } from "@/lib/resultados";
+import { formato } from "@/lib/i18n/idiomas";
 import { letrasVersiones, versionValida } from "@/lib/versiones";
 import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 
@@ -28,7 +31,8 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
   const matricula = matriculaEnCurso(alumno, grupo.id);
   const entrega = matricula ? db.entregas.find((e) => e.actividadId === id && e.matricula === matricula && e.estado !== "sin_entregar") : undefined;
   const primera = entrega && primeraEntrega(entrega);
-  const { t } = await textos();
+  const { t, locale } = await textos();
+  const recepcion = estadoEnvio(actividad);
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
       <Logo grande />
@@ -51,8 +55,21 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
       )}
       {actividad.entregasSuspendidas && !comoProfesor ? (
         <p className="mt-5 rounded-xl bg-error-suave px-4 py-4 text-sm font-medium text-error">{t.alumno.entregar.suspendidas}</p>
+      ) : recepcion === "proximo" && !comoProfesor ? (
+        <p className="mt-5 rounded-xl bg-tinta-50 px-4 py-4 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200">
+          {formato(t.alumno.entregar.proximo, { f: fechaHoraLarga(aperturaEnvio(actividad)!, locale) })}
+        </p>
+      ) : recepcion === "cerrado" && !comoProfesor ? (
+        <p className="mt-5 rounded-xl bg-error-suave px-4 py-4 text-sm font-medium text-error">
+          {formato(t.alumno.entregar.cerrado, { f: fechaHoraLarga(actividad.envioHasta!, locale) })}
+        </p>
       ) : (
         <div className="mt-5">
+          {actividad.envioHasta && (
+            <p className="mb-4 rounded-lg bg-tinta-50 px-3 py-2 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200">
+              {formato(t.alumno.entregar.hasta, { f: fechaHoraLarga(actividad.envioHasta, locale) })}
+            </p>
+          )}
           <EntregarForm
             actividadId={id}
             titulo={actividad.titulo}

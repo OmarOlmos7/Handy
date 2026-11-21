@@ -20,6 +20,14 @@ const alumno: Diccionario["alumno"] = {
     evaluando: "批改中",
     entregarFotos: "提交照片",
     revisada: "已批改",
+    recepcion: "提交时间：{desde} 至 {hasta}",
+    recepcionDesde: "提交开始：{desde}",
+    recepcionHasta: "提交截止：{hasta}",
+    abierta: "正在接收提交",
+    abre: "{f} 开始提交",
+    cerrada: "提交已截止",
+    enviado: "已提交",
+    solucionRetro: "解答与反馈",
   },
   campos: {
     nombre: "姓名",
@@ -44,6 +52,9 @@ const alumno: Diccionario["alumno"] = {
     suspendidas: "老师已暂停本作业的提交。请向老师询问何时重新开放。",
     entregasComo: "提交人：",
     noEresTu: "不是你？退出",
+    proximo: "本作业将于 {f} 开始接收提交（墨西哥城时间）。",
+    cerrado: "本作业已于 {f} 截止提交。如需提交，请联系老师。",
+    hasta: "接收提交至 {f}（墨西哥城时间）。",
   },
   formulario: {
     errorEnviar: "发送时出错",
@@ -177,6 +188,8 @@ const alumno: Diccionario["alumno"] = {
     sinEvaluadas: "还没有已批改的提交",
     sinHoja: "此作业没有扫描的作业纸",
     noAutorizado: "无权访问",
+    envioProximo: "本作业将于 {f} 开始接收提交（墨西哥城时间）。",
+    envioCerrado: "本作业已于 {f} 截止提交。如需提交，请联系老师。",
   },
 };
 

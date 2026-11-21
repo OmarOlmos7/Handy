@@ -21,6 +21,14 @@ const alumno = {
     evaluando: "Evaluando",
     entregarFotos: "Entregar fotos",
     revisada: "Revisada",
+    recepcion: "Recepción: {desde} a {hasta}",
+    recepcionDesde: "Recepción desde {desde}",
+    recepcionHasta: "Recepción hasta {hasta}",
+    abierta: "Recepción abierta",
+    abre: "Abre el {f}",
+    cerrada: "Envío cerrado",
+    enviado: "Enviado",
+    solucionRetro: "Solución y Retro",
   },
   campos: {
     nombre: "Nombre completo",
@@ -45,6 +53,9 @@ const alumno = {
     suspendidas: "El profesor suspendió las entregas de esta actividad. Pregúntale cuándo se vuelven a abrir.",
     entregasComo: "Entregas como",
     noEresTu: "¿No eres tú? Salir",
+    proximo: "La recepción de entregas de esta actividad abre el {f} (hora del centro de México).",
+    cerrado: "La recepción de entregas de esta actividad cerró el {f}. Si necesitas entregar, habla con tu profesor.",
+    hasta: "Recibe entregas hasta el {f} (hora del centro de México).",
   },
   formulario: {
     errorEnviar: "Error al enviar",
@@ -180,6 +191,8 @@ const alumno = {
     sinEvaluadas: "Aún no hay entregas evaluadas",
     sinHoja: "Esta actividad no tiene hoja escaneada",
     noAutorizado: "No autorizado",
+    envioProximo: "La recepción de entregas de esta actividad abre el {f} (hora del centro de México).",
+    envioCerrado: "La recepción de entregas de esta actividad cerró el {f}. Si necesitas entregar, habla con tu profesor.",
   },
 };
 

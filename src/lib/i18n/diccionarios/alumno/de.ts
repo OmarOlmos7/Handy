@@ -21,6 +21,14 @@ const alumno: Diccionario["alumno"] = {
     evaluando: "Wird bewertet",
     entregarFotos: "Fotos abgeben",
     revisada: "Korrigiert",
+    recepcion: "Abgabe: {desde} bis {hasta}",
+    recepcionDesde: "Abgabe ab {desde}",
+    recepcionHasta: "Abgabe bis {hasta}",
+    abierta: "Abgabe offen",
+    abre: "Öffnet am {f}",
+    cerrada: "Abgabe geschlossen",
+    enviado: "Abgegeben",
+    solucionRetro: "Lösung und Feedback",
   },
   campos: {
     nombre: "Vollständiger Name",
@@ -45,6 +53,9 @@ const alumno: Diccionario["alumno"] = {
     suspendidas: "Deine Lehrkraft hat die Abgaben für diese Aufgabe pausiert. Frag nach, wann sie wieder geöffnet werden.",
     entregasComo: "Du gibst ab als",
     noEresTu: "Nicht du? Abmelden",
+    proximo: "Die Abgabe für diese Aufgabe öffnet am {f} (Mexiko-Stadt-Zeit).",
+    cerrado: "Die Abgabe für diese Aufgabe wurde am {f} geschlossen. Wenn du noch abgeben musst, sprich mit deiner Lehrkraft.",
+    hasta: "Abgaben bis {f} (Mexiko-Stadt-Zeit).",
   },
   formulario: {
     errorEnviar: "Fehler beim Senden",
@@ -180,6 +191,8 @@ const alumno: Diccionario["alumno"] = {
     sinEvaluadas: "Noch keine bewerteten Abgaben",
     sinHoja: "Diese Aufgabe hat kein eingescanntes Blatt",
     noAutorizado: "Nicht berechtigt",
+    envioProximo: "Die Abgabe für diese Aufgabe öffnet am {f} (Mexiko-Stadt-Zeit).",
+    envioCerrado: "Die Abgabe für diese Aufgabe wurde am {f} geschlossen. Wenn du noch abgeben musst, sprich mit deiner Lehrkraft.",
   },
 };
 
