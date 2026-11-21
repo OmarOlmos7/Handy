@@ -34,6 +34,10 @@ export interface GrupoColumnas {
   /** Etiqueta tal como está en las actividades ("" si no tienen); con ella se busca su peso en el plan. */
   clave: string;
   columnas: Columna[];
+  /** Promedio de cada alumno en este tipo (escala del cuaderno); null si aún no tiene calificaciones del tipo. */
+  promedios: Record<string, number | null>;
+  /** Promedio del grupo en este tipo (escala del cuaderno). */
+  promedioGrupo: number | null;
 }
 
 export interface FilaCuaderno {
@@ -100,11 +104,26 @@ export function cuadernoCurso(grupo: Grupo, actividades: Actividad[], entregas: 
     };
   };
 
-  const grupos = agruparPorEtiqueta(porFecha).map(({ etiqueta, items }) => ({
-    etiqueta: etiqueta ?? sinEtiqueta,
-    clave: etiqueta ?? "",
-    columnas: items.map(columna),
-  }));
+  const grupos: GrupoColumnas[] = agruparPorEtiqueta(porFecha).map(({ etiqueta, items }) => {
+    // Promedio del tipo: las actividades del tipo que ya cuentan, llevadas a la escala del cuaderno.
+    const promedios: Record<string, number | null> = {};
+    for (const f of filas) {
+      const valores = items
+        .map((a) => f.celdas[a.id].valor)
+        .map((v, i) => (v === null ? null : (v / escalaDe(items[i])) * escala))
+        .filter((v): v is number => v !== null);
+      const p = prom(valores);
+      promedios[f.matricula] = p === null ? null : r1(p);
+    }
+    const pg = prom(Object.values(promedios).filter((v): v is number => v !== null));
+    return {
+      etiqueta: etiqueta ?? sinEtiqueta,
+      clave: etiqueta ?? "",
+      columnas: items.map(columna),
+      promedios,
+      promedioGrupo: pg === null ? null : r1(pg),
+    };
+  });
 
   const promedios = filas.map((f) => f.promedio).filter((v): v is number => v !== null);
   const pg = prom(promedios);

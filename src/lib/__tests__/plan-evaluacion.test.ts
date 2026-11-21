@@ -50,18 +50,35 @@ describe("plan de evaluación", () => {
     expect(errorPlan([{ etiqueta: "A", porcentaje: 90 }])).toBe("suma");
     expect(errorPlan([{ etiqueta: "A", porcentaje: 60 }, { etiqueta: "B", porcentaje: 40 }])).toBeUndefined();
   });
-  it("calcula la nota final con los porcentajes y reparte los tipos sin calificar", () => {
+  it("calcula el promedio de cada tipo y la nota final con los porcentajes del plan", () => {
     const acts = [act("t1", "Tarea"), act("t2", "Tarea"), act("ex", "Examen", 100), act("proy", "Proyecto")];
     const ents = [ent("t1", "A1", 10), ent("t2", "A1", 6), ent("ex", "A1", 5), ent("t1", "A2", 10)];
     const c = cuadernoCurso(grupo, acts, ents);
     const plan = { pesos: [{ etiqueta: "Tarea", porcentaje: 40 }, { etiqueta: "Examen", porcentaje: 40 }, { etiqueta: "Proyecto", porcentaje: 20 }], actualizadoEn: "" };
     const n = notaFinal(c, plan);
-    // El cuaderno va sobre 100 (hay un examen sobre 100). A1: tareas 80, examen 50 → (80·40 + 50·40) / 80 = 65.
-    expect(n.porAlumno.get("A1")).toBe(65);
-    // A2: tareas (100 + 0 de la no entregada) / 2 = 50; examen no entregado = 0 → 25. Proyecto aún sin calificar.
-    expect(n.porAlumno.get("A2")).toBe(25);
+    // El cuaderno va sobre 100 (hay un examen sobre 100). Promedio de cada tipo:
+    // A1: tareas (100 + 60) / 2 = 80, examen 50. A2: tareas (100 + 0 no entregada) / 2 = 50, examen 0 (no entregado).
+    expect(c.grupos.map((g) => [g.clave, g.promedios.A1, g.promedios.A2, g.promedioGrupo])).toEqual([
+      ["Examen", 50, 0, 25],
+      ["Proyecto", null, null, null],
+      ["Tarea", 80, 50, 65],
+    ]);
+    // Nota final = Σ promedio del tipo × % del plan. Proyecto aún sin calificar aporta 0.
+    // A1: 80·0.4 + 50·0.4 = 52. A2: 50·0.4 + 0·0.4 = 20.
+    expect(n.porAlumno.get("A1")).toBe(52);
+    expect(n.porAlumno.get("A2")).toBe(20);
     expect(n.ponderacionActual).toBe(80);
     expect(n.sinCalificar).toEqual(["Proyecto"]);
-    expect(n.promedioGrupo).toBe(45);
+    expect(n.promedioGrupo).toBe(36);
+  });
+
+  it("con un solo tipo calificado acumula solo su porcentaje", () => {
+    const c = cuadernoCurso(grupo, [act("t1", "Tarea")], [ent("t1", "A1", 6.5), ent("t1", "A2", 7.2)]);
+    const plan = { pesos: [{ etiqueta: "Tarea", porcentaje: 30 }, { etiqueta: "Examen", porcentaje: 50 }, { etiqueta: "Quiz", porcentaje: 20 }], actualizadoEn: "" };
+    const n = notaFinal(c, plan);
+    // 6.5 × 30 % ≈ 1.9-2.0 y 7.2 × 30 % ≈ 2.2: lo que ya lleva acumulado de la nota final.
+    expect(n.porAlumno.get("A1")).toBeCloseTo(1.95, 0);
+    expect(n.porAlumno.get("A2")).toBe(2.2);
+    expect(n.sinCalificar).toEqual(["Examen", "Quiz"]);
   });
 });

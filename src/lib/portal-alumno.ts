@@ -5,6 +5,7 @@ import { APROBATORIA, mediana } from "./analiticas";
 import { cuadernoCurso, type Celda, type Cuaderno } from "./cuaderno";
 import { calificacion, calificada, escalaDe } from "./estadisticas";
 import { conPuntaje } from "./modalidad";
+import { notaFinal, pesoDe } from "./plan-evaluacion";
 import { actividadVisible, estadoEnvio } from "./periodo";
 import { resultadosDisponibles } from "./resultados";
 import type { Actividad, Entrega, Escala, Grupo } from "./tipos";
@@ -65,10 +66,20 @@ export function resultadoVisible(actividad: Actividad, entrega: Entrega | undefi
 export interface CuadernoAlumno {
   escala: Escala;
   /** Columnas del cuaderno agrupadas por tipo, con el promedio del grupo solo si hay suficientes datos. */
-  grupos: { etiqueta: string; columnas: { id: string; titulo: string; fecha: string; escala: Escala; cuenta: boolean; promedioGrupo: number | null; celda: Celda }[] }[];
+  grupos: {
+    etiqueta: string;
+    /** Porcentaje del tipo en el plan de evaluación del curso (undefined si no hay plan o no está en él). */
+    peso?: number;
+    /** Promedio del alumno en el tipo y el del grupo (este solo con suficientes calificados). */
+    promedio: number | null;
+    promedioGrupo: number | null;
+    columnas: { id: string; titulo: string; fecha: string; escala: Escala; cuenta: boolean; promedioGrupo: number | null; celda: Celda }[];
+  }[];
   /** Promedio del alumno en la escala del cuaderno (lo no entregado cuenta como 0, igual que en el del profesor). */
   promedio: number | null;
   promedioGrupo: number | null;
+  /** Nota final según el plan de evaluación (solo si el curso tiene plan). */
+  final?: { nota: number | null; promedioGrupo: number | null; ponderacionActual: number; sinCalificar: string[] };
 }
 
 /**
@@ -92,10 +103,15 @@ export function cuadernoAlumno(
   const fila = c.filas.find((f) => f.matricula === matricula);
   const calificadasPorActividad = new Map(visibles.map((a) => [a.id, liberadas.filter((e) => e.actividadId === a.id && calificada(e)).length]));
   const comparable = c.filas.filter((f) => f.promedio !== null).length >= MINIMO_COMPARACION;
+  const plan = grupo.planEvaluacion;
+  const nf = plan ? notaFinal(c, plan) : undefined;
   return {
     escala: c.escala,
     grupos: c.grupos.map((g) => ({
       etiqueta: g.etiqueta,
+      peso: plan ? pesoDe(plan, g.clave) : undefined,
+      promedio: g.promedios[matricula] ?? null,
+      promedioGrupo: comparable ? g.promedioGrupo : null,
       columnas: g.columnas.map((col) => ({
         id: col.id,
         titulo: col.titulo,
@@ -108,6 +124,12 @@ export function cuadernoAlumno(
     })),
     promedio: fila?.promedio ?? null,
     promedioGrupo: comparable ? c.promedioGrupo : null,
+    final: nf && {
+      nota: nf.porAlumno.get(matricula) ?? null,
+      promedioGrupo: comparable ? nf.promedioGrupo : null,
+      ponderacionActual: nf.ponderacionActual,
+      sinCalificar: nf.sinCalificar,
+    },
   };
 }
 

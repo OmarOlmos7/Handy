@@ -859,7 +859,7 @@ const profesor: Diccionario["profesor"] = {
       notaFinal: "Endnote",
       porcentajeTipo: "{n} % der Note",
       sinPeso: "Kein % im Plan",
-      parcial: "Vorläufige Endnote: Bisher zählen Typen mit {n} % des Plans. {tipos} hat noch keine Noten; sein Anteil wird bis dahin auf die anderen verteilt.",
+      parcial: "Kumulierte Endnote: Jeder Typ trägt seinen Schnitt mal seinem Anteil bei. Bisher sind {n} % des Plans bewertet; {tipos} hat noch keine Noten und zählt bis dahin 0.",
       errores: {
         sinInstrucciones: "Schreibe die Gewichtungsanweisungen.",
         noEncontrado: "Kurs nicht gefunden.",

@@ -7,6 +7,7 @@ import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
 import { MINIMO_COMPARACION, type CuadernoAlumno } from "@/lib/portal-alumno";
 import type { Escala } from "@/lib/tipos";
+import { tonoTipo } from "./tonos-tipo";
 
 const SEMAFORO: Record<Nivel, string> = {
   alto: "bg-acierto-suave text-acierto",
@@ -28,8 +29,9 @@ export async function TablaCuadernoAlumno({ cuaderno, nombre, matricula }: { cua
   const tq = t.profesor.cuaderno;
   const tc = t.profesor.comun;
   const ta = t.alumno.cuaderno;
-  const columnas = cuaderno.grupos.flatMap((g) => g.columnas);
-  const borde = new Set(cuaderno.grupos.map((g) => g.columnas[0]?.id));
+  const tp = tq.plan;
+  const grupos = cuaderno.grupos.map((g, i) => ({ ...g, tono: tonoTipo(i) }));
+  const final = cuaderno.final;
 
   return (
     <div className="space-y-4">
@@ -62,42 +64,63 @@ export async function TablaCuadernoAlumno({ cuaderno, nombre, matricula }: { cua
               <th rowSpan={2} className="border-b border-slate-200 bg-slate-50 px-3 py-2 text-left">
                 {tc.matricula}
               </th>
-              {cuaderno.grupos.map((g) => (
-                <th key={g.etiqueta} colSpan={g.columnas.length} className="border-b border-l border-slate-200 bg-slate-50 px-3 py-2 text-center text-slate-700">
+              {grupos.map((g) => (
+                <th key={g.etiqueta} colSpan={g.columnas.length + 1} className={`border-b border-l border-slate-200 px-3 py-2 text-center text-slate-700 ${g.tono.cabeza}`}>
                   {g.etiqueta}
+                  {final && (
+                    <span className="mt-0.5 block text-[11px] font-semibold normal-case tracking-normal text-tinta-700">
+                      {g.peso !== undefined ? formato(tp.porcentajeTipo, { n: g.peso }) : tp.sinPeso}
+                    </span>
+                  )}
                 </th>
               ))}
               <th rowSpan={2} className="border-b border-l border-slate-200 bg-slate-50 px-3 py-2 text-center text-slate-700">
                 {tq.promedio}
                 <span className="block text-[10px] font-normal normal-case">{formato(tq.sobre, { n: cuaderno.escala })}</span>
               </th>
+              {final && (
+                <th rowSpan={2} className="border-b border-l border-slate-200 bg-tinta-50 px-3 py-2 text-center text-tinta-800">
+                  {tp.notaFinal}
+                  <span className="block text-[10px] font-normal normal-case">{formato(tq.sobre, { n: cuaderno.escala })}</span>
+                </th>
+              )}
             </tr>
             <tr>
-              {columnas.map((c) => (
+              {grupos.map((g) => [
+                ...g.columnas.map((c, i) => (
+                  <th
+                    key={c.id}
+                    className={`max-w-36 border-b border-slate-200 px-2 py-2 text-center align-bottom text-xs font-medium text-slate-700 ${g.tono.cabeza} ${i === 0 ? "border-l" : ""}`}
+                  >
+                    {c.celda.estado === "calificada" ? (
+                      <Link href={`/alumno/reporte/${c.id}`} className="line-clamp-2 hover:text-tinta-700" title={c.titulo}>
+                        {c.titulo}
+                      </Link>
+                    ) : (
+                      <span className="line-clamp-2" title={c.titulo}>
+                        {c.titulo}
+                      </span>
+                    )}
+                    <span className="block text-[10px] font-normal text-slate-500">/ {c.escala}</span>
+                  </th>
+                )),
                 <th
-                  key={c.id}
-                  className={`max-w-36 border-b border-slate-200 bg-slate-50 px-2 py-2 text-center align-bottom text-xs font-medium text-slate-700 ${borde.has(c.id) ? "border-l" : ""}`}
+                  key={`prom-${g.etiqueta}`}
+                  className={`border-b border-l border-slate-200 border-l-slate-300/70 px-2 py-2 text-center align-bottom text-xs font-semibold text-slate-800 ${g.tono.promedio}`}
                 >
-                  {c.celda.estado === "calificada" ? (
-                    <Link href={`/alumno/reporte/${c.id}`} className="line-clamp-2 hover:text-tinta-700" title={c.titulo}>
-                      {c.titulo}
-                    </Link>
-                  ) : (
-                    <span className="line-clamp-2" title={c.titulo}>
-                      {c.titulo}
-                    </span>
-                  )}
-                  <span className="block text-[10px] font-normal text-slate-500">/ {c.escala}</span>
-                </th>
-              ))}
+                  {tq.promedio}
+                  <span className="block text-[10px] font-normal text-slate-500">{formato(tq.sobre, { n: cuaderno.escala })}</span>
+                </th>,
+              ])}
             </tr>
           </thead>
           <tbody>
             <tr>
               <td className="sticky left-0 z-10 whitespace-nowrap border-b border-slate-100 bg-white px-4 py-1.5 font-medium text-slate-800">{nombre}</td>
               <td className="whitespace-nowrap border-b border-slate-100 px-3 py-1.5 font-mono text-xs text-slate-600">{matricula}</td>
-              {columnas.map(({ id, celda, escala }) => (
-                <td key={id} className={`border-b border-slate-100 px-2 py-1.5 text-center ${borde.has(id) ? "border-l border-l-slate-200" : ""}`}>
+              {grupos.map((g) => [
+                ...g.columnas.map(({ id, celda, escala }, i) => (
+                <td key={id} className={`border-b border-slate-100 px-2 py-1.5 text-center ${g.tono.celda} ${i === 0 ? "border-l border-l-slate-200" : ""}`}>
                   <span
                     title={celda.estado === "calificada" ? undefined : ta.estados[celda.estado]}
                     className={`inline-flex min-w-12 items-center justify-center gap-1 rounded-md px-2 py-1 tabular-nums ${
@@ -115,10 +138,19 @@ export async function TablaCuadernoAlumno({ cuaderno, nombre, matricula }: { cua
                     {celda.manual && <span className="h-1.5 w-1.5 rounded-full bg-tinta-600" aria-label={ta.ajustada} />}
                   </span>
                 </td>
-              ))}
+              )),
+                <td key={`prom-${g.etiqueta}`} className={`border-b border-l border-slate-100 border-l-slate-300/70 px-2 py-1.5 text-center ${g.tono.promedio}`}>
+                  <Promedio valor={g.promedio} escala={cuaderno.escala} />
+                </td>,
+              ])}
               <td className="border-b border-l border-slate-100 border-l-slate-200 px-3 py-1.5 text-center">
                 <Promedio valor={cuaderno.promedio} escala={cuaderno.escala} />
               </td>
+              {final && (
+                <td className="border-b border-l border-slate-100 border-l-slate-200 bg-tinta-50/40 px-3 py-1.5 text-center">
+                  <Promedio valor={final.nota} escala={cuaderno.escala} />
+                </td>
+              )}
             </tr>
           </tbody>
           <tfoot>
@@ -126,18 +158,33 @@ export async function TablaCuadernoAlumno({ cuaderno, nombre, matricula }: { cua
               <td className="sticky left-0 z-10 bg-slate-50 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-600" colSpan={2}>
                 {ta.promedioGrupo}
               </td>
-              {columnas.map((c) => (
-                <td key={c.id} className={`px-2 py-2.5 text-center ${borde.has(c.id) ? "border-l border-slate-200" : ""}`}>
-                  <Promedio valor={c.promedioGrupo} escala={c.escala} />
-                </td>
-              ))}
+              {grupos.map((g) => [
+                ...g.columnas.map((c, i) => (
+                  <td key={c.id} className={`px-2 py-2.5 text-center ${g.tono.celda} ${i === 0 ? "border-l border-slate-200" : ""}`}>
+                    <Promedio valor={c.promedioGrupo} escala={c.escala} />
+                  </td>
+                )),
+                <td key={`prom-${g.etiqueta}`} className={`border-l border-slate-300/70 px-2 py-2.5 text-center ${g.tono.promedio}`}>
+                  <Promedio valor={g.promedioGrupo} escala={cuaderno.escala} />
+                </td>,
+              ])}
               <td className="border-l border-slate-200 px-3 py-2.5 text-center">
                 <Promedio valor={cuaderno.promedioGrupo} escala={cuaderno.escala} />
               </td>
+              {final && (
+                <td className="border-l border-slate-200 bg-tinta-50/60 px-3 py-2.5 text-center">
+                  <Promedio valor={final.promedioGrupo} escala={cuaderno.escala} />
+                </td>
+              )}
             </tr>
           </tfoot>
         </table>
       </div>
+      {final && final.sinCalificar.length > 0 && (
+        <p className="rounded-lg bg-tinta-50 px-3 py-2 text-xs text-tinta-800">
+          {formato(tp.parcial, { n: final.ponderacionActual, tipos: final.sinCalificar.map((e) => e || t.profesor.calculo.sinEtiqueta).join(", ") })}
+        </p>
+      )}
       <p className="text-xs text-slate-500">{formato(ta.ayuda, { n: MINIMO_COMPARACION })}</p>
     </div>
   );

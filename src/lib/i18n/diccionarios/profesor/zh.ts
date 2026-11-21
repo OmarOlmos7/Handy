@@ -848,7 +848,7 @@ const profesor: Diccionario["profesor"] = {
       notaFinal: "总评",
       porcentajeTipo: "占总评 {n}%",
       sinPeso: "方案中无百分比",
-      parcial: "暂定总评：目前计入的类型占方案的 {n}%。{tipos}还没有成绩，在有成绩之前其比重分摊给其他类型。",
+      parcial: "累计总评：各类型的平均分乘以其比重后相加。目前已评分的部分占方案的 {n}%；{tipos}还没有成绩，在有成绩之前按 0 计入。",
       errores: {
         sinInstrucciones: "请写下加权说明。",
         noEncontrado: "未找到课程。",

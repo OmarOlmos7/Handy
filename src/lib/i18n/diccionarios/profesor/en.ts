@@ -859,7 +859,7 @@ const profesor: Diccionario["profesor"] = {
       notaFinal: "Final grade",
       porcentajeTipo: "{n}% of the grade",
       sinPeso: "No % in the plan",
-      parcial: "Partial final grade: for now it counts types worth {n}% of the plan. {tipos} has no grades yet; its weight is shared among the others until it does.",
+      parcial: "Accumulated final grade: each type adds its average times its weight. {n}% of the plan is graded so far; {tipos} has no grades yet and adds 0 until it does.",
       errores: {
         sinInstrucciones: "Write the weighting instructions.",
         noEncontrado: "Course not found.",

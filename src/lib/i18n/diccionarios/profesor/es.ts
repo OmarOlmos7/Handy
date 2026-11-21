@@ -857,7 +857,7 @@ const profesor = {
       notaFinal: "Nota final",
       porcentajeTipo: "{n} % de la calificación",
       sinPeso: "Sin % en el plan",
-      parcial: "Nota final parcial: por ahora cuentan tipos que suman {n} % del plan. {tipos} aún no tiene calificaciones; su porcentaje se reparte entre los demás hasta que las tenga.",
+      parcial: "Nota final acumulada: suma el promedio de cada tipo por su porcentaje. Ya está calificado {n} % del plan; {tipos} aún no tiene calificaciones y aporta 0 hasta que las tenga.",
       errores: {
         sinInstrucciones: "Escribe las instrucciones de ponderación.",
         noEncontrado: "Curso no encontrado.",
