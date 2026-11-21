@@ -74,16 +74,20 @@ export async function salirProfesor() {
 }
 
 /** El alumno entra con su correo y su clave de acceso para ver solo sus resultados. */
+// Con "volver" (página de una actividad en plataforma), regresa ahí al entrar o crear la cuenta.
 export async function ingresarAlumno(form: FormData) {
+  const regreso = volverSeguro(form.get("volver"));
   const cuenta = verificarAlumno(await leer(), String(form.get("correo") ?? ""), String(form.get("clave") ?? ""));
-  if (!cuenta) volver("/alumno", "credenciales");
+  if (!cuenta) volver(regreso || "/alumno", "credenciales");
   await iniciarSesionAlumno(cuenta.id);
-  redirect("/alumno");
+  redirect(regreso || "/alumno");
 }
 
 export async function registrarAlumno(form: FormData) {
+  const regreso = volverSeguro(form.get("volver"));
+  const alCrear = regreso ? `${regreso}?crear=1` : "/alumno?crear=1";
   const clave = String(form.get("clave") ?? "");
-  if (clave !== String(form.get("clave2") ?? "")) volver("/alumno?crear=1", "clavesDistintas");
+  if (clave !== String(form.get("clave2") ?? "")) volver(alCrear, "clavesDistintas");
   const r = crearCuentaAlumno({
     nombre: String(form.get("nombre") ?? ""),
     matricula: String(form.get("matricula") ?? ""),
@@ -91,9 +95,9 @@ export async function registrarAlumno(form: FormData) {
     clave,
     aceptacion: aceptacionDeFormulario(form),
   });
-  if (!r.ok) volver("/alumno?crear=1", r.error);
+  if (!r.ok) volver(alCrear, r.error);
   await iniciarSesionAlumno(r.cuenta.id);
-  redirect("/alumno");
+  redirect(regreso || "/alumno");
 }
 
 export async function salirAlumno() {

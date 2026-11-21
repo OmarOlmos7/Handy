@@ -10,6 +10,7 @@ import { leerFechas, type FechasActividad } from "@/lib/periodo";
 import { detectarIdioma } from "@/lib/i18n/detectar";
 import { esIdioma } from "@/lib/i18n/idiomas";
 import { limpiarEtiqueta } from "@/lib/etiquetas";
+import { leerFormato } from "@/lib/plataforma";
 
 export const maxDuration = 300;
 
@@ -42,6 +43,9 @@ export async function POST(req: Request) {
   if (!titulo || !grupo) return Response.json({ error: "Escribe el título y elige el grupo" }, { status: 400 });
 
   const idiomaElegido = form.get("idioma");
+  // Manuscrita (hoja impresa con QR) o en plataforma (el alumno contesta en la app).
+  const formato = leerFormato(form.get("formato"));
+  if (formato === "plataforma" && modo !== "ia") return Response.json({ error: "Las actividades en plataforma se generan con IA" }, { status: 400 });
   const id = slug(titulo);
   const base: Actividad = {
     id,
@@ -65,6 +69,7 @@ export async function POST(req: Request) {
     idioma: esIdioma(idiomaElegido) ? idiomaElegido : undefined,
     // Tipo de actividad: agrupa la actividad en el cuaderno y en el plan de evaluación.
     etiqueta: limpiarEtiqueta(form.get("etiqueta")),
+    formato: formato === "plataforma" ? "plataforma" : undefined,
   };
 
   if (modo === "ia") {
@@ -72,7 +77,7 @@ export async function POST(req: Request) {
     if (prompt.length < 10) return Response.json({ error: "Describe la actividad: tipo de reactivos, ponderaciones y temas" }, { status: 400 });
     try {
       const generada = await generarActividad(
-        { titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala, sinSolucion: base.sinSolucion },
+        { titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala, sinSolucion: base.sinSolucion, formato: base.formato },
         { profesorId: profesor.id, actividadId: id, precision: base.precision, idioma: esIdioma(idiomaElegido) ? idiomaElegido : detectarIdioma(`${titulo}\n${prompt}`) },
       );
       Object.assign(base, {

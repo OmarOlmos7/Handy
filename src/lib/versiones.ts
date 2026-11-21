@@ -1,7 +1,7 @@
 // Versiones de una actividad (A, B, C…): los mismos reactivos con otros valores numéricos.
 // La A es la actividad misma; las demás guardan solo lo que cambia (texto impreso y solución).
 // La rúbrica (tipo, puntos, pasos, criterios) es la misma para todas.
-import { opcion, pares } from "./calificar";
+import { letras, opcion, pares, primerNumero, siNo } from "./calificar";
 import type { Actividad, Reactivo, ReactivoVersion, TipoReactivo, VersionActividad } from "./tipos";
 
 /** Máximo de versiones que se pueden pedir al crear una actividad. */
@@ -71,7 +71,15 @@ function cerca(a: number, b: number) {
 export function coinciden(tipo: TipoReactivo, a: { respuesta: string; valores?: number[] }, b: { respuesta: string; valores?: number[] }): boolean {
   if (tipo === "abierto") return true;
   if (tipo === "opcion_multiple" || tipo === "verdadero_falso") return opcion(a.respuesta) === opcion(b.respuesta);
-  if (tipo === "relacion_columnas" || tipo === "parentesis") return pares(a.respuesta).join() === pares(b.respuesta).join();
+  if (tipo === "relacion_columnas" || tipo === "parentesis" || tipo === "relacion_imagenes") return pares(a.respuesta).join() === pares(b.respuesta).join();
+  if (tipo === "si_no") return siNo(a.respuesta) === siNo(b.respuesta);
+  if (tipo === "seleccion_multiple" || tipo === "seleccion_imagenes") return [...letras(a.respuesta)].sort().join() === [...letras(b.respuesta)].sort().join();
+  if (tipo === "orden") return letras(a.respuesta).join() === letras(b.respuesta).join();
+  if (tipo === "numerica") {
+    const x = primerNumero(a.respuesta);
+    const y = primerNumero(b.respuesta);
+    return x !== null && y !== null && cerca(x, y);
+  }
   const va = a.valores?.length ? a.valores : numerosDe(a.respuesta);
   const vb = b.valores?.length ? b.valores : numerosDe(b.respuesta);
   if (!va.length || !vb.length) return va.length === vb.length;

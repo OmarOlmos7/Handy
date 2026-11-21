@@ -15,17 +15,21 @@ export function FormRegistroAlumno({
   error,
   clase = TARJETA,
   ingreso = "/alumno",
+  volver,
 }: {
   t: Diccionario;
   error?: string;
   clase?: string;
   /** Enlace para entrar con una cuenta existente. */
   ingreso?: string;
+  /** Página de entrega a la que vuelve al crear la cuenta. */
+  volver?: string;
 }) {
   const tp = t.alumno.panel;
   const tc = t.alumno.campos;
   return (
     <form action={registrarAlumno} className={clase}>
+      {volver && <input type="hidden" name="volver" value={volver} />}
       <label className="block text-sm font-medium text-slate-700">
         {tc.nombre}
         <input name="nombre" required autoComplete="name" className={campo} placeholder={tc.nombreEjemplo} />
@@ -66,17 +70,21 @@ export function FormIngresoAlumno({
   error,
   clase = TARJETA,
   registro = "/alumno?crear=1",
+  volver,
 }: {
   t: Diccionario;
   error?: string;
   clase?: string;
   /** Enlace para crear la cuenta. */
   registro?: string;
+  /** Página de entrega a la que vuelve al entrar. */
+  volver?: string;
 }) {
   const tp = t.alumno.panel;
   const tc = t.alumno.campos;
   return (
     <form action={ingresarAlumno} className={clase}>
+      {volver && <input type="hidden" name="volver" value={volver} />}
       <label className="block text-sm font-medium text-slate-700">
         {tc.correo}
         <input name="correo" type="email" required autoComplete="email" className={campo} placeholder={tc.correoEjemplo} />
