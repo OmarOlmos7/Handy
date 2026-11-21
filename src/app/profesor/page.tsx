@@ -6,6 +6,7 @@ import { estadoActividad, saldo } from "@/lib/almacen";
 import { agruparPorColor } from "@/lib/colores";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
+import { resumenTemario } from "@/lib/asignaturas";
 import { textos } from "@/lib/i18n/servidor";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,6 +19,7 @@ export default async function PanelProfesor() {
   const { t, locale } = await textos();
   const tp = t.profesor.panel;
   const { grupos } = db;
+  const asignaturas = db.asignaturas ?? [];
   const saldoCreditos = saldo(db);
   const actividadesDeGrupo = (id: string) => db.actividades.filter((a) => a.grupoId === id);
   const porRevisar = db.actividades.filter((a) => estadoActividad(db, a) === "en_revision");
@@ -39,6 +41,35 @@ export default async function PanelProfesor() {
         }
       />
 
+      {/* A la izquierda, el acceso a Asignaturas (el syllabus de cada materia). */}
+      <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+      <aside className="mb-6 lg:sticky lg:top-4 lg:mb-0">
+        <Link
+          href="/profesor/asignaturas"
+          className="flex items-center gap-3 rounded-xl bg-tinta-600 px-4 py-3 text-white shadow-sm transition hover:bg-tinta-700"
+        >
+          <span className="text-2xl" aria-hidden>
+            📚
+          </span>
+          <span>
+            <span className="block font-semibold">{tp.asignaturas}</span>
+            <span className="block text-xs text-tinta-100">{tp.asignaturasTexto}</span>
+          </span>
+        </Link>
+        {asignaturas.length > 0 && (
+          <ul className="mt-2 hidden space-y-1 lg:block">
+            {asignaturas.slice(0, 8).map((a) => (
+              <li key={a.id}>
+                <Link href={`/profesor/asignaturas/${a.id}`} className="block rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-white hover:shadow-sm">
+                  <span className="block truncate font-medium">{a.nombre}</span>
+                  <span className="block text-xs text-slate-500">{formato(tp.unidadesTemas, { u: resumenTemario(a.unidades).unidades, t: resumenTemario(a.unidades).temas })}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </aside>
+      <div className="min-w-0">
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <Tarjeta>
           <p className="text-sm text-slate-500">{tp.cursos}</p>
@@ -99,6 +130,8 @@ export default async function PanelProfesor() {
           </div>
         </>
       )}
+      </div>
+      </div>
     </>
   );
 }

@@ -21,6 +21,7 @@ const de: Diccionario = {
       "Ihre Schüler fotografieren ihr Blatt, Sie laden die Lösung hoch und die KI schlägt die Note, Korrekturen in Rot und Grün, Berichte und die Excel-Datei für Canvas vor.",
   },
   barra: {
+    asignaturas: "Fächer",
     panel: "Übersicht",
     nuevaActividad: "Neue Aufgabe",
     nuevoCurso: "Neuer Kurs",

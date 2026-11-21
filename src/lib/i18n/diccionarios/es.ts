@@ -22,6 +22,7 @@ const es = {
       "Tus alumnos fotografían su hoja, tú subes la solución y la IA sugiere calificación, correcciones en rojo y verde, reportes y el Excel para Canvas.",
   },
   barra: {
+    asignaturas: "Asignaturas",
     panel: "Panel",
     nuevaActividad: "Nueva actividad",
     nuevoCurso: "Nuevo curso",

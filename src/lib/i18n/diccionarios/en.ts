@@ -21,6 +21,7 @@ const en: Diccionario = {
       "Your students photograph their sheet, you upload the solution, and the AI suggests the grade, red and green corrections, reports and the Excel file for Canvas.",
   },
   barra: {
+    asignaturas: "Subjects",
     panel: "Dashboard",
     nuevaActividad: "New assignment",
     nuevoCurso: "New course",

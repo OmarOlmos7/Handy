@@ -11,6 +11,7 @@ import { detectarIdioma } from "@/lib/i18n/detectar";
 import { esIdioma } from "@/lib/i18n/idiomas";
 import { limpiarEtiqueta } from "@/lib/etiquetas";
 import { leerFormato } from "@/lib/plataforma";
+import { leerTemarioActividad, temarioComoTexto } from "@/lib/asignaturas";
 
 export const maxDuration = 300;
 
@@ -27,7 +28,10 @@ export async function POST(req: Request) {
   const grupoId = String(form.get("grupo") ?? "");
   const fecha = String(form.get("fecha") || new Date().toISOString().slice(0, 10));
   const instrucciones = String(form.get("instrucciones") ?? "").trim();
-  const grupo = (await leer()).grupos.find((g) => g.id === grupoId && g.profesorId === profesor.id);
+  const db = await leer();
+  const grupo = db.grupos.find((g) => g.id === grupoId && g.profesorId === profesor.id);
+  // Unidad y temas del syllabus elegidos (solo de las asignaturas del profesor).
+  const temario = leerTemarioActividad(form.get("temario"), (db.asignaturas ?? []).filter((a) => a.profesorId === profesor.id));
   let fechas: FechasActividad;
   try {
     fechas = leerFechas({
@@ -70,6 +74,7 @@ export async function POST(req: Request) {
     // Tipo de actividad: agrupa la actividad en el cuaderno y en el plan de evaluación.
     etiqueta: limpiarEtiqueta(form.get("etiqueta")),
     formato: formato === "plataforma" ? "plataforma" : undefined,
+    temario,
   };
 
   if (modo === "ia") {
@@ -77,7 +82,7 @@ export async function POST(req: Request) {
     if (prompt.length < 10) return Response.json({ error: "Describe la actividad: tipo de reactivos, ponderaciones y temas" }, { status: 400 });
     try {
       const generada = await generarActividad(
-        { titulo, materia: grupo.materia, grupo: grupo.nombre, prompt, paginas: base.paginas, escala: base.escala, sinSolucion: base.sinSolucion, formato: base.formato },
+        { titulo, materia: grupo.materia, grupo: grupo.nombre, prompt: [prompt, temarioComoTexto(temario)].filter(Boolean).join("\n\n"), paginas: base.paginas, escala: base.escala, sinSolucion: base.sinSolucion, formato: base.formato },
         { profesorId: profesor.id, actividadId: id, precision: base.precision, idioma: esIdioma(idiomaElegido) ? idiomaElegido : detectarIdioma(`${titulo}\n${prompt}`) },
       );
       Object.assign(base, {

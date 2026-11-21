@@ -95,6 +95,12 @@ export default async function EntregasActividad({ params, searchParams }: PagePr
                 {formato(ta.resultadosVisibles, { f: fechaHoraLarga(actividad.resultadosDesde, locale) })}
               </Insignia>
             )}
+            {actividad.temario && (
+              <span className="basis-full text-xs text-slate-500" title={actividad.temario.temas.join(" · ")}>
+                📚 {actividad.temario.unidad}
+                {actividad.temario.temas.length > 0 && ` · ${actividad.temario.temas.slice(0, 4).join(" · ")}${actividad.temario.temas.length > 4 ? " …" : ""}`}
+              </span>
+            )}
           </span>
         }
         acciones={

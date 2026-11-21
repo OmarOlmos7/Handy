@@ -152,6 +152,8 @@ export interface Actividad {
   color?: string;
   /** Etiqueta para agrupar: Tarea, Actividad, Quiz, Examen, Ensayo u otra que escriba el profesor. */
   etiqueta?: string;
+  /** Unidad y temas del syllabus de la asignatura que cubre la actividad. */
+  temario?: TemarioActividad;
   /** Cómo responde el alumno; sin valor, manuscrita (actividades anteriores). */
   formato?: FormatoActividad;
   /** Cómo se creó: generada con IA o cargada desde un escaneo del profesor. */
@@ -472,7 +474,7 @@ export interface Sesion {
 }
 
 /** Para qué se llamó a la IA (para el panel de administración). */
-export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio" | "recursos" | "plan";
+export type TipoConsumoIA = "evaluacion" | "rubrica" | "generar" | "editar" | "resolver" | "estudio" | "recursos" | "plan" | "temario";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {
@@ -489,6 +491,39 @@ export interface ConsumoIA {
   ok: boolean;
 }
 
+/** Tema de una unidad del temario, con sus subtemas. */
+export interface TemaAsignatura {
+  nombre: string;
+  subtemas: string[];
+}
+
+export interface UnidadAsignatura {
+  nombre: string;
+  temas: TemaAsignatura[];
+}
+
+/** Syllabus de una asignatura del profesor: unidades, temas y subtemas. */
+export interface Asignatura {
+  id: string;
+  profesorId: string;
+  nombre: string;
+  /** Nivel o grado (por ejemplo "2.º de secundaria"). */
+  nivel?: string;
+  unidades: UnidadAsignatura[];
+  /** Cómo se cargó: archivo (PDF, Word o txt), texto pegado o generado con IA. */
+  origen: "archivo" | "texto" | "ia";
+  creadaEn: string;
+  actualizadaEn: string;
+}
+
+/** Temas del syllabus que cubre una actividad. */
+export interface TemarioActividad {
+  asignaturaId: string;
+  unidad: string;
+  /** Temas y subtemas elegidos, con su texto. */
+  temas: string[];
+}
+
 export interface BaseDeDatos {
   version: 1 | 2 | 3;
   profesores: Profesor[];
@@ -502,4 +537,6 @@ export interface BaseDeDatos {
   movimientos: Movimiento[];
   /** Consumo de tokens de la IA, el más reciente al final. */
   consumoIA?: ConsumoIA[];
+  /** Asignaturas (syllabus) de los profesores. */
+  asignaturas?: Asignatura[];
 }
