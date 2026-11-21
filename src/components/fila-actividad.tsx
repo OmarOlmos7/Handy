@@ -11,7 +11,7 @@ import type { EstadoActividad } from "@/lib/tipos";
 import { BotonIcono, IconoBasura, IconoLapiz } from "./iconos";
 import { SelectorColor } from "./selector-color";
 import { SelectorEtiqueta } from "./selector-etiqueta";
-import { Boton, InsigniaActividad, fechaLarga } from "./ui";
+import { Boton, BotonLink, InsigniaActividad, fechaLarga } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 
@@ -133,7 +133,8 @@ export function FilaActividad({
             </Boton>
           </div>
         </form>
-        <p className="mt-2 text-xs text-slate-500">
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-slate-500">
           {tf.ayudaAntes}
           <Link href={`/profesor/actividades/${id}/hoja`} className="font-medium text-tinta-700 hover:underline">
             {tf.hojaImprimible}
@@ -144,6 +145,16 @@ export function FilaActividad({
           </Link>
           .
         </p>
+        <BotonLink
+          href={`/profesor/actividades/${id}/editar`}
+          variante="secundario"
+          title={tf.reeditarAyuda}
+          className="inline-flex shrink-0 items-center gap-2 !px-3 !py-1.5"
+        >
+          <IconoLapiz />
+          {tf.reeditar}
+        </BotonLink>
+        </div>
         {error && <p className="mt-2 text-xs text-error">{error}</p>}
       </li>
     );

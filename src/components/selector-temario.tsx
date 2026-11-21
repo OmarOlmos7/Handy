@@ -3,7 +3,7 @@
 // En el alta de actividad: primero la unidad de la asignatura y enseguida sus temas y subtemas.
 import Link from "next/link";
 import { useState } from "react";
-import type { Asignatura } from "@/lib/tipos";
+import type { Asignatura, TemarioActividad } from "@/lib/tipos";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 import { campo } from "./ui";
@@ -33,18 +33,31 @@ function Casilla({ activa, parcial, onClick, children, fuerte }: { activa: boole
   );
 }
 
-export function SelectorTemario({ asignaturas, materia }: { asignaturas: AsignaturaParaAlta[]; materia?: string }) {
+export function SelectorTemario({
+  asignaturas,
+  materia,
+  inicial,
+}: {
+  asignaturas: AsignaturaParaAlta[];
+  materia?: string;
+  /** Unidad y temas ya elegidos (al reeditar una actividad). */
+  inicial?: TemarioActividad;
+}) {
   const { t } = useTextos();
   const ta = t.profesor.asignaturas;
   // La asignatura sigue la materia del curso hasta que el profesor elige otra.
-  const [elegida, setElegida] = useState<string | null>(null);
+  const asignaturaInicial = asignaturas.find((a) => a.id === inicial?.asignaturaId);
+  const unidadInicial = asignaturaInicial?.unidades.findIndex((u) => u.nombre === inicial?.unidad) ?? -1;
+  const [elegida, setElegida] = useState<string | null>(asignaturaInicial?.id ?? null);
   const porMateria = asignaturas.find((a) => materia && normal(a.nombre) === normal(materia))?.id ?? "";
   const asignaturaId = elegida ?? porMateria;
   const asignatura = asignaturas.find((a) => a.id === asignaturaId);
-  const [unidadSel, setUnidadSel] = useState<{ asignatura: string; unidad: number } | null>(null);
+  const [unidadSel, setUnidadSel] = useState<{ asignatura: string; unidad: number } | null>(
+    asignaturaInicial && unidadInicial >= 0 ? { asignatura: asignaturaInicial.id, unidad: unidadInicial } : null,
+  );
   const unidadIndice = unidadSel && unidadSel.asignatura === asignaturaId ? unidadSel.unidad : -1;
   const unidad = asignatura?.unidades[unidadIndice];
-  const [temas, setTemas] = useState<string[]>([]);
+  const [temas, setTemas] = useState<string[]>(unidadInicial >= 0 ? (inicial?.temas ?? []) : []);
 
   const alternar = (nombres: string[], activar: boolean) =>
     setTemas((xs) => (activar ? [...new Set([...xs, ...nombres])] : xs.filter((x) => !nombres.includes(x))));

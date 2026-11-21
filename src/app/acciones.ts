@@ -13,6 +13,8 @@ import { requerirProfesor } from "@/lib/sesion";
 import type { BaseDeDatos, EstiloCorreccion, Reactivo, ResultadoReactivo } from "@/lib/tipos";
 import { aCampoFechaHora, deCampoFechaHora } from "@/lib/resultados";
 import { leerFechas } from "@/lib/periodo";
+import { limpiarEtiqueta } from "@/lib/etiquetas";
+import { leerTemarioActividad } from "@/lib/asignaturas";
 
 /** Corre el cambio solo si la actividad es de un curso del profesor con sesión. */
 async function enActividadPropia<T>(actividadId: string, cambio: (db: BaseDeDatos) => T) {
@@ -252,7 +254,19 @@ export interface CambiosActividad {
   /** Idioma de la actividad; vacío deja el que tenía. */
   idioma?: string;
   instruccionesAlumno?: string[];
+  /** Tipo de actividad (Tarea, Quiz…); vacío la quita. Sin valor deja el que tenía. */
+  etiqueta?: string;
+  /** Unidad y temas del syllabus (JSON del selector de temario); vacío los quita. Sin valor deja los que tenía. */
+  temario?: string;
+  /** Precisión de la IA para evaluar las entregas que lleguen; sin valor deja la que tenía. */
+  motor?: string;
+  esfuerzo?: string;
   reactivos: { numero: number; enunciado: string; tema: string; puntos: number; opciones?: string[] }[];
+}
+
+/** true si ya llegó al menos una entrega de alumno de la actividad. */
+function tieneEntregas(db: BaseDeDatos, actividadId: string) {
+  return db.entregas.some((e) => e.actividadId === actividadId && e.estado !== "sin_entregar");
 }
 
 /** Lo que se imprime de cada reactivo (texto, opciones y puntos), para saber si la hoja cambió. */
@@ -269,10 +283,13 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
   if (!titulo) throw new Error("Escribe el título");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(c.fecha)) throw new Error("Fecha no válida");
   const fechas = leerFechas(c);
+  const profesor = await requerirProfesor();
   let carpetaVieja: string | undefined;
   await enActividadPropia(actividadId, (db) => {
     const a = actividadDe(db, actividadId)!;
     const textoAntes = textoImpreso(a.reactivos);
+    // Con entregas, los alumnos ya contestaron sobre ese texto: el enunciado y las opciones quedan fijos.
+    const conEntregas = tieneEntregas(db, actividadId);
     a.titulo = titulo;
     a.fechaAplicacion = c.fecha;
     a.visibleDesde = fechas.visibleDesde;
@@ -284,20 +301,26 @@ export async function modificarActividad(actividadId: string, c: CambiosActivida
     a.sinSolucion = c.sinSolucion || undefined;
     a.estiloCorreccion = c.estiloCorreccion === "subrayado" ? "subrayado" : "margen";
     if (esIdioma(c.idioma)) a.idioma = c.idioma;
-    if (c.instruccionesAlumno && a.origen === "ia") {
+    if (c.etiqueta !== undefined) a.etiqueta = limpiarEtiqueta(c.etiqueta);
+    if (c.temario !== undefined) {
+      a.temario = leerTemarioActividad(c.temario, (db.asignaturas ?? []).filter((x) => x.profesorId === profesor.id));
+    }
+    if (esMotor(c.motor)) a.precision = precisionPara(c.motor, profesor.config, c.esfuerzo);
+    if (c.instruccionesAlumno && a.origen === "ia" && !conEntregas) {
       a.instruccionesAlumno = c.instruccionesAlumno.map((x) => x.trim()).filter(Boolean).slice(0, 6);
     }
     for (const r of a.reactivos) {
       const n = c.reactivos.find((x) => x.numero === r.numero);
       if (!n) continue;
-      if (n.enunciado.trim()) r.enunciado = n.enunciado.trim().slice(0, 2000);
       r.tema = n.tema.trim().slice(0, 80);
       if (Number.isFinite(n.puntos) && n.puntos > 0) r.puntos = Math.min(1000, n.puntos);
+      if (conEntregas) continue;
+      if (n.enunciado.trim()) r.enunciado = n.enunciado.trim().slice(0, 2000);
       if (n.opciones && CON_OPCIONES.includes(r.tipo)) r.opciones = n.opciones.map((x) => x.trim()).filter(Boolean).slice(0, 8);
     }
     // Actividad escaneada cuyo texto cambió: el PDF anterior ya no coincide. Se borra y la hoja se
     // vuelve a generar con los textos nuevos (hoja de la app con QR, editable también con IA).
-    if (a.origen === "escaneada" && a.reactivos.length > 0 && textoImpreso(a.reactivos) !== textoAntes) {
+    if (!conEntregas && a.origen === "escaneada" && a.reactivos.length > 0 && textoImpreso(a.reactivos) !== textoAntes) {
       const carpeta = `actividades/${actividadId}/hoja`;
       if ((a.archivos ?? []).every((r) => r.startsWith(`${carpeta}/`))) carpetaVieja = carpeta;
       a.origen = "ia";
