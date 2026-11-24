@@ -49,6 +49,13 @@ const autoestudio = {
     },
     otraIdea: "Otra idea",
     usarIdea: "¡Va, armémosla!",
+    pascal: {
+      saludo: "¡Hola, soy Pascal!",
+      lema: "¡Soy tu mejor amigo y te acompaño a lograr tus metas!",
+      pide: "Pídeme ejercicios, videos, lecturas o tarjetas de cualquier tema de tu curso.",
+      guau: "¡Guau!",
+      etiqueta: "Pascal, tu compañero de estudio. Hazle clic para que ladre.",
+    },
   },
   alta: {
     titulo: "Diseña tu actividad",

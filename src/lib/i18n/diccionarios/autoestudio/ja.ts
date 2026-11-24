@@ -47,6 +47,13 @@ const autoestudio: typeof es = {
     },
     otraIdea: "ほかのアイデア",
     usarIdea: "よし、作ろう！",
+    pascal: {
+      saludo: "こんにちは、パスカルだよ！",
+      lema: "きみの親友として、目標の達成をいっしょに応援するよ！",
+      pide: "コースのどのテーマでも、問題・動画・読み物・暗記カードを頼んでね。",
+      guau: "ワン！",
+      etiqueta: "きみの勉強仲間パスカル。クリックするとほえるよ。",
+    },
   },
   alta: {
     titulo: "自分の課題をつくる",

@@ -106,3 +106,50 @@ body {
     transition: none;
   }
 }
+
+/* Pascal, el compañero de estudio: se asoma al llegar, respira y ladra al hacerle clic. */
+.pascal {
+  animation: pascal-asoma 700ms cubic-bezier(.3,1.5,.6,1) both;
+}
+.pascal-cuerpo {
+  transform-origin: 50% 100%;
+  animation: pascal-respira 4s ease-in-out infinite;
+}
+.pascal:hover .pascal-cuerpo {
+  transform: translateY(-4px);
+}
+.pascal-ladra {
+  animation: pascal-ladra 260ms ease-in-out 4;
+}
+.pascal-guau {
+  animation: pascal-guau 1.3s ease-out both;
+}
+@keyframes pascal-asoma {
+  from { transform: translateY(34px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes pascal-respira {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.025); }
+}
+@keyframes pascal-ladra {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  30% { transform: rotate(-3deg) translateY(-5px); }
+  70% { transform: rotate(2deg) translateY(-2px); }
+}
+@keyframes pascal-guau {
+  0% { transform: scale(.4) translateY(8px); opacity: 0; }
+  20% { transform: scale(1.15) translateY(0); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: scale(1) translateY(-10px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pascal,
+  .pascal-cuerpo,
+  .pascal-ladra {
+    animation: none;
+  }
+  .pascal-guau {
+    animation: none;
+  }
+}

@@ -47,6 +47,13 @@ const autoestudio: typeof es = {
     },
     otraIdea: "换个主意",
     usarIdea: "好，开始做吧！",
+    pascal: {
+      saludo: "你好，我是帕斯卡！",
+      lema: "我是你最好的朋友，陪你一起实现目标！",
+      pide: "课程里的任何主题，都可以让我帮你出练习、找视频、写阅读或做学习卡片。",
+      guau: "汪！",
+      etiqueta: "帕斯卡，你的学习伙伴。点一下，它会叫。",
+    },
   },
   alta: {
     titulo: "设计你的活动",
