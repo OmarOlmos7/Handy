@@ -310,6 +310,7 @@ const alumno: Diccionario["alumno"] = {
     pdfPesado: "PDF が 40 MB を超えています",
     matriculaProfesor: "生徒番号を入力してください（英数字、スペースなし）",
     nombreAlumno: "生徒の氏名を入力してください",
+    sinLicencia: "提出するには、このコースの有効なライセンスが必要です。「マイ課題」でコースコード {codigo} を入力して有効にしてください。",
     matriculaOcupada: "この生徒番号は、このコースで別のメールアドレスに登録済みです。先生に相談してください。",
     pdfIlegible: "PDF を読み込めませんでした。正しいファイルか確認して、もう一度お試しください。",
     pdfPaginas: "PDF は {paginas} ページあります。最大は {max} ページです",

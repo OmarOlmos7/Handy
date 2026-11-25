@@ -3,6 +3,7 @@ import autoestudio from "./autoestudio/ja";
 import alumno from "./alumno/ja";
 import profesor from "./profesor/ja";
 import ruta from "./ruta/ja";
+import licencias from "./licencias/ja";
 import alumnosGrupo from "./alumnos-grupo/ja";
 import contenido from "./contenido/ja";
 
@@ -181,7 +182,7 @@ const ja: Diccionario = {
     eresAlumno: "生徒の方",
     entraAlumno: "メールアドレスとアクセスコードでログイン",
     planesPrecios: "プランと料金",
-    planesDetalle: "無料・ベーシック・プロ・アカデミー・スクール · 新しいタブで開きます",
+    planesDetalle: "生徒・コースごとのライセンス:5週間、10週間、1学期、1年 · 新しいタブで開きます",
     registroTitulo: "教員アカウントを作成",
     registroMeta: "教員アカウントを作成",
     registroTexto: "コース、課題、採点結果はアカウントに保存されます。生徒の登録は不要です。",
@@ -273,71 +274,6 @@ const ja: Diccionario = {
       sinCorreo: "メール送信はまだ設定されていません。管理者にお問い合わせください。",
       correo: "有効なメールアドレスを入力してください。",
       envio: "メールを送信できませんでした。数分後にもう一度お試しください。",
-    },
-  },
-  planes: {
-    gratis: {
-      nombre: "無料",
-      lema: "クラスで無料でお試し。カード不要",
-      periodo: "ウェルカムクレジット（1 回のみ）",
-      boton: "無料でアカウント作成",
-      incluye: "お試しに：",
-      ventajas: [
-        "50 クレジット",
-        "AIが作る課題とQR付きの印刷用答案用紙",
-        "スマホから写真やPDFで提出",
-        "AIによる解答とルーブリックは無料",
-      ],
-    },
-    basico: {
-      nombre: "ベーシック",
-      lema: "1クラスを担当する先生に：1学期分の採点",
-      periodo: "210 クレジットの一括払い",
-      boton: "ベーシックを選ぶ",
-      incluye: "無料プランのすべてに加えて：",
-      ventajas: [
-        "210 クレジット",
-        "生徒一人ひとりへのフィードバックを数分で",
-        "すべての精度レベル（高速〜上級）",
-        "クラスの分析とPDF・Excelのレポート",
-        "カード、OXXOでの現金、SPEIで支払い、請求書（CFDI）対応",
-      ],
-    },
-    pro: {
-      nombre: "プロ",
-      lema: "2〜3クラスを担当する先生に",
-      periodo: "460 クレジットの一括払い",
-      boton: "プロを選ぶ",
-      incluye: "ベーシックのすべてに加えて：",
-      ventajas: [
-        "460 クレジット",
-        "生徒ごとの動画と読み物による学習のアドバイス",
-        "コースの成績表",
-      ],
-    },
-    academia: {
-      nombre: "アカデミー",
-      lema: "1学期まるごと、または教科チームに：1ページあたり最安",
-      periodo: "1,000 クレジットの一括払い",
-      boton: "アカデミーを選ぶ",
-      incluye: "プロのすべてに加えて：",
-      ventajas: [
-        "1,000 クレジット",
-        "試験で上級レベルを使える余裕",
-        "学期を通じた生徒別・クラス別のレポート",
-      ],
-    },
-    escuela: {
-      nombre: "スクール",
-      lema: "複数の先生がいる学校に",
-      periodo: "4,000 クレジット以上、機関に合わせて調整",
-      boton: "機関向けプランのお問い合わせ",
-      incluye: "アカデミーのすべてに加えて：",
-      ventajas: [
-        "4,000 クレジット以上",
-        "教科チームの導入サポート",
-        "学校宛ての請求書",
-      ],
     },
   },
   precios: {
@@ -506,6 +442,7 @@ const ja: Diccionario = {
   alumno,
   autoestudio,
   ruta,
+  licencias,
   alumnosGrupo,
   contenido,
 };

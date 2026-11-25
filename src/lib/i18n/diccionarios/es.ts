@@ -4,6 +4,7 @@ import autoestudio from "./autoestudio/es";
 import alumno from "./alumno/es";
 import profesor from "./profesor/es";
 import ruta from "./ruta/es";
+import licencias from "./licencias/es";
 import alumnosGrupo from "./alumnos-grupo/es";
 import contenido from "./contenido/es";
 
@@ -182,7 +183,7 @@ const es = {
     eresAlumno: "¿Eres alumno?",
     entraAlumno: "Entra con tu correo y clave de acceso",
     planesPrecios: "Planes y precios",
-    planesDetalle: "Gratuito, Básico, Pro, Academia y Escuela · se abre en otra pestaña",
+    planesDetalle: "Licencias por alumno y curso: 5 semanas, 10 semanas, semestre o un año · se abre en otra pestaña",
     registroTitulo: "Crea tu cuenta de profesor",
     registroMeta: "Crear cuenta de profesor",
     registroTexto: "Tus cursos, actividades y evaluaciones quedan guardados en tu cuenta. Tus alumnos no necesitan registrarse.",
@@ -275,71 +276,6 @@ const es = {
       sinCorreo: "El envío de correos todavía no está configurado. Pide ayuda al administrador.",
       correo: "Escribe un correo válido.",
       envio: "No se pudo enviar el correo. Intenta de nuevo en unos minutos.",
-    },
-  },
-  planes: {
-    gratis: {
-      nombre: "Gratuito",
-      lema: "Prueba gratis con tu grupo, sin tarjeta",
-      periodo: "créditos de bienvenida, una sola vez",
-      boton: "Crear cuenta gratis",
-      incluye: "Para probar:",
-      ventajas: [
-        "50 créditos",
-        "Actividades generadas con IA y hojas imprimibles con QR",
-        "Entregas desde el celular con foto o PDF",
-        "Solución y rúbrica con IA sin costo",
-      ],
-    },
-    basico: {
-      nombre: "Básico",
-      lema: "Para un profesor con un grupo: todo un parcial calificado",
-      periodo: "pago único por 210 créditos",
-      boton: "Elegir Básico",
-      incluye: "Todo lo de Gratuito, más:",
-      ventajas: [
-        "210 créditos",
-        "Retroalimentación personal para cada alumno en minutos",
-        "Todos los niveles de precisión, de Rápido a Avanzado",
-        "Analíticas del grupo y reporte en PDF y Excel",
-        "Pago con tarjeta, efectivo en OXXO o SPEI y factura (CFDI)",
-      ],
-    },
-    pro: {
-      nombre: "Pro",
-      lema: "Para un profesor con dos o tres grupos",
-      periodo: "pago único por 460 créditos",
-      boton: "Elegir Pro",
-      incluye: "Todo lo de Básico, más:",
-      ventajas: [
-        "460 créditos",
-        "Recomendaciones de estudio con videos y lecturas para cada alumno",
-        "Cuaderno de calificaciones del curso",
-      ],
-    },
-    academia: {
-      nombre: "Academia",
-      lema: "Para todo el semestre o una academia: el mejor precio por página",
-      periodo: "pago único por 1,000 créditos",
-      boton: "Elegir Academia",
-      incluye: "Todo lo de Pro, más:",
-      ventajas: [
-        "1,000 créditos",
-        "Margen para usar el nivel Avanzado en exámenes",
-        "Reportes por alumno y por grupo durante todo el curso",
-      ],
-    },
-    escuela: {
-      nombre: "Escuela",
-      lema: "Para instituciones con varios profesores",
-      periodo: "4,000 créditos o más, a la medida de tu institución",
-      boton: "Contactar para gestionar plan institucional",
-      incluye: "Todo lo de Academia, más:",
-      ventajas: [
-        "4,000 créditos o más",
-        "Acompañamiento para arrancar con tus academias",
-        "Facturación institucional",
-      ],
     },
   },
   precios: {
@@ -509,6 +445,7 @@ const es = {
   alumno,
   autoestudio,
   ruta,
+  licencias,
   alumnosGrupo,
   contenido,
 };

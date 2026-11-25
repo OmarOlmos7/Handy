@@ -7,6 +7,7 @@ import { notFound, redirect } from "next/navigation";
 import { esAdmin } from "./admin";
 import { leer, modificar } from "./almacen";
 import { cursosDeAlumno, datosDeProfesor, hashToken, nuevoToken } from "./cuentas";
+import { licenciasObligatorias, tieneAcceso } from "./licencias";
 import type { Alumno, BaseDeDatos, Grupo } from "./tipos";
 
 const COOKIE_PROFESOR = "rt_sesion";
@@ -90,8 +91,10 @@ export interface AlumnoConSesion {
   nombre: string;
   correo: string;
   matricula: string;
-  /** Cursos donde está inscrito, con la matrícula que tiene en cada uno. */
+  /** Cursos donde está inscrito y tiene acceso, con la matrícula que tiene en cada uno. */
   cursos: { grupo: Grupo; alumno: Alumno }[];
+  /** Cursos donde está en la lista pero le falta la licencia (solo con LICENCIAS_OBLIGATORIAS). */
+  porActivar: { grupo: Grupo; alumno: Alumno }[];
 }
 
 /** Alumno con sesión abierta (entró con su correo y clave), o undefined. */
@@ -100,7 +103,19 @@ export const alumnoActual = cache(async (): Promise<AlumnoConSesion | undefined>
   const sesion = await sesionDe(COOKIE_ALUMNO, db);
   const cuenta = sesion?.alumnoId ? db.cuentasAlumno.find((c) => c.id === sesion.alumnoId) : undefined;
   if (!cuenta) return undefined;
-  return { id: cuenta.id, tipo: cuenta.tipo, nombre: cuenta.nombre, correo: cuenta.correo, matricula: cuenta.matricula, cursos: cursosDeAlumno(db, cuenta) };
+  // Con el cobro obligatorio, un curso sin licencia vigente no abre ninguna página ni acción del alumno.
+  const obligatorias = licenciasObligatorias();
+  const todos = cursosDeAlumno(db, cuenta);
+  const conAcceso = todos.filter((c) => tieneAcceso(db, cuenta.id, c.grupo.id, obligatorias));
+  return {
+    id: cuenta.id,
+    tipo: cuenta.tipo,
+    nombre: cuenta.nombre,
+    correo: cuenta.correo,
+    matricula: cuenta.matricula,
+    cursos: conAcceso,
+    porActivar: todos.filter((c) => !conAcceso.includes(c)),
+  };
 });
 
 /** Matrícula con que el alumno con sesión aparece en el curso, si está inscrito. */

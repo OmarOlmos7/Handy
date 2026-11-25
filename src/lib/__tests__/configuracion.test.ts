@@ -24,7 +24,7 @@ import {
   rebanadasNiveles,
   validarRangos,
 } from "../configuracion";
-import { PLANES, UTILIDAD_OBJETIVO, ahorroContra, costoCreditoMXN, creditosMaximos, planDe, precioPorPagina, utilidad } from "../planes";
+import { UTILIDAD_OBJETIVO, costoCreditoMXN, creditosMaximos } from "../planes";
 
 describe("rangos de calificación", () => {
   it("usa Bajo 0-69, Medio 70-84, Alto 85-95 y Superior 96-100 por omisión", () => {
@@ -143,40 +143,13 @@ describe("créditos por página", () => {
   });
 });
 
-describe("planes", () => {
-  it("tiene Gratuito, Básico, Pro, Academia y Escuela con sus créditos", () => {
-    expect(PLANES.map((p) => [p.id, p.creditos, p.precio])).toEqual([
-      ["gratis", 50, 0],
-      ["basico", 210, 215],
-      ["pro", 460, 345],
-      ["academia", 1000, 635],
-      ["escuela", 4000, undefined],
-    ]);
-  });
-
-  it("cada plan de pago deja su utilidad con su riesgo, después de IVA, operación e ISR", () => {
+describe("costo por crédito", () => {
+  it("calcula el costo de IA de un crédito y los créditos máximos de un precio", () => {
     expect(costoCreditoMXN()).toBeCloseTo(0.24, 2);
     expect(costoCreditoMXN(0.05)).toBeCloseTo(0.21, 2);
     expect(UTILIDAD_OBJETIVO).toBe(0.35);
-    for (const p of PLANES.filter((p) => (p.precio ?? 0) > 0)) {
-      expect(utilidad(p)!).toBeGreaterThanOrEqual(p.utilidad!);
-      expect(p.creditos).toBeLessThanOrEqual(creditosMaximos(p.precio!, p.riesgo, p.utilidad));
-    }
-    expect(PLANES.map((p) => p.riesgo)).toEqual([undefined, 0.2, 0.1, 0.05, undefined]);
-    expect(PLANES.map((p) => p.utilidad)).toEqual([undefined, 0.35, 0.31, 0.28, undefined]);
     expect([creditosMaximos(215, 0.2, 0.35), creditosMaximos(345, 0.1, 0.31), creditosMaximos(635, 0.05, 0.28)]).toEqual([219, 464, 1009]);
     // Con el riesgo completo de la escala, un crédito cuesta COSTO_CREDITO_USD.
     expect(creditosMaximos(345)).toBe(352);
   });
-
-  it("el precio por crédito baja de Básico a Pro y a Academia", () => {
-    expect(precioPorPagina(planDe("basico"))).toBe(1.02);
-    expect(precioPorPagina(planDe("pro"))).toBe(0.75);
-    expect(precioPorPagina(planDe("academia"))).toBe(0.64);
-    expect(precioPorPagina(planDe("escuela"))).toBeUndefined();
-    expect(ahorroContra(planDe("pro"), planDe("basico"))).toBe(26);
-    expect(ahorroContra(planDe("academia"), planDe("basico"))).toBe(37);
-    expect(precioPorPagina(planDe("gratis"))).toBeUndefined();
-  });
-
 });

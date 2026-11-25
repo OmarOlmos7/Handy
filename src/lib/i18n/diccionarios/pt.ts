@@ -3,6 +3,7 @@ import autoestudio from "./autoestudio/pt";
 import alumno from "./alumno/pt";
 import profesor from "./profesor/pt";
 import ruta from "./ruta/pt";
+import licencias from "./licencias/pt";
 import alumnosGrupo from "./alumnos-grupo/pt";
 import contenido from "./contenido/pt";
 
@@ -181,7 +182,7 @@ const pt: Diccionario = {
     eresAlumno: "É aluno?",
     entraAlumno: "Entre com seu e-mail e código de acesso",
     planesPrecios: "Planos e preços",
-    planesDetalle: "Gratuito, Básico, Pro, Academia e Escola · abre em outra aba",
+    planesDetalle: "Licenças por aluno e curso: 5 semanas, 10 semanas, um semestre ou um ano · abre em outra aba",
     registroTitulo: "Crie sua conta de professor",
     registroMeta: "Criar conta de professor",
     registroTexto: "Seus cursos, atividades e avaliações ficam salvos na sua conta. Seus alunos não precisam se cadastrar.",
@@ -273,71 +274,6 @@ const pt: Diccionario = {
       sinCorreo: "O envio de e-mails ainda não está configurado. Peça ajuda ao administrador.",
       correo: "Digite um e-mail válido.",
       envio: "Não foi possível enviar o e-mail. Tente de novo em alguns minutos.",
-    },
-  },
-  planes: {
-    gratis: {
-      nombre: "Gratuito",
-      lema: "Teste grátis com sua turma, sem cartão",
-      periodo: "créditos de boas-vindas, uma única vez",
-      boton: "Criar conta grátis",
-      incluye: "Para testar:",
-      ventajas: [
-        "50 créditos",
-        "Atividades geradas com IA e folhas para imprimir com QR",
-        "Entregas pelo celular com foto ou PDF",
-        "Solução e rubrica com IA sem custo",
-      ],
-    },
-    basico: {
-      nombre: "Básico",
-      lema: "Para um professor com uma turma: um bimestre inteiro corrigido",
-      periodo: "pagamento único por 210 créditos",
-      boton: "Escolher Básico",
-      incluye: "Tudo do Gratuito, mais:",
-      ventajas: [
-        "210 créditos",
-        "Feedback pessoal para cada aluno em minutos",
-        "Todos os níveis de precisão, do Rápido ao Avançado",
-        "Análises da turma e relatórios em PDF e Excel",
-        "Pagamento com cartão, dinheiro no OXXO ou SPEI, com nota fiscal (CFDI)",
-      ],
-    },
-    pro: {
-      nombre: "Pro",
-      lema: "Para um professor com duas ou três turmas",
-      periodo: "pagamento único por 460 créditos",
-      boton: "Escolher Pro",
-      incluye: "Tudo do Básico, mais:",
-      ventajas: [
-        "460 créditos",
-        "Recomendações de estudo com vídeos e leituras para cada aluno",
-        "Diário de notas do curso",
-      ],
-    },
-    academia: {
-      nombre: "Academia",
-      lema: "Para o semestre inteiro ou uma coordenação: o melhor preço por página",
-      periodo: "pagamento único por 1.000 créditos",
-      boton: "Escolher Academia",
-      incluye: "Tudo do Pro, mais:",
-      ventajas: [
-        "1.000 créditos",
-        "Folga para usar o nível Avançado nas provas",
-        "Relatórios por aluno e por turma durante todo o curso",
-      ],
-    },
-    escuela: {
-      nombre: "Escola",
-      lema: "Para instituições com vários professores",
-      periodo: "4.000 créditos ou mais, sob medida para sua instituição",
-      boton: "Fale conosco para um plano institucional",
-      incluye: "Tudo do Academia, mais:",
-      ventajas: [
-        "4.000 créditos ou mais",
-        "Acompanhamento para começar com suas coordenações",
-        "Faturamento institucional",
-      ],
     },
   },
   precios: {
@@ -507,6 +443,7 @@ const pt: Diccionario = {
   alumno,
   autoestudio,
   ruta,
+  licencias,
   alumnosGrupo,
   contenido,
 };

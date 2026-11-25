@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CompaneroDelAlumno } from "@/components/companero-servidor";
 import { InstalarApp } from "@/components/instalar-app";
-import { Encabezado, colorCalificacion } from "@/components/ui";
+import { BotonLink, Encabezado, colorCalificacion } from "@/components/ui";
 import { num } from "@/components/tablero";
 import { TarjetaCursoAlumno } from "@/components/tarjeta-curso-alumno";
 import { agruparPorColor } from "@/lib/colores";
@@ -47,6 +47,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
   const ahora = new Date();
   const cuenta = db.cuentasAlumno.find((c) => c.id === alumno.id);
   const tc = t.alumno.cursos;
+  const tl = t.licencias.alumno;
   const tarjetas = alumno.cursos.map(({ grupo, alumno: enCurso }) => ({
     grupo,
     // El color que eligió el alumno; si no eligió, el que puso el profesor.
@@ -60,6 +61,28 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
         subtitulo={`${alumno.nombre} · ${alumno.correo}. ${tp.subtituloSesion}`}
       />
       <CompaneroDelAlumno db={db} alumno={alumno} />
+      {alumno.porActivar.length > 0 && (
+        <section className="mb-6 rounded-xl border border-aviso/30 bg-aviso-suave p-5" aria-labelledby="por-activar">
+          <h2 id="por-activar" className="font-semibold text-slate-900">
+            {tl.porActivarTitulo}
+          </h2>
+          <p className="mt-1 text-sm text-slate-700">{tl.porActivarTexto}</p>
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {alumno.porActivar.map(({ grupo }) => (
+              <li key={grupo.id}>
+                <BotonLink href={`/alumno/licencias?codigo=${encodeURIComponent(grupo.codigo ?? "")}`}>
+                  {tl.activar}: {grupo.materia} · {grupo.nombre}
+                </BotonLink>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <p className="mb-6 text-sm">
+        <BotonLink href="/alumno/licencias" variante="secundario">
+          {tl.unirme}
+        </BotonLink>
+      </p>
       {tarjetas.length === 0 ? (
         <p className="rounded-xl bg-white px-5 py-4 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">{tp.sinActividades}</p>
       ) : (
