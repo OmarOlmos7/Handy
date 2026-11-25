@@ -60,7 +60,8 @@ export function MapaTemario({
   const tm = t.profesor.mapa;
   const nodos = useMemo(() => nodosTemario(asignatura), [asignatura]);
   const porClave = useMemo(() => new Map(nodos.map((n) => [n.clave, n])), [nodos]);
-  const [capa, setCapa] = useState<number | null>(null);
+  // Abre siempre en la Unidad 1; "Todas las unidades" queda al final del selector.
+  const [capa, setCapa] = useState<number | null>(asignatura.unidades.length > 0 ? 0 : null);
   const [seleccion, setSeleccion] = useState<string | null>(null);
   const [ruta, setRuta] = useState<string[]>(rutaInicial);
   const [rutaGuardada, setRutaGuardada] = useState(JSON.stringify(rutaInicial));
@@ -201,16 +202,6 @@ export function MapaTemario({
       {/* Barra: capa actual, leyenda y acciones */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <nav className="flex flex-wrap items-center gap-1 text-sm" aria-label={tm.capas}>
-          <button
-            type="button"
-            onClick={() => {
-              setCapa(null);
-              setSeleccion(null);
-            }}
-            className={`rounded-lg px-3 py-1.5 font-medium ${capa === null ? "bg-slate-800 text-white" : "text-slate-600 hover:bg-slate-100"}`}
-          >
-            {tm.todas}
-          </button>
           {asignatura.unidades.map((u, i) => (
             <button
               key={u.nombre}
@@ -226,6 +217,16 @@ export function MapaTemario({
               {formato(tm.unidadN, { n: i + 1 })}
             </button>
           ))}
+          <button
+            type="button"
+            onClick={() => {
+              setCapa(null);
+              setSeleccion(null);
+            }}
+            className={`rounded-lg px-3 py-1.5 font-medium ${capa === null ? "bg-slate-800 text-white" : "text-slate-600 hover:bg-slate-100"}`}
+          >
+            {tm.todas}
+          </button>
         </nav>
         {editable && (
           <button type="button" onClick={relacionar} disabled={ocupado} className="rounded-lg px-3 py-1.5 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200 hover:bg-tinta-50 disabled:opacity-60">
