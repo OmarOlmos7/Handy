@@ -3,6 +3,7 @@ import autoestudio from "./autoestudio/zh";
 import alumno from "./alumno/zh";
 import profesor from "./profesor/zh";
 import ruta from "./ruta/zh";
+import licencias from "./licencias/zh";
 import alumnosGrupo from "./alumnos-grupo/zh";
 import contenido from "./contenido/zh";
 
@@ -175,7 +176,7 @@ const zh: Diccionario = {
     eresAlumno: "你是学生？",
     entraAlumno: "用邮箱和访问码登录",
     planesPrecios: "套餐与价格",
-    planesDetalle: "免费、基础、专业、学院和学校 · 在新标签页中打开",
+    planesDetalle: "按学生和课程的许可证:5 周、10 周、1 学期或 1 年 · 在新标签页中打开",
     registroTitulo: "创建教师账号",
     registroMeta: "创建教师账号",
     registroTexto: "你的课程、作业和批改结果都保存在账号中。学生无需注册。",
@@ -267,71 +268,6 @@ const zh: Diccionario = {
       sinCorreo: "邮件发送尚未配置。请联系管理员。",
       correo: "请输入有效的邮箱。",
       envio: "邮件发送失败。请几分钟后再试。",
-    },
-  },
-  planes: {
-    gratis: {
-      nombre: "免费",
-      lema: "和你的班级免费试用，无需银行卡",
-      periodo: "欢迎积分，仅一次",
-      boton: "免费创建账户",
-      incluye: "试用内容：",
-      ventajas: [
-        "50 点数",
-        "AI 生成作业和带二维码的可打印作业纸",
-        "学生用手机拍照或 PDF 提交",
-        "AI 生成解答和评分细则，免费",
-      ],
-    },
-    basico: {
-      nombre: "基础",
-      lema: "适合带一个班的老师：一整个阶段的批改",
-      periodo: "一次性购买 210 积分",
-      boton: "选择基础",
-      incluye: "包含免费版全部内容，另外：",
-      ventajas: [
-        "210 点数",
-        "几分钟内给每位学生个性化反馈",
-        "所有精度等级：从快速到进阶",
-        "班级分析以及 PDF 和 Excel 报告",
-        "可用银行卡、OXXO 现金或 SPEI 付款，并开具发票（CFDI）",
-      ],
-    },
-    pro: {
-      nombre: "专业",
-      lema: "适合带两三个班的老师",
-      periodo: "一次性购买 460 积分",
-      boton: "选择专业",
-      incluye: "包含基础版全部内容，另外：",
-      ventajas: [
-        "460 点数",
-        "为每位学生推荐学习视频和阅读材料",
-        "课程成绩册",
-      ],
-    },
-    academia: {
-      nombre: "学院",
-      lema: "适合整个学期或教研组：每页价格最低",
-      periodo: "一次性购买 1,000 积分",
-      boton: "选择学院",
-      incluye: "包含专业版全部内容，另外：",
-      ventajas: [
-        "1,000 点数",
-        "考试时可放心使用进阶等级",
-        "整个学期的学生和班级报告",
-      ],
-    },
-    escuela: {
-      nombre: "学校",
-      lema: "适合有多位老师的学校",
-      periodo: "4,000 点数或以上，按机构定制",
-      boton: "联系我们办理机构方案",
-      incluye: "包含学院版全部内容，另外：",
-      ventajas: [
-        "4,000 点数或以上",
-        "协助教研组上手",
-        "机构发票",
-      ],
     },
   },
   precios: {
@@ -487,6 +423,7 @@ const zh: Diccionario = {
   alumno,
   autoestudio,
   ruta,
+  licencias,
   alumnosGrupo,
   contenido,
 };

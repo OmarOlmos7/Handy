@@ -310,6 +310,7 @@ const alumno = {
     pdfPesado: "El PDF pesa más de 40 MB",
     matriculaProfesor: "Escribe la matrícula (letras y números, sin espacios)",
     nombreAlumno: "Escribe el nombre completo del alumno",
+    sinLicencia: "Necesitas una licencia vigente en este curso para entregar. Actívala en Mis actividades con el código del curso {codigo}.",
     matriculaOcupada: "Esa matrícula ya está registrada en este curso con otro correo. Habla con tu profesor.",
     pdfIlegible: "No se pudo leer el PDF. Revisa que sea el archivo correcto y vuelve a intentarlo.",
     pdfPaginas: "El PDF tiene {paginas} páginas; el máximo es {max}",

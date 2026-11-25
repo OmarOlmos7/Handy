@@ -310,6 +310,7 @@ const alumno: Diccionario["alumno"] = {
     pdfPesado: "The PDF is larger than 40 MB",
     matriculaProfesor: "Enter the student ID (letters and numbers, no spaces)",
     nombreAlumno: "Enter the student's full name",
+    sinLicencia: "You need an active license for this course to submit. Activate it in My assignments with the course code {codigo}.",
     matriculaOcupada: "That student ID is already registered in this course with another email. Talk to your teacher.",
     pdfIlegible: "The PDF could not be read. Check that it is the right file and try again.",
     pdfPaginas: "The PDF has {paginas} pages; the maximum is {max}",

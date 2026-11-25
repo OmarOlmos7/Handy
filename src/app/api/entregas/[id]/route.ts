@@ -11,6 +11,7 @@ import { errorAlumno } from "@/lib/i18n/alumno";
 import { textos } from "@/lib/i18n/servidor";
 import { ErrorPaginasPdf, MAX_PAGINAS_ENTREGA, normalizarFoto, pdfAImagenes } from "@/lib/imagenes";
 import { permisoReenvio, primeraEntrega } from "@/lib/reenvio";
+import { licenciasObligatorias, tieneAcceso } from "@/lib/licencias";
 import { alumnoActual, iniciarSesionAlumno, profesorActual } from "@/lib/sesion";
 import type { Alumno } from "@/lib/tipos";
 
@@ -74,11 +75,11 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
           aceptacion: aceptacionDeFormulario(form),
         });
         if (!r.ok) return error(r.error, 400);
-        cuenta = { ...r.cuenta, cursos: [] };
+        cuenta = { ...r.cuenta, cursos: [], porActivar: [] };
       } else {
         const c = verificarAlumno(db, correo, clave);
         if (!c) return error("credenciales", 401);
-        cuenta = { ...c, cursos: [] };
+        cuenta = { ...c, cursos: [], porActivar: [] };
       }
       abrirSesion = true;
     }
@@ -94,6 +95,10 @@ export async function POST(req: Request, ctx: RouteContext<"/api/entregas/[id]">
       alumno = { matricula: cuenta.matricula, nombre: cuenta.nombre, correo: cuenta.correo };
     }
     if (abrirSesion) await iniciarSesionAlumno(cuenta.id);
+    // Con el cobro obligatorio, solo entrega quien tiene licencia vigente en el curso.
+    if (licenciasObligatorias() && !tieneAcceso(db, cuenta.id, grupo.id, true)) {
+      return error("sinLicencia", 402, { codigo: grupo.codigo ?? "" });
+    }
   }
 
   const previa = db.entregas.find((e) => e.actividadId === id && e.matricula === alumno.matricula);

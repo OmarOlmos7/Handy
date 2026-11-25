@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { TiendaCreditos } from "@/components/tienda-creditos";
 import { ESCALA, PUNTO_PREDETERMINADO, valoresEscala } from "@/lib/configuracion";
 import { Encabezado, Tarjeta, fechaLarga } from "@/components/ui";
 import { QuitarEjemplo } from "@/components/quitar-ejemplo";
 import { saldo } from "@/lib/almacen";
+import { CREDITOS_POR_SEMANA, LICENCIAS, creditosLicencia, resumenLicenciasProfesor } from "@/lib/licencias";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
-import { divisaActual, textos } from "@/lib/i18n/servidor";
+import { textos } from "@/lib/i18n/servidor";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
@@ -14,12 +14,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Creditos() {
-  const { db } = await datosProfesor();
+  const { db, profesor } = await datosProfesor();
   const { t, locale } = await textos();
   const tc = t.profesor.creditos;
   const hayEjemplo = db.actividades.some((a) => a.demo);
   const saldoCreditos = saldo(db);
   const movimientos = db.movimientos;
+  const tl = t.licencias.profesor;
+  const porCurso = resumenLicenciasProfesor(db, profesor.id);
+  const creditos = LICENCIAS.map(creditosLicencia);
   return (
     <>
       <Encabezado
@@ -33,8 +36,38 @@ export default async function Creditos() {
           <p className="text-xs text-slate-500">{formato(tc.aproximado, { n: Math.floor(saldoCreditos / (3 * ESCALA[PUNTO_PREDETERMINADO].creditos)).toLocaleString(locale) })}</p>
         </Tarjeta>
       </div>
-      <h2 className="mb-3 text-lg font-semibold">{tc.comprar}</h2>
-      <TiendaCreditos divisa={await divisaActual()} />
+      <h2 className="mb-1 text-lg font-semibold">{tl.creditosTitulo}</h2>
+      <p className="mb-3 max-w-3xl text-sm text-slate-600">
+        {formato(tl.creditosTexto, { n: CREDITOS_POR_SEMANA, min: Math.min(...creditos), max: Math.max(...creditos) })}
+      </p>
+      {porCurso.length === 0 ? (
+        <p className="text-sm text-slate-500">{tl.sinCursos}</p>
+      ) : (
+        <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+          <table className="w-full text-left text-sm">
+            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <tr>
+                <th className="px-4 py-3 font-medium">{t.licencias.alumno.curso}</th>
+                <th className="px-4 py-3 font-medium">{tl.codigoCurso}</th>
+                <th className="px-4 py-3 text-right font-medium">{tl.vigentes}</th>
+                <th className="px-4 py-3 text-right font-medium">{tl.creditosAbonados}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {porCurso.map(({ grupo, vigentes, creditos: abonados }) => (
+                <tr key={grupo.id}>
+                  <td className="px-4 py-2">
+                    {grupo.materia} · {grupo.nombre}
+                  </td>
+                  <td className="px-4 py-2 font-mono">{grupo.codigo}</td>
+                  <td className="px-4 py-2 text-right">{vigentes.toLocaleString(locale)}</td>
+                  <td className="px-4 py-2 text-right font-medium text-acierto">{abonados.toLocaleString(locale)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       <h2 className="mb-3 mt-10 text-lg font-semibold">{tc.movimientos}</h2>
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <table className="w-full text-left text-sm">

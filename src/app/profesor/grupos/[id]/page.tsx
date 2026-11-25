@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { conPuntaje } from "@/lib/modalidad";
 import { notFound } from "next/navigation";
+import { CodigoCurso } from "@/components/codigo-curso";
 import { FilaActividad } from "@/components/fila-actividad";
 import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
 import { BotonLink, Encabezado, Tarjeta, colorCalificacion } from "@/components/ui";
@@ -60,6 +61,15 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           </>
         }
       />
+      {grupo.codigo && (
+        <CodigoCurso
+          codigo={grupo.codigo}
+          titulo={t.licencias.profesor.codigoCurso}
+          ayuda={t.licencias.profesor.codigoAyuda}
+          copiar={t.licencias.profesor.copiar}
+          copiado={t.licencias.profesor.copiado}
+        />
+      )}
       {actividades.length === 0 ? (
         <Tarjeta className="text-sm text-slate-600">
           {tc.sinActividadesAntes}

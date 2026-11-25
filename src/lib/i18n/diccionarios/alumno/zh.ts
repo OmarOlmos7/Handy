@@ -308,6 +308,7 @@ const alumno: Diccionario["alumno"] = {
     pdfPesado: "PDF 超过 40 MB",
     matriculaProfesor: "请填写学号（字母和数字，不含空格）",
     nombreAlumno: "请填写学生的姓名",
+    sinLicencia: "提交前需要本课程的有效许可证。请在“我的作业”中输入课程代码 {codigo} 激活。",
     matriculaOcupada: "该学号已在本课程中用另一个邮箱注册。请联系你的老师。",
     pdfIlegible: "无法读取 PDF。请确认文件正确后重试。",
     pdfPaginas: "PDF 有 {paginas} 页；最多 {max} 页",

@@ -8,8 +8,8 @@ import { ESCALA, INFO_MOTOR, PUNTO_PREDETERMINADO, gruposEscala, valoresEscala }
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { formato } from "@/lib/i18n/idiomas";
 import { divisaActual, textos } from "@/lib/i18n/servidor";
-import { type Divisa, formatoPorPagina, formatoPrecio, textoDivisa } from "@/lib/divisas";
-import { PLANES, ahorroContra, planDe, type Plan } from "@/lib/planes";
+import { type Divisa, formatoPrecio, textoDivisa } from "@/lib/divisas";
+import { CREDITOS_POR_SEMANA, LICENCIAS, type TipoLicencia } from "@/lib/licencias";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t, locale } = await textos();
@@ -43,65 +43,36 @@ async function BotonContacto({ texto, clase, t }: { texto: string; clase: string
   );
 }
 
-function TarjetaPlan({ plan, t, locale, divisa }: { plan: Plan; t: Diccionario; locale: string; divisa: Divisa }) {
-  const texto = t.planes[plan.id];
-  const porPagina = plan.precio ? formatoPorPagina(plan.precio, plan.creditos, divisa, locale) : undefined;
-  const ahorro = ahorroContra(plan, planDe("basico"));
-  const d = plan.destacado;
-  const claseBoton = `mt-4 flex min-h-17 w-full items-center justify-center rounded-lg px-4 py-2 text-center text-sm font-medium leading-tight transition ${
-    d ? "bg-white text-tinta-700 hover:bg-tinta-50" : "bg-slate-900 text-white hover:bg-slate-700"
-  }`;
+function TarjetaLicencia({ licencia, t, locale, divisa }: { licencia: TipoLicencia; t: Diccionario; locale: string; divisa: Divisa }) {
+  const tl = t.licencias;
+  const texto = tl.tipos[licencia.id];
+  const d = licencia.destacado;
   return (
     <section
       className={`relative flex flex-col rounded-2xl p-6 ring-1 ${d ? "bg-tinta-600 text-white shadow-xl ring-tinta-600" : "bg-white shadow-sm ring-slate-200"}`}
-      aria-labelledby={`plan-${plan.id}`}
+      aria-labelledby={`licencia-${licencia.id}`}
     >
       {d && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-3 py-0.5 text-xs font-medium text-tinta-700 shadow-sm ring-1 ring-tinta-200">
-          {t.precios.masPopular}
+          {tl.precios.masPopular}
         </span>
       )}
-      <h2 id={`plan-${plan.id}`} className="text-center text-xl font-semibold">
+      <h2 id={`licencia-${licencia.id}`} className="text-center text-xl font-semibold">
         {texto.nombre}
       </h2>
-
-      {/* Precio y detalle con la misma altura en todos los planes: títulos, precios y botones alineados. */}
-      <div className="mt-6 flex h-11 items-end justify-center gap-1.5 text-center">
-        {plan.precio === undefined ? (
-          <span className="text-3xl font-semibold tracking-tight">{t.precios.aLaMedida}</span>
-        ) : (
-          <>
-            <span className="text-4xl font-semibold tracking-tight">{formatoPrecio(plan.precio, divisa, locale)}</span>
-          </>
-        )}
-      </div>
-      <p className={`mt-1 min-h-15 text-center text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{texto.periodo}</p>
-      <p className={`mt-1 min-h-8 text-center text-xs font-medium ${d ? "text-white" : "text-tinta-700"}`}>
-        {porPagina !== undefined && formato(t.precios.porPagina, { p: porPagina })}
-        {ahorro !== undefined && ` · ${formato(t.precios.ahorra, { n: ahorro })}`}
-      </p>
-
-      {plan.boton.href ? (
-        <Link href={plan.boton.href} className={claseBoton}>
-          {texto.boton}
-        </Link>
-      ) : (
-        <Suspense fallback={<span className={claseBoton}>{texto.boton}</span>}>
-          <BotonContacto texto={texto.boton} clase={claseBoton} t={t} />
-        </Suspense>
-      )}
-
-      <div className={`mt-6 border-t pt-5 ${d ? "border-white/20" : "border-slate-100"}`}>
-        <p className={`text-sm font-medium ${d ? "text-white" : "text-slate-800"}`}>{texto.incluye}</p>
-        <ul className="mt-3 space-y-2.5 text-sm">
-          {texto.ventajas.map((v) => (
-            <li key={v} className={`flex gap-2.5 ${d ? "text-white" : "text-slate-600"}`}>
-              <Paloma claro={d} />
-              {v}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <p className="mt-6 text-center text-4xl font-semibold tracking-tight">{formatoPrecio(licencia.precio, divisa, locale)}</p>
+      <p className={`mt-1 text-center text-sm ${d ? "text-tinta-100" : "text-slate-500"}`}>{tl.porAlumno}</p>
+      <p className={`mt-1 min-h-5 text-center text-xs font-medium ${d ? "text-white" : "text-aviso"}`}>{licencia.provisional ? tl.provisional : ""}</p>
+      <p className={`mt-3 text-center text-sm ${d ? "text-white" : "text-slate-600"}`}>{texto.detalle}</p>
+      <p className={`mt-1 text-center text-xs ${d ? "text-tinta-100" : "text-slate-500"}`}>{formato(tl.semanas, { n: licencia.semanas })}</p>
+      <Link
+        href={`/alumno/licencias?tipo=${licencia.id}`}
+        className={`mt-5 flex min-h-11 w-full items-center justify-center rounded-lg px-4 py-2 text-center text-sm font-medium leading-tight transition ${
+          d ? "bg-white text-tinta-700 hover:bg-tinta-50" : "bg-slate-900 text-white hover:bg-slate-700"
+        }`}
+      >
+        {tl.precios.boton}
+      </Link>
     </section>
   );
 }
@@ -110,10 +81,10 @@ function TarjetaPlan({ plan, t, locale, divisa }: { plan: Plan; t: Diccionario; 
 export default async function Precios() {
   const { idioma, t, locale } = await textos();
   const pr = t.precios;
+  const tl = t.licencias;
+  const claseContacto = "mt-4 inline-flex self-start rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700";
   const divisa = await divisaActual();
   const valores = valoresEscala(locale);
-  const medio = ESCALA[PUNTO_PREDETERMINADO].precision;
-  const nota = formato(pr.notaEstimacion, { ...valores, modelo: `${INFO_MOTOR[medio.motor].nombreCorto} - ${t.esfuerzos[medio.esfuerzo]}` });
   return (
     <div className="flex min-h-full flex-1 flex-col bg-[#f6f7f9]">
       <header className="border-b border-slate-200 bg-white">
@@ -135,16 +106,44 @@ export default async function Precios() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{pr.titulo}</h1>
-          <p className="mt-3 text-slate-600">{formato(pr.texto, { ...valores, divisa: textoDivisa(divisa, locale, t.comun.ivaIncluido) })}</p>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{tl.precios.titulo}</h1>
+          <p className="mt-3 text-slate-600">{formato(tl.precios.texto, { divisa: textoDivisa(divisa, locale, t.comun.ivaIncluido) })}</p>
         </div>
 
-        <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {PLANES.map((p) => (
-            <TarjetaPlan key={p.id} plan={p} t={t} locale={locale} divisa={divisa} />
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {LICENCIAS.map((l) => (
+            <TarjetaLicencia key={l.id} licencia={l} t={t} locale={locale} divisa={divisa} />
           ))}
         </div>
-        <p className="mx-auto mt-4 max-w-3xl text-center text-xs text-slate-500">{nota}</p>
+
+        <div className="mx-auto mt-6 max-w-3xl rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <p className="text-sm font-medium text-slate-800">{tl.precios.incluye}</p>
+          <ul className="mt-3 grid gap-2.5 text-sm text-slate-600 sm:grid-cols-2">
+            {tl.precios.ventajas.map((v) => (
+              <li key={v} className="flex gap-2.5">
+                <Paloma />
+                {v}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          <section className="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <h2 className="text-lg font-semibold">{tl.precios.profesorTitulo}</h2>
+            <p className="mt-2 flex-1 text-sm text-slate-600">{formato(tl.precios.profesorTexto, { n: CREDITOS_POR_SEMANA })}</p>
+            <BotonLink href="/registro" className="mt-4 self-start">
+              {tl.precios.profesorBoton}
+            </BotonLink>
+          </section>
+          <section className="flex flex-col rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+            <h2 className="text-lg font-semibold">{tl.precios.escuelaTitulo}</h2>
+            <p className="mt-2 flex-1 text-sm text-slate-600">{tl.precios.escuelaTexto}</p>
+            <Suspense fallback={<span className={claseContacto}>{tl.precios.escuelaBoton}</span>}>
+              <BotonContacto texto={tl.precios.escuelaBoton} clase={claseContacto} t={t} />
+            </Suspense>
+          </section>
+        </div>
 
         <section className="mt-16" aria-labelledby="precision">
           <h2 id="precision" className="text-2xl font-semibold tracking-tight">
@@ -193,7 +192,7 @@ export default async function Precios() {
             {pr.preguntasTitulo}
           </h2>
           <dl className="mt-6 grid gap-4 md:grid-cols-2">
-            {pr.preguntas.map(([p, r]) => (
+            {tl.precios.preguntas.map(([p, r]) => (
               <div key={p} className="rounded-xl bg-white p-5 ring-1 ring-slate-200">
                 <dt className="font-medium">{p}</dt>
                 <dd className="mt-1 text-sm text-slate-600">{formato(r, valores)}</dd>

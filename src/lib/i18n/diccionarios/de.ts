@@ -3,6 +3,7 @@ import autoestudio from "./autoestudio/de";
 import alumno from "./alumno/de";
 import profesor from "./profesor/de";
 import ruta from "./ruta/de";
+import licencias from "./licencias/de";
 import alumnosGrupo from "./alumnos-grupo/de";
 import contenido from "./contenido/de";
 
@@ -181,7 +182,7 @@ const de: Diccionario = {
     eresAlumno: "Sind Sie Schüler?",
     entraAlumno: "Melden Sie sich mit E-Mail und Zugangscode an",
     planesPrecios: "Tarife und Preise",
-    planesDetalle: "Kostenlos, Basis, Pro, Akademie und Schule · öffnet in neuem Tab",
+    planesDetalle: "Lizenzen pro Schüler und Kurs: 5 Wochen, 10 Wochen, ein Semester oder ein Jahr · öffnet in neuem Tab",
     registroTitulo: "Lehrerkonto erstellen",
     registroMeta: "Lehrerkonto erstellen",
     registroTexto: "Ihre Kurse, Aufgaben und Bewertungen werden in Ihrem Konto gespeichert. Ihre Schüler müssen sich nicht registrieren.",
@@ -273,71 +274,6 @@ const de: Diccionario = {
       sinCorreo: "Der E-Mail-Versand ist noch nicht eingerichtet. Bitte wende dich an den Administrator.",
       correo: "Gib eine gültige E-Mail-Adresse ein.",
       envio: "Die E-Mail konnte nicht gesendet werden. Versuche es in ein paar Minuten erneut.",
-    },
-  },
-  planes: {
-    gratis: {
-      nombre: "Kostenlos",
-      lema: "Kostenlos mit deiner Klasse testen, ohne Karte",
-      periodo: "Willkommensguthaben, nur einmal",
-      boton: "Kostenloses Konto erstellen",
-      incluye: "Zum Ausprobieren:",
-      ventajas: [
-        "50 Credits",
-        "KI-generierte Aufgaben und druckbare Blätter mit QR",
-        "Abgaben per Handy als Foto oder PDF",
-        "Lösung und Bewertungsraster per KI ohne Kosten",
-      ],
-    },
-    basico: {
-      nombre: "Basis",
-      lema: "Für eine Lehrkraft mit einer Klasse: ein ganzer Abschnitt bewertet",
-      periodo: "Einmalzahlung für 210 Credits",
-      boton: "Basis wählen",
-      incluye: "Alles aus Kostenlos, plus:",
-      ventajas: [
-        "210 Credits",
-        "Persönliches Feedback für jede/n Schüler/in in Minuten",
-        "Alle Präzisionsstufen, von Schnell bis Fortgeschritten",
-        "Klassenauswertung und Berichte als PDF und Excel",
-        "Zahlung per Karte, bar bei OXXO oder SPEI, mit Rechnung (CFDI)",
-      ],
-    },
-    pro: {
-      nombre: "Pro",
-      lema: "Für eine Lehrkraft mit zwei oder drei Klassen",
-      periodo: "Einmalzahlung für 460 Credits",
-      boton: "Pro wählen",
-      incluye: "Alles aus Basis, plus:",
-      ventajas: [
-        "460 Credits",
-        "Lernempfehlungen mit Videos und Texten für jede/n Schüler/in",
-        "Notenbuch des Kurses",
-      ],
-    },
-    academia: {
-      nombre: "Akademie",
-      lema: "Für ein ganzes Semester oder eine Fachschaft: der beste Preis pro Seite",
-      periodo: "Einmalzahlung für 1.000 Credits",
-      boton: "Akademie wählen",
-      incluye: "Alles aus Pro, plus:",
-      ventajas: [
-        "1.000 Credits",
-        "Spielraum für die Stufe Fortgeschritten bei Prüfungen",
-        "Berichte pro Schüler/in und Klasse das ganze Semester",
-      ],
-    },
-    escuela: {
-      nombre: "Schule",
-      lema: "Für Schulen mit mehreren Lehrkräften",
-      periodo: "4.000 Credits oder mehr, passend für Ihre Institution",
-      boton: "Kontakt für einen institutionellen Plan",
-      incluye: "Alles aus Akademie, plus:",
-      ventajas: [
-        "4.000 Credits oder mehr",
-        "Begleitung beim Start mit euren Fachschaften",
-        "Rechnung für die Institution",
-      ],
     },
   },
   precios: {
@@ -507,6 +443,7 @@ const de: Diccionario = {
   alumno,
   autoestudio,
   ruta,
+  licencias,
   alumnosGrupo,
   contenido,
 };

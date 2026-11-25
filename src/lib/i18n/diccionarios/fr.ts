@@ -3,6 +3,7 @@ import autoestudio from "./autoestudio/fr";
 import alumno from "./alumno/fr";
 import profesor from "./profesor/fr";
 import ruta from "./ruta/fr";
+import licencias from "./licencias/fr";
 import alumnosGrupo from "./alumnos-grupo/fr";
 import contenido from "./contenido/fr";
 
@@ -181,7 +182,7 @@ const fr: Diccionario = {
     eresAlumno: "Vous êtes élève ?",
     entraAlumno: "Connectez-vous avec votre e-mail et votre code d'accès",
     planesPrecios: "Offres et tarifs",
-    planesDetalle: "Gratuit, Basique, Pro, Académie et École · s'ouvre dans un nouvel onglet",
+    planesDetalle: "Licences par élève et par cours : 5 semaines, 10 semaines, un semestre ou un an · s’ouvre dans un nouvel onglet",
     registroTitulo: "Créez votre compte enseignant",
     registroMeta: "Créer un compte enseignant",
     registroTexto: "Vos cours, devoirs et évaluations sont enregistrés dans votre compte. Vos élèves n'ont pas besoin de s'inscrire.",
@@ -273,71 +274,6 @@ const fr: Diccionario = {
       sinCorreo: "L'envoi d'e-mails n'est pas encore configuré. Demandez de l'aide à l'administrateur.",
       correo: "Saisissez un e-mail valide.",
       envio: "L'e-mail n'a pas pu être envoyé. Réessayez dans quelques minutes.",
-    },
-  },
-  planes: {
-    gratis: {
-      nombre: "Gratuit",
-      lema: "Essayez gratuitement avec votre classe, sans carte",
-      periodo: "crédits de bienvenue, une seule fois",
-      boton: "Créer un compte gratuit",
-      incluye: "Pour essayer :",
-      ventajas: [
-        "50 crédits",
-        "Activités générées par l'IA et feuilles imprimables avec QR",
-        "Rendus depuis le téléphone en photo ou PDF",
-        "Solution et grille par l'IA sans frais",
-      ],
-    },
-    basico: {
-      nombre: "Basique",
-      lema: "Pour un enseignant avec une classe : toute une période corrigée",
-      periodo: "paiement unique pour 210 crédits",
-      boton: "Choisir Basique",
-      incluye: "Tout Gratuit, plus :",
-      ventajas: [
-        "210 crédits",
-        "Un commentaire personnel pour chaque élève en quelques minutes",
-        "Tous les niveaux de précision, de Rapide à Avancé",
-        "Analyses de la classe et rapports PDF et Excel",
-        "Paiement par carte, espèces chez OXXO ou SPEI, avec facture (CFDI)",
-      ],
-    },
-    pro: {
-      nombre: "Pro",
-      lema: "Pour un enseignant avec deux ou trois classes",
-      periodo: "paiement unique pour 460 crédits",
-      boton: "Choisir Pro",
-      incluye: "Tout Basique, plus :",
-      ventajas: [
-        "460 crédits",
-        "Recommandations d'étude avec vidéos et lectures pour chaque élève",
-        "Carnet de notes du cours",
-      ],
-    },
-    academia: {
-      nombre: "Académie",
-      lema: "Pour tout le semestre ou une équipe : le meilleur prix par page",
-      periodo: "paiement unique pour 1 000 crédits",
-      boton: "Choisir Académie",
-      incluye: "Tout Pro, plus :",
-      ventajas: [
-        "1 000 crédits",
-        "De la marge pour le niveau Avancé aux examens",
-        "Rapports par élève et par classe tout au long du cours",
-      ],
-    },
-    escuela: {
-      nombre: "École",
-      lema: "Pour les établissements avec plusieurs enseignants",
-      periodo: "4 000 crédits ou plus, sur mesure pour votre établissement",
-      boton: "Nous contacter pour un plan institutionnel",
-      incluye: "Tout Académie, plus :",
-      ventajas: [
-        "4 000 crédits ou plus",
-        "Accompagnement pour démarrer avec vos équipes",
-        "Facturation institutionnelle",
-      ],
     },
   },
   precios: {
@@ -507,6 +443,7 @@ const fr: Diccionario = {
   alumno,
   autoestudio,
   ruta,
+  licencias,
   alumnosGrupo,
   contenido,
 };

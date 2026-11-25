@@ -3,6 +3,7 @@ import autoestudio from "./autoestudio/en";
 import alumno from "./alumno/en";
 import profesor from "./profesor/en";
 import ruta from "./ruta/en";
+import licencias from "./licencias/en";
 import alumnosGrupo from "./alumnos-grupo/en";
 import contenido from "./contenido/en";
 
@@ -181,7 +182,7 @@ const en: Diccionario = {
     eresAlumno: "Are you a student?",
     entraAlumno: "Sign in with your email and access code",
     planesPrecios: "Plans and pricing",
-    planesDetalle: "Free, Basic, Pro, Academy and School · opens in a new tab",
+    planesDetalle: "Licenses per student and course: 5 weeks, 10 weeks, a semester or a year · opens in a new tab",
     registroTitulo: "Create your teacher account",
     registroMeta: "Create a teacher account",
     registroTexto: "Your courses, assignments and grades are saved in your account. Your students don't need to sign up.",
@@ -273,71 +274,6 @@ const en: Diccionario = {
       sinCorreo: "Email sending is not set up yet. Ask the administrator for help.",
       correo: "Enter a valid email.",
       envio: "The email could not be sent. Try again in a few minutes.",
-    },
-  },
-  planes: {
-    gratis: {
-      nombre: "Free",
-      lema: "Try it free with your class, no card needed",
-      periodo: "welcome credits, one time only",
-      boton: "Create a free account",
-      incluye: "To try it out:",
-      ventajas: [
-        "50 credits",
-        "AI-generated activities and printable sheets with QR",
-        "Submissions from phones with a photo or PDF",
-        "AI solution and rubric at no cost",
-      ],
-    },
-    basico: {
-      nombre: "Basic",
-      lema: "For a teacher with one class: a whole term graded",
-      periodo: "one-time payment for 210 credits",
-      boton: "Choose Basic",
-      incluye: "Everything in Free, plus:",
-      ventajas: [
-        "210 credits",
-        "Personal feedback for every student in minutes",
-        "All precision levels, from Fast to Advanced",
-        "Class analytics and PDF and Excel reports",
-        "Pay by card, cash at OXXO or SPEI, with invoice (CFDI)",
-      ],
-    },
-    pro: {
-      nombre: "Pro",
-      lema: "For a teacher with two or three classes",
-      periodo: "one-time payment for 460 credits",
-      boton: "Choose Pro",
-      incluye: "Everything in Basic, plus:",
-      ventajas: [
-        "460 credits",
-        "Study recommendations with videos and readings for each student",
-        "Course gradebook",
-      ],
-    },
-    academia: {
-      nombre: "Academy",
-      lema: "For a whole semester or a department: the best price per page",
-      periodo: "one-time payment for 1,000 credits",
-      boton: "Choose Academy",
-      incluye: "Everything in Pro, plus:",
-      ventajas: [
-        "1,000 credits",
-        "Room to use the Advanced level on exams",
-        "Student and class reports all term long",
-      ],
-    },
-    escuela: {
-      nombre: "School",
-      lema: "For institutions with several teachers",
-      periodo: "4,000 credits or more, tailored to your institution",
-      boton: "Contact us to set up an institutional plan",
-      incluye: "Everything in Academy, plus:",
-      ventajas: [
-        "4,000 credits or more",
-        "Onboarding support for your departments",
-        "Institutional invoicing",
-      ],
     },
   },
   precios: {
@@ -507,6 +443,7 @@ const en: Diccionario = {
   alumno,
   autoestudio,
   ruta,
+  licencias,
   alumnosGrupo,
   contenido,
 };

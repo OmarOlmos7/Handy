@@ -100,7 +100,7 @@ export interface Grupo {
   id: string;
   /** Profesor dueño del curso. */
   profesorId?: string;
-  /** Código interno del curso (ya no se muestra; los alumnos entran con correo y clave). */
+  /** Código del curso (ej. FIS-3B7K): el profesor lo comparte y con él el alumno activa su licencia. */
   codigo?: string;
   nombre: string;
   materia: string;
@@ -641,6 +641,39 @@ export interface BaseDeDatos {
   tiempos?: TiempoActividad[];
   /** Actividades que cada alumno se asignó a sí mismo (generadas con IA). */
   autoactividades?: Autoactividad[];
+  /** Licencias de alumno por curso (ver lib/licencias). */
+  licencias?: Licencia[];
+}
+
+// ---------- Licencias de alumno ----------
+
+/** Duración de la licencia de un alumno en un curso. */
+export type IdLicencia = "semanas5" | "semanas10" | "semestre" | "anual";
+
+/**
+ * Licencia de un alumno en un curso. La llave (IEG-XXXX-XXXX-XXXX) liga el pago al alumno y al
+ * curso: viaja como referencia externa a la pasarela y vuelve en la confirmación del pago.
+ */
+export interface Licencia {
+  llave: string;
+  tipo: IdLicencia;
+  alumnoId: string;
+  grupoId: string;
+  /** Código del curso con que el alumno se inscribió. */
+  codigoCurso: string;
+  /** Precio en MXN con IVA al crearla. */
+  precio: number;
+  semanas: number;
+  /** Créditos de IA que abona al profesor del curso al pagarse. */
+  creditosProfesor: number;
+  estado: "pendiente" | "pagada" | "cancelada";
+  creadaEn: string;
+  pagadaEn?: string;
+  /** Fin del acceso (ISO). */
+  vence?: string;
+  proveedor?: "mercadopago" | "demo" | "cortesia";
+  /** Id del pago en la pasarela. */
+  pagoId?: string;
 }
 
 // ---------- Actividades autoasignadas por el alumno ----------
