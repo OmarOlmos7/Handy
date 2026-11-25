@@ -39,19 +39,24 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
         subtitulo={`${formato(c.ciclo, { c: grupo.ciclo })} · ${formato(actividades.length === 1 ? c.actividad1 : c.actividadN, { n: actividades.length })} · ${formato(alumnos === 1 ? c.alumno1 : c.alumnoN, { n: alumnos })}`}
         acciones={
           <>
-            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/analiticas`}>
-              <IconoGrafica /> {tc.analiticas}
+            {/* Dos columnas: Analíticas y Cuaderno a la izquierda; Rutas y Avance del temario a la derecha. */}
+            <div className="grid w-full grid-flow-col grid-cols-2 grid-rows-2 gap-2 sm:w-auto">
+              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/analiticas`}>
+                <IconoGrafica /> {tc.analiticas}
+              </BotonLink>
+              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/cuaderno`}>
+                <IconoCuaderno /> {tc.cuaderno}
+              </BotonLink>
+              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/rutas`}>
+                <IconoRuta /> {t.ruta.profesor.boton}
+              </BotonLink>
+              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/avance`}>
+                <IconoMapa /> {tc.avanceTemario}
+              </BotonLink>
+            </div>
+            <BotonLink className="w-full sm:w-auto sm:self-center" href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>
+              {tc.nuevaActividad}
             </BotonLink>
-            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/avance`}>
-              <IconoMapa /> {tc.avanceTemario}
-            </BotonLink>
-            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/rutas`}>
-              <IconoRuta /> {t.ruta.profesor.boton}
-            </BotonLink>
-            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/cuaderno`}>
-              <IconoCuaderno /> {tc.cuaderno}
-            </BotonLink>
-            <BotonLink href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>{tc.nuevaActividad}</BotonLink>
           </>
         }
       />
