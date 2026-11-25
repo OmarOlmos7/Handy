@@ -13,6 +13,7 @@ export function BarraApp({
   configuracion,
   idioma,
   textoConfiguracion = "Configuración",
+  logo,
 }: {
   enlaces: { href: string; texto: string; exacto?: boolean }[];
   /** Nombre, tipo de perfil (va debajo del nombre) y un dato extra, como el correo. */
@@ -23,13 +24,15 @@ export function BarraApp({
   /** Selector de idioma (idioma actual y etiqueta). */
   idioma?: { actual: Idioma; etiqueta: string };
   textoConfiguracion?: string;
+  /** Imagen del logo; sin ella, la de iEureka-Grader. */
+  logo?: string;
 }) {
   const ruta = usePathname();
   return (
     <header className="no-imprimir border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
         <Link href="/">
-          <Logo grande />
+          <Logo grande src={logo} />
         </Link>
         <nav className="order-3 flex w-full gap-1 overflow-x-auto text-sm sm:order-none sm:w-auto">
           {enlaces.map((e) => {

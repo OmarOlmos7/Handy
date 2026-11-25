@@ -6,6 +6,7 @@ import { IdiomaDocumento } from "@/components/idioma-documento";
 import { ProveedorTextos } from "@/components/proveedor-textos";
 import { esAdmin } from "@/lib/admin";
 import { mantenimiento } from "@/lib/archivo";
+import { srcLogo } from "@/lib/logo";
 import { saldo } from "@/lib/almacen";
 import { formato } from "@/lib/i18n/idiomas";
 import { idiomaPublico, textos } from "@/lib/i18n/servidor";
@@ -30,6 +31,7 @@ export default async function LayoutProfesor({ children }: LayoutProps<"/profeso
         ]}
         usuario={{ nombre: profesor.nombre, tipo: t.barra.tipos[profesor.tipo], rol: profesor.correo }}
         configuracion="/profesor/configuracion"
+        logo={srcLogo(profesor.config)}
         textoConfiguracion={t.comun.configuracion}
         extra={
           <>

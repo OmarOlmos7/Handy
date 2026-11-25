@@ -4,7 +4,7 @@ import "server-only";
 import { PDFDocument, rgb } from "pdf-lib";
 import QRCode from "qrcode";
 import { leerArchivo } from "./almacen";
-import { leerLogo } from "./pdf";
+import { bytesLogo } from "./logo";
 import { escalaDe } from "./estadisticas";
 import { conPuntaje } from "./modalidad";
 import profesorEs from "./i18n/diccionarios/profesor/es";
@@ -23,11 +23,13 @@ export async function pdfHojaEscaneada(
   actividad: Actividad,
   datos: { curso: string; enlace: string },
   tx: typeof profesorEs.hojaImpresa = profesorEs.hojaImpresa,
+  /** PNG del encabezado; por omisión, el logo de iEureka-Grader. */
+  logoPng: Buffer = bytesLogo(),
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   doc.setTitle(actividad.titulo);
   const { normal, negrita, limpiar } = await fuentesPdf(doc, [actividad.titulo, datos.curso, ...Object.values(tx)], leerFuenteCjk);
-  const logo = await doc.embedPng(leerLogo());
+  const logo = await doc.embedPng(logoPng);
   const qr = await doc.embedPng(await QRCode.toBuffer(datos.enlace, { margin: 1, width: 300, errorCorrectionLevel: "M" }));
 
   // Páginas originales del profesor, en orden.
