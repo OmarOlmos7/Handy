@@ -285,15 +285,33 @@ function Tarjetas({ tarjetas, estado, onCambiar }: { tarjetas: TarjetaEstudio[];
         ))}
       </div>
       <div className={`tarjeta-estudio ${e.volteada ? "tarjeta-estudio-volteada" : ""}`}>
-        <div className="tarjeta-estudio-cara relative min-h-56">
-          <div className="tarjeta-estudio-frente absolute inset-0 flex flex-col justify-center rounded-3xl bg-gradient-to-br from-tinta-600 to-indigo-700 p-6 text-center text-white shadow-lg">
-            <p className="text-lg font-semibold leading-snug">
-              <TextoMat texto={tj.frente} negritas="font-bold text-white" />
+        <div className="tarjeta-estudio-cara grid">
+          <div className="tarjeta-estudio-frente flex flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_32px_-14px_rgba(15,23,42,0.22)] [grid-area:1/1] sm:p-5">
+            <div className="flex h-28 items-center justify-center rounded-2xl bg-slate-50">
+              <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-100 text-4xl shadow-sm">🧠</span>
+            </div>
+            <p className="mt-5 text-xs font-bold uppercase tracking-[0.16em] text-green-800">{th.etiquetaPregunta}</p>
+            <p className="mt-2 text-xl font-bold leading-snug text-tinta-900">
+              <TextoMat texto={tj.frente} negritas="font-extrabold text-tinta-900" />
             </p>
-            {tj.pista && (pista ? <p className="mt-3 text-sm text-tinta-100">💡 {tj.pista}</p> : <button type="button" onClick={() => setPista(true)} className="mt-3 text-sm text-tinta-100 underline">💡 {th.verPista}</button>)}
+            {tj.pista && (
+              <div className="mt-auto pt-5">
+                {pista ? (
+                  <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900">💡 {tj.pista}</p>
+                ) : (
+                  <button type="button" onClick={() => setPista(true)} className="text-[15px] font-bold text-tinta-700 hover:text-tinta-900">
+                    {th.verPista} →
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-          <div className="tarjeta-estudio-reverso absolute inset-0 flex flex-col justify-center rounded-3xl bg-white p-6 text-center shadow-lg ring-2 ring-tinta-200">
-            <p className="text-[15px] leading-relaxed text-slate-800">
+          <div className="tarjeta-estudio-reverso flex flex-col rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_12px_32px_-14px_rgba(15,23,42,0.22)] [grid-area:1/1] sm:p-5">
+            <div className="flex h-28 items-center justify-center rounded-2xl bg-slate-50">
+              <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-acierto-suave text-4xl shadow-sm">💡</span>
+            </div>
+            <p className="mt-5 text-xs font-bold uppercase tracking-[0.16em] text-green-800">{th.etiquetaRespuesta}</p>
+            <p className="mt-2 text-lg font-semibold leading-relaxed text-tinta-900">
               <TextoMat texto={tj.reverso} />
             </p>
           </div>

@@ -144,6 +144,8 @@ const autoestudio: typeof es = {
     fuentesNota: "信頼できる教育サイトの内容をまとめたものです。くわしくは出典を見てください。",
     tarjetaN: "カード {n} / {t}",
     recuerda: "覚えていることを書こう",
+    etiquetaPregunta: "問題",
+    etiquetaRespuesta: "答え",
     verPista: "ヒントを見る",
     voltear: "裏返して比べる",
     comparar: "書いたことと比べてみよう。どうだった？",

@@ -91,6 +91,7 @@ body {
 }
 .tarjeta-estudio-frente,
 .tarjeta-estudio-reverso {
+  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
 .tarjeta-estudio-reverso {

@@ -146,6 +146,8 @@ const autoestudio = {
     fuentesNota: "Contenido resumido de sitios educativos confiables. Revisa las fuentes si quieres saber más.",
     tarjetaN: "Tarjeta {n} de {t}",
     recuerda: "Escribe lo que recuerdas",
+    etiquetaPregunta: "Pregunta",
+    etiquetaRespuesta: "Respuesta",
     verPista: "Ver pista",
     voltear: "Voltear y comparar",
     comparar: "Compáralo con lo que escribiste. ¿Qué tal te fue?",
