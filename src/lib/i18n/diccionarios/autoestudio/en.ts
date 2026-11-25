@@ -47,6 +47,13 @@ const autoestudio: typeof es = {
     },
     otraIdea: "Another idea",
     usarIdea: "Sure, let's build it!",
+    pascal: {
+      saludo: "Hi, I'm Pascal!",
+      lema: "I'm your best friend and I'll help you reach your goals!",
+      pide: "Ask me for exercises, videos, readings or study cards on any topic in your course.",
+      guau: "Woof!",
+      etiqueta: "Pascal, your study buddy. Click him to hear him bark.",
+    },
   },
   alta: {
     titulo: "Design your activity",

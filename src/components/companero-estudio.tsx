@@ -1,20 +1,24 @@
 "use client";
 
-// Compañero de estudio: unos ojitos que cambian de ánimo según lo que el alumno estudia por su
-// cuenta, una línea donde "habla" (invita a estudiar, avisa lo que está por vencer y propone
-// temas) y, debajo, el formulario para pedirle una actividad diseñada con IA.
+// Compañero de estudio: Pascal (golden retriever) asomándose sobre la línea donde "habla" cuando el
+// profesor tiene créditos, o unos ojitos si no. Cambia de pose o de ánimo según lo que el alumno
+// estudia por su cuenta; invita a estudiar, avisa lo que está por vencer y propone temas. Debajo,
+// el formulario para pedirle una actividad diseñada con IA.
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CANTIDAD_MAX, CANTIDAD_MIN, CANTIDAD_PREDETERMINADA, LARGO_PETICION, TIPOS_AUTOACTIVIDAD, TIPOS_EJERCICIO_MANUSCRITA, TIPOS_EJERCICIO_PRACTICA, type Animo } from "@/lib/autoestudio";
+import { CANTIDAD_MAX, CANTIDAD_MIN, CANTIDAD_PREDETERMINADA, LARGO_PETICION, TIPOS_AUTOACTIVIDAD, TIPOS_EJERCICIO_MANUSCRITA, TIPOS_EJERCICIO_PRACTICA, type Animo, type Sugerencia } from "@/lib/autoestudio";
 import { formato } from "@/lib/i18n/idiomas";
+import { gestoPascal } from "@/lib/pascal";
 import type { CursoCompanero } from "@/lib/companero";
 import type { TipoAutoactividad, TipoEjercicio } from "@/lib/tipos";
 import { Ojitos } from "./ojitos";
+import { Pascal } from "./pascal";
 import { useTextos } from "./proveedor-textos";
 import { campo } from "./ui";
 
 export interface IdeaCompanero {
   texto: string;
+  clave?: Sugerencia["clave"];
   tipo?: TipoAutoactividad;
   tema?: string;
   grupoId?: string;
@@ -49,6 +53,7 @@ export function CompaneroEstudio({
   cursos,
   grupoFijo,
   restantes,
+  conCreditos = false,
 }: {
   animo: Animo;
   ideas: IdeaCompanero[];
@@ -56,6 +61,8 @@ export function CompaneroEstudio({
   /** Dentro de un curso: el curso ya está elegido. */
   grupoFijo?: string;
   restantes: number;
+  /** El profesor tiene créditos para que el alumno cree actividades: sale Pascal. */
+  conCreditos?: boolean;
 }) {
   const { t } = useTextos();
   const ta = t.autoestudio;
@@ -74,9 +81,38 @@ export function CompaneroEstudio({
   const elegidos = tipos.filter((x) => opcionesEjercicio.includes(x));
   const [estado, setEstado] = useState<"listo" | "creando">("listo");
   const [error, setError] = useState("");
+  const [saludando, setSaludando] = useState(conCreditos);
+  const [ladrando, setLadrando] = useState(0);
+  const [senalando, setSenalando] = useState(false);
+
+  // Pascal saluda al llegar y luego se pone según lo que dice.
+  useEffect(() => {
+    if (!saludando) return;
+    const t = setTimeout(() => setSaludando(false), 3500);
+    return () => clearTimeout(t);
+  }, [saludando]);
+
+  // Cada clic lo hace ladrar un momento.
+  useEffect(() => {
+    if (!ladrando) return;
+    const t = setTimeout(() => setLadrando(0), 1300);
+    return () => clearTimeout(t);
+  }, [ladrando]);
 
   const idea = ideas[i % Math.max(1, ideas.length)];
-  const dicho = useEscritura(aviso ?? (estado === "creando" ? ta.alta.creando : (idea?.texto ?? ta.companero.mensajes.bienvenida)));
+  // Con Pascal, el saludo ya va arriba: la bienvenida solo dice qué puede pedirle.
+  const textoIdea = conCreditos && (!idea || idea.clave === "bienvenida") ? ta.companero.pascal.pide : (idea?.texto ?? ta.companero.mensajes.bienvenida);
+  const dicho = useEscritura(aviso ?? (estado === "creando" ? ta.alta.creando : textoIdea));
+  const gesto = gestoPascal({
+    animo: animoAhora,
+    clave: idea?.clave,
+    creando: estado === "creando",
+    ladrando: ladrando > 0,
+    apoyo: !!aviso,
+    saludando,
+    senalando,
+    sinRestantes: restantes <= 0,
+  });
   const curso = cursos.find((c) => c.id === grupoId);
   const temas = curso?.temas ?? [];
 
@@ -119,18 +155,39 @@ export function CompaneroEstudio({
 
   return (
     <section aria-label={ta.companero.nombre} className="mx-auto mb-8 max-w-3xl">
-      <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-5">
-        <Ojitos animo={animoAhora} pensando={estado === "creando"} etiqueta={`${ta.companero.nombre}: ${ta.companero.animos[animoAhora]}`} className="h-24 w-40 shrink-0 sm:h-28 sm:w-48" />
-        <div className="relative w-full flex-1 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200">
-          {/* Piquito del globo de diálogo hacia los ojitos. */}
-          <span aria-hidden className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 bg-white ring-1 ring-slate-200 [clip-path:polygon(0_0,100%_0,0_100%)] sm:top-1/2 sm:-left-2 sm:-translate-y-1/2 sm:translate-x-0 sm:[clip-path:polygon(0_100%,0_0,100%_100%)]" />
+      <div className={conCreditos ? "flex flex-col" : "flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:gap-5"}>
+        {conCreditos ? (
+          // Pascal se asoma por encima de la línea: sus patitas quedan sobre la orilla del recuadro.
+          <div className="relative z-10 -mb-[22px] flex justify-center sm:justify-start sm:pl-6">
+            <Pascal gesto={gesto} guau={ta.companero.pascal.guau} etiqueta={ta.companero.pascal.etiqueta} onLadrar={() => setLadrando((n) => n + 1)} className="h-32 w-40 sm:h-36 sm:w-44" />
+          </div>
+        ) : (
+          <Ojitos animo={animoAhora} pensando={estado === "creando"} etiqueta={`${ta.companero.nombre}: ${ta.companero.animos[animoAhora]}`} className="h-24 w-40 shrink-0 sm:h-28 sm:w-48" />
+        )}
+        <div className={`relative w-full flex-1 rounded-2xl bg-white px-4 shadow-sm ring-1 ring-slate-200 ${conCreditos ? "border-t-4 border-amber-400 pt-6 pb-3" : "py-3"}`}>
+          {!conCreditos && (
+            // Piquito del globo de diálogo hacia los ojitos.
+            <span aria-hidden className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 bg-white ring-1 ring-slate-200 [clip-path:polygon(0_0,100%_0,0_100%)] sm:top-1/2 sm:-left-2 sm:-translate-y-1/2 sm:translate-x-0 sm:[clip-path:polygon(0_100%,0_0,100%_100%)]" />
+          )}
+          {conCreditos && (
+            <p className="mb-1 text-[15px] leading-snug">
+              <strong className="font-extrabold text-amber-700">{ta.companero.pascal.saludo}</strong> <span className="font-semibold text-slate-900">{ta.companero.pascal.lema}</span>
+            </p>
+          )}
           <p className="min-h-12 text-[15px] leading-snug text-slate-800" aria-live="polite">
             {dicho}
           </p>
           {!aviso && estado === "listo" && (
             <div className="mt-2 flex flex-wrap gap-2 text-sm">
               {idea?.tipo && (
-                <button type="button" onClick={usarIdea} className="rounded-full bg-tinta-600 px-3 py-1 font-medium text-white hover:bg-tinta-700">
+                <button
+                  type="button"
+                  onClick={usarIdea}
+                  onPointerEnter={() => setSenalando(true)}
+                  onPointerLeave={() => setSenalando(false)}
+                  onFocus={() => setSenalando(true)}
+                  onBlur={() => setSenalando(false)}
+                  className="rounded-full bg-tinta-600 px-3 py-1 font-medium text-white hover:bg-tinta-700">
                   {ta.companero.usarIdea}
                 </button>
               )}
