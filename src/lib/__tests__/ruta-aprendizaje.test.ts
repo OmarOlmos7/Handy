@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { leerTemarioActividad } from "../asignaturas";
-import { acomodoEspina, accionPara, coincideTema, descripcionUnidad, limpiarNiveles, renglones, rutaDeAprendizaje, type ActividadParaRuta } from "../ruta-aprendizaje";
+import { acomodoEspina, accionPara, coincideTema, descripcionUnidad, distribucionPorUnidad, esDeLaUnidad, limpiarNiveles, porcentajesEnteros, tableroUnidad, renglones, rutaDeAprendizaje, type ActividadParaRuta } from "../ruta-aprendizaje";
 import type { Asignatura } from "../tipos";
 
 const asig: Asignatura = {
@@ -133,5 +133,63 @@ describe("diagrama de espina", () => {
   it("parte nombres largos en dos renglones", () => {
     expect(renglones("Introducción a conjuntos, subconjuntos y diagramas de Venn", 22, 2)).toHaveLength(2);
     expect(renglones("Corto")).toEqual(["Corto"]);
+  });
+});
+
+describe("histograma de rutas del grupo", () => {
+  it("los porcentajes enteros suman 100", () => {
+    expect(porcentajesEnteros([1, 1, 1])).toEqual([34, 33, 33]);
+    expect(porcentajesEnteros([2, 1, 0])).toEqual([67, 33, 0]);
+    expect(porcentajesEnteros([0, 0, 0])).toEqual([0, 0, 0]);
+    expect(porcentajesEnteros([1, 5, 1]).reduce((a, b) => a + b, 0)).toBe(100);
+  });
+
+  it("cuenta por unidad cuántos alumnos completaron, van en proceso o no iniciaron", () => {
+    const ruta = (...estados: ("certificada" | "en_progreso" | "sin_iniciar")[]) => ({ unidades: estados.map((estado, indice) => ({ indice, nombre: "", estado, prioridad: "media" as const, temas: [], certificaciones: [] })) });
+    const d = distribucionPorUnidad(
+      [ruta("certificada", "en_progreso", "sin_iniciar"), ruta("certificada", "sin_iniciar", "sin_iniciar"), ruta("en_progreso", "sin_iniciar", "sin_iniciar"), ruta("certificada", "certificada", "sin_iniciar")],
+      asig.unidades,
+    );
+    expect(d[0].conteos).toEqual({ certificada: 3, en_progreso: 1, sin_iniciar: 0 });
+    expect(d[0].porcentajes).toEqual({ certificada: 75, en_progreso: 25, sin_iniciar: 0 });
+    expect(d[1].porcentajes).toEqual({ certificada: 25, en_progreso: 25, sin_iniciar: 50 });
+    expect(d[2].porcentajes.sin_iniciar).toBe(100);
+    expect(d[2].total).toBe(4);
+  });
+
+  it("sin alumnos todo queda en cero", () => {
+    expect(distribucionPorUnidad([], asig.unidades)[0].porcentajes).toEqual({ certificada: 0, en_progreso: 0, sin_iniciar: 0 });
+  });
+});
+
+describe("tablero de una unidad", () => {
+  it("reconoce el autoestudio de la unidad por su tema", () => {
+    expect(esDeLaUnidad("velocidad", asig.unidades[0])).toBe(true);
+    expect(esDeLaUnidad("rapidez", asig.unidades[0])).toBe(true);
+    expect(esDeLaUnidad("Fricción", asig.unidades[0])).toBe(false);
+  });
+
+  it("promedia lo del profesor y lo autoasignado por separado y junto", () => {
+    const r = rutaDeAprendizaje({
+      asignatura: asig,
+      niveles: {},
+      actividades: [act("t1", "U1 Cinemática", ["1.1 Velocidad"], { entregada: true, porcentaje: 90 }), act("t2", "U1 Cinemática", ["1.2 Aceleración"])],
+      autoactividades: [{ tema: "Aceleración", estado: "completada", calificacion: 60 }],
+    });
+    const tab = tableroUnidad(
+      r.unidades[0],
+      [
+        { entregada: true, porcentaje: 90 },
+        { entregada: false, porcentaje: null },
+      ],
+      [
+        { estado: "completada", calificacion: 60, segundos: 300 },
+        { estado: "pendiente" },
+      ],
+    );
+    expect(tab.profesor).toEqual({ total: 2, entregadas: 1, calificadas: 1, promedio: 90 });
+    expect(tab.autoestudio).toEqual({ total: 2, completadas: 1, promedio: 60, segundos: 300 });
+    expect(tab.promedio).toBe(75);
+    expect(tab.temas).toEqual({ total: 2, dominados: 1, enProgreso: 1, pendientes: 0 });
   });
 });
