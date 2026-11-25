@@ -144,6 +144,8 @@ const autoestudio: typeof es = {
     fuentesNota: "Conteúdo resumido de sites educativos confiáveis. Consulte as fontes para saber mais.",
     tarjetaN: "Cartão {n} de {t}",
     recuerda: "Escreva o que você lembra",
+    etiquetaPregunta: "Pergunta",
+    etiquetaRespuesta: "Resposta",
     verPista: "Ver dica",
     voltear: "Virar e comparar",
     comparar: "Compare com o que você escreveu. Como foi?",

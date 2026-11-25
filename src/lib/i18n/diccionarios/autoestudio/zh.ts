@@ -144,6 +144,8 @@ const autoestudio: typeof es = {
     fuentesNota: "内容总结自可靠的教育网站。想了解更多，请查看来源。",
     tarjetaN: "第 {n} 张，共 {t} 张",
     recuerda: "写下你记得的内容",
+    etiquetaPregunta: "问题",
+    etiquetaRespuesta: "答案",
     verPista: "查看提示",
     voltear: "翻面对照",
     comparar: "和你写的对照一下，怎么样？",
