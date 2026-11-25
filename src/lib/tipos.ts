@@ -557,6 +557,27 @@ export interface TemarioActividad {
   unidad: string;
   /** Temas y subtemas elegidos, con su texto. */
   temas: string[];
+  /**
+   * Si la actividad es el examen (o quiz) de certificación de la unidad: el alumno la certifica
+   * cuando su calificación liberada llega al mínimo, en porcentaje.
+   */
+  certificacion?: { minimo: number };
+}
+
+/** Respuestas del alumno a "Mi nivel de conocimiento y uso de las herramientas de la unidad…". */
+export type NivelConocimiento = "avanzado" | "bueno" | "basico" | "apoyo" | "sin_idea";
+
+/** Valoración inicial que hace el alumno al empezar un curso: su nivel en cada unidad. */
+export interface ValoracionInicial {
+  alumnoId: string;
+  grupoId: string;
+  /** Matrícula con que el alumno aparece en el curso (para la vista del profesor). */
+  matricula: string;
+  asignaturaId: string;
+  /** Nivel por nombre de unidad. */
+  niveles: Record<string, NivelConocimiento>;
+  creadaEn: string;
+  actualizadaEn: string;
 }
 
 export interface BaseDeDatos {
@@ -576,6 +597,8 @@ export interface BaseDeDatos {
   asignaturas?: Asignatura[];
   /** Rutas de estudio de los alumnos en el mapa de cada asignatura. */
   rutas?: RutaAlumno[];
+  /** Valoraciones iniciales de los alumnos (base de su ruta de aprendizaje). */
+  valoraciones?: ValoracionInicial[];
   /** Tiempo que cada alumno tiene abierta cada actividad (para las analíticas de avance). */
   tiempos?: TiempoActividad[];
   /** Actividades que cada alumno se asignó a sí mismo (generadas con IA). */

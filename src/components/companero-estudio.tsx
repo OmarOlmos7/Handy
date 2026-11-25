@@ -54,6 +54,8 @@ export function CompaneroEstudio({
   grupoFijo,
   restantes,
   conCreditos = false,
+  temaInicial,
+  tipoInicial,
 }: {
   animo: Animo;
   ideas: IdeaCompanero[];
@@ -63,6 +65,9 @@ export function CompaneroEstudio({
   restantes: number;
   /** El profesor tiene créditos para que el alumno cree actividades: sale Pascal. */
   conCreditos?: boolean;
+  /** Tema y tipo ya elegidos (desde la ruta de aprendizaje): el formulario abre listo. */
+  temaInicial?: string;
+  tipoInicial?: TipoAutoactividad;
 }) {
   const { t } = useTextos();
   const ta = t.autoestudio;
@@ -70,10 +75,10 @@ export function CompaneroEstudio({
   const [i, setI] = useState(0);
   const [aviso, setAviso] = useState<string | null>(null);
   const [animoAhora, setAnimoAhora] = useState<Animo>(animo);
-  const [abierto, setAbierto] = useState(false);
+  const [abierto, setAbierto] = useState(Boolean(temaInicial));
   const [grupoId, setGrupoId] = useState(grupoFijo ?? (cursos.length === 1 ? cursos[0].id : ""));
-  const [tipo, setTipo] = useState<TipoAutoactividad>("practica");
-  const [tema, setTema] = useState("");
+  const [tipo, setTipo] = useState<TipoAutoactividad>(tipoInicial ?? "practica");
+  const [tema, setTema] = useState(temaInicial ?? "");
   const [peticion, setPeticion] = useState("");
   const [cantidad, setCantidad] = useState(CANTIDAD_PREDETERMINADA);
   const [tipos, setTipos] = useState<TipoEjercicio[]>([]);

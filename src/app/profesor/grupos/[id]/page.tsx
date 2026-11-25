@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { conPuntaje } from "@/lib/modalidad";
 import { notFound } from "next/navigation";
 import { FilaActividad } from "@/components/fila-actividad";
-import { IconoCuaderno, IconoGrafica, IconoMapa } from "@/components/iconos";
+import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
 import { BotonLink, Encabezado, Tarjeta, colorCalificacion } from "@/components/ui";
 import { entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
 import { agruparPorEtiqueta } from "@/lib/colores";
@@ -44,6 +44,9 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
             </BotonLink>
             <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/avance`}>
               <IconoMapa /> {tc.avanceTemario}
+            </BotonLink>
+            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/rutas`}>
+              <IconoRuta /> {t.ruta.profesor.boton}
             </BotonLink>
             <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/cuaderno`}>
               <IconoCuaderno /> {tc.cuaderno}

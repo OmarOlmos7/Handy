@@ -2,6 +2,7 @@ import type { Diccionario } from "../diccionario";
 import autoestudio from "./autoestudio/en";
 import alumno from "./alumno/en";
 import profesor from "./profesor/en";
+import ruta from "./ruta/en";
 
 const en: Diccionario = {
   comun: {
@@ -489,6 +490,7 @@ const en: Diccionario = {
   profesor,
   alumno,
   autoestudio,
+  ruta,
 };
 
 export default en;

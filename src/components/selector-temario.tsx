@@ -3,6 +3,7 @@
 // En el alta de actividad: primero la unidad de la asignatura y enseguida sus temas y subtemas.
 import Link from "next/link";
 import { useState } from "react";
+import { MINIMO_CERTIFICACION, minimoCertificacion } from "@/lib/asignaturas";
 import type { Asignatura, TemarioActividad } from "@/lib/tipos";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
@@ -58,11 +59,17 @@ export function SelectorTemario({
   const unidadIndice = unidadSel && unidadSel.asignatura === asignaturaId ? unidadSel.unidad : -1;
   const unidad = asignatura?.unidades[unidadIndice];
   const [temas, setTemas] = useState<string[]>(unidadInicial >= 0 ? (inicial?.temas ?? []) : []);
+  const tr = t.ruta.profesor;
+  const [certifica, setCertifica] = useState(Boolean(inicial?.certificacion));
+  const [minimo, setMinimo] = useState(inicial?.certificacion?.minimo ?? MINIMO_CERTIFICACION);
 
   const alternar = (nombres: string[], activar: boolean) =>
     setTemas((xs) => (activar ? [...new Set([...xs, ...nombres])] : xs.filter((x) => !nombres.includes(x))));
 
-  const valor = asignatura && unidad ? JSON.stringify({ asignaturaId: asignatura.id, unidad: unidad.nombre, temas }) : "";
+  const valor =
+    asignatura && unidad
+      ? JSON.stringify({ asignaturaId: asignatura.id, unidad: unidad.nombre, temas, ...(certifica ? { certificacion: { minimo: minimoCertificacion(minimo) } } : {}) })
+      : "";
 
   if (asignaturas.length === 0) {
     return (
@@ -153,6 +160,30 @@ export function SelectorTemario({
               );
             })}
           </ul>
+        </div>
+      )}
+      {unidad && (
+        <div className="rounded-xl bg-blue-50/60 p-3 ring-1 ring-blue-200">
+          <label className="flex items-start gap-2 text-sm font-medium text-slate-800">
+            <input type="checkbox" checked={certifica} onChange={(e) => setCertifica(e.target.checked)} className="mt-0.5 h-4 w-4 accent-blue-600" />
+            <span>
+              {tr.certificacion}
+              <span className="block text-xs font-normal text-slate-500">{tr.certificacionAyuda}</span>
+            </span>
+          </label>
+          {certifica && (
+            <label className="mt-2 ml-6 flex items-center gap-2 text-xs font-medium text-slate-600">
+              {tr.minimo}
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={minimo}
+                onChange={(e) => setMinimo(Number(e.target.value))}
+                className="w-20 rounded-md border border-slate-300 px-2 py-1 text-sm"
+              />
+            </label>
+          )}
         </div>
       )}
       <span className="block text-xs text-slate-500">{ta.temasAyuda}</span>
