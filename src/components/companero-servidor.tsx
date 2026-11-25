@@ -7,7 +7,7 @@ import { formato } from "@/lib/i18n/idiomas";
 import { hayCreditosAutoestudio } from "@/lib/pascal";
 import { textos } from "@/lib/i18n/servidor";
 import type { AlumnoConSesion } from "@/lib/sesion";
-import type { BaseDeDatos } from "@/lib/tipos";
+import type { BaseDeDatos, TipoAutoactividad } from "@/lib/tipos";
 import { CompaneroEstudio } from "./companero-estudio";
 
 function textoSugerencia(t: Diccionario, s: Sugerencia): string {
@@ -16,7 +16,20 @@ function textoSugerencia(t: Diccionario, s: Sugerencia): string {
   return formato(m[s.clave], s.valores);
 }
 
-export async function CompaneroDelAlumno({ db, alumno, grupoId }: { db: BaseDeDatos; alumno: AlumnoConSesion; grupoId?: string }) {
+export async function CompaneroDelAlumno({
+  db,
+  alumno,
+  grupoId,
+  temaInicial,
+  tipoInicial,
+}: {
+  db: BaseDeDatos;
+  alumno: AlumnoConSesion;
+  grupoId?: string;
+  /** Desde la ruta de aprendizaje: el formulario abre con el tema y el tipo sugeridos. */
+  temaInicial?: string;
+  tipoInicial?: TipoAutoactividad;
+}) {
   const { t } = await textos();
   const cursos = grupoId ? alumno.cursos.filter((c) => c.grupo.id === grupoId) : alumno.cursos;
   if (cursos.length === 0) return null;
@@ -31,6 +44,8 @@ export async function CompaneroDelAlumno({ db, alumno, grupoId }: { db: BaseDeDa
       grupoFijo={grupoId}
       restantes={d.restantes}
       conCreditos={conCreditos}
+      temaInicial={temaInicial}
+      tipoInicial={tipoInicial}
     />
   );
 }

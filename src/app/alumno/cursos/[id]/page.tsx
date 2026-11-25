@@ -3,9 +3,10 @@ import { notFound, redirect } from "next/navigation";
 import { CompaneroDelAlumno } from "@/components/companero-servidor";
 import { FilaActividadAlumno } from "@/components/fila-actividad-alumno";
 import { TablaAutoestudio } from "@/components/tabla-autoestudio";
-import { IconoCuaderno, IconoGrafica, IconoMapa } from "@/components/iconos";
+import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { leer } from "@/lib/almacen";
+import { asignaturaDelCurso } from "@/lib/asignaturas";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
 import { actividadesVisibles, seccionesAlumno, type SeccionActividad } from "@/lib/portal-alumno";
@@ -37,6 +38,11 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
   const propias = (db.autoactividades ?? [])
     .filter((a) => a.alumnoId === alumno.id && a.grupoId === grupo.id)
     .sort((a, b) => (b.completadaEn ?? b.creadaEn).localeCompare(a.completadaEn ?? a.creadaEn));
+  // Al empezar el curso, el alumno hace su valoración inicial (base de su ruta de aprendizaje).
+  const asignatura = asignaturaDelCurso(db, grupo);
+  const conTemario = Boolean(asignatura && asignatura.unidades.length > 0);
+  const sinValoracion =
+    conTemario && !(db.valoraciones ?? []).some((v) => v.alumnoId === alumno.id && v.grupoId === grupo.id && v.asignaturaId === asignatura!.id);
   const evaluadas = secciones.entregadas.filter((x) => x.entrega?.estado === "aprobada").length;
   const orden: { clave: SeccionActividad; titulo: string; nota: string }[] = [
     { clave: "por_entregar", titulo: tc.porEntregar, nota: tc.porEntregarNota },
@@ -56,6 +62,9 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
         })}
         acciones={
           <>
+            <BotonLink href={`/alumno/cursos/${grupo.id}/ruta`}>
+              <IconoRuta /> {t.ruta.boton}
+            </BotonLink>
             <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/analiticas`}>
               <IconoGrafica /> {tc.analiticas}
             </BotonLink>
@@ -71,6 +80,15 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
           </>
         }
       />
+      {sinValoracion && (
+        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_6px_16px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-bold tracking-[0.12em] text-emerald-800 uppercase">{t.ruta.valoracion.titulo}</p>
+            <p className="mt-1 text-[15px] font-semibold text-slate-900">{t.ruta.valoracion.aviso}</p>
+          </div>
+          <BotonLink href={`/alumno/cursos/${grupo.id}/valoracion`}>{t.ruta.valoracion.avisoBoton} →</BotonLink>
+        </div>
+      )}
       <CompaneroDelAlumno db={db} alumno={alumno} grupoId={grupo.id} />
       {actividades.length === 0 ? (
         <Tarjeta className="text-sm text-slate-600">{tc.sinActividadesCurso}</Tarjeta>

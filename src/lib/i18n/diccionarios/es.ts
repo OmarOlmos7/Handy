@@ -3,6 +3,7 @@
 import autoestudio from "./autoestudio/es";
 import alumno from "./alumno/es";
 import profesor from "./profesor/es";
+import ruta from "./ruta/es";
 
 const es = {
   comun: {
@@ -505,6 +506,7 @@ const es = {
   profesor,
   alumno,
   autoestudio,
+  ruta,
 };
 
 export default es;

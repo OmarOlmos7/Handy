@@ -2,6 +2,7 @@ import type { Diccionario } from "../diccionario";
 import autoestudio from "./autoestudio/zh";
 import alumno from "./alumno/zh";
 import profesor from "./profesor/zh";
+import ruta from "./ruta/zh";
 
 const zh: Diccionario = {
   comun: {
@@ -483,6 +484,7 @@ const zh: Diccionario = {
   profesor,
   alumno,
   autoestudio,
+  ruta,
 };
 
 export default zh;

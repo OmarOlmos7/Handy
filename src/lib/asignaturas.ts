@@ -150,13 +150,23 @@ export function leerTemarioActividad(crudo: unknown, asignaturas: Asignatura[]):
     }
   }
   if (!dato || typeof dato !== "object") return undefined;
-  const { asignaturaId, unidad, temas } = dato as Record<string, unknown>;
+  const { asignaturaId, unidad, temas, certificacion } = dato as Record<string, unknown>;
   const a = asignaturas.find((x) => x.id === asignaturaId);
   const u = a?.unidades.find((x) => x.nombre === unidad);
   if (!a || !u) return undefined;
   const validos = new Set(u.temas.flatMap((t) => [t.nombre, ...t.subtemas]));
   const elegidos = (Array.isArray(temas) ? temas : []).filter((t): t is string => typeof t === "string" && validos.has(t));
-  return { asignaturaId: a.id, unidad: u.nombre, temas: [...new Set(elegidos)] };
+  const minimo = certificacion && typeof certificacion === "object" ? minimoCertificacion((certificacion as { minimo?: unknown }).minimo) : undefined;
+  return { asignaturaId: a.id, unidad: u.nombre, temas: [...new Set(elegidos)], ...(minimo !== undefined ? { certificacion: { minimo } } : {}) };
+}
+
+/** Calificación mínima predeterminada (en %) para certificar una unidad. */
+export const MINIMO_CERTIFICACION = 70;
+
+/** Mínimo para certificar, entre 1 y 100 %; si no es número, el predeterminado. */
+export function minimoCertificacion(v: unknown): number {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n >= 1 ? Math.min(100, n) : MINIMO_CERTIFICACION;
 }
 
 /** Texto para la IA al generar la actividad: la unidad y los temas que debe cubrir. */

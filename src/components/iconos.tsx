@@ -20,6 +20,17 @@ export function IconoLapiz() {
   );
 }
 
+/** Espina con ramas (ruta de aprendizaje). */
+export function IconoRuta() {
+  return (
+    <svg {...base}>
+      <path d="M3 12h18M7 12l3-5M7 12l3 5M13 12l3-5M13 12l3 5" />
+      <circle cx="3.5" cy="12" r="1.5" />
+      <circle cx="20.5" cy="12" r="1.5" />
+    </svg>
+  );
+}
+
 /** Mapa de nodos unidos (mapa del temario). */
 export function IconoMapa() {
   return (
