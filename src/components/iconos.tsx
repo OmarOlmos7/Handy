@@ -20,6 +20,18 @@ export function IconoLapiz() {
   );
 }
 
+/** Dos personas (lista de alumnos). */
+export function IconoAlumnos() {
+  return (
+    <svg {...base}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17" cy="9" r="2.5" />
+      <path d="M16 14.2c2.9 0 5 2.4 5 5.3" />
+    </svg>
+  );
+}
+
 /** Espina con ramas (ruta de aprendizaje). */
 export function IconoRuta() {
   return (
