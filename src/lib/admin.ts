@@ -101,6 +101,7 @@ export const NOMBRE_TIPO_CONSUMO: Record<TipoConsumoIA, string> = {
   relaciones: "Mapa: temas afines",
   autoestudio: "Autoestudio: generar actividad del alumno",
   autoestudio_evaluar: "Autoestudio: evaluar respuestas escritas",
+  instrucciones: "Contenido: redactar instrucciones",
 };
 
 export interface TotalTokens {

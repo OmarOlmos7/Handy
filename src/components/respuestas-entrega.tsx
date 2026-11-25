@@ -4,6 +4,7 @@ import { letraDeOpcion, sinLetra } from "@/lib/plataforma";
 import type { Actividad, Entrega, Reactivo, RespuestaPlataforma } from "@/lib/tipos";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { TextoMat } from "./texto-mat";
+import { VisorArchivos, archivoDeRuta, type ArchivoVisor } from "./visor-archivos";
 
 const svgUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
@@ -35,6 +36,19 @@ function Imagenes({ r, letras }: { r: Reactivo; letras: string[] }) {
 function Respuesta({ r, resp, tr, tx }: { r: Reactivo; resp?: RespuestaPlataforma; tr: Diccionario["profesor"]["reporte"]; tx: Diccionario["alumno"]["responder"] }) {
   const sel = (resp?.seleccion ?? []).map((x) => x.trim().toLowerCase());
   const vacio = <span className="italic text-slate-400">{tr.sinRespuesta}</span>;
+  // Evidencia digital (actividad de contenido): Word, Excel, PowerPoint, audio o video se ven con el
+  // previsualizador; las fotos, como siempre.
+  const evidencia = (resp?.archivos ?? []).map((ruta, i) => archivoDeRuta(ruta, resp?.nombres?.[i])).filter((a): a is ArchivoVisor => Boolean(a));
+  if (evidencia.some((a) => a.clase !== "imagen") || (r.tipo !== "desarrollo" && evidencia.length)) {
+    return (
+      <div className="mt-1">
+        <p className="text-xs text-slate-500">{tr.tusArchivos}</p>
+        <div className="mt-1">
+          <VisorArchivos archivos={evidencia} />
+        </div>
+      </div>
+    );
+  }
   switch (r.tipo) {
     case "opcion_multiple":
     case "seleccion_multiple":

@@ -10,6 +10,60 @@ import { MAX_ARCHIVOS_REACTIVO, letra, letraDeOpcion, sinLetra, type ReactivoAlu
 import { useTextos } from "./proveedor-textos";
 import { TextoMat } from "./texto-mat";
 import { Boton } from "./ui";
+import { ACEPTA_ARCHIVOS, MAX_BYTES_ARCHIVO, MAX_EVIDENCIAS, claseDeArchivo } from "@/lib/contenido";
+import { useErrorArchivos } from "./alta-contenido";
+import { VisorArchivos } from "./visor-archivos";
+
+/**
+ * Evidencia digital de una actividad de contenido: el alumno anexa su trabajo (PDF, Word, Excel,
+ * PowerPoint, imágenes, audio o video) y lo revisa con el previsualizador antes de enviarlo.
+ */
+function Evidencia({ archivos, onArchivos }: { archivos: File[]; onArchivos: (f: File[]) => void }) {
+  const tc = useTextos().t.contenido;
+  const error = useErrorArchivos()(archivos, MAX_EVIDENCIAS);
+  return (
+    <div>
+      <p className="mb-2 text-xs text-slate-500">{formato(tc.evidencia.ayuda, { n: MAX_EVIDENCIAS, mb: Math.round(MAX_BYTES_ARCHIVO / 1024 / 1024) })}</p>
+      <div className="flex flex-wrap gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-tinta-600 px-3 py-2 text-sm font-medium text-white hover:bg-tinta-700">
+          📎 {tc.evidencia.elegir}
+          <input
+            type="file"
+            accept={ACEPTA_ARCHIVOS}
+            multiple
+            className="sr-only"
+            onChange={(e) => {
+              onArchivos([...archivos, ...Array.from(e.target.files ?? [])]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
+          📷 {tc.evidencia.tomarFoto}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="sr-only"
+            onChange={(e) => {
+              onArchivos([...archivos, ...Array.from(e.target.files ?? [])]);
+              e.target.value = "";
+            }}
+          />
+        </label>
+      </div>
+      {error && <p className="mt-2 rounded-lg bg-error-suave px-3 py-2 text-sm text-error">{error}</p>}
+      {archivos.length > 0 && (
+        <div className="mt-3">
+          <VisorArchivos
+            archivos={archivos.map((f) => ({ archivo: f, nombre: f.name, clase: claseDeArchivo(f.name, f.type) ?? "pdf", bytes: f.size }))}
+            onQuitar={(i) => onArchivos(archivos.filter((_, j) => j !== i))}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
 
 const svgUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
@@ -318,6 +372,7 @@ export function ResponderActividad({
   instrucciones,
   version,
   vistaPrevia,
+  evidenciaDigital,
 }: {
   actividadId: string;
   reactivos: ReactivoAlumno[];
@@ -325,6 +380,8 @@ export function ResponderActividad({
   version?: string;
   /** Para el profesor: se puede contestar pero no se envía. */
   vistaPrevia?: boolean;
+  /** Actividad de contenido con evidencia digital: un solo espacio para anexar el trabajo. */
+  evidenciaDigital?: boolean;
 }) {
   const { t } = useTextos();
   const tr = t.alumno.responder;
@@ -335,8 +392,17 @@ export function ResponderActividad({
   const [mensaje, setMensaje] = useState("");
   const [resultado, setResultado] = useState<{ evaluada: boolean; automatica: boolean } | null>(null);
 
+  const errorArchivos = useErrorArchivos();
   async function enviar() {
-    const faltan = reactivos.filter((r) => !contestado(r, respuestas[r.numero], archivos[r.numero])).length;
+    if (evidenciaDigital) {
+      const problema = Object.values(archivos).map((fs) => errorArchivos(fs, MAX_EVIDENCIAS)).find(Boolean);
+      if (problema) {
+        setEstado("error");
+        setMensaje(problema);
+        return;
+      }
+    }
+    const faltan = reactivos.filter((r) => !(evidenciaDigital ? archivos[r.numero]?.length : contestado(r, respuestas[r.numero], archivos[r.numero]))).length;
     const aviso = faltan ? (faltan === 1 ? tr.falta1 : formato(tr.faltan, { n: faltan })) : tr.confirmar;
     if (!window.confirm(aviso)) return;
     const datos = new FormData();
@@ -399,7 +465,19 @@ export function ResponderActividad({
           ))}
         </ul>
       )}
-      {reactivos.map((r) => (
+      {evidenciaDigital
+        ? reactivos.map((r) => (
+            <section key={r.numero} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
+              <div className="flex items-baseline justify-between gap-3">
+                <h3 className="text-sm font-semibold text-tinta-700">{t.contenido.evidencia.titulo}</h3>
+                <span className="text-xs font-medium text-slate-500">{r.puntos === 1 ? tr.pt1 : formato(tr.pts, { n: r.puntos })}</span>
+              </div>
+              <div className="mt-3">
+                <Evidencia archivos={archivos[r.numero] ?? []} onArchivos={(f) => setArchivos((x) => ({ ...x, [r.numero]: f }))} />
+              </div>
+            </section>
+          ))
+        : reactivos.map((r) => (
         <section key={r.numero} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5" aria-labelledby={`reactivo-${r.numero}`}>
           <div className="flex items-baseline justify-between gap-3">
             <h3 id={`reactivo-${r.numero}`} className="text-sm font-semibold text-tinta-700">

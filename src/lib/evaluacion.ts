@@ -11,7 +11,9 @@ import { imagenesParaIA } from "./imagenes";
 import { diccionarioDe } from "./i18n/diccionario";
 import { idiomaDeActividad } from "./i18n/detectar";
 import { calificarSinIA, creditosPlataforma, esPlataforma } from "./plataforma";
-import type { Actividad, Entrega, Grupo } from "./tipos";
+import type { Actividad, Entrega, Grupo, Reactivo } from "./tipos";
+import { esEvidenciaDigital } from "./contenido";
+import { hayQueLeer, materialParaIA, type MaterialParaIA } from "./material-ia";
 
 export type ResultadoEvaluacion = { ok: true } | { ok: false; error: string; status: number };
 
@@ -102,8 +104,34 @@ async function evaluarPlataforma(actividad: Actividad, grupo: Grupo, entrega: En
   const respuestas = entrega.respuestas ?? [];
   const version = actividadDeVersion(actividad, entrega.version);
   const fijos = diccionarioDe(idiomaDeActividad(actividad) ?? "es").alumno.correccion;
-  const { resultados, paraIA } = calificarSinIA(version, respuestas, fijos);
+  const { resultados, paraIA: pendientes } = calificarSinIA(version, respuestas, fijos);
   const costo = creditosPlataforma(version, respuestas);
+  // Evidencia digital (actividad de contenido): la IA lee PDF, imágenes, Word, Excel y PowerPoint.
+  // Si el alumno solo entregó audio o video, ese reactivo lo califica el profesor en la revisión.
+  const materiales = new Map<number, MaterialParaIA>();
+  let paraIA: Reactivo[] = pendientes;
+  let manuales = 0;
+  if (esEvidenciaDigital(actividad)) {
+    const tc = diccionarioDe(idiomaDeActividad(actividad) ?? "es").contenido;
+    paraIA = [];
+    for (const r of pendientes) {
+      const resp = respuestas.find((x) => x.numero === r.numero);
+      if (!resp?.archivos?.length) {
+        paraIA.push(r);
+        continue;
+      }
+      const material = await materialParaIA(resp.archivos.map((ruta) => ({ ruta })));
+      if (hayQueLeer(material)) {
+        materiales.set(r.numero, material);
+        paraIA.push(r);
+        // Si además entregó audio o video, el profesor lo revisa antes de liberar la calificación.
+        if (material.sinLeer.length) manuales++;
+      } else {
+        manuales++;
+        resultados.push({ numero: r.numero, puntosObtenidos: 0, respuestaLeida: tc.evidenciaAudioVideo, confianza: "baja", comentario: tc.revisionManual });
+      }
+    }
+  }
   const db = leerAhora();
   if (paraIA.length && (!grupo.profesorId || saldoDe(db, grupo.profesorId) < costo)) {
     const error = "No hay créditos suficientes para evaluar. Compra créditos y vuelve a intentar.";
@@ -122,6 +150,8 @@ async function evaluarPlataforma(actividad: Actividad, grupo: Grupo, entrega: En
         version,
         paraIA.map((r) => {
           const resp = respuestas.find((x) => x.numero === r.numero);
+          const material = materiales.get(r.numero);
+          if (material) return { numero: r.numero, material };
           return r.tipo === "desarrollo" ? { numero: r.numero, imagenes: imagenesParaIA(resp?.archivos ?? []) } : { numero: r.numero, texto: resp?.texto ?? "" };
         }),
         { profesorId: grupo.profesorId, actividadId },
@@ -141,7 +171,8 @@ async function evaluarPlataforma(actividad: Actividad, grupo: Grupo, entrega: En
     const e = d.entregas.find((x) => x.actividadId === actividadId && x.matricula === matricula);
     // Si el alumno volvió a entregar mientras se evaluaba, no se pisa su entrega nueva.
     if (!e || (!reevaluar && e.estado !== "entregada") || e.entregadaEn !== enviadas) return;
-    Object.assign(e, { resultados, positivos, mejoras, estado: "aprobada", evaluadaEn: new Date().toISOString(), error: undefined, evaluandoDesde: undefined });
+    // Con audio o video por calificar, la entrega espera la revisión del profesor antes de liberarse.
+    Object.assign(e, { resultados, positivos, mejoras, estado: manuales ? "evaluada" : "aprobada", evaluadaEn: new Date().toISOString(), error: undefined, evaluandoDesde: undefined });
     if (reevaluar) e.calificacionManual = undefined;
     if (paraIA.length && costo > 0) {
       d.movimientos.unshift({

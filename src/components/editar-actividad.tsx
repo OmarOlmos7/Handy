@@ -1,5 +1,6 @@
 "use client";
 
+import { ChipsTipo } from "./chips-tipo";
 import { leerFechas } from "@/lib/periodo";
 import { FechasActividad } from "./fechas-actividad";
 import { useRouter } from "next/navigation";
@@ -182,24 +183,7 @@ export function EditarActividad({
               <option key={e} value={e} />
             ))}
           </datalist>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {tiposSugeridos.map((e) => {
-              const activo = etiqueta.trim().toLowerCase() === e.toLowerCase();
-              return (
-                <button
-                  key={e}
-                  type="button"
-                  aria-pressed={activo}
-                  onClick={() => setEtiqueta(activo ? "" : e)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                    activo ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  {e}
-                </button>
-              );
-            })}
-          </div>
+          <ChipsTipo tipos={tiposSugeridos} valor={etiqueta} onCambiar={setEtiqueta} />
         </div>
         <SelectorTemario asignaturas={asignaturas} materia={materia} inicial={inicial.temario} />
         <FechasActividad inicial={inicial} />

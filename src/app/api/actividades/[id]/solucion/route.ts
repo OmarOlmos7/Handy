@@ -3,6 +3,14 @@ import { ErrorIA, proponerRubrica, resolverVersiones, unirConHoja } from "@/lib/
 import { guardarSubidos } from "@/lib/imagenes";
 import { esDelProfesor } from "@/lib/cuentas";
 import { profesorActual } from "@/lib/sesion";
+import { unirEnUnReactivo } from "@/lib/contenido";
+import type { Actividad, Reactivo } from "@/lib/tipos";
+
+/** Reactivos con la rúbrica nueva: en una actividad de contenido, todo es una sola tarea. */
+function conRubrica(a: Actividad, nuevos: Reactivo[]): Reactivo[] {
+  if (a.contenido && a.reactivos.length) return [unirEnUnReactivo(a.reactivos[0], nuevos)];
+  return unirConHoja(a.reactivos, nuevos);
+}
 
 export const maxDuration = 300;
 
@@ -35,13 +43,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
   try {
     const uso = { profesorId: profesor.id, actividadId: actividad.id };
     const { reactivos, criterios, recomendaciones } = await proponerRubrica(paraIA, { titulo: actividad.titulo, instrucciones }, uso);
-    const unidos = unirConHoja(actividad.reactivos, reactivos);
+    const unidos = conRubrica(actividad, reactivos);
     // Las demás versiones se resuelven con el método de la solución del profesor y se verifican.
     const versiones = await resolverVersiones({ ...actividad, reactivos: unidos }, uso);
     modificar((d) => {
       const a = actividadDe(d, id)!;
       a.solucion = rutas;
-      a.reactivos = unirConHoja(a.reactivos, reactivos);
+      a.reactivos = conRubrica(a, reactivos);
       a.versiones = versiones;
       a.solucionIA = false;
       a.criterios = criterios;

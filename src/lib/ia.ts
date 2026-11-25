@@ -2,6 +2,7 @@
 // Los números finales (puntos, calificación) los calcula el código; Claude lee
 // las hojas, compara procedimientos y redacta la retroalimentación.
 import "server-only";
+import type { MaterialParaIA } from "./material-ia";
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
@@ -50,6 +51,17 @@ function bloquesImagen(imagenes: ImagenParaIA[], etiqueta: string): Anthropic.Be
       ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: img.base64 } }
       : { type: "image", source: { type: "base64", media_type: img.mediaType, data: img.base64 } },
   ]);
+}
+
+/** Material de una actividad de contenido: imágenes y PDF como tales; documentos de Office, como texto. */
+function bloquesMaterial(m: MaterialParaIA, etiqueta: string): Anthropic.Beta.BetaContentBlockParam[] {
+  return [
+    ...bloquesImagen(m.imagenes, etiqueta),
+    ...m.textos.map((x): Anthropic.Beta.BetaContentBlockParam => ({ type: "text", text: `${etiqueta} · documento "${x.nombre}" (texto):\n${x.texto}` })),
+    ...(m.sinLeer.length
+      ? [{ type: "text" as const, text: `${etiqueta} · archivos de audio o video que no puedes ver ni escuchar: ${m.sinLeer.map((x) => `"${x.nombre}"`).join(", ")}. No inventes su contenido ni los menciones en los comentarios al alumno: el profesor los revisa.` }]
+      : []),
+  ];
 }
 
 /** A quién se carga el consumo de tokens de una llamada (solo IDs, nunca datos del alumno). */
@@ -751,9 +763,11 @@ Además:
 ${RESPUESTAS_PLATAFORMA}
 - En plataforma, desarrollo es un problema que el alumno resuelve a mano y sube como foto: escribe sus pasos y solución como en cualquier desarrollo.`;
 
+const NOTA_RESOLVER_CONTENIDO = `ACTIVIDAD DE CONTENIDO: el profesor compartió el material anterior y el alumno hace la tarea descrita en el reactivo con base en él. Resuelve la tarea como lo haría un alumno ejemplar (respuesta y pasos de lo que debe contener su trabajo) usando el material.\n\n`;
+
 export async function resolverActividad(
   act: Actividad,
-  datos: { condiciones: string; imagenes?: ImagenParaIA[] },
+  datos: { condiciones: string; imagenes?: ImagenParaIA[]; material?: MaterialParaIA },
   uso: UsoIA,
 ): Promise<PropuestaRubrica> {
   const comoTexto = act.reactivos.map((r) => ({
@@ -775,9 +789,11 @@ export async function resolverActividad(
     esquema: EsquemaRubrica,
     contenido: [
       ...(datos.imagenes?.length ? bloquesImagen(datos.imagenes, "Actividad en blanco") : []),
+      ...(datos.material ? bloquesMaterial(datos.material, "Material de la actividad") : []),
       {
         type: "text",
         text:
+          (datos.material ? NOTA_RESOLVER_CONTENIDO : "") +
           `Actividad: ${act.titulo}\n` +
           (comoTexto.length ? `Reactivos:\n${JSON.stringify(comoTexto, null, 1)}\n` : "") +
           `Criterios e indicaciones del profesor para evaluar: ${act.instrucciones?.trim() || "ninguno"}${criteriosParaIA(act)}\n` +
@@ -1057,6 +1073,8 @@ export interface RespuestaParaIA {
   numero: number;
   texto?: string;
   imagenes?: ImagenParaIA[];
+  /** Evidencia digital de una actividad de contenido (PDF, imágenes, Word, Excel, PowerPoint). */
+  material?: MaterialParaIA;
 }
 
 /**
@@ -1066,10 +1084,14 @@ export interface RespuestaParaIA {
 export async function evaluarRespuestasPlataforma(act: Actividad, respuestas: RespuestaParaIA[], uso: UsoIA): Promise<EvaluacionAlumno> {
   const numeros = new Set(respuestas.map((x) => x.numero));
   const rubrica = rubricaParaIA(act).filter((r) => numeros.has(r.numero));
-  const contenido: Anthropic.Beta.BetaContentBlockParam[] = respuestas.flatMap((x): Anthropic.Beta.BetaContentBlockParam[] => [
-    { type: "text", text: x.imagenes?.length ? `Reactivo ${x.numero}: desarrollo del alumno en ${x.imagenes.length} archivo(s).` : `Reactivo ${x.numero}, respuesta escrita del alumno:\n${x.texto ?? ""}` },
-    ...(x.imagenes?.length ? bloquesImagen(x.imagenes, `Reactivo ${x.numero}`) : []),
-  ]);
+  const contenido: Anthropic.Beta.BetaContentBlockParam[] = respuestas.flatMap((x): Anthropic.Beta.BetaContentBlockParam[] =>
+    x.material
+      ? [{ type: "text", text: `Reactivo ${x.numero}: evidencia digital que entregó el alumno.` }, ...bloquesMaterial(x.material, `Reactivo ${x.numero}`)]
+      : [
+          { type: "text", text: x.imagenes?.length ? `Reactivo ${x.numero}: desarrollo del alumno en ${x.imagenes.length} archivo(s).` : `Reactivo ${x.numero}, respuesta escrita del alumno:\n${x.texto ?? ""}` },
+          ...(x.imagenes?.length ? bloquesImagen(x.imagenes, `Reactivo ${x.numero}`) : []),
+        ],
+  );
   const salida = await pedir({
     tipo: "evaluacion",
     uso,
@@ -1389,4 +1411,44 @@ export async function buscarRecursos(
     limpios[tema] = verificados;
   }
   return limpios;
+}
+
+// ---------- Instrucciones de una actividad de contenido ----------
+
+const EsquemaInstrucciones = z.object({ instrucciones: z.array(z.string()) });
+
+const SISTEMA_INSTRUCCIONES = `Eres un asistente para profesores de secundaria y bachillerato en México.
+El profesor comparte material con sus alumnos (documentos, presentaciones, hojas de cálculo, imágenes, audio o video) y te dice qué quiere que hagan con él.
+Redacta las instrucciones que leerá el alumno, para que entienda exactamente qué hacer y qué entregar:
+- De 3 a 8 indicaciones, una por elemento, en orden, en segunda persona (tú), claras y concretas, adecuadas para adolescentes.
+- Menciona el material por su nombre cuando haga falta (por ejemplo "Lee el documento Leyes de Newton.pdf"). Si hay audio o video que no puedes ver ni escuchar, refiérete a él por su nombre sin inventar su contenido.
+- Indica qué debe entregar y cómo: {entrega}
+- Si el profesor indicó criterios, extensión o tiempo, inclúyelos. No inventes puntajes.
+- Sin viñetas ni números al inicio (se agregan al mostrarlas). LaTeX entre $…$ solo si hace falta una fórmula.
+- No pidas datos personales al alumno.`;
+
+const ENTREGA_PARA_IA = {
+  manuscrita: "a mano, en hojas que fotografía o escanea y sube a la app.",
+  digital: "como archivo digital (PDF, Word, Excel, PowerPoint, imagen, audio o video) que anexa en la app.",
+} as const;
+
+/** Instrucciones claras para el alumno a partir de lo que pide el profesor y del material anexo. */
+export async function redactarInstrucciones(
+  datos: { titulo: string; materia?: string; peticion: string; entrega: "manuscrita" | "digital"; material: MaterialParaIA },
+  uso: UsoIA,
+): Promise<string[]> {
+  const salida = await pedir({
+    tipo: "instrucciones",
+    uso,
+    system: SISTEMA_INSTRUCCIONES.replace("{entrega}", ENTREGA_PARA_IA[datos.entrega]),
+    esquema: EsquemaInstrucciones,
+    contenido: [
+      ...bloquesMaterial(datos.material, "Material"),
+      {
+        type: "text",
+        text: `${datos.materia ? `Materia: ${datos.materia}\n` : ""}Título de la actividad: ${datos.titulo || "(sin título)"}\n\nLo que pide el profesor:\n${datos.peticion}\n\nRedacta las instrucciones para el alumno.`,
+      },
+    ],
+  });
+  return salida.instrucciones.map((x) => x.trim().replace(/^([-•*]|\d+[.)])\s+/, "")).filter(Boolean).slice(0, 12);
 }

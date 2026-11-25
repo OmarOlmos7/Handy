@@ -39,6 +39,14 @@ export interface RespuestaPlataforma {
   texto?: string;
   seleccion?: string[];
   archivos?: string[];
+  /**
+   * Páginas que la IA revisa de los archivos (evidencia digital de una actividad de contenido:
+   * un PDF cuenta sus páginas, un Word, Excel o PowerPoint cuenta uno, el audio y el video no
+   * cuentan). Sin valor, una por archivo.
+   */
+  paginas?: number;
+  /** Nombres originales de los archivos de evidencia digital, en el orden de `archivos`. */
+  nombres?: string[];
 }
 
 export type Confianza = "alta" | "media" | "baja";
@@ -144,7 +152,32 @@ export interface CriterioEvaluacion {
   reactivos?: number[];
 }
 
-export type OrigenActividad = "ia" | "escaneada";
+export type OrigenActividad = "ia" | "escaneada" | "contenido";
+
+/** Clase de archivo que se anexa o entrega en una actividad de contenido. */
+export type ClaseArchivo = "pdf" | "word" | "excel" | "ppt" | "audio" | "video" | "imagen";
+
+/** Archivo que el profesor anexa a una actividad de contenido (se ve con el previsualizador). */
+export interface AnexoContenido {
+  /** Ruta relativa a la carpeta de datos. */
+  ruta: string;
+  /** Nombre original del archivo. */
+  nombre: string;
+  clase: ClaseArchivo;
+  bytes: number;
+}
+
+/** Cómo entrega el alumno una actividad de contenido. */
+export type EntregaContenido = "manuscrita" | "digital";
+
+/**
+ * Actividad de contenido: el profesor comparte material (PDF, Word, Excel, PowerPoint, audio o
+ * video) con instrucciones, y el alumno entrega a mano (fotos) o con evidencia digital.
+ */
+export interface ContenidoActividad {
+  anexos: AnexoContenido[];
+  entrega: EntregaContenido;
+}
 
 /** Escala de calificación: sobre 100 (por defecto en actividades nuevas) o sobre 10. */
 export type Escala = 10 | 100;
@@ -165,6 +198,8 @@ export interface Actividad {
   origen?: OrigenActividad;
   /** Lo que pidió el profesor para generar la actividad con IA. */
   prompt?: string;
+  /** Actividad de contenido: material anexo y tipo de entrega del alumno. */
+  contenido?: ContenidoActividad;
   /** Instrucciones para el alumno que van impresas en la hoja. */
   instruccionesAlumno?: string[];
   /** Escaneo de la actividad en blanco (rutas relativas a la carpeta de datos). */
@@ -493,7 +528,8 @@ export type TipoConsumoIA =
   | "temario"
   | "relaciones"
   | "autoestudio"
-  | "autoestudio_evaluar";
+  | "autoestudio_evaluar"
+  | "instrucciones";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {

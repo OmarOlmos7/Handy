@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import type { EsfuerzoIA, EstiloCorreccion, Grupo, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
 import { FechasActividad } from "./fechas-actividad";
@@ -12,6 +12,10 @@ import { LARGO_ETIQUETA } from "@/lib/etiquetas";
 import { IDIOMAS, NOMBRE_IDIOMA, formato, type Idioma } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
 import { SelectorTemario, type AsignaturaParaAlta } from "./selector-temario";
+import { AltaContenido, useErrorArchivos } from "./alta-contenido";
+import { ChipsTipo } from "./chips-tipo";
+import { MAX_ANEXOS } from "@/lib/contenido";
+import { esEtiquetaContenido } from "@/lib/iconos-tipo";
 
 type Modo = "ia" | "escaneada";
 type Formato = "manuscrita" | "plataforma";
@@ -55,6 +59,14 @@ export function NuevaActividad({
   const [estilo, setEstilo] = useState<EstiloCorreccion>("margen");
   const [estado, setEstado] = useState<"listo" | "enviando" | "error">("listo");
   const [mensaje, setMensaje] = useState("");
+  // Actividad de contenido (tipo "Contenido"): material anexo, instrucciones y tipo de entrega.
+  const tc = t.contenido;
+  const esContenido = esEtiquetaContenido(etiqueta) || etiqueta.trim().toLowerCase() === tc.chip.toLowerCase();
+  const [anexos, setAnexos] = useState<File[]>([]);
+  const [entregaContenido, setEntregaContenido] = useState<"manuscrita" | "digital">("manuscrita");
+  const [instruccionesAlumno, setInstruccionesAlumno] = useState("");
+  const errorArchivos = useErrorArchivos();
+  const formRef = useRef<HTMLFormElement>(null);
 
   if (grupos.length === 0) {
     return (
@@ -75,6 +87,36 @@ export function NuevaActividad({
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const datos = new FormData(e.currentTarget);
+    if (esContenido) {
+      const problema = errorArchivos(anexos, MAX_ANEXOS) || (instruccionesAlumno.trim() ? "" : tc.errores.instrucciones);
+      if (problema) {
+        setEstado("error");
+        setMensaje(problema);
+        return;
+      }
+      datos.set("modo", "contenido");
+      datos.set("formato", entregaContenido === "digital" ? "plataforma" : "manuscrita");
+      datos.set("entregaContenido", entregaContenido);
+      datos.set("instruccionesAlumno", instruccionesAlumno);
+      datos.set("sinSolucion", sinSolucion ? "1" : "");
+      datos.set("estiloCorreccion", estilo);
+      datos.delete("anexos");
+      datos.delete("archivos");
+      datos.delete("prompt");
+      anexos.forEach((f) => datos.append("anexos", f));
+      setEstado("enviando");
+      setMensaje("");
+      try {
+        const r = await fetch("/api/actividades/nueva", { method: "POST", body: datos });
+        const j = await r.json().catch(() => ({ error: tn.noSeCreo }));
+        if (!r.ok) throw new Error(j.error ?? "Error");
+        router.push(j.siguiente);
+      } catch (err) {
+        setEstado("error");
+        setMensaje(err instanceof Error ? err.message : tn.noSeCreo);
+      }
+      return;
+    }
     datos.set("modo", modo);
     datos.set("formato", formatoAct);
     datos.set("sinSolucion", sinSolucion ? "1" : "");
@@ -115,7 +157,19 @@ export function NuevaActividad({
   );
 
   return (
-    <form onSubmit={enviar} className="mx-auto max-w-3xl space-y-5">
+    <form ref={formRef} onSubmit={enviar} className="mx-auto max-w-3xl space-y-5">
+      {esContenido ? (
+        <div className="flex items-start gap-3 rounded-xl bg-tinta-50 p-4 ring-2 ring-tinta-500">
+          <span className="text-3xl" aria-hidden>
+            📎
+          </span>
+          <span>
+            <span className="block font-semibold text-slate-900">{tc.modoTitulo}</span>
+            <span className="mt-1 block text-sm text-slate-600">{tc.modoTexto}</span>
+          </span>
+        </div>
+      ) : (
+      <>
       <fieldset>
         <legend className="text-sm font-medium text-slate-700">{tn.formato}</legend>
         <div className="mt-1 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1 sm:inline-grid sm:w-96" role="radiogroup">
@@ -144,6 +198,8 @@ export function NuevaActividad({
           {opcion("ia", tn.conIA, tn.conIATexto, "✨")}
           {opcion("escaneada", tn.escaneada, tn.escaneadaTexto, "📄")}
         </div>
+      )}
+      </>
       )}
 
       <div className="space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -196,30 +252,26 @@ export function NuevaActividad({
               <option key={e} value={e} />
             ))}
           </datalist>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {tiposSugeridos.map((e) => {
-              const activo = etiqueta.trim().toLowerCase() === e.toLowerCase();
-              return (
-                <button
-                  key={e}
-                  type="button"
-                  aria-pressed={activo}
-                  onClick={() => setEtiqueta(activo ? "" : e)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-                    activo ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
-                >
-                  {e}
-                </button>
-              );
-            })}
-          </div>
+          <ChipsTipo tipos={tiposSugeridos} valor={etiqueta} onCambiar={setEtiqueta} contenido={tc.chip} />
           <span className="mt-1 block text-xs text-slate-500">{tn.tipoActividadTexto}</span>
         </div>
 
         <SelectorTemario asignaturas={asignaturas} materia={grupos.find((g) => g.id === grupoSel)?.materia} />
 
-        {modo === "ia" ? (
+        {esContenido ? (
+          <AltaContenido
+            anexos={anexos}
+            onAnexos={setAnexos}
+            entrega={entregaContenido}
+            onEntrega={setEntregaContenido}
+            instrucciones={instruccionesAlumno}
+            onInstrucciones={setInstruccionesAlumno}
+            datosIA={() => {
+              const d = formRef.current ? new FormData(formRef.current) : new FormData();
+              return { titulo: String(d.get("titulo") ?? ""), grupo: grupoSel, idioma: String(d.get("idioma") ?? "") };
+            }}
+          />
+        ) : modo === "ia" ? (
           <>
             <label className="block text-sm font-medium text-slate-700">
               {tn.queActividad}
@@ -284,7 +336,7 @@ export function NuevaActividad({
             setEstilo(v ? "subrayado" : "margen");
           }}
         />
-        {!enPlataforma && <OpcionEstilo estilo={estilo} onCambio={setEstilo} />}
+        {(esContenido ? entregaContenido === "manuscrita" : !enPlataforma) && <OpcionEstilo estilo={estilo} onCambio={setEstilo} />}
 
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">{tn.calificarSobre}</legend>
@@ -310,7 +362,7 @@ export function NuevaActividad({
 
         {estado === "enviando" && (
           <p className="rounded-lg bg-tinta-50 p-3 text-sm text-tinta-700" role="status">
-            {modo === "ia"
+            {esContenido ? tc.subiendo : modo === "ia"
               ? tn.disenando
               : tn.subiendo}
           </p>
@@ -318,8 +370,16 @@ export function NuevaActividad({
         {estado === "error" && <p className="rounded-lg bg-error-suave p-3 text-sm text-error">{mensaje}</p>}
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-slate-500">{tn.sinCreditos}</p>
-          <Boton type="submit" disabled={estado === "enviando" || (modo === "escaneada" && archivos.length === 0)}>
-            {estado === "enviando" ? (modo === "ia" ? tn.generando : tn.subiendoCorto) : modo === "ia" ? tn.generar : tn.cargar}
+          <Boton type="submit" disabled={estado === "enviando" || (!esContenido && modo === "escaneada" && archivos.length === 0)}>
+            {esContenido
+              ? estado === "enviando"
+                ? tc.creando
+                : tc.crear
+              : estado === "enviando"
+                ? (modo === "ia" ? tn.generando : tn.subiendoCorto)
+                : modo === "ia"
+                  ? tn.generar
+                  : tn.cargar}
           </Boton>
         </div>
       </div>
