@@ -185,6 +185,87 @@ export function rutaDeAprendizaje({
   };
 }
 
+// ---------- Resumen del grupo y tablero de una unidad ----------
+
+export const ESTADOS_UNIDAD: readonly EstadoUnidad[] = ["certificada", "en_progreso", "sin_iniciar"];
+
+/** Cuántos alumnos van en cada estado de una unidad, en número y en porcentaje (suman 100). */
+export interface DistribucionUnidad {
+  indice: number;
+  nombre: string;
+  total: number;
+  conteos: Record<EstadoUnidad, number>;
+  porcentajes: Record<EstadoUnidad, number>;
+}
+
+/** Porcentajes enteros que suman exactamente 100 (método del residuo mayor). */
+export function porcentajesEnteros(conteos: number[]): number[] {
+  const total = conteos.reduce((s, x) => s + x, 0);
+  if (total === 0) return conteos.map(() => 0);
+  const crudos = conteos.map((c) => (c * 100) / total);
+  const base = crudos.map(Math.floor);
+  let faltan = 100 - base.reduce((s, x) => s + x, 0);
+  const orden = crudos.map((c, i) => ({ i, resto: c - Math.floor(c) })).sort((a, b) => b.resto - a.resto || a.i - b.i);
+  for (const { i } of orden) {
+    if (faltan <= 0) break;
+    base[i]++;
+    faltan--;
+  }
+  return base;
+}
+
+/**
+ * Para el histograma del profesor: por unidad, qué parte del grupo ya la completó (certificada),
+ * cuál va en proceso y cuál no la ha iniciado.
+ */
+export function distribucionPorUnidad(rutas: Pick<RutaAprendizaje, "unidades">[], unidades: { nombre: string }[]): DistribucionUnidad[] {
+  return unidades.map((u, indice) => {
+    const conteos = { certificada: 0, en_progreso: 0, sin_iniciar: 0 } as Record<EstadoUnidad, number>;
+    for (const r of rutas) conteos[r.unidades[indice]?.estado ?? "sin_iniciar"]++;
+    const [c, p, s] = porcentajesEnteros(ESTADOS_UNIDAD.map((e) => conteos[e]));
+    return { indice, nombre: u.nombre, total: rutas.length, conteos, porcentajes: { certificada: c, en_progreso: p, sin_iniciar: s } };
+  });
+}
+
+/** La actividad de autoestudio (tema libre) es de la unidad si su tema coincide con algún tema o subtema. */
+export function esDeLaUnidad(tema: string, unidad: Pick<Asignatura["unidades"][number], "temas">): boolean {
+  return unidad.temas.some((t) => [t.nombre, ...t.subtemas].some((n) => coincideTema(tema, n)));
+}
+
+/** Tablero de rendimiento del alumno en una unidad. Porcentajes sobre 100, un decimal. */
+export interface TableroUnidad {
+  profesor: { total: number; entregadas: number; calificadas: number; promedio: number | null };
+  autoestudio: { total: number; completadas: number; promedio: number | null; segundos: number };
+  temas: { total: number; dominados: number; enProgreso: number; pendientes: number };
+  /** Promedio de todo lo calificado en la unidad (profesor y autoestudio), o null. */
+  promedio: number | null;
+}
+
+export function tableroUnidad(
+  unidad: Pick<UnidadRuta, "temas">,
+  actividades: Pick<ActividadParaRuta, "entregada" | "porcentaje">[],
+  autoactividades: { estado: AutoactividadParaRuta["estado"]; calificacion?: number; segundos?: number }[],
+): TableroUnidad {
+  const notasProf = actividades.map((a) => a.porcentaje).filter((p): p is number => p !== null);
+  const notasAuto = autoactividades.filter((x) => x.estado === "completada" && typeof x.calificacion === "number").map((x) => x.calificacion!);
+  return {
+    profesor: { total: actividades.length, entregadas: actividades.filter((a) => a.entregada).length, calificadas: notasProf.length, promedio: promedio(notasProf) },
+    autoestudio: {
+      total: autoactividades.length,
+      completadas: autoactividades.filter((x) => x.estado === "completada").length,
+      promedio: promedio(notasAuto),
+      segundos: autoactividades.reduce((s, x) => s + (x.segundos ?? 0), 0),
+    },
+    temas: {
+      total: unidad.temas.length,
+      dominados: unidad.temas.filter((t) => t.estado === "dominado").length,
+      enProgreso: unidad.temas.filter((t) => t.estado === "en_progreso").length,
+      pendientes: unidad.temas.filter((t) => t.estado === "pendiente").length,
+    },
+    promedio: promedio([...notasProf, ...notasAuto]),
+  };
+}
+
 /** Respuestas válidas de la valoración: solo unidades que existen y niveles conocidos. */
 export function limpiarNiveles(a: Pick<Asignatura, "unidades">, crudo: unknown): Record<string, NivelConocimiento> {
   const fuente = crudo && typeof crudo === "object" ? (crudo as Record<string, unknown>) : {};

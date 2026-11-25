@@ -4,7 +4,7 @@ import { calificacion, escalaDe } from "./estadisticas";
 import { aPorcentaje } from "./mapa-temario";
 import { actividadesVisibles, resultadoVisible } from "./portal-alumno";
 import { rutaDeAprendizaje, type ActividadParaRuta, type RutaAprendizaje } from "./ruta-aprendizaje";
-import type { Asignatura, BaseDeDatos, ValoracionInicial } from "./tipos";
+import type { Asignatura, Autoactividad, BaseDeDatos, ValoracionInicial } from "./tipos";
 
 /**
  * Ruta de un alumno de un curso con los datos guardados: actividades visibles del curso (con su
@@ -16,7 +16,7 @@ export function rutaDelAlumno(
   asignatura: Pick<Asignatura, "id" | "unidades">,
   alumno: { cuentaId?: string; matricula: string },
   ahora: Date = new Date(),
-): { ruta: RutaAprendizaje; valoracion?: ValoracionInicial } {
+): { ruta: RutaAprendizaje; valoracion?: ValoracionInicial; actividades: ActividadParaRuta[]; autoactividades: Autoactividad[] } {
   const actividades = actividadesVisibles(db.actividades, grupoId, ahora)
     .filter((a) => a.temario?.asignaturaId === asignatura.id)
     .map((a): ActividadParaRuta => {
@@ -34,5 +34,5 @@ export function rutaDelAlumno(
   const valoracion = (db.valoraciones ?? []).find(
     (v) => v.grupoId === grupoId && v.asignaturaId === asignatura.id && (alumno.cuentaId ? v.alumnoId === alumno.cuentaId : v.matricula === alumno.matricula),
   );
-  return { ruta: rutaDeAprendizaje({ asignatura, niveles: valoracion?.niveles, actividades, autoactividades }), valoracion };
+  return { ruta: rutaDeAprendizaje({ asignatura, niveles: valoracion?.niveles, actividades, autoactividades }), valoracion, actividades, autoactividades };
 }

@@ -40,7 +40,18 @@ function Etiqueta({ x, y, lineas, ancla = "start", clase = "fill-slate-600", tam
   );
 }
 
-export function RutaEspina({ ruta, t, enlaceTema }: { ruta: RutaAprendizaje; t: Diccionario; enlaceTema?: (unidad: number, tema: TemaRuta) => string }) {
+export function RutaEspina({
+  ruta,
+  t,
+  enlaceTema,
+  enlaceUnidad,
+}: {
+  ruta: RutaAprendizaje;
+  t: Diccionario;
+  enlaceTema?: (unidad: number, tema: TemaRuta) => string;
+  /** Al tocar una unidad se abre su vista (actividades, autoestudio y tablero). */
+  enlaceUnidad?: (unidad: number) => string;
+}) {
   const tr = t.ruta;
   const ac = acomodoEspina(ruta.unidades.map((u) => u.temas.length), 56);
   const puntosEspina = [ac.inicio, ...ac.unidades, ac.fin];
@@ -138,9 +149,11 @@ export function RutaEspina({ ruta, t, enlaceTema }: { ruta: RutaAprendizaje; t: 
         const color = colorRuta(i);
         const relleno = u.estado === "certificada" ? AZUL_CERTIFICADA : u.estado === "en_progreso" ? AMARILLO_PROGRESO : "#fff";
         const borde = u.estado === "certificada" ? AZUL_CERTIFICADA : color;
-        return (
-          <g key={u.nombre}>
-            <title>{`${formato(tr.unidad, { n: i + 1 })} · ${u.nombre} · ${tr.estados[u.estado]}`}</title>
+        const contenido = (
+          <>
+            <title>{`${formato(tr.unidad, { n: i + 1 })} · ${u.nombre} · ${tr.estados[u.estado]}${enlaceUnidad ? ` · ${tr.verUnidad}` : ""}`}</title>
+            {/* Área de toque que incluye el nombre de la unidad. */}
+            {enlaceUnidad && <rect x={p.x - 60} y={p.y - 46} width={120} height={120} fill="transparent" />}
             {/* Anillo exterior con el color de la unidad, para no perder su identidad. */}
             <circle cx={p.x} cy={p.y} r={25} fill="#fff" stroke={color} strokeWidth={3} />
             <circle cx={p.x} cy={p.y} r={19} fill={relleno} stroke={borde} strokeWidth={u.estado === "sin_iniciar" ? 3 : 0} />
@@ -153,7 +166,14 @@ export function RutaEspina({ ruta, t, enlaceTema }: { ruta: RutaAprendizaje; t: 
             )}
             <Etiqueta x={p.x} y={p.y - 34} lineas={[formato(tr.unidad, { n: i + 1 })]} ancla="middle" clase="fill-slate-500" tam={10} peso={600} />
             <Etiqueta x={p.x} y={p.y + 44} lineas={renglones(u.nombre.replace(/^(unidad|unit)\s*\d+[.:)\-–]?\s*/i, ""), 20, 2)} ancla="middle" clase="fill-slate-800" tam={12} peso={600} />
-          </g>
+          </>
+        );
+        return enlaceUnidad ? (
+          <a key={u.nombre} href={enlaceUnidad(i)} className="cursor-pointer outline-none [&:focus-visible_circle:first-of-type]:stroke-slate-900 [&:hover_circle:first-of-type]:stroke-[5px]">
+            {contenido}
+          </a>
+        ) : (
+          <g key={u.nombre}>{contenido}</g>
         );
       })}
 

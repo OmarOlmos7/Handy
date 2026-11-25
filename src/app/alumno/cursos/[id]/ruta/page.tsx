@@ -28,7 +28,7 @@ const ESTILO_ESTADO: Record<UnidadRuta["estado"], { fondo: string; texto: string
 };
 
 /** Tarjeta de una unidad: estado, nivel, examen de certificación y temas por trabajar. */
-function TarjetaUnidad({ u, t, enlace }: { u: UnidadRuta; t: Diccionario; enlace: (tema: TemaRuta) => string }) {
+function TarjetaUnidad({ u, t, enlace, vista }: { u: UnidadRuta; t: Diccionario; enlace: (tema: TemaRuta) => string; vista: string }) {
   const tr = t.ruta;
   const color = colorRuta(u.indice);
   const est = ESTILO_ESTADO[u.estado];
@@ -49,7 +49,11 @@ function TarjetaUnidad({ u, t, enlace }: { u: UnidadRuta; t: Diccionario; enlace
           <p className="text-xs font-bold tracking-[0.12em] uppercase" style={{ color }}>
             {formato(tr.unidad, { n: u.indice + 1 })} · {tr.estados[u.estado]}
           </p>
-          <h3 className="mt-0.5 text-lg leading-snug font-bold text-slate-900">{u.nombre}</h3>
+          <h3 className="mt-0.5 text-lg leading-snug font-bold text-slate-900">
+            <Link href={vista} className="hover:text-tinta-700 hover:underline">
+              {u.nombre}
+            </Link>
+          </h3>
           <p className="mt-1 text-xs text-slate-500">
             {u.nivel ? formato(tr.tuNivel, { nivel: tr.valoracion.niveles[u.nivel] }) : tr.sinNivel}
             {u.estado !== "certificada" && <> · {tr.prioridades[u.prioridad]}</>}
@@ -105,6 +109,9 @@ function TarjetaUnidad({ u, t, enlace }: { u: UnidadRuta; t: Diccionario; enlace
         </p>
       )}
       {opcionales.length > 0 && u.estado !== "certificada" && <p className="mt-2 text-xs text-slate-400">{formato(tr.opcionales, { temas: opcionales.map((o) => o.nombre).join(", ") })}</p>}
+      <Link href={vista} className="mt-4 self-start rounded-lg px-1 text-sm font-semibold text-tinta-700 hover:underline">
+        {tr.verUnidad} →
+      </Link>
     </article>
   );
 }
@@ -143,7 +150,9 @@ export default async function RutaCursoAlumno({ params, searchParams }: PageProp
   if (!valoracion) redirect(`/alumno/cursos/${grupo.id}/valoracion`);
 
   const base = `/alumno/cursos/${grupo.id}/ruta`;
-  const enlace = (tm: TemaRuta) => `${base}?tema=${encodeURIComponent(tm.nombre.replace(/^\s*\d+(\.\d+)*[.)]?\s+/, ""))}&tipo=${tm.tipo}#estudiar`;
+  const vistaUnidad = (i: number) => `${base}/${i + 1}`;
+  // Cada tema abre la vista de su unidad con el editor listo para ese tema.
+  const enlaceTema = (i: number, tm: TemaRuta) => `${vistaUnidad(i)}?tema=${encodeURIComponent(tm.nombre.replace(/^\s*\d+(\.\d+)*[.)]?\s+/, ""))}&tipo=${tm.tipo}#estudiar`;
   const temaInicial = typeof sp.tema === "string" ? sp.tema.slice(0, 120) : undefined;
   const tipoInicial = esTipoAutoactividad(sp.tipo) ? sp.tipo : undefined;
 
@@ -166,7 +175,7 @@ export default async function RutaCursoAlumno({ params, searchParams }: PageProp
           <p className="text-sm text-slate-600">{tr.comoFunciona}</p>
         </div>
         <div className="overflow-x-auto px-2 py-2">
-          <RutaEspina ruta={ruta} t={t} enlaceTema={(_, tm) => enlace(tm)} />
+          <RutaEspina ruta={ruta} t={t} enlaceTema={enlaceTema} enlaceUnidad={vistaUnidad} />
         </div>
         <div className="flex flex-col gap-2 border-t border-slate-100 px-5 py-3">
           <LeyendaRuta t={t} />
@@ -184,7 +193,7 @@ export default async function RutaCursoAlumno({ params, searchParams }: PageProp
         </h2>
         <div className="grid gap-4 md:grid-cols-2">
           {ruta.unidades.map((u) => (
-            <TarjetaUnidad key={u.nombre} u={u} t={t} enlace={enlace} />
+            <TarjetaUnidad key={u.nombre} u={u} t={t} enlace={(tm) => enlaceTema(u.indice, tm)} vista={vistaUnidad(u.indice)} />
           ))}
         </div>
       </section>
