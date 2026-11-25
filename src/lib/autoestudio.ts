@@ -373,6 +373,40 @@ export function resumenAutoestudio(lista: Autoactividad[], grupoId: string, matr
   };
 }
 
+/** Promedio (sobre 100) y número de actividades terminadas de un tipo de autoasignada. */
+export interface PromedioTipoAuto {
+  promedio: number | null;
+  hechas: number;
+}
+
+const promedioTipo = (hechas: Pick<Autoactividad, "calificacion">[]): PromedioTipoAuto => ({
+  promedio: hechas.length ? r1(hechas.reduce((s, a) => s + a.calificacion!, 0) / hechas.length) : null,
+  hechas: hechas.length,
+});
+
+/** Promedio y número de autoasignadas terminadas de un alumno, por cada uno de los 5 tipos. */
+export function autoestudioPorTipo(lista: Autoactividad[], grupoId: string, matricula: string): Record<TipoAutoactividad, PromedioTipoAuto> {
+  const hechas = lista.filter((a) => a.grupoId === grupoId && a.matricula === matricula && a.estado === "completada" && a.calificacion !== undefined);
+  return Object.fromEntries(TIPOS_AUTOACTIVIDAD.map((t) => [t, promedioTipo(hechas.filter((a) => a.tipo === t))])) as Record<TipoAutoactividad, PromedioTipoAuto>;
+}
+
+/**
+ * Promedio del grupo en cada tipo y en el global: promedio de los promedios de los alumnos que
+ * ya tienen alguna del tipo (como los promedios por tipo del cuaderno); `hechas` es el total del grupo.
+ */
+export function autoestudioGrupo(
+  porAlumno: { porTipo: Record<TipoAutoactividad, PromedioTipoAuto>; global: PromedioTipoAuto }[],
+): { porTipo: Record<TipoAutoactividad, PromedioTipoAuto>; global: PromedioTipoAuto } {
+  const juntar = (xs: PromedioTipoAuto[]): PromedioTipoAuto => {
+    const vs = xs.map((x) => x.promedio).filter((v): v is number => v !== null);
+    return { promedio: vs.length ? r1(vs.reduce((s, v) => s + v, 0) / vs.length) : null, hechas: xs.reduce((s, x) => s + x.hechas, 0) };
+  };
+  return {
+    porTipo: Object.fromEntries(TIPOS_AUTOACTIVIDAD.map((t) => [t, juntar(porAlumno.map((a) => a.porTipo[t]))])) as Record<TipoAutoactividad, PromedioTipoAuto>,
+    global: juntar(porAlumno.map((a) => a.global)),
+  };
+}
+
 /** Peso del autoestudio en la nota final (0 a 100, a décimas); sin valor, 0. */
 export function pesoAutoestudio(x: unknown): number {
   const n = Number(x);

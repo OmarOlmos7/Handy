@@ -200,6 +200,11 @@ const autoestudio: typeof es = {
       "Por padrão 0%: as autoatribuídas não contam na nota final até você ajustar. Com p%, nota final = nota do curso × (100 − p)% + média do autoestudo × p%.",
     costo: "Cada atividade criada por um aluno usa créditos do seu saldo ({g} ao gerá-la; {l} as leituras e os vídeos) e cada aluno pode criar até {n} por dia.",
     verTodas: "Autoatribuídas",
+    tiposCortos: { practica: "Prática", manuscrita: "À mão", videos: "Vídeos", lectura: "Leitura", tarjetas: "Cartões" },
+    global: "Geral",
+    hechas1: "1 feita",
+    hechasN: "{n} feitas",
+    porTipoAyuda: "Média sobre 100 e número de atividades concluídas de cada tipo.",
   },
 };
 

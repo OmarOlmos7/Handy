@@ -8,7 +8,8 @@ import { cambiarPesoAutoestudio } from "@/app/acciones-autoestudio";
 import { ORDENES, ordenarFilas, type Celda, type Columna, type Cuaderno, type Orden } from "@/lib/cuaderno";
 import { formatoCal, nivelDe, type Nivel } from "@/lib/estadisticas";
 import type { InfoCuaderno } from "@/lib/exportar-cuaderno";
-import type { Escala, PlanEvaluacion } from "@/lib/tipos";
+import type { Escala, PlanEvaluacion, TipoAutoactividad } from "@/lib/tipos";
+import { TIPOS_AUTOACTIVIDAD, type PromedioTipoAuto } from "@/lib/autoestudio";
 import { pesoDe } from "@/lib/plan-evaluacion";
 import { DescargarCuaderno } from "./descargar-cuaderno";
 import { tonoTipo } from "./tonos-tipo";
@@ -185,11 +186,18 @@ function PesoAutoestudio({ grupoId, peso }: { grupoId: string; peso: number }) {
   );
 }
 
-/** Promedio del autoestudio por alumno (sobre 100), cuántas hizo y si hay comentarios por revisar. */
+/**
+ * Autoestudio por alumno (promedios sobre 100): global, por cada tipo de autoasignada con cuántas
+ * terminó, cuántas creó y si hay comentarios por revisar. `grupo` trae los promedios del grupo.
+ */
 export interface AutoestudioTabla {
   grupoId: string;
   peso: number;
-  porAlumno: Record<string, { promedio: number | null; total: number; alertas: number }>;
+  porAlumno: Record<
+    string,
+    { promedio: number | null; total: number; completadas: number; alertas: number; porTipo: Record<TipoAutoactividad, PromedioTipoAuto> }
+  >;
+  grupo: { porTipo: Record<TipoAutoactividad, PromedioTipoAuto>; global: PromedioTipoAuto };
 }
 
 /** Nota final calculada en el servidor con el plan de evaluación (por matrícula). */
@@ -211,13 +219,11 @@ export function TablaCuaderno({
   final?: NotaFinalTabla;
   autoestudio?: AutoestudioTabla;
 }) {
-  const tq = useTextos().t.profesor.cuaderno;
-  const ta = useTextos().t.autoestudio.profesor;
+  const { t } = useTextos();
+  const tq = t.profesor.cuaderno;
+  const ta = t.autoestudio.profesor;
   const aEscala = (v: number | null) => (v === null ? null : Math.round((v / 100) * cuaderno.escala * 10) / 10);
-  const autoGrupo = (() => {
-    const vs = Object.values(autoestudio?.porAlumno ?? {}).map((x) => x.promedio).filter((v): v is number => v !== null);
-    return vs.length ? vs.reduce((s, v) => s + v, 0) / vs.length : null;
-  })();
+  const hechas = (n: number) => (n === 1 ? ta.hechas1 : formato(ta.hechasN, { n }));
   const tc = useTextos().t.profesor.comun;
   const [orden, setOrden] = useState<Orden>("apellido");
   const filas = ordenarFilas(cuaderno.filas, orden);
@@ -287,12 +293,18 @@ export function TablaCuaderno({
                 </th>
               ))}
               {autoestudio && (
-                <th rowSpan={2} className="border-b border-l border-slate-200 bg-violet-50 px-3 py-2 text-center text-violet-900">
+                <th
+                  colSpan={TIPOS_AUTOACTIVIDAD.length + 1}
+                  title={ta.porTipoAyuda}
+                  className="border-b border-l border-slate-200 bg-violet-50 px-3 py-2 text-center text-violet-900"
+                >
                   <Link href={`/profesor/grupos/${autoestudio.grupoId}/autoestudio`} className="hover:underline">
                     ✨ {ta.columna}
                   </Link>
-                  <span className="block text-[10px] font-normal normal-case">{ta.porcentaje}</span>
-                  <PesoAutoestudio grupoId={autoestudio.grupoId} peso={autoestudio.peso} />
+                  <span className="mt-0.5 flex items-center justify-center gap-2 text-[10px] font-normal normal-case">
+                    {ta.porcentaje}
+                    <PesoAutoestudio grupoId={autoestudio.grupoId} peso={autoestudio.peso} />
+                  </span>
                 </th>
               )}
               <th rowSpan={2} className="border-b border-l border-slate-200 bg-slate-50 px-3 py-2 text-center text-slate-700">
@@ -327,6 +339,25 @@ export function TablaCuaderno({
                   <span className="block text-[10px] font-normal text-slate-500">{formato(tq.sobre, { n: cuaderno.escala })}</span>
                 </th>,
               ])}
+              {autoestudio && [
+                ...TIPOS_AUTOACTIVIDAD.map((tipo, i) => (
+                  <th
+                    key={`auto-${tipo}`}
+                    title={t.autoestudio.tipos[tipo]}
+                    className={`border-b border-slate-200 bg-violet-50/70 px-2 py-2 text-center align-bottom text-xs font-medium text-violet-900 ${i === 0 ? "border-l" : ""}`}
+                  >
+                    {ta.tiposCortos[tipo]}
+                    <span className="block text-[10px] font-normal text-slate-500">{formato(tq.sobre, { n: cuaderno.escala })}</span>
+                  </th>
+                )),
+                <th
+                  key="auto-global"
+                  className="border-b border-l border-slate-200 border-l-violet-300/70 bg-violet-100/70 px-2 py-2 text-center align-bottom text-xs font-semibold text-violet-950"
+                >
+                  {ta.global}
+                  <span className="block text-[10px] font-normal text-slate-500">{formato(tq.sobre, { n: cuaderno.escala })}</span>
+                </th>,
+              ]}
             </tr>
           </thead>
           <tbody>
@@ -346,9 +377,22 @@ export function TablaCuaderno({
                     <Promedio valor={g.promedios[f.matricula] ?? null} escala={cuaderno.escala} fuerte />
                   </td>,
                 ])}
+                {autoestudio &&
+                  TIPOS_AUTOACTIVIDAD.map((tipo, i) => {
+                    const x = autoestudio.porAlumno[f.matricula]?.porTipo[tipo];
+                    return (
+                      <td
+                        key={`auto-${tipo}`}
+                        className={`whitespace-nowrap border-b border-slate-100 bg-violet-50/30 px-2 py-1.5 text-center ${i === 0 ? "border-l border-l-slate-200" : ""}`}
+                      >
+                        <Promedio valor={aEscala(x?.promedio ?? null)} escala={cuaderno.escala} />
+                        {(x?.hechas ?? 0) > 0 && <span className="block text-[10px] text-slate-500">{hechas(x!.hechas)}</span>}
+                      </td>
+                    );
+                  })}
                 {autoestudio && (
-                  <td className="whitespace-nowrap border-b border-l border-slate-100 border-l-slate-200 bg-violet-50/40 px-3 py-1.5 text-center">
-                    <Promedio valor={aEscala(autoestudio.porAlumno[f.matricula]?.promedio ?? null)} escala={cuaderno.escala} />
+                  <td className="whitespace-nowrap border-b border-l border-slate-100 border-l-violet-300/70 bg-violet-100/40 px-3 py-1.5 text-center">
+                    <Promedio valor={aEscala(autoestudio.porAlumno[f.matricula]?.promedio ?? null)} escala={cuaderno.escala} fuerte />
                     <Link
                       href={`/profesor/grupos/${autoestudio.grupoId}/autoestudio/${encodeURIComponent(f.matricula)}`}
                       className="ml-1.5 text-xs font-medium text-violet-800 hover:underline"
@@ -359,6 +403,9 @@ export function TablaCuaderno({
                       <span title={ta.alerta} className="ml-1 text-xs text-error">
                         ⚠
                       </span>
+                    )}
+                    {(autoestudio.porAlumno[f.matricula]?.completadas ?? 0) > 0 && (
+                      <span className="block text-[10px] text-slate-500">{hechas(autoestudio.porAlumno[f.matricula].completadas)}</span>
                     )}
                   </td>
                 )}
@@ -388,9 +435,19 @@ export function TablaCuaderno({
                   <Promedio valor={g.promedioGrupo} escala={cuaderno.escala} fuerte />
                 </td>,
               ])}
+              {autoestudio &&
+                TIPOS_AUTOACTIVIDAD.map((tipo, i) => (
+                  <td key={`auto-${tipo}`} className={`whitespace-nowrap bg-violet-50/60 px-2 py-2.5 text-center ${i === 0 ? "border-l border-slate-200" : ""}`}>
+                    <Promedio valor={aEscala(autoestudio.grupo.porTipo[tipo].promedio)} escala={cuaderno.escala} fuerte />
+                    {autoestudio.grupo.porTipo[tipo].hechas > 0 && (
+                      <span className="block text-[10px] text-slate-500">{hechas(autoestudio.grupo.porTipo[tipo].hechas)}</span>
+                    )}
+                  </td>
+                ))}
               {autoestudio && (
-                <td className="border-l border-slate-200 bg-violet-50/60 px-3 py-2.5 text-center">
-                  <Promedio valor={aEscala(autoGrupo)} escala={cuaderno.escala} fuerte />
+                <td className="whitespace-nowrap border-l border-violet-300/70 bg-violet-100/60 px-3 py-2.5 text-center">
+                  <Promedio valor={aEscala(autoestudio.grupo.global.promedio)} escala={cuaderno.escala} fuerte />
+                  {autoestudio.grupo.global.hechas > 0 && <span className="block text-[10px] text-slate-500">{hechas(autoestudio.grupo.global.hechas)}</span>}
                 </td>
               )}
               <td className="border-l border-slate-200 px-3 py-2.5 text-center">
@@ -408,7 +465,11 @@ export function TablaCuaderno({
       <p className="text-xs text-slate-500">
         {tq.ayuda}
       </p>
-      {autoestudio && <p className="text-xs text-violet-900">✨ {ta.pesoAyuda}</p>}
+      {autoestudio && (
+        <p className="text-xs text-violet-900">
+          ✨ {ta.porTipoAyuda} {ta.pesoAyuda}
+        </p>
+      )}
     </div>
   );
 }

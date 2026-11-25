@@ -200,6 +200,11 @@ const autoestudio: typeof es = {
       "默认 0%：在你调整之前，自选活动不计入最终成绩。设为 p% 时，最终成绩 = 课程成绩 ×（100 − p）% + 自主学习平均分 × p%。",
     costo: "学生每创建一个活动都会使用你的点数（生成 {g}；阅读和视频 {l}），每名学生每天最多创建 {n} 个。",
     verTodas: "自选活动",
+    tiposCortos: { practica: "练习", manuscrita: "手写", videos: "视频", lectura: "阅读", tarjetas: "卡片" },
+    global: "总体",
+    hechas1: "完成 1 个",
+    hechasN: "完成 {n} 个",
+    porTipoAyuda: "每种类型的平均分（满分 100）和完成的活动数。",
   },
 };
 

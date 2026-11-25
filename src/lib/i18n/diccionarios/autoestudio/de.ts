@@ -200,6 +200,11 @@ const autoestudio: typeof es = {
       "Standardmäßig 0 %: Selbst zugewiesene Aktivitäten zählen nicht zur Endnote, bis Sie es ändern. Mit p % gilt: Endnote = Kursnote × (100 − p) % + Durchschnitt Selbststudium × p %.",
     costo: "Jede Aktivität, die ein/e Schüler/in erstellt, verbraucht Credits Ihres Guthabens ({g} beim Erstellen; {l} bei Lesetexten und Videos), und jede/r kann bis zu {n} pro Tag erstellen.",
     verTodas: "Selbst zugewiesen",
+    tiposCortos: { practica: "Übung", manuscrita: "Von Hand", videos: "Videos", lectura: "Lesen", tarjetas: "Lernkarten" },
+    global: "Gesamt",
+    hechas1: "1 erledigt",
+    hechasN: "{n} erledigt",
+    porTipoAyuda: "Durchschnitt von 100 und Anzahl erledigter Aktivitäten je Typ.",
   },
 };
 

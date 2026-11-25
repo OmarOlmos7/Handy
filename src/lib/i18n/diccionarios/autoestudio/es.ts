@@ -202,6 +202,11 @@ const autoestudio = {
       "Por defecto 0 %: las autoasignadas no cuentan en la nota final hasta que lo ajustes. Con p %, nota final = nota del curso × (100 − p) % + promedio de autoestudio × p %.",
     costo: "Cada actividad que crea un alumno usa créditos de tu saldo ({g} al generarla; {l} las lecturas y los videos) y cada alumno puede crear hasta {n} al día.",
     verTodas: "Autoasignadas",
+    tiposCortos: { practica: "Práctica", manuscrita: "A mano", videos: "Videos", lectura: "Lectura", tarjetas: "Tarjetas" },
+    global: "Global",
+    hechas1: "1 hecha",
+    hechasN: "{n} hechas",
+    porTipoAyuda: "Promedio sobre 100 y número de actividades terminadas de cada tipo.",
   },
 };
 

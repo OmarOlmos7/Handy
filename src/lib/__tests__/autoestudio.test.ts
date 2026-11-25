@@ -12,6 +12,8 @@ import {
   pesoAutoestudio,
   restantesHoy,
   resumenAutoestudio,
+  autoestudioPorTipo,
+  autoestudioGrupo,
   senalesDeRiesgo,
   sinDatosPersonales,
   sugerenciasCompanero,
@@ -184,5 +186,28 @@ describe("nota final con autoestudio", () => {
       { grupoId: "g", matricula: "M2", estado: "completada", calificacion: 10, creadaEn: haceDias(0) },
     ] as Autoactividad[];
     expect(resumenAutoestudio(lista, "g", "M1")).toMatchObject({ total: 3, completadas: 2, promedio: 80, segundos: 900, alertas: 1 });
+  });
+  it("promedia por tipo y cuenta las terminadas", () => {
+    const lista = [
+      { grupoId: "g", matricula: "M1", tipo: "practica", estado: "completada", calificacion: 90 },
+      { grupoId: "g", matricula: "M1", tipo: "practica", estado: "completada", calificacion: 75 },
+      { grupoId: "g", matricula: "M1", tipo: "tarjetas", estado: "completada", calificacion: 50 },
+      { grupoId: "g", matricula: "M1", tipo: "lectura", estado: "pendiente" },
+      { grupoId: "g", matricula: "M2", tipo: "practica", estado: "completada", calificacion: 60 },
+      { grupoId: "otro", matricula: "M1", tipo: "videos", estado: "completada", calificacion: 100 },
+    ] as Autoactividad[];
+    const m1 = autoestudioPorTipo(lista, "g", "M1");
+    expect(m1.practica).toEqual({ promedio: 82.5, hechas: 2 });
+    expect(m1.tarjetas).toEqual({ promedio: 50, hechas: 1 });
+    expect(m1.lectura).toEqual({ promedio: null, hechas: 0 });
+    expect(m1.videos).toEqual({ promedio: null, hechas: 0 });
+    const m2 = autoestudioPorTipo(lista, "g", "M2");
+    const grupo = autoestudioGrupo([
+      { porTipo: m1, global: { promedio: 71.7, hechas: 3 } },
+      { porTipo: m2, global: { promedio: 60, hechas: 1 } },
+    ]);
+    expect(grupo.porTipo.practica).toEqual({ promedio: 71.3, hechas: 3 });
+    expect(grupo.porTipo.manuscrita).toEqual({ promedio: null, hechas: 0 });
+    expect(grupo.global).toEqual({ promedio: 65.9, hechas: 4 });
   });
 });

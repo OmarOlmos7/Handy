@@ -7,7 +7,7 @@ import { grupoDe } from "@/lib/almacen";
 import { cuadernoCurso } from "@/lib/cuaderno";
 import { PlanEvaluacionCurso } from "@/components/plan-evaluacion";
 import { notaFinal } from "@/lib/plan-evaluacion";
-import { notaConAutoestudio, resumenAutoestudio } from "@/lib/autoestudio";
+import { autoestudioGrupo, autoestudioPorTipo, notaConAutoestudio, resumenAutoestudio } from "@/lib/autoestudio";
 import { datosProfesor } from "@/lib/sesion";
 import { textos } from "@/lib/i18n/servidor";
 import { formato } from "@/lib/i18n/idiomas";
@@ -36,6 +36,14 @@ export default async function CuadernoCurso({ params }: PageProps<"/profesor/gru
   const autoactividades = (db.autoactividades ?? []).filter((a) => a.grupoId === grupo.id);
   const peso = grupo.pesoAutoestudio ?? 0;
   const auto = Object.fromEntries(grupo.alumnos.map((al) => [al.matricula, resumenAutoestudio(autoactividades, grupo.id, al.matricula)]));
+  // Promedio y número de terminadas por tipo de autoasignada (los 5 tipos) y del grupo.
+  const autoTipos = Object.fromEntries(
+    grupo.alumnos.map((al) => [
+      al.matricula,
+      { porTipo: autoestudioPorTipo(autoactividades, grupo.id, al.matricula), global: { promedio: auto[al.matricula].promedio, hechas: auto[al.matricula].completadas } },
+    ]),
+  );
+  const autoDelGrupo = autoestudioGrupo(Object.values(autoTipos));
   const base = (m: string) => (nf ? (nf.porAlumno.get(m) ?? null) : (cuaderno.filas.find((f) => f.matricula === m)?.promedio ?? null));
   const finales = Object.fromEntries(grupo.alumnos.map((al) => [al.matricula, notaConAutoestudio(base(al.matricula), auto[al.matricula].promedio, peso, cuaderno.escala)]));
   const valoresFinales = Object.values(finales).filter((v): v is number => v !== null);
@@ -95,7 +103,10 @@ export default async function CuadernoCurso({ params }: PageProps<"/profesor/gru
           autoestudio={{
             grupoId: grupo.id,
             peso,
-            porAlumno: Object.fromEntries(Object.entries(auto).map(([m, r]) => [m, { promedio: r.promedio, total: r.total, alertas: r.alertas }])),
+            porAlumno: Object.fromEntries(
+              Object.entries(auto).map(([m, r]) => [m, { promedio: r.promedio, total: r.total, completadas: r.completadas, alertas: r.alertas, porTipo: autoTipos[m].porTipo }]),
+            ),
+            grupo: autoDelGrupo,
           }}
         />
       )}

@@ -200,6 +200,11 @@ const autoestudio: typeof es = {
       "初期値は0%：変更するまで自分で出した課題は最終成績に含まれません。p%の場合、最終成績 = コースの成績 ×（100 − p）% + 自主学習の平均 × p%。",
     costo: "生徒が課題をつくるたびに、あなたのクレジットを使います（生成に{g}、読み物と動画は{l}）。1人1日{n}個までつくれます。",
     verTodas: "自分で出した課題",
+    tiposCortos: { practica: "練習", manuscrita: "手書き", videos: "動画", lectura: "読み物", tarjetas: "カード" },
+    global: "全体",
+    hechas1: "1個完了",
+    hechasN: "{n}個完了",
+    porTipoAyuda: "種類ごとの平均（100点満点）と終えた課題の数。",
   },
 };
 
