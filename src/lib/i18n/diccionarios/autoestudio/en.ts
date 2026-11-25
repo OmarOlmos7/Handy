@@ -200,6 +200,11 @@ const autoestudio: typeof es = {
       "0% by default: self-assigned activities don't count toward the final grade until you change it. With p%, final grade = course grade × (100 − p)% + self-study average × p%.",
     costo: "Each activity a student creates uses credits from your balance ({g} to generate it; {l} for readings and videos), and each student can create up to {n} per day.",
     verTodas: "Self-assigned",
+    tiposCortos: { practica: "Practice", manuscrita: "By hand", videos: "Videos", lectura: "Reading", tarjetas: "Flash cards" },
+    global: "Overall",
+    hechas1: "1 done",
+    hechasN: "{n} done",
+    porTipoAyuda: "Average out of 100 and number of finished activities of each type.",
   },
 };
 

@@ -200,6 +200,11 @@ const autoestudio: typeof es = {
       "0 % par défaut : les auto-assignées ne comptent pas dans la note finale tant que vous ne l'ajustez pas. Avec p %, note finale = note du cours × (100 − p) % + moyenne du travail personnel × p %.",
     costo: "Chaque activité créée par un élève utilise des crédits de votre solde ({g} pour la générer ; {l} pour les lectures et les vidéos) et chaque élève peut en créer jusqu'à {n} par jour.",
     verTodas: "Auto-assignées",
+    tiposCortos: { practica: "Pratique", manuscrita: "À la main", videos: "Vidéos", lectura: "Lecture", tarjetas: "Cartes" },
+    global: "Global",
+    hechas1: "1 faite",
+    hechasN: "{n} faites",
+    porTipoAyuda: "Moyenne sur 100 et nombre d’activités terminées de chaque type.",
   },
 };
 
