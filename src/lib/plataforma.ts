@@ -85,7 +85,8 @@ export function respuestaComoTexto(r: Reactivo, resp: RespuestaPlataforma | unde
 /** true si el alumno contestó el reactivo (texto, selección o archivo). */
 export function contestado(r: Reactivo, resp: RespuestaPlataforma | undefined) {
   if (!resp) return false;
-  if (r.tipo === "desarrollo") return Boolean(resp.archivos?.length);
+  // Desarrollos y evidencia digital (actividad de contenido): cuenta si subió archivos.
+  if (r.tipo === "desarrollo" || resp.archivos?.length) return Boolean(resp.archivos?.length);
   return respuestaComoTexto(r, resp).length > 0;
 }
 
@@ -126,8 +127,14 @@ export function calificarSinIA(
  */
 export function creditosPlataforma(act: Actividad, respuestas: RespuestaPlataforma[], precision?: PrecisionIA): number {
   const paraIA = act.reactivos.filter((r) => vaALaIA(r) && contestado(r, respuestas.find((x) => x.numero === r.numero)));
-  const archivos = paraIA.filter((r) => r.tipo === "desarrollo").reduce((s, r) => s + (respuestas.find((x) => x.numero === r.numero)?.archivos?.length ?? 0), 0);
-  const textos = paraIA.some((r) => r.tipo !== "desarrollo") ? 1 : 0;
+  const conArchivos = (r: Reactivo) => Boolean(respuestas.find((x) => x.numero === r.numero)?.archivos?.length);
+  // Cada archivo o foto cuenta como una página; en la evidencia digital, las páginas que lee la IA
+  // (un PDF sus páginas; el audio y el video no cuentan).
+  const archivos = paraIA.filter(conArchivos).reduce((s, r) => {
+    const resp = respuestas.find((x) => x.numero === r.numero);
+    return s + (resp?.paginas ?? resp?.archivos?.length ?? 0);
+  }, 0);
+  const textos = paraIA.some((r) => !conArchivos(r)) ? 1 : 0;
   return sumarCreditos((archivos + textos) * creditosPorPagina(precision ?? act.precision));
 }
 

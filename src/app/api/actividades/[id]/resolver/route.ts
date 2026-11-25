@@ -2,6 +2,7 @@ import { actividadDe, leer, modificar } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
 import { ErrorIA, resolverActividad, resolverVersiones } from "@/lib/ia";
 import { imagenesParaIA } from "@/lib/imagenes";
+import { materialParaIA } from "@/lib/material-ia";
 import { profesorActual } from "@/lib/sesion";
 
 export const maxDuration = 300;
@@ -24,7 +25,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/actividades/[id
   try {
     const imagenes = actividad.origen === "escaneada" && actividad.archivos?.length ? imagenesParaIA(actividad.archivos) : undefined;
     const uso = { profesorId: profesor.id, actividadId: actividad.id };
-    const propuesta = await resolverActividad({ ...actividad, instrucciones: criterios }, { condiciones: String(condiciones).slice(0, 4000), imagenes }, uso);
+    // Actividad de contenido: la IA resuelve la tarea con el material que anexó el profesor.
+    const material = actividad.contenido ? await materialParaIA(actividad.contenido.anexos) : undefined;
+    const propuesta = await resolverActividad({ ...actividad, instrucciones: criterios }, { condiciones: String(condiciones).slice(0, 4000), imagenes, material }, uso);
     // Las demás versiones se resuelven con el mismo método que la A y se verifican.
     const versiones = await resolverVersiones({ ...actividad, reactivos: propuesta.reactivos, condicionesSolucion: String(condiciones).trim() }, uso);
     modificar((d) => {

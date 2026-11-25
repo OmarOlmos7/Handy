@@ -12,6 +12,8 @@ import { fechaHoraLarga } from "@/lib/resultados";
 import { alumnoActual } from "@/lib/sesion";
 import type { Alumno, RespuestaPlataforma } from "@/lib/tipos";
 import { actividadDeVersion } from "@/lib/versiones";
+import { MAX_EVIDENCIAS, esEvidenciaDigital, revisarArchivos } from "@/lib/contenido";
+import { guardarArchivosContenido } from "@/lib/subir-contenido";
 
 export const maxDuration = 300;
 
@@ -71,7 +73,18 @@ export async function POST(req: Request, ctx: RouteContext<"/api/respuestas/[id]
   const carpeta = `actividades/${id}/entregas/${alumno.matricula}`;
   const sello = Date.now().toString(36);
   const porReactivo = new Map<number, Buffer[]>();
-  for (const r of suya.reactivos.filter((x) => x.tipo === "desarrollo")) {
+  // Evidencia digital (actividad de contenido): los archivos se guardan tal cual (PDF, Word,
+  // Excel, PowerPoint, imágenes, audio o video) para verlos con el previsualizador.
+  const digital = esEvidenciaDigital(actividad);
+  const evidencias = new Map<number, File[]>();
+  for (const r of digital ? suya.reactivos.filter((x) => x.tipo === "desarrollo" || x.tipo === "abierto") : []) {
+    const archivos = form.getAll(`archivo-${r.numero}`).filter((f): f is File => f instanceof File && f.size > 0);
+    const problema = revisarArchivos(archivos, MAX_EVIDENCIAS);
+    if (problema?.error === "cantidad") return error("maxArchivos", 400, { max: MAX_EVIDENCIAS });
+    if (problema) return error("archivoInvalido", 400, { n: r.numero });
+    if (archivos.length) evidencias.set(r.numero, archivos);
+  }
+  for (const r of digital ? [] : suya.reactivos.filter((x) => x.tipo === "desarrollo")) {
     const archivos = form.getAll(`archivo-${r.numero}`).filter((f): f is File => f instanceof File && f.size > 0);
     if (archivos.length > MAX_ARCHIVOS_REACTIVO) return error("maxArchivos", 400, { max: MAX_ARCHIVOS_REACTIVO });
     const jpgs: Buffer[] = [];
@@ -89,9 +102,21 @@ export async function POST(req: Request, ctx: RouteContext<"/api/respuestas/[id]
     if (jpgs.length) porReactivo.set(r.numero, jpgs);
   }
   borrarCarpeta(carpeta);
+  const guardadas = new Map<number, { archivos: string[]; paginas: number; nombres: string[] }>();
+  for (const [numero, archivos] of evidencias) {
+    try {
+      const { anexos, paginasIA } = await guardarArchivosContenido(archivos, carpeta, MAX_EVIDENCIAS, `${sello}-r${numero}-`);
+      guardadas.set(numero, { archivos: anexos.map((a) => a.ruta), paginas: paginasIA, nombres: anexos.map((a) => a.nombre) });
+    } catch {
+      borrarCarpeta(carpeta);
+      return error("archivoInvalido", 400, { n: numero });
+    }
+  }
   const finales: RespuestaPlataforma[] = suya.reactivos
     .map((r) => {
       const base = respuestas.find((x) => x.numero === r.numero) ?? { numero: r.numero };
+      const evidencia = guardadas.get(r.numero);
+      if (evidencia) return { ...base, ...evidencia };
       const jpgs = porReactivo.get(r.numero);
       return jpgs ? { ...base, archivos: jpgs.map((jpg, i) => guardarArchivo(`${carpeta}/${sello}-r${r.numero}-${i + 1}.jpg`, jpg)) } : base;
     })
@@ -125,7 +150,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/respuestas/[id]
   const automatica = Boolean(actividad.rubricaConfirmada && actividad.reactivos.length);
   let evaluada = false;
   if (automatica) {
-    if (creditosPlataforma(suya, finales) === 0) {
+    // La evidencia digital (aunque sea solo audio o video) se procesa en segundo plano.
+    if (!digital && creditosPlataforma(suya, finales) === 0) {
       evaluada = (await evaluarYGuardar(id, alumno.matricula)).ok;
     } else {
       marcarEnFila(id, [alumno.matricula]);

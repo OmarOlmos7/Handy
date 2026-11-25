@@ -3,7 +3,7 @@
 import { inflateRawSync } from "node:zlib";
 
 /** Archivo dentro de un ZIP, o undefined si no está. */
-function archivoDeZip(zip: Buffer, nombre: string): Buffer | undefined {
+export function archivoDeZip(zip: Buffer, nombre: string): Buffer | undefined {
   // Fin del directorio central: firma 0x06054b50, en los últimos 64 KB.
   let fin = -1;
   for (let i = zip.length - 22; i >= Math.max(0, zip.length - 65_557); i--) {

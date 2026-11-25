@@ -12,12 +12,17 @@ import { esIdioma } from "@/lib/i18n/idiomas";
 import { limpiarEtiqueta } from "@/lib/etiquetas";
 import { leerFormato } from "@/lib/plataforma";
 import { leerTemarioActividad, temarioComoTexto } from "@/lib/asignaturas";
+import { MAX_ANEXOS, leerEntregaContenido, reactivoContenido, renglonesInstrucciones } from "@/lib/contenido";
+import { ErrorArchivos, guardarArchivosContenido } from "@/lib/subir-contenido";
+import { diccionarioDe } from "@/lib/i18n/diccionario";
 
 export const maxDuration = 300;
 
 // Paso 1: crear la actividad. Dos opciones:
 // - "ia": Claude genera la actividad (reactivos, puntos, instrucciones) a partir del prompt del profesor.
 // - "escaneada": el profesor sube su actividad en blanco (fotos o PDF).
+// - "contenido": el profesor anexa material (PDF, Word, Excel, PowerPoint, audio o video) con
+//   instrucciones; el alumno entrega a mano (fotos) o con evidencia digital.
 // Generar o cargar la actividad no consume créditos.
 export async function POST(req: Request) {
   const profesor = await profesorActual();
@@ -49,7 +54,7 @@ export async function POST(req: Request) {
   const idiomaElegido = form.get("idioma");
   // Manuscrita (hoja impresa con QR) o en plataforma (el alumno contesta en la app).
   const formato = leerFormato(form.get("formato"));
-  if (formato === "plataforma" && modo !== "ia") return Response.json({ error: "Las actividades en plataforma se generan con IA" }, { status: 400 });
+  if (formato === "plataforma" && modo !== "ia" && modo !== "contenido") return Response.json({ error: "Las actividades en plataforma se generan con IA" }, { status: 400 });
   const id = slug(titulo);
   const base: Actividad = {
     id,
@@ -134,6 +139,38 @@ export async function POST(req: Request) {
       borrarCarpeta(`actividades/${id}`);
       return Response.json({ error: "Algún archivo no es una imagen o PDF válido" }, { status: 400 });
     }
+  } else if (modo === "contenido") {
+    const instruccionesAlumno = renglonesInstrucciones(String(form.get("instruccionesAlumno") ?? "").slice(0, 6000));
+    if (!instruccionesAlumno.length) return Response.json({ error: "Escribe las instrucciones para el alumno" }, { status: 400 });
+    const entrega = leerEntregaContenido(form.get("entregaContenido"));
+    const archivos = form.getAll("anexos").filter((f): f is File => f instanceof File && f.size > 0);
+    let anexos;
+    try {
+      anexos = (await guardarArchivosContenido(archivos, `actividades/${id}/anexos`, MAX_ANEXOS)).anexos;
+    } catch (e) {
+      borrarCarpeta(`actividades/${id}`);
+      if (e instanceof ErrorArchivos) {
+        const motivo = { cantidad: `Máximo ${MAX_ANEXOS} archivos`, tipo: `No se acepta el archivo ${e.nombre}`, tamano: `${e.nombre} es demasiado grande`, total: "Los archivos juntos son demasiado grandes", invalido: `${e.nombre} no se pudo leer` }[e.clave];
+        return Response.json({ error: motivo }, { status: 400 });
+      }
+      throw e;
+    }
+    const idioma = (esIdioma(idiomaElegido) ? idiomaElegido : detectarIdioma(`${titulo}\n${instruccionesAlumno.join("\n")}`)) ?? "es";
+    const reactivo = reactivoContenido(titulo, instruccionesAlumno, base.escala ?? 100, Boolean(base.sinSolucion));
+    // Sin solución: criterios de partida, que el profesor ajusta en la rúbrica.
+    const criteriosBase = diccionarioDe(idioma).contenido.criteriosBase;
+    if (base.sinSolucion) reactivo.respuesta = criteriosBase.map((c) => c.descripcion).join(" ");
+    Object.assign(base, {
+      origen: "contenido",
+      contenido: { anexos, entrega },
+      instruccionesAlumno,
+      // Evidencia digital: el alumno entrega en la app (como en plataforma); manuscrita, con fotos.
+      formato: entrega === "digital" ? "plataforma" : undefined,
+      paginas: 1,
+      reactivos: [reactivo],
+      criterios: base.sinSolucion ? criteriosBase.map((c) => ({ ...c })) : undefined,
+      idioma: base.idioma ?? idioma,
+    });
   } else {
     return Response.json({ error: "Elige cómo crear la actividad" }, { status: 400 });
   }

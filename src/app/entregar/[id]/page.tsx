@@ -17,6 +17,8 @@ import { actividadDeVersion, letrasVersiones, versionValida } from "@/lib/versio
 import { esPlataforma, reactivosParaAlumno, versionDeAlumno } from "@/lib/plataforma";
 import { alumnoActual, matriculaEnCurso, profesorActual } from "@/lib/sesion";
 import { CronometroActividad } from "@/components/cronometro-actividad";
+import { MaterialContenido } from "@/components/material-contenido";
+import { esEvidenciaDigital } from "@/lib/contenido";
 
 // Página pública del QR. El alumno entra con su correo y clave de acceso (o crea su cuenta
 // aquí la primera vez) y la entrega queda en el curso del profesor dueño de la actividad.
@@ -39,7 +41,7 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
   const { t, locale } = await textos();
   const recepcion = estadoEnvio(actividad);
   return (
-    <main className="mx-auto w-full max-w-lg flex-1 px-4 py-6">
+    <main className={`mx-auto w-full flex-1 px-4 py-6 ${actividad.contenido ? "max-w-3xl" : "max-w-lg"}`}>
       <Logo grande />
       <h1 className="mt-5 text-xl font-semibold">{actividad.titulo}</h1>
       <p className="text-sm text-slate-500">
@@ -56,6 +58,17 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
               {t.alumno.entregar.noEresTu}
             </button>
           </form>
+        </div>
+      )}
+      {/* Actividad de contenido: instrucciones y material con su previsualizador. */}
+      {actividad.contenido && (
+        <div className="mt-5">
+          <MaterialContenido
+            instrucciones={actividad.instruccionesAlumno ?? []}
+            anexos={actividad.contenido.anexos}
+            entrega={actividad.contenido.entrega}
+            sinSesion={!comoProfesor && !matricula}
+          />
         </div>
       )}
       {actividad.entregasSuspendidas && !comoProfesor ? (
@@ -107,7 +120,16 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
     if (comoProfesor) {
       const version = versionValida(actividad, v) ?? (actividad.versiones?.length ? "A" : undefined);
       const suya = actividadDeVersion(actividad, version);
-      return <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(suya)} instrucciones={suya.instruccionesAlumno} version={version} vistaPrevia />;
+      return (
+        <ResponderActividad
+          actividadId={id}
+          reactivos={reactivosParaAlumno(suya)}
+          instrucciones={actividad.contenido ? undefined : suya.instruccionesAlumno}
+          version={version}
+          vistaPrevia
+          evidenciaDigital={esEvidenciaDigital(actividad)}
+        />
+      );
     }
     if (!alumno) {
       const err = typeof error === "string" ? error : undefined;
@@ -150,7 +172,13 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
             <strong>{tr.yaRespondiste}</strong> {tr.puedesCambiar}
           </p>
         )}
-        <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(suya)} instrucciones={suya.instruccionesAlumno} version={actividad.versiones?.length ? (version ?? "A") : undefined} />
+        <ResponderActividad
+          actividadId={id}
+          reactivos={reactivosParaAlumno(suya)}
+          instrucciones={actividad.contenido ? undefined : suya.instruccionesAlumno}
+          version={actividad.versiones?.length ? (version ?? "A") : undefined}
+          evidenciaDigital={esEvidenciaDigital(actividad)}
+        />
         {matricula && <CronometroActividad actividadId={id} />}
       </div>
     );

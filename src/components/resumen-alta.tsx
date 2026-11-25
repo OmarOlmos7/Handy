@@ -38,8 +38,16 @@ export async function ResumenAlta({ actividad, grupo }: { actividad: Actividad; 
   const fechaHora = (iso?: string) => (iso ? fechaHoraLarga(iso, locale) : th.resumenVacio);
 
   const datos: [string, ReactNode][] = [
-    [tn.formato, plataforma ? tn.enPlataforma : tn.manuscrita],
-    ...(!plataforma ? [[th.resumenCreacion, actividad.origen === "escaneada" ? th.resumenEscaneada : th.resumenIA] as [string, ReactNode]] : []),
+    ...(actividad.contenido
+      ? [
+          [tn.formato, t.contenido.modoTitulo],
+          [t.contenido.entrega, actividad.contenido.entrega === "digital" ? t.contenido.digital : t.contenido.manuscrita],
+          [t.contenido.material, String(actividad.contenido.anexos.length)],
+        ] as [string, ReactNode][]
+      : [
+          [tn.formato, plataforma ? tn.enPlataforma : tn.manuscrita] as [string, ReactNode],
+          ...(!plataforma ? [[th.resumenCreacion, actividad.origen === "escaneada" ? th.resumenEscaneada : th.resumenIA] as [string, ReactNode]] : []),
+        ]),
     [tn.curso, `${grupo.materia} · ${grupo.nombre}`],
     [tn.tipoActividad, actividad.etiqueta || th.resumenVacio],
     [tn.idiomaActividad, idioma ? NOMBRE_IDIOMA[idioma] : th.resumenVacio],
@@ -65,7 +73,7 @@ export async function ResumenAlta({ actividad, grupo }: { actividad: Actividad; 
       `${t.escala[punto.punto].nombre} · ${INFO_MOTOR[punto.precision.motor].nombreCorto} - ${t.esfuerzos[punto.precision.esfuerzo]}`,
     ],
     [th.resumenReactivos, String(actividad.reactivos.length)],
-    ...(!plataforma ? [[tn.paginas, String(actividad.paginas)] as [string, ReactNode]] : []),
+    ...(!plataforma && !actividad.contenido ? [[tn.paginas, String(actividad.paginas)] as [string, ReactNode]] : []),
     [tn.versiones, String(1 + (actividad.versiones?.length ?? 0))],
     [tn.visibleDesde, fechaHora(actividad.visibleDesde)],
     [tn.envioDesde, fechaHora(actividad.envioDesde)],

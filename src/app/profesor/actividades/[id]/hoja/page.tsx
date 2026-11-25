@@ -16,6 +16,7 @@ import { ProveedorTextos } from "@/components/proveedor-textos";
 import { ResponderActividad } from "@/components/responder-actividad";
 import { esPlataforma, reactivosParaAlumno } from "@/lib/plataforma";
 import { formato } from "@/lib/i18n/idiomas";
+import { MaterialContenido } from "@/components/material-contenido";
 
 export default async function HojaImprimible({ params }: PageProps<"/profesor/actividades/[id]/hoja">) {
   const { id } = await params;
@@ -48,6 +49,41 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
     { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
     { texto: actividad.titulo, href: `/profesor/actividades/${id}` },
   ];
+
+  // Actividad de contenido: el profesor ve el material y las instrucciones como los verá el alumno.
+  if (actividad.contenido) {
+    const enlace = `${base}/entregar/${id}`;
+    const tc = t.contenido;
+    return (
+      <>
+        <Encabezado migas={migas} titulo={tc.hojaTitulo} subtitulo={tc.hojaTexto} acciones={siguiente} />
+        <ConFlujo vista={1} db={db} actividad={actividad}>
+          <div className="mx-auto max-w-3xl space-y-6">
+            {resumen}
+            <Tarjeta className="flex flex-col items-center gap-4 p-5 sm:flex-row">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={qr} alt="QR" className="h-32 w-32 shrink-0" />
+              <div className="min-w-0 text-sm">
+                <p className="font-semibold text-slate-800">{th.enlaceAlumnos}</p>
+                <a href={enlace} target="_blank" className="mt-1 block break-all font-medium text-tinta-700 hover:underline">
+                  {enlace}
+                </a>
+              </div>
+            </Tarjeta>
+            <ProveedorTextos valor={impreso}>
+              <section className="space-y-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:p-6">
+                <h2 className="text-lg font-semibold text-slate-900">{actividad.titulo}</h2>
+                <MaterialContenido instrucciones={actividad.instruccionesAlumno ?? []} anexos={actividad.contenido.anexos} entrega={actividad.contenido.entrega} />
+                {esPlataforma(actividad) && (
+                  <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(actividad)} vistaPrevia evidenciaDigital />
+                )}
+              </section>
+            </ProveedorTextos>
+          </div>
+        </ConFlujo>
+      </>
+    );
+  }
 
   // En plataforma no hay hoja impresa: el profesor ve la actividad como la contestará el alumno.
   if (esPlataforma(actividad)) {

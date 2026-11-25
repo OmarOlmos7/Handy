@@ -4,6 +4,7 @@ import alumno from "./alumno/zh";
 import profesor from "./profesor/zh";
 import ruta from "./ruta/zh";
 import alumnosGrupo from "./alumnos-grupo/zh";
+import contenido from "./contenido/zh";
 
 const zh: Diccionario = {
   comun: {
@@ -487,6 +488,7 @@ const zh: Diccionario = {
   autoestudio,
   ruta,
   alumnosGrupo,
+  contenido,
 };
 
 export default zh;
