@@ -119,14 +119,15 @@ export function Encabezado({
   );
 }
 
-export function Logo({ claro = false, grande = false }: { claro?: boolean; grande?: boolean }) {
+/** Logo con el nombre; `src` cambia la imagen (por ejemplo, el logo propio del profesor). */
+export function Logo({ claro = false, grande = false, src = "/logo.png" }: { claro?: boolean; grande?: boolean; src?: string }) {
   const color = claro ? "text-white" : "text-slate-900";
   if (grande) {
     // Versión grande: logo y nombre en dos líneas que miden juntas el 60 % del alto del logo.
     return (
       <span className={`flex items-center gap-3 font-bold tracking-tight md:gap-5 ${color}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="" width={330} height={382} className="h-24 w-auto md:h-40" />
+        <img src={src} alt="" width={330} height={382} className="h-24 w-auto max-w-[9rem] object-contain md:h-40 md:max-w-[14rem]" />
         <span className="flex flex-col text-[26px] leading-[29px] md:text-[43px] md:leading-[48px]">
           <span>iEureka</span>
           <span>Grader</span>
@@ -137,7 +138,7 @@ export function Logo({ claro = false, grande = false }: { claro?: boolean; grand
   return (
     <span className={`flex items-center gap-2 font-semibold ${color}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="" width={36} height={42} className="h-10 w-auto" />
+      <img src={src} alt="" width={36} height={42} className="h-10 w-auto max-w-[5rem] object-contain" />
       iEureka-Grader
     </span>
   );

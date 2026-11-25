@@ -7,6 +7,7 @@ import { Hoja } from "@/components/hoja";
 import { HojaActividad } from "@/components/hoja-actividad";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { actividadDe, grupoDe } from "@/lib/almacen";
+import { srcLogo } from "@/lib/logo";
 import { datosProfesor } from "@/lib/sesion";
 import { qrDataUrl, urlBase } from "@/lib/qr";
 import { versionesCompletas } from "@/lib/versiones";
@@ -18,7 +19,7 @@ import { formato } from "@/lib/i18n/idiomas";
 
 export default async function HojaImprimible({ params }: PageProps<"/profesor/actividades/[id]/hoja">) {
   const { id } = await params;
-  const { db } = await datosProfesor();
+  const { db, profesor } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
@@ -144,12 +145,12 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
               <p className="no-imprimir mx-auto mb-4 max-w-[8.5in] rounded-lg bg-tinta-50 px-4 py-3 text-sm text-tinta-700">{th.versionesTexto}</p>
               {versiones.map((v, i) => (
                 <div key={v.letra} className={i > 0 ? "mt-8 break-before-page" : ""}>
-                  <HojaActividad actividad={v.actividad} curso={curso} qrSrc={v.qr} version={v.letra} />
+                  <HojaActividad logo={srcLogo(profesor.config)} actividad={v.actividad} curso={curso} qrSrc={v.qr} version={v.letra} />
                 </div>
               ))}
             </>
           ) : (
-            <HojaActividad actividad={actividad} curso={curso} qrSrc={qr} />
+            <HojaActividad logo={srcLogo(profesor.config)} actividad={actividad} curso={curso} qrSrc={qr} />
           )}
         </>
       ) : (

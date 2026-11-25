@@ -442,6 +442,8 @@ export interface ConfiguracionProfesor {
   esfuerzos?: Partial<Record<MotorIA, EsfuerzoIA>>;
   /** Idioma de la interfaz ("es", "en", "fr", "de", "ja", "pt" o "zh"). */
   idioma?: string;
+  /** Versión del logo propio (fecha en que se subió); sin ella se usa el de iEureka-Grader. */
+  logo?: string;
 }
 
 /** Cuenta del alumno: entra con su correo y su clave de acceso para ver solo sus resultados. */

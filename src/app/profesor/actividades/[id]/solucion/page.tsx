@@ -6,6 +6,7 @@ import { HojaActividad } from "@/components/hoja-actividad";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { OpcionesSolucion } from "@/components/opciones-solucion";
 import { actividadDe, grupoDe } from "@/lib/almacen";
+import { srcLogo } from "@/lib/logo";
 import { datosProfesor } from "@/lib/sesion";
 import { TextoMat } from "@/components/texto-mat";
 import { textos } from "@/lib/i18n/servidor";
@@ -15,7 +16,7 @@ import { versionesCompletas } from "@/lib/versiones";
 /** Paso 2 del flujo: preparar la solución (escaneada o con IA) y verla escrita sobre la hoja. */
 export default async function Solucion({ params }: PageProps<"/profesor/actividades/[id]/solucion">) {
   const { id } = await params;
-  const { db } = await datosProfesor();
+  const { db, profesor } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
@@ -105,7 +106,7 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
               {actividad.versiones?.length ? ` · ${formato(t.comun.version, { v: "A" })}` : ""}
             </h2>
             {enHoja ? (
-              <HojaActividad actividad={actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion version={actividad.versiones?.length ? "A" : undefined} />
+              <HojaActividad logo={srcLogo(profesor.config)} actividad={actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion version={actividad.versiones?.length ? "A" : undefined} />
             ) : (
               <div className="mx-auto max-w-3xl space-y-4">
                 {actividad.solucionIA ? (
@@ -147,7 +148,7 @@ export default async function Solucion({ params }: PageProps<"/profesor/activida
               <section key={v.letra}>
                 <h2 className="mb-3 text-lg font-semibold">{formato(ts.solucionVersion, { v: v.letra })}</h2>
                 {enHoja ? (
-                  <HojaActividad actividad={v.actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion version={v.letra} />
+                  <HojaActividad logo={srcLogo(profesor.config)} actividad={v.actividad} curso={`${grupo.materia} · ${grupo.nombre}`} solucion version={v.letra} />
                 ) : (
                   <div className="mx-auto max-w-3xl">
                     <SolucionTexto reactivos={v.actividad.reactivos} />

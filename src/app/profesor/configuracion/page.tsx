@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { guardarCuenta, guardarPrecision, guardarRangos } from "@/app/acciones-configuracion";
 import { cambiarIdioma } from "@/app/acciones-idioma";
+import { ElegirLogo } from "@/components/elegir-logo";
 import { ConfigPrecision } from "@/components/precision-ia";
 import { Boton, Encabezado, Tarjeta, campo, fechaLarga } from "@/components/ui";
 import { NIVELES_REPORTE, configuracionDe, valoresEscala, type NivelReporte } from "@/lib/configuracion";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { IDIOMAS, NOMBRE_IDIOMA, formato } from "@/lib/i18n/idiomas";
+import { MAX_BYTES_LOGO, srcLogo } from "@/lib/logo";
 import { textos } from "@/lib/i18n/servidor";
 import { DIAS_AVISO, DIAS_FOTOS, diasRestantes, fechaBorrado } from "@/lib/retencion";
 import { datosProfesor } from "@/lib/sesion";
@@ -124,6 +126,35 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
             </div>
           </form>
           <Aviso seccion="cuenta" {...aviso} />
+        </Tarjeta>
+
+        <Tarjeta>
+          <h2 id="logo" className="scroll-mt-6 text-lg font-semibold">
+            {c.logoTitulo}
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">{c.logoTexto}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <span className="flex h-20 w-32 items-center justify-center rounded-lg bg-slate-50 p-2 ring-1 ring-slate-200">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={srcLogo(profesor.config)} alt={c.logoActual} className="max-h-full max-w-full object-contain" />
+            </span>
+            <p className="text-sm text-slate-600">{profesor.config?.logo ? c.logoPersonalizado : c.logoOriginal}</p>
+          </div>
+          <div className="mt-4">
+            <ElegirLogo
+              maxBytes={MAX_BYTES_LOGO}
+              textos={{ elegir: c.logoElegir, guardar: c.guardarLogo, nota: c.logoNota, grande: c.avisos.logoGrande }}
+            />
+          </div>
+          {profesor.config?.logo && (
+            <form action="/api/logo" method="post" className="mt-3">
+              <input type="hidden" name="accion" value="restaurar" />
+              <Boton type="submit" variante="secundario">
+                {c.restaurarLogo}
+              </Boton>
+            </form>
+          )}
+          <Aviso seccion="logo" {...aviso} />
         </Tarjeta>
 
         <Tarjeta>

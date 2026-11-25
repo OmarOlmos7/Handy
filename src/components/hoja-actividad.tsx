@@ -201,8 +201,11 @@ export async function HojaActividad({
   qrSrc,
   solucion = false,
   version,
+  logo = "/logo.png",
 }: {
   actividad: Actividad;
+  /** Imagen del encabezado: el logo propio del profesor o el de iEureka-Grader. */
+  logo?: string;
   curso: string;
   /** Letra de la versión (A, B…) cuando la actividad tiene varias; se imprime junto al título. */
   version?: string;
@@ -223,7 +226,7 @@ export async function HojaActividad({
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start gap-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="" className="h-[74px] w-auto" />
+            <img src={logo} alt="" className="h-[74px] w-auto max-w-[10rem] object-contain" />
             <div className="min-w-0">
               <p className="flex flex-wrap items-center gap-x-3 text-xs font-bold uppercase tracking-[0.3em] text-tinta-600">
                 {curso}
