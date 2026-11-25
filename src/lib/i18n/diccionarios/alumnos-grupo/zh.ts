@@ -1,0 +1,65 @@
+import type es from "./es";
+
+const alumnosGrupo: typeof es = {
+  boton: "学生名单",
+  enlaceEditar: "添加、修改或移除学生",
+  meta: "学生名单",
+  titulo: "学生名单",
+  subtitulo: "添加学生、修改信息或将其移出课程。",
+  alta: {
+    titulo: "添加学生",
+    matricula: "学号",
+    nombre: "全名",
+    correo: "邮箱（可选）",
+    agregar: "添加",
+    nota: "填写邮箱后，学生用同一邮箱创建账户即可查看成绩。没有邮箱时按学号关联。",
+    hecha: "已添加 {nombre}。",
+  },
+  lista: {
+    titulo: "粘贴名单",
+    ayuda: "每行一名学生：学号、全名和邮箱（可选）。可直接从 Excel 粘贴。",
+    agregar: "添加名单",
+    hecha: "已添加学生：{n}。",
+    fallidas: "未添加的行：{l}。",
+  },
+  tabla: {
+    alumno: "学生",
+    matricula: "学号",
+    correo: "邮箱",
+    cuenta: "账户",
+    conCuenta: "已有账户",
+    sinCuenta: "无账户",
+    entregas: "提交",
+    acciones: "操作",
+    vacio: "还没有学生。可在此添加，或学生提交第一份作业时自动加入。",
+    sinResultados: "没有符合搜索的学生。",
+    buscar: "按姓名、学号或邮箱搜索",
+  },
+  cambiar: "修改信息",
+  guardar: "保存",
+  cancelar: "取消",
+  guardado: "已保存更改。",
+  avisoMatricula: "修改学号后，其提交和成绩会转到新学号。",
+  baja: "移除",
+  bajaHecha: "已移除 {nombre}。",
+  confirmarBaja:
+    "移除 {nombre}（{m}）？其将离开课程名单，并删除其在本课程的 {e} 份提交和 {a} 项自学活动及成绩。账户和其他课程不受影响。无法撤销。",
+  confirmarBajaSinTrabajo: "移除 {nombre}（{m}）？其将离开课程名单。账户和其他课程不受影响。",
+  enActividad: {
+    boton: "添加、修改或移除学生",
+    ocultar: "隐藏学生名单",
+    ayuda: "更改适用于整个课程，而不仅是本作业。",
+    verLista: "打开完整名单",
+  },
+  errores: {
+    matricula: "学号须为 3 到 20 个字母、数字或连字符。",
+    nombre: "请输入全名（至少 3 个字）。",
+    correo: "邮箱无效。",
+    matriculaRepetida: "课程中已有该学号的学生。",
+    correoRepetido: "课程中已有该邮箱的学生。",
+    noEncontrado: "未找到学生或课程。",
+    general: "无法保存，请重试。",
+  },
+};
+
+export default alumnosGrupo;

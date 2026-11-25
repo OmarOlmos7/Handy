@@ -18,7 +18,7 @@ import {
   colorCalificacion,
   fechaLarga,
 } from "@/components/ui";
-import { actividadDe, entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
+import { actividadDe, entregasDe, estadoActividad, grupoDe, leer } from "@/lib/almacen";
 import { evaluandoAhora } from "@/lib/evaluacion";
 import { datosProfesor } from "@/lib/sesion";
 import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadisticas";
@@ -30,6 +30,8 @@ import { conPuntaje } from "@/lib/modalidad";
 import { formato } from "@/lib/i18n/idiomas";
 import { leerFiltro, leerOrden, ordenarEntregas } from "@/lib/listas";
 import { OrdenLista } from "@/components/orden-lista";
+import { AlumnosEnActividad } from "@/components/administrar-alumnos";
+import { filasAlumnos } from "@/lib/alumnos-grupo";
 
 export default async function EntregasActividad({ params, searchParams }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
@@ -65,6 +67,9 @@ export default async function EntregasActividad({ params, searchParams }: PagePr
   const filtro = leerFiltro(busqueda.ver);
   const lista = ordenarEntregas(entregas, nombre, orden, filtro);
   const conteos = { todas: entregas.length, entregadas: recibidas.length, sin_entregar: entregas.length - recibidas.length };
+  // Altas, bajas y cambios de alumnos desde la evaluación (aplican a todo el curso).
+  const correosConCuenta = new Set((await leer()).cuentasAlumno.map((c) => c.correo));
+  const filas = filasAlumnos(db, grupo, correosConCuenta, locale);
 
   return (
     <>
@@ -210,6 +215,7 @@ export default async function EntregasActividad({ params, searchParams }: PagePr
         </Tarjeta>
       </div>
 
+      <AlumnosEnActividad grupoId={grupo.id} alumnos={filas} />
       <OrdenLista orden={orden} filtro={filtro} conteos={conteos} />
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <table className="w-full text-left text-sm">

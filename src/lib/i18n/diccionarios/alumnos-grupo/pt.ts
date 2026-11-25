@@ -1,0 +1,65 @@
+import type es from "./es";
+
+const alumnosGrupo: typeof es = {
+  boton: "Lista de alunos",
+  enlaceEditar: "Incluir, alterar ou remover alunos",
+  meta: "Lista de alunos",
+  titulo: "Lista de alunos",
+  subtitulo: "Inclua alunos, altere seus dados ou remova-os do curso.",
+  alta: {
+    titulo: "Incluir um aluno",
+    matricula: "Matrícula",
+    nombre: "Nome completo",
+    correo: "E-mail (opcional)",
+    agregar: "Incluir",
+    nota: "Com e-mail, o aluno vê seus resultados ao criar a conta com esse mesmo e-mail. Sem e-mail, é vinculado pela matrícula.",
+    hecha: "{nombre} foi incluído.",
+  },
+  lista: {
+    titulo: "Colar uma lista",
+    ayuda: "Uma linha por aluno: matrícula, nome completo e e-mail (opcional). Pode colar direto do Excel.",
+    agregar: "Incluir lista",
+    hecha: "Alunos incluídos: {n}.",
+    fallidas: "Linhas não incluídas: {l}.",
+  },
+  tabla: {
+    alumno: "Aluno",
+    matricula: "Matrícula",
+    correo: "E-mail",
+    cuenta: "Conta",
+    conCuenta: "Com conta",
+    sinCuenta: "Sem conta",
+    entregas: "Entregas",
+    acciones: "Ações",
+    vacio: "Ainda não há alunos. Inclua-os aqui, ou eles entram sozinhos ao entregar a primeira atividade.",
+    sinResultados: "Nenhum aluno corresponde à busca.",
+    buscar: "Buscar por nome, matrícula ou e-mail",
+  },
+  cambiar: "Alterar dados",
+  guardar: "Salvar",
+  cancelar: "Cancelar",
+  guardado: "Alterações salvas.",
+  avisoMatricula: "Se você mudar a matrícula, as entregas e notas passam para a nova.",
+  baja: "Remover",
+  bajaHecha: "{nombre} foi removido.",
+  confirmarBaja:
+    "Remover {nombre} ({m})? Sai da lista do curso e são apagadas suas {e} entregas e {a} atividades de autoestudo neste curso, com as notas. A conta e os outros cursos não mudam. Não pode ser desfeito.",
+  confirmarBajaSinTrabajo: "Remover {nombre} ({m})? Sai da lista do curso. A conta e os outros cursos não mudam.",
+  enActividad: {
+    boton: "Incluir, alterar ou remover alunos",
+    ocultar: "Ocultar lista de alunos",
+    ayuda: "As mudanças valem para todo o curso, não só para esta atividade.",
+    verLista: "Abrir a lista completa",
+  },
+  errores: {
+    matricula: "A matrícula deve ter de 3 a 20 letras, números ou hífens.",
+    nombre: "Escreva o nome completo (3 letras ou mais).",
+    correo: "O e-mail não é válido.",
+    matriculaRepetida: "Já existe um aluno com essa matrícula no curso.",
+    correoRepetido: "Já existe um aluno com esse e-mail no curso.",
+    noEncontrado: "Aluno ou curso não encontrado.",
+    general: "Não foi possível salvar. Tente de novo.",
+  },
+};
+
+export default alumnosGrupo;

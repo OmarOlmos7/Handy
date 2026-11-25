@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { borrarGrupo, colorGrupo, renombrarGrupo } from "@/app/acciones";
 import { colorDe } from "@/lib/colores";
-import { BotonIcono, IconoBasura, IconoLapiz } from "./iconos";
+import { BotonIcono, IconoAlumnos, IconoBasura, IconoLapiz } from "./iconos";
 import { SelectorColor } from "./selector-color";
 import { Boton } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
@@ -13,7 +13,10 @@ import { useTextos } from "./proveedor-textos";
 
 const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
 
-/** Tarjeta de un curso en el panel: abre la vista del curso; lápiz para renombrar y bote para borrar. */
+/**
+ * Tarjeta de un curso en el panel: abre la vista del curso; botón a la lista de alumnos; lápiz para
+ * renombrar (y entrar a altas, bajas y cambios de alumnos) y bote para borrar.
+ */
 export function TarjetaCurso({
   id,
   materia,
@@ -37,6 +40,7 @@ export function TarjetaCurso({
   const { t } = useTextos();
   const c = t.profesor.comun;
   const tc = t.profesor.tarjetaCurso;
+  const tal = t.alumnosGrupo;
   const [editando, setEditando] = useState(false);
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
@@ -100,6 +104,12 @@ export function TarjetaCurso({
             {c.grupo}
             <input name="nombre" defaultValue={nombre} required className={campoChico} />
           </label>
+          <Link
+            href={`/profesor/grupos/${id}/alumnos`}
+            className="flex items-center gap-2 rounded-md bg-tinta-50 px-2 py-1.5 text-xs font-medium text-tinta-700 hover:bg-tinta-100"
+          >
+            <IconoAlumnos /> {tal.enlaceEditar} →
+          </Link>
           <div className="flex gap-2 pt-1">
             <Boton type="submit" disabled={pendiente} className="!px-3 !py-1.5">
               {c.guardar}
@@ -117,6 +127,12 @@ export function TarjetaCurso({
             <span className="mt-0.5 block text-xl font-semibold text-slate-900">{nombre}</span>
           </Link>
           <span className="text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>
+          <Link
+            href={`/profesor/grupos/${id}/alumnos`}
+            className="relative z-10 mt-3 inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-tinta-50 hover:text-tinta-700 hover:ring-tinta-300"
+          >
+            <IconoAlumnos /> {tal.boton}
+          </Link>
         </>
       )}
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}

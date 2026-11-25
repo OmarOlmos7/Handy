@@ -3,6 +3,7 @@ import autoestudio from "./autoestudio/ja";
 import alumno from "./alumno/ja";
 import profesor from "./profesor/ja";
 import ruta from "./ruta/ja";
+import alumnosGrupo from "./alumnos-grupo/ja";
 
 const ja: Diccionario = {
   comun: {
@@ -504,6 +505,7 @@ const ja: Diccionario = {
   alumno,
   autoestudio,
   ruta,
+  alumnosGrupo,
 };
 
 export default ja;

@@ -3,6 +3,7 @@ import autoestudio from "./autoestudio/fr";
 import alumno from "./alumno/fr";
 import profesor from "./profesor/fr";
 import ruta from "./ruta/fr";
+import alumnosGrupo from "./alumnos-grupo/fr";
 
 const fr: Diccionario = {
   comun: {
@@ -505,6 +506,7 @@ const fr: Diccionario = {
   alumno,
   autoestudio,
   ruta,
+  alumnosGrupo,
 };
 
 export default fr;

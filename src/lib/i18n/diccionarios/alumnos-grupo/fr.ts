@@ -1,0 +1,65 @@
+import type es from "./es";
+
+const alumnosGrupo: typeof es = {
+  boton: "Liste des élèves",
+  enlaceEditar: "Ajouter, modifier ou retirer des élèves",
+  meta: "Liste des élèves",
+  titulo: "Liste des élèves",
+  subtitulo: "Ajoutez des élèves, modifiez leurs données ou retirez-les du cours.",
+  alta: {
+    titulo: "Ajouter un élève",
+    matricula: "Matricule",
+    nombre: "Nom complet",
+    correo: "E-mail (facultatif)",
+    agregar: "Ajouter",
+    nota: "Avec un e-mail, l'élève voit ses résultats en créant son compte avec ce même e-mail. Sans e-mail, il est relié par son matricule.",
+    hecha: "{nombre} a été ajouté.",
+  },
+  lista: {
+    titulo: "Coller une liste",
+    ayuda: "Une ligne par élève : matricule, nom complet et e-mail (facultatif). Vous pouvez coller directement depuis Excel.",
+    agregar: "Ajouter la liste",
+    hecha: "Élèves ajoutés : {n}.",
+    fallidas: "Lignes non ajoutées : {l}.",
+  },
+  tabla: {
+    alumno: "Élève",
+    matricula: "Matricule",
+    correo: "E-mail",
+    cuenta: "Compte",
+    conCuenta: "Avec compte",
+    sinCuenta: "Sans compte",
+    entregas: "Remises",
+    acciones: "Actions",
+    vacio: "Aucun élève pour l'instant. Ajoutez-les ici, ou ils s'inscrivent seuls en remettant leur première activité.",
+    sinResultados: "Aucun élève ne correspond à la recherche.",
+    buscar: "Rechercher par nom, matricule ou e-mail",
+  },
+  cambiar: "Modifier",
+  guardar: "Enregistrer",
+  cancelar: "Annuler",
+  guardado: "Modifications enregistrées.",
+  avisoMatricula: "Si vous changez le matricule, ses remises et ses notes passent au nouveau.",
+  baja: "Retirer",
+  bajaHecha: "{nombre} a été retiré.",
+  confirmarBaja:
+    "Retirer {nombre} ({m}) ? Il quitte la liste du cours et ses {e} remises et {a} activités d'autoformation dans ce cours sont supprimées, avec leurs notes. Son compte et ses autres cours ne changent pas. Action irréversible.",
+  confirmarBajaSinTrabajo: "Retirer {nombre} ({m}) ? Il quitte la liste du cours. Son compte et ses autres cours ne changent pas.",
+  enActividad: {
+    boton: "Ajouter, modifier ou retirer des élèves",
+    ocultar: "Masquer la liste des élèves",
+    ayuda: "Les changements s'appliquent à tout le cours, pas seulement à cette activité.",
+    verLista: "Ouvrir la liste complète",
+  },
+  errores: {
+    matricula: "Le matricule doit avoir de 3 à 20 lettres, chiffres ou tirets.",
+    nombre: "Saisissez le nom complet (3 lettres ou plus).",
+    correo: "L'e-mail n'est pas valide.",
+    matriculaRepetida: "Un élève a déjà ce matricule dans le cours.",
+    correoRepetido: "Un élève a déjà cet e-mail dans le cours.",
+    noEncontrado: "Élève ou cours introuvable.",
+    general: "Impossible d'enregistrer. Réessayez.",
+  },
+};
+
+export default alumnosGrupo;
