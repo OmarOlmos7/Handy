@@ -6,6 +6,7 @@ import { leer } from "@/lib/almacen";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
 import { cuadernoAlumno } from "@/lib/portal-alumno";
+import { columnasDeProyectos } from "@/lib/proyectos";
 import { resumenAutoestudio } from "@/lib/autoestudio";
 import { alumnoActual } from "@/lib/sesion";
 
@@ -26,7 +27,17 @@ export default async function CuadernoAlumno({ params }: PageProps<"/alumno/curs
   const tq = t.alumno.cuaderno;
   const db = await leer();
   const auto = resumenAutoestudio(db.autoactividades ?? [], grupo.id, curso.alumno.matricula);
-  const c = cuadernoAlumno(grupo, db.actividades, db.entregas, curso.alumno.matricula, new Date(), t.profesor.calculo.sinEtiqueta, auto.promedio);
+  // Los proyectos entran como columnas con el promedio de sus etapas ya cerradas.
+  const deProyectos = columnasDeProyectos((db.proyectos ?? []).filter((p) => p.grupoId === grupo.id), db.evaluacionesProyecto ?? [], grupo.alumnos, t.proyecto.chip);
+  const c = cuadernoAlumno(
+    grupo,
+    [...db.actividades, ...deProyectos.actividades],
+    [...db.entregas, ...deProyectos.entregas],
+    curso.alumno.matricula,
+    new Date(),
+    t.profesor.calculo.sinEtiqueta,
+    auto.promedio,
+  );
   const nombreCurso = `${grupo.materia} · ${grupo.nombre}`;
   const actividades = c.grupos.reduce((n, g) => n + g.columnas.length, 0);
   const tc = t.profesor.comun;
@@ -54,7 +65,7 @@ export default async function CuadernoAlumno({ params }: PageProps<"/alumno/curs
       {actividades === 0 ? (
         <Tarjeta className="text-sm text-slate-600">{tq.vacio}</Tarjeta>
       ) : (
-        <TablaCuadernoAlumno cuaderno={c} nombre={curso.alumno.nombre || alumno.nombre} matricula={curso.alumno.matricula} />
+        <TablaCuadernoAlumno cuaderno={c} nombre={curso.alumno.nombre || alumno.nombre} matricula={curso.alumno.matricula} grupoId={grupo.id} />
       )}
     </>
   );

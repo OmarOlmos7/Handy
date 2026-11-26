@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { conPuntaje } from "@/lib/modalidad";
 import { notFound } from "next/navigation";
 import { CodigoCurso } from "@/components/codigo-curso";
@@ -11,6 +12,7 @@ import { reporteGrupo } from "@/lib/estadisticas";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
+import { evaluadoresDe } from "@/lib/proyectos";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
@@ -27,6 +29,8 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
   const grupo = grupoDe(db, id);
   if (!grupo) notFound();
   const actividades = db.actividades.filter((a) => a.grupoId === id);
+  const proyectos = (db.proyectos ?? []).filter((p) => p.grupoId === id);
+  const tpr = t.proyecto;
   const alumnos = new Set(grupo.alumnos.map((a) => a.matricula)).size;
   // Etiquetas propias del profesor en todos sus cursos, para sugerirlas.
   const etiquetasCurso = [...new Set(db.actividades.map((a) => a.etiqueta?.trim()).filter((e): e is string => !!e))];
@@ -69,6 +73,41 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           copiar={t.licencias.profesor.copiar}
           copiado={t.licencias.profesor.copiado}
         />
+      )}
+      {proyectos.length > 0 && (
+        <section className="mb-6" aria-labelledby="seccion-proyectos">
+          <h2 id="seccion-proyectos" className="mb-2 flex items-baseline gap-2 text-base font-semibold text-slate-800">
+            🛠️ {tpr.seccionCurso}
+            <span className="text-sm font-normal text-slate-500">{proyectos.length}</span>
+          </h2>
+          <ul className="divide-y divide-slate-100 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+            {proyectos.map((p) => {
+              const cerradas = p.etapas.filter((e) => e.cerradaEn).length;
+              const ev = evaluadoresDe(p).length;
+              return (
+                <li key={p.id}>
+                  <Link href={`/profesor/proyectos/${p.id}`} className="flex flex-col gap-2 px-5 py-3 hover:bg-slate-50 sm:flex-row sm:items-center">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium text-slate-900">{p.titulo}</span>
+                      <span className="block text-xs text-slate-500">
+                        {formato(p.etapas.length === 1 ? tpr.etapas1 : tpr.etapasN, { n: p.etapas.length })} · {formato(ev === 1 ? tpr.evaluadores1 : tpr.evaluadoresN, { n: ev })}
+                      </span>
+                    </span>
+                    {/* Avance: una barrita por etapa (verde si ya se cerró). */}
+                    <span className="flex items-center gap-2">
+                      <span className="flex gap-1" aria-hidden>
+                        {p.etapas.map((e) => (
+                          <span key={e.id} className={`h-2 w-6 rounded-full ${e.cerradaEn ? "bg-acierto" : "bg-slate-200"}`} />
+                        ))}
+                      </span>
+                      <span className="text-xs text-slate-600">{formato(tpr.cerradasDe, { c: cerradas, n: p.etapas.length })}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
       {actividades.length === 0 ? (
         <Tarjeta className="text-sm text-slate-600">

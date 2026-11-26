@@ -529,7 +529,9 @@ export type TipoConsumoIA =
   | "relaciones"
   | "autoestudio"
   | "autoestudio_evaluar"
-  | "instrucciones";
+  | "instrucciones"
+  | "proyecto_rubrica"
+  | "proyecto_evaluar";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {
@@ -643,6 +645,112 @@ export interface BaseDeDatos {
   autoactividades?: Autoactividad[];
   /** Licencias de alumno por curso (ver lib/licencias). */
   licencias?: Licencia[];
+  /** Proyectos (retos) por etapas con evaluación de varios profesores (ver lib/proyectos). */
+  proyectos?: Proyecto[];
+  /** Evidencias que entregan los alumnos o equipos en cada etapa de un proyecto. */
+  entregasProyecto?: EntregaProyecto[];
+  /** Evaluaciones de cada profesor evaluador, una por etapa y alumno o equipo. */
+  evaluacionesProyecto?: EvaluacionProyecto[];
+}
+
+// ---------- Proyectos (retos) con evaluación de varios profesores ----------
+
+/**
+ * Tipo de evaluación de una etapa del proyecto: avance de reporte (documento), presentación oral
+ * grupal, entrevista oral individual o demostración del proyecto.
+ */
+export type TipoEtapaProyecto = "reporte" | "oral_grupal" | "entrevista" | "demostracion";
+
+/** Elemento de la rúbrica de una etapa, con la descripción de cada nivel de desempeño. */
+export interface CriterioProyecto {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  /** Peso del elemento en la calificación de la etapa (los de una etapa suman 100). */
+  porcentaje: number;
+  /** Qué se observa en cada nivel, del más alto al más bajo (ver NIVELES_RUBRICA en lib/proyectos). */
+  niveles: string[];
+}
+
+/** Etapa (fase o avance) del proyecto, con su rúbrica y su peso en la calificación final. */
+export interface EtapaProyecto {
+  id: string;
+  nombre: string;
+  tipo: TipoEtapaProyecto;
+  /** Qué debe hacer y entregar el alumno o el equipo. */
+  instrucciones: string;
+  /** Fecha de entrega o de presentación (ISO yyyy-mm-dd). */
+  fecha?: string;
+  /** Peso de la etapa en la calificación final del proyecto (las etapas suman 100). */
+  peso: number;
+  /** true si la etapa se evalúa por equipo (cada integrante recibe la calificación del equipo). */
+  porEquipo: boolean;
+  /** true si el alumno o el equipo sube evidencia (documento, presentación, audio o video). */
+  conEvidencia: boolean;
+  criterios: CriterioProyecto[];
+  /** Cuándo se cerró la etapa: desde entonces el alumno ve su calificación y la retroalimentación. */
+  cerradaEn?: string;
+}
+
+export interface EquipoProyecto {
+  id: string;
+  nombre: string;
+  matriculas: string[];
+}
+
+export interface Proyecto {
+  id: string;
+  grupoId: string;
+  /** Profesor dueño (el del curso): arma el modelo del proyecto y cierra las etapas. */
+  profesorId: string;
+  titulo: string;
+  descripcion: string;
+  /** Idioma del proyecto (rúbricas y textos de la IA). */
+  idioma?: string;
+  creadoEn: string;
+  etapas: EtapaProyecto[];
+  /** Otros profesores registrados que también evalúan (por su id); el dueño siempre evalúa. */
+  evaluadores: string[];
+  equipos: EquipoProyecto[];
+}
+
+/** Evidencia de una etapa: archivos del alumno o de su equipo. */
+export interface EntregaProyecto {
+  proyectoId: string;
+  etapaId: string;
+  /** Matrícula del alumno, o "equipo:<id>" si la etapa es por equipo. */
+  sujeto: string;
+  archivos: string[];
+  nombres: string[];
+  /** Matrícula de quien subió la evidencia. */
+  matricula: string;
+  entregadaEn: string;
+  /** Páginas que leería la IA (un PDF sus páginas; Word, Excel, PowerPoint o imagen, una; audio y video, ninguna). */
+  paginasIA?: number;
+}
+
+/** Calificación de un elemento de la rúbrica: puntaje de 0 a 100 y comentario del evaluador. */
+export interface PuntajeCriterio {
+  criterioId: string;
+  /** 0 a 100; sin valor, el elemento no se ha calificado. */
+  puntaje?: number;
+  comentario: string;
+}
+
+/** Evaluación independiente de un profesor en una etapa, para un alumno o un equipo. */
+export interface EvaluacionProyecto {
+  proyectoId: string;
+  etapaId: string;
+  sujeto: string;
+  evaluadorId: string;
+  criterios: PuntajeCriterio[];
+  /** Comentario general para el alumno. */
+  comentario: string;
+  /** Áreas de mejora, una por renglón. */
+  mejoras: string[];
+  /** true cuando el evaluador terminó: solo así cuenta en el promedio. */
+  terminada: boolean;
+  actualizadaEn: string;
 }
 
 // ---------- Licencias de alumno ----------

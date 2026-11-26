@@ -6,6 +6,7 @@ import ruta from "./ruta/ja";
 import licencias from "./licencias/ja";
 import alumnosGrupo from "./alumnos-grupo/ja";
 import contenido from "./contenido/ja";
+import proyecto from "./proyecto/ja";
 
 const ja: Diccionario = {
   comun: {
@@ -445,6 +446,7 @@ const ja: Diccionario = {
   licencias,
   alumnosGrupo,
   contenido,
+  proyecto,
 };
 
 export default ja;

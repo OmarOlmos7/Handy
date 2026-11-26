@@ -28,3 +28,8 @@ export function iconoTipoActividad(etiqueta: string): string {
 export function esEtiquetaContenido(etiqueta: string): boolean {
   return /^\s*(contenido|content|contenu|conte[uú]do|inhalt|コンテンツ|内容)\s*$/i.test(etiqueta);
 }
+
+/** true si la etiqueta es la de los proyectos con evaluación por etapas (en cualquier idioma de la app). */
+export function esEtiquetaProyecto(etiqueta: string): boolean {
+  return /^\s*(proyecto|project|projet|projeto|projekt|プロジェクト|项目)\s*$/i.test(etiqueta);
+}

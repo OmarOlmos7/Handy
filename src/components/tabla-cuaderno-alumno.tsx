@@ -2,6 +2,7 @@
 // columnas agrupadas por tipo de actividad, solo con la fila del alumno y, abajo,
 // el promedio del grupo cuando hay suficientes calificados. Es de solo lectura.
 import Link from "next/link";
+import { esColumnaProyecto } from "@/lib/proyectos";
 import { formatoCal, nivelDe, type Nivel } from "@/lib/estadisticas";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
@@ -24,7 +25,7 @@ function Promedio({ valor, escala }: { valor: number | null; escala: Escala }) {
   );
 }
 
-export async function TablaCuadernoAlumno({ cuaderno, nombre, matricula }: { cuaderno: CuadernoAlumno; nombre: string; matricula: string }) {
+export async function TablaCuadernoAlumno({ cuaderno, nombre, matricula, grupoId }: { cuaderno: CuadernoAlumno; nombre: string; matricula: string; grupoId?: string }) {
   const { t } = await textos();
   const tq = t.profesor.cuaderno;
   const tc = t.profesor.comun;
@@ -93,7 +94,12 @@ export async function TablaCuadernoAlumno({ cuaderno, nombre, matricula }: { cua
                     className={`max-w-36 border-b border-slate-200 px-2 py-2 text-center align-bottom text-xs font-medium text-slate-700 ${g.tono.cabeza} ${i === 0 ? "border-l" : ""}`}
                   >
                     {c.celda.estado === "calificada" ? (
-                      <Link href={`/alumno/reporte/${c.id}`} className="line-clamp-2 hover:text-tinta-700" title={c.titulo}>
+                      <Link
+                        href={esColumnaProyecto(c.id) ? `/alumno/cursos/${grupoId}/proyecto` : `/alumno/reporte/${c.id}`}
+                        className="line-clamp-2 hover:text-tinta-700"
+                        title={c.titulo}
+                      >
+                        {esColumnaProyecto(c.id) && "🛠️ "}
                         {c.titulo}
                       </Link>
                     ) : (

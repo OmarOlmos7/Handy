@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { TablaCuaderno } from "@/components/tabla-cuaderno";
 import { Tarjeta } from "@/components/ui";
-import { grupoDe } from "@/lib/almacen";
+import { grupoDe, leer } from "@/lib/almacen";
+import { columnasDeProyectos } from "@/lib/proyectos";
 import { cuadernoCurso } from "@/lib/cuaderno";
 import { PlanEvaluacionCurso } from "@/components/plan-evaluacion";
 import { notaFinal } from "@/lib/plan-evaluacion";
@@ -28,7 +29,19 @@ export default async function CuadernoCurso({ params }: PageProps<"/profesor/gru
   const { t } = await textos();
   const tc = t.profesor.comun;
   const tq = t.profesor.cuaderno;
-  const cuaderno = cuadernoCurso(grupo, actividades, db.entregas.filter((e) => ids.has(e.actividadId)), t.profesor.calculo.sinEtiqueta);
+  // Los proyectos del curso entran como columnas (promedio ponderado de sus etapas cerradas).
+  const deProyectos = columnasDeProyectos(
+    (db.proyectos ?? []).filter((p) => p.grupoId === grupo.id),
+    (await leer()).evaluacionesProyecto ?? [],
+    grupo.alumnos,
+    t.proyecto.chip,
+  );
+  const cuaderno = cuadernoCurso(
+    grupo,
+    [...actividades, ...deProyectos.actividades],
+    [...db.entregas.filter((e) => ids.has(e.actividadId)), ...deProyectos.entregas],
+    t.profesor.calculo.sinEtiqueta,
+  );
   const plan = grupo.planEvaluacion;
   const nf = plan ? notaFinal(cuaderno, plan) : undefined;
   const tp = tq.plan;
@@ -49,7 +62,7 @@ export default async function CuadernoCurso({ params }: PageProps<"/profesor/gru
   const valoresFinales = Object.values(finales).filter((v): v is number => v !== null);
   const promedioFinal = valoresFinales.length ? Math.round((valoresFinales.reduce((s, v) => s + v, 0) / valoresFinales.length) * 10) / 10 : null;
   const final = nf || peso > 0 ? { porAlumno: finales, promedioGrupo: peso > 0 ? promedioFinal : (nf?.promedioGrupo ?? null) } : undefined;
-  const etiquetas = [...new Set(actividades.map((a) => a.etiqueta?.trim()).filter((e): e is string => !!e))].sort((a, b) => a.localeCompare(b, "es"));
+  const etiquetas = [...new Set([...actividades, ...deProyectos.actividades].map((a) => a.etiqueta?.trim()).filter((e): e is string => !!e))].sort((a, b) => a.localeCompare(b, "es"));
   const nombreTipo = (e: string) => e || t.profesor.calculo.sinEtiqueta;
 
   return (
