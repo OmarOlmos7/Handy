@@ -54,7 +54,7 @@ function bloquesImagen(imagenes: ImagenParaIA[], etiqueta: string): Anthropic.Be
 }
 
 /** Material de una actividad de contenido: imágenes y PDF como tales; documentos de Office, como texto. */
-function bloquesMaterial(m: MaterialParaIA, etiqueta: string): Anthropic.Beta.BetaContentBlockParam[] {
+export function bloquesMaterial(m: MaterialParaIA, etiqueta: string): Anthropic.Beta.BetaContentBlockParam[] {
   return [
     ...bloquesImagen(m.imagenes, etiqueta),
     ...m.textos.map((x): Anthropic.Beta.BetaContentBlockParam => ({ type: "text", text: `${etiqueta} · documento "${x.nombre}" (texto):\n${x.texto}` })),

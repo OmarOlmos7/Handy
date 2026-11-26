@@ -65,6 +65,11 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
             <BotonLink href={`/alumno/cursos/${grupo.id}/ruta`}>
               <IconoRuta /> {t.ruta.boton}
             </BotonLink>
+            {(db.proyectos ?? []).some((p) => p.grupoId === grupo.id) && (
+              <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/proyecto`}>
+                🛠️ {t.proyecto.alumno.boton}
+              </BotonLink>
+            )}
             <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/analiticas`}>
               <IconoGrafica /> {tc.analiticas}
             </BotonLink>

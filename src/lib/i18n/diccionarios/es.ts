@@ -7,6 +7,7 @@ import ruta from "./ruta/es";
 import licencias from "./licencias/es";
 import alumnosGrupo from "./alumnos-grupo/es";
 import contenido from "./contenido/es";
+import proyecto from "./proyecto/es";
 
 const es = {
   comun: {
@@ -448,6 +449,7 @@ const es = {
   licencias,
   alumnosGrupo,
   contenido,
+  proyecto,
 };
 
 export default es;

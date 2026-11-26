@@ -6,6 +6,7 @@ import ruta from "./ruta/zh";
 import licencias from "./licencias/zh";
 import alumnosGrupo from "./alumnos-grupo/zh";
 import contenido from "./contenido/zh";
+import proyecto from "./proyecto/zh";
 
 const zh: Diccionario = {
   comun: {
@@ -426,6 +427,7 @@ const zh: Diccionario = {
   licencias,
   alumnosGrupo,
   contenido,
+  proyecto,
 };
 
 export default zh;

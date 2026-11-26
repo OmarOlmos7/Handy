@@ -6,6 +6,7 @@ import ruta from "./ruta/de";
 import licencias from "./licencias/de";
 import alumnosGrupo from "./alumnos-grupo/de";
 import contenido from "./contenido/de";
+import proyecto from "./proyecto/de";
 
 const de: Diccionario = {
   comun: {
@@ -446,6 +447,7 @@ const de: Diccionario = {
   licencias,
   alumnosGrupo,
   contenido,
+  proyecto,
 };
 
 export default de;

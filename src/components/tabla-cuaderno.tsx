@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { cambiarCalificacion } from "@/app/acciones";
 import { cambiarPesoAutoestudio } from "@/app/acciones-autoestudio";
 import { ORDENES, ordenarFilas, type Celda, type Columna, type Cuaderno, type Orden } from "@/lib/cuaderno";
+import { PREFIJO_COLUMNA_PROYECTO, esColumnaProyecto } from "@/lib/proyectos";
 import { formatoCal, nivelDe, type Nivel } from "@/lib/estadisticas";
 import type { InfoCuaderno } from "@/lib/exportar-cuaderno";
 import type { Escala, PlanEvaluacion, TipoAutoactividad } from "@/lib/tipos";
@@ -325,7 +326,12 @@ export function TablaCuaderno({
                     key={c.id}
                     className={`max-w-36 border-b border-slate-200 px-2 py-2 text-center align-bottom text-xs font-medium text-slate-700 ${g.tono.cabeza} ${i === 0 ? "border-l" : ""}`}
                   >
-                    <Link href={`/profesor/actividades/${c.id}`} className="line-clamp-2 hover:text-tinta-700" title={c.titulo}>
+                    <Link
+                      href={esColumnaProyecto(c.id) ? `/profesor/proyectos/${c.id.slice(PREFIJO_COLUMNA_PROYECTO.length)}/calificaciones` : `/profesor/actividades/${c.id}`}
+                      className="line-clamp-2 hover:text-tinta-700"
+                      title={c.titulo}
+                    >
+                      {esColumnaProyecto(c.id) && "🛠️ "}
                       {c.titulo}
                     </Link>
                     <span className="block text-[10px] font-normal text-slate-500">/ {c.escala}</span>
@@ -370,7 +376,12 @@ export function TablaCuaderno({
                 {grupos.map((g) => [
                   ...g.columnas.map((c, i) => (
                     <td key={c.id} className={`border-b border-slate-100 px-2 py-1.5 text-center ${g.tono.celda} ${i === 0 ? "border-l border-l-slate-200" : ""}`}>
-                      <CeldaEditable celda={f.celdas[c.id]} columna={c} matricula={f.matricula} nombre={f.nombre} />
+                      {/* La nota de un proyecto sale de sus evaluaciones: se ve, pero no se edita aquí. */}
+                      {esColumnaProyecto(c.id) ? (
+                        <Promedio valor={f.celdas[c.id].valor} escala={c.escala} />
+                      ) : (
+                        <CeldaEditable celda={f.celdas[c.id]} columna={c} matricula={f.matricula} nombre={f.nombre} />
+                      )}
                     </td>
                   )),
                   <td key={`prom-${g.etiqueta}`} className={`border-b border-l border-slate-100 border-l-slate-300/70 px-2 py-1.5 text-center ${g.tono.promedio}`}>

@@ -15,7 +15,8 @@ import { SelectorTemario, type AsignaturaParaAlta } from "./selector-temario";
 import { AltaContenido, useErrorArchivos } from "./alta-contenido";
 import { ChipsTipo } from "./chips-tipo";
 import { MAX_ANEXOS } from "@/lib/contenido";
-import { esEtiquetaContenido } from "@/lib/iconos-tipo";
+import { esEtiquetaContenido, esEtiquetaProyecto } from "@/lib/iconos-tipo";
+import { AltaProyecto } from "./alta-proyecto";
 
 type Modo = "ia" | "escaneada";
 type Formato = "manuscrita" | "plataforma";
@@ -65,6 +66,9 @@ export function NuevaActividad({
   const [anexos, setAnexos] = useState<File[]>([]);
   const [entregaContenido, setEntregaContenido] = useState<"manuscrita" | "digital">("manuscrita");
   const [instruccionesAlumno, setInstruccionesAlumno] = useState("");
+  // Proyecto (tipo "Proyecto"): evaluación por etapas con varios profesores; se arma en su propia pestaña.
+  const tpr = t.proyecto;
+  const esProyecto = esEtiquetaProyecto(etiqueta) || etiqueta.trim().toLowerCase() === tpr.chip.toLowerCase();
   const errorArchivos = useErrorArchivos();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -86,6 +90,7 @@ export function NuevaActividad({
 
   async function enviar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (esProyecto) return;
     const datos = new FormData(e.currentTarget);
     if (esContenido) {
       const problema = errorArchivos(anexos, MAX_ANEXOS) || (instruccionesAlumno.trim() ? "" : tc.errores.instrucciones);
@@ -158,7 +163,17 @@ export function NuevaActividad({
 
   return (
     <form ref={formRef} onSubmit={enviar} className="mx-auto max-w-3xl space-y-5">
-      {esContenido ? (
+      {esProyecto ? (
+        <div className="flex items-start gap-3 rounded-xl bg-tinta-50 p-4 ring-2 ring-tinta-500">
+          <span className="text-3xl" aria-hidden>
+            🛠️
+          </span>
+          <span>
+            <span className="block font-semibold text-slate-900">{tpr.modoTitulo}</span>
+            <span className="mt-1 block text-sm text-slate-600">{tpr.modoTexto}</span>
+          </span>
+        </div>
+      ) : esContenido ? (
         <div className="flex items-start gap-3 rounded-xl bg-tinta-50 p-4 ring-2 ring-tinta-500">
           <span className="text-3xl" aria-hidden>
             📎
@@ -252,10 +267,19 @@ export function NuevaActividad({
               <option key={e} value={e} />
             ))}
           </datalist>
-          <ChipsTipo tipos={tiposSugeridos} valor={etiqueta} onCambiar={setEtiqueta} contenido={tc.chip} />
+          <ChipsTipo tipos={tiposSugeridos} valor={etiqueta} onCambiar={setEtiqueta} contenido={tc.chip} proyecto={tpr.chip} />
           <span className="mt-1 block text-xs text-slate-500">{tn.tipoActividadTexto}</span>
         </div>
 
+        {esProyecto ? (
+          <AltaProyecto
+            datos={() => {
+              const d = formRef.current ? new FormData(formRef.current) : new FormData();
+              return { grupo: grupoSel, titulo: String(d.get("titulo") ?? ""), idioma: String(d.get("idioma") ?? "") };
+            }}
+          />
+        ) : (
+        <>
         <SelectorTemario asignaturas={asignaturas} materia={grupos.find((g) => g.id === grupoSel)?.materia} />
 
         {esContenido ? (
@@ -382,6 +406,8 @@ export function NuevaActividad({
                   : tn.cargar}
           </Boton>
         </div>
+        </>
+        )}
       </div>
     </form>
   );

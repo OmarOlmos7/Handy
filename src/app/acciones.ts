@@ -138,9 +138,14 @@ export async function borrarGrupo(grupoId: string) {
     db.actividades = db.actividades.filter((a) => a.grupoId !== grupoId);
     db.entregas = db.entregas.filter((e) => !acts.includes(e.actividadId));
     db.grupos = db.grupos.filter((g) => g.id !== grupoId);
-    return acts;
+    // Proyectos del curso con sus evidencias y evaluaciones.
+    const proyectos = (db.proyectos ?? []).filter((p) => p.grupoId === grupoId).map((p) => p.id);
+    db.proyectos = (db.proyectos ?? []).filter((p) => p.grupoId !== grupoId);
+    db.entregasProyecto = (db.entregasProyecto ?? []).filter((e) => !proyectos.includes(e.proyectoId));
+    db.evaluacionesProyecto = (db.evaluacionesProyecto ?? []).filter((e) => !proyectos.includes(e.proyectoId));
+    return [...acts.map((id) => `actividades/${id}`), ...proyectos.map((id) => `proyectos/${id}`)];
   });
-  ids.forEach((id) => borrarCarpeta(`actividades/${id}`));
+  ids.forEach((carpeta) => borrarCarpeta(carpeta));
   revalidatePath("/profesor", "layout");
 }
 

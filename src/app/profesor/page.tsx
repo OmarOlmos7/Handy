@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TarjetaCurso } from "@/components/tarjeta-curso";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
-import { estadoActividad, saldo } from "@/lib/almacen";
+import { estadoActividad, leer, saldo } from "@/lib/almacen";
 import { agruparPorColor } from "@/lib/colores";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
 import { resumenTemario } from "@/lib/asignaturas";
 import { textos } from "@/lib/i18n/servidor";
+import { proyectosComoEvaluador } from "@/lib/proyectos-servidor";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
@@ -23,6 +24,9 @@ export default async function PanelProfesor() {
   const saldoCreditos = saldo(db);
   const actividadesDeGrupo = (id: string) => db.actividades.filter((a) => a.grupoId === id);
   const porRevisar = db.actividades.filter((a) => estadoActividad(db, a) === "en_revision");
+  // Proyectos de otros profesores donde me invitaron a evaluar.
+  const comoEvaluador = proyectosComoEvaluador(await leer(), profesor.id);
+  const tpr = t.proyecto;
 
   return (
     <>
@@ -87,6 +91,28 @@ export default async function PanelProfesor() {
           </Link>
         </Tarjeta>
       </div>
+
+      {comoEvaluador.length > 0 && (
+        <section className="mb-8" aria-labelledby="como-evaluador">
+          <h2 id="como-evaluador" className="text-lg font-semibold">
+            🛠️ {tpr.dondeEvaluas}
+          </h2>
+          <p className="mb-3 text-sm text-slate-500">{tpr.dondeEvaluasNota}</p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {comoEvaluador.map(({ proyecto, grupo, dueno }) => (
+              <Link key={proyecto.id} href={`/profesor/proyectos/${proyecto.id}`} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition hover:ring-tinta-300">
+                <span className="block font-semibold text-slate-900">{proyecto.titulo}</span>
+                <span className="mt-0.5 block text-sm text-slate-600">
+                  {grupo.materia} · {grupo.nombre}
+                </span>
+                <span className="mt-1 block text-xs text-slate-500">
+                  {formato(tpr.deProfesor, { nombre: dueno })} · {formato(tpr.cerradasDe, { c: proyecto.etapas.filter((e) => e.cerradaEn).length, n: proyecto.etapas.length })}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {grupos.length === 0 && (
         <Tarjeta className="text-sm text-slate-600">
