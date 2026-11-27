@@ -5,6 +5,7 @@ import profesor from "./profesor/ja";
 import ruta from "./ruta/ja";
 import licencias from "./licencias/ja";
 import alumnosGrupo from "./alumnos-grupo/ja";
+import archivados from "./archivados/ja";
 import contenido from "./contenido/ja";
 import proyecto from "./proyecto/ja";
 
@@ -445,6 +446,7 @@ const ja: Diccionario = {
   ruta,
   licencias,
   alumnosGrupo,
+  archivados,
   contenido,
   proyecto,
 };

@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
+import { desarchivarGrupo } from "@/app/acciones";
 import { guardarCuenta, guardarPrecision, guardarRangos } from "@/app/acciones-configuracion";
 import { cambiarIdioma } from "@/app/acciones-idioma";
 import { ElegirLogo } from "@/components/elegir-logo";
 import { ConfigPrecision } from "@/components/precision-ia";
+import { IconoDesarchivar } from "@/components/iconos";
 import { Boton, Encabezado, Tarjeta, campo, fechaLarga } from "@/components/ui";
+import { colorDe } from "@/lib/colores";
 import { NIVELES_REPORTE, configuracionDe, valoresEscala, type NivelReporte } from "@/lib/configuracion";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { IDIOMAS, NOMBRE_IDIOMA, formato } from "@/lib/i18n/idiomas";
 import { MAX_BYTES_LOGO, srcLogo } from "@/lib/logo";
 import { textos } from "@/lib/i18n/servidor";
-import { DIAS_AVISO, DIAS_FOTOS, diasRestantes, fechaBorrado } from "@/lib/retencion";
+import { DIAS_AVISO, DIAS_FOTOS, agruparPorCurso, diasRestantes, fechaBorrado } from "@/lib/retencion";
 import { datosProfesor } from "@/lib/sesion";
 import type { RangosCalificacion } from "@/lib/tipos";
 
@@ -51,13 +54,19 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
       const borrado = fechaBorrado(a, entregas);
       return {
         actividad: a,
-        grupo: db.grupos.find((g) => g.id === a.grupoId),
+        grupoId: a.grupoId as string | undefined,
         evaluadas: entregas.filter((e) => e.resultados.length > 0 && (e.imagenes?.length || e.pdf)).length,
         borrado,
         dias: diasRestantes(borrado, ahora),
       };
     })
     .sort((x, y) => x.borrado.getTime() - y.borrado.getTime());
+  // Agrupadas por curso, cada curso en una sección plegable.
+  const porCurso = agruparPorCurso(conservacion).map((x) => ({ ...x, grupo: db.grupos.find((g) => g.id === x.grupoId) }));
+  const ta = t.archivados;
+  const archivados = db.grupos
+    .filter((g) => g.archivado)
+    .sort((x, y) => (y.archivado ?? "").localeCompare(x.archivado ?? ""));
   const conf = configuracionDe(profesor.config);
   const q = await searchParams;
   const texto = (k: string) => (typeof q[k] === "string" ? (q[k] as string) : undefined);
@@ -216,6 +225,51 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
           <Aviso seccion="precision" {...aviso} />
         </Tarjeta>
         <Tarjeta>
+          <details id="archivados" open={q.archivados === "1"} className="group scroll-mt-6">
+            <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 [&::-webkit-details-marker]:hidden">
+              <span aria-hidden className="text-slate-400 transition group-open:rotate-90">▸</span>
+              <h2 className="text-lg font-semibold">🗄️ {ta.profesor.titulo}</h2>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{archivados.length}</span>
+            </summary>
+            <p className="mt-2 text-sm text-slate-500">{ta.profesor.texto}</p>
+            {archivados.length === 0 ? (
+              <p className="mt-4 text-sm text-slate-500">{ta.profesor.ninguno}</p>
+            ) : (
+              <ul className="mt-4 divide-y divide-slate-100 rounded-xl ring-1 ring-slate-200">
+                {archivados.map((g) => (
+                  <li key={g.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3">
+                    {colorDe(g.color) && <span className={`h-2.5 w-2.5 rounded-full ${colorDe(g.color)!.punto}`} aria-hidden />}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-slate-900">
+                        {g.materia} · {g.nombre}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {formato(t.profesor.comun.ciclo, { c: g.ciclo })} · {formato(ta.archivadoEl, { fecha: fechaLarga(g.archivado!.slice(0, 10), locale) })} ·{" "}
+                        {(() => {
+                          const n = db.actividades.filter((a) => a.grupoId === g.id).length;
+                          return n === 1 ? ta.conservacion.actividades1 : formato(ta.conservacion.actividadesN, { n });
+                        })()}
+                      </p>
+                    </div>
+                    <a href={`/profesor/grupos/${g.id}`} className="text-sm font-medium text-tinta-700 hover:underline">
+                      {ta.abrir}
+                    </a>
+                    <form action={desarchivarGrupo}>
+                      <input type="hidden" name="grupoId" value={g.id} />
+                      <Boton type="submit" variante="secundario" className="!px-3 !py-1.5">
+                        <span className="inline-flex items-center gap-1.5">
+                          <IconoDesarchivar /> {ta.desarchivar}
+                        </span>
+                      </Boton>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </details>
+        </Tarjeta>
+
+        <Tarjeta>
           <h2 id="conservacion" className="scroll-mt-6 text-lg font-semibold">
             {c.conservacionTitulo}
           </h2>
@@ -231,38 +285,59 @@ export default async function Configuracion({ searchParams }: PageProps<"/profes
           {conservacion.length === 0 ? (
             <p className="mt-4 text-sm text-slate-500">{c.sinActividades}</p>
           ) : (
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[560px] text-left text-sm">
-                <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
-                  <tr>
-                    <th className="py-2 pr-3 font-medium">{c.colActividad}</th>
-                    <th className="py-2 pr-3 font-medium">{c.colCurso}</th>
-                    <th className="py-2 pr-3 font-medium">{c.colBorrado}</th>
-                    <th className="py-2 text-right font-medium">{c.colDescargar}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {conservacion.map((x) => (
-                    <tr key={x.actividad.id}>
-                      <td className="py-2 pr-3 font-medium">{x.actividad.titulo}</td>
-                      <td className="py-2 pr-3 text-slate-600">{x.grupo ? `${x.grupo.materia} · ${x.grupo.nombre}` : "—"}</td>
-                      <td className={`py-2 pr-3 ${x.dias <= DIAS_AVISO ? "font-medium text-error" : "text-slate-600"}`}>
-                        {fechaLarga(x.borrado.toISOString().slice(0, 10), locale)}
-                        {x.dias <= DIAS_AVISO && formato(c.enDias, { n: Math.max(0, x.dias) })}
-                      </td>
-                      <td className="py-2 text-right">
-                        {x.evaluadas > 0 ? (
-                          <a href={`/api/pdf/${x.actividad.id}/grupo`} className="text-xs font-medium text-tinta-700 hover:underline">
-                            {formato(c.pdfGrupo, { n: x.evaluadas })}
-                          </a>
-                        ) : (
-                          <span className="text-xs text-slate-400">{c.sinReportes}</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="mt-4 space-y-3">
+              {porCurso.map(({ grupoId, grupo, filas, proximo }) => {
+                const urgente = filas.some((x) => x.dias <= DIAS_AVISO);
+                return (
+                  <details key={grupoId ?? "-"} open={urgente} className="group overflow-hidden rounded-xl ring-1 ring-slate-200">
+                    <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                      <span aria-hidden className="text-slate-400 transition group-open:rotate-90">▸</span>
+                      {colorDe(grupo?.color) && <span className={`h-2.5 w-2.5 rounded-full ${colorDe(grupo?.color)!.punto}`} aria-hidden />}
+                      <h3 className="font-semibold text-slate-900">{grupo ? `${grupo.materia} · ${grupo.nombre}` : ta.conservacion.sinCurso}</h3>
+                      {grupo?.archivado && (
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">🗄️ {ta.conservacion.archivado}</span>
+                      )}
+                      <span className="text-xs text-slate-500">
+                        {filas.length === 1 ? ta.conservacion.actividades1 : formato(ta.conservacion.actividadesN, { n: filas.length })}
+                      </span>
+                      <span className={`ml-auto text-xs ${urgente ? "font-medium text-error" : "text-slate-500"}`}>
+                        {formato(ta.conservacion.proximo, { fecha: fechaLarga(proximo.toISOString().slice(0, 10), locale) })}
+                      </span>
+                    </summary>
+                    <div className="overflow-x-auto border-t border-slate-100 px-4">
+                      <table className="w-full min-w-[480px] text-left text-sm">
+                        <thead className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
+                          <tr>
+                            <th className="py-2 pr-3 font-medium">{c.colActividad}</th>
+                            <th className="py-2 pr-3 font-medium">{c.colBorrado}</th>
+                            <th className="py-2 text-right font-medium">{c.colDescargar}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filas.map((x) => (
+                            <tr key={x.actividad.id}>
+                              <td className="py-2 pr-3 font-medium">{x.actividad.titulo}</td>
+                              <td className={`py-2 pr-3 ${x.dias <= DIAS_AVISO ? "font-medium text-error" : "text-slate-600"}`}>
+                                {fechaLarga(x.borrado.toISOString().slice(0, 10), locale)}
+                                {x.dias <= DIAS_AVISO && formato(c.enDias, { n: Math.max(0, x.dias) })}
+                              </td>
+                              <td className="py-2 text-right">
+                                {x.evaluadas > 0 ? (
+                                  <a href={`/api/pdf/${x.actividad.id}/grupo`} className="text-xs font-medium text-tinta-700 hover:underline">
+                                    {formato(c.pdfGrupo, { n: x.evaluadas })}
+                                  </a>
+                                ) : (
+                                  <span className="text-xs text-slate-400">{c.sinReportes}</span>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
+                );
+              })}
             </div>
           )}
         </Tarjeta>

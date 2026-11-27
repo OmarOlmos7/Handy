@@ -22,3 +22,19 @@ export async function colorCursoAlumno(grupoId: string, color: string) {
   });
   revalidatePath("/alumno", "layout");
 }
+
+/** Archiva o restaura un curso en el portal del alumno. Solo cambia su propia vista. */
+export async function archivarCursoAlumno(grupoId: string, archivar: boolean) {
+  const alumno = await alumnoActual();
+  if (!alumno) throw new Error("No autorizado");
+  if (!alumno.cursos.some((c) => c.grupo.id === grupoId)) throw new Error("No autorizado");
+  modificar((db) => {
+    const cuenta = db.cuentasAlumno.find((c) => c.id === alumno.id);
+    if (!cuenta) return;
+    const archivados = { ...(cuenta.archivados ?? {}) };
+    if (archivar) archivados[grupoId] = new Date().toISOString();
+    else delete archivados[grupoId];
+    cuenta.archivados = Object.keys(archivados).length ? archivados : undefined;
+  });
+  revalidatePath("/alumno", "layout");
+}

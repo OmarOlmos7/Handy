@@ -19,7 +19,10 @@ export default async function PanelProfesor() {
   const { db, profesor } = await datosProfesor();
   const { t, locale } = await textos();
   const tp = t.profesor.panel;
-  const { grupos } = db;
+  // Los cursos archivados no salen en el panel; se ven y desarchivan en Configuración.
+  const grupos = db.grupos.filter((g) => !g.archivado);
+  const archivados = db.grupos.length - grupos.length;
+  const ta = t.archivados;
   const asignaturas = db.asignaturas ?? [];
   const saldoCreditos = saldo(db);
   const actividadesDeGrupo = (id: string) => db.actividades.filter((a) => a.grupoId === id);
@@ -114,7 +117,7 @@ export default async function PanelProfesor() {
         </section>
       )}
 
-      {grupos.length === 0 && (
+      {grupos.length === 0 && archivados === 0 && (
         <Tarjeta className="text-sm text-slate-600">
           {tp.sinCursos}{" "}
           <Link href="/profesor/grupos/nuevo" className="text-tinta-700 hover:underline">
@@ -155,6 +158,13 @@ export default async function PanelProfesor() {
             ))}
           </div>
         </>
+      )}
+      {archivados > 0 && (
+        <p className="mt-6 text-sm">
+          <Link href="/profesor/configuracion?archivados=1#archivados" className="inline-flex items-center gap-1.5 text-slate-500 hover:text-tinta-700 hover:underline">
+            🗄️ {archivados === 1 ? ta.verArchivados1 : formato(ta.verArchivadosN, { n: archivados })} →
+          </Link>
+        </p>
       )}
       </div>
       </div>

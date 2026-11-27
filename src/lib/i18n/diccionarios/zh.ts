@@ -5,6 +5,7 @@ import profesor from "./profesor/zh";
 import ruta from "./ruta/zh";
 import licencias from "./licencias/zh";
 import alumnosGrupo from "./alumnos-grupo/zh";
+import archivados from "./archivados/zh";
 import contenido from "./contenido/zh";
 import proyecto from "./proyecto/zh";
 
@@ -426,6 +427,7 @@ const zh: Diccionario = {
   ruta,
   licencias,
   alumnosGrupo,
+  archivados,
   contenido,
   proyecto,
 };

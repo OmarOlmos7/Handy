@@ -48,12 +48,17 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
   const cuenta = db.cuentasAlumno.find((c) => c.id === alumno.id);
   const tc = t.alumno.cursos;
   const tl = t.licencias.alumno;
-  const tarjetas = alumno.cursos.map(({ grupo, alumno: enCurso }) => ({
+  const ta = t.archivados;
+  const todas = alumno.cursos.map(({ grupo, alumno: enCurso }) => ({
     grupo,
     // El color que eligió el alumno; si no eligió, el que puso el profesor.
     color: cuenta?.colores?.[grupo.id] ?? grupo.color,
     resumen: resumenCursoAlumno(grupo, db.actividades, db.entregas, enCurso.matricula, ahora),
   }));
+  // Los que el alumno archivó salen de la vista principal y van a la sección plegable de abajo.
+  const archivados = cuenta?.archivados ?? {};
+  const tarjetas = todas.filter((x) => !archivados[x.grupo.id]);
+  const tarjetasArchivadas = todas.filter((x) => archivados[x.grupo.id]);
   return (
     <>
       <Encabezado
@@ -83,11 +88,11 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
           {tl.unirme}
         </BotonLink>
       </p>
-      {tarjetas.length === 0 ? (
+      {tarjetas.length === 0 && tarjetasArchivadas.length === 0 ? (
         <p className="rounded-xl bg-white px-5 py-4 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">{tp.sinActividades}</p>
       ) : (
         <>
-          <h2 className="mb-3 text-lg font-semibold">{tc.misCursos}</h2>
+          {tarjetas.length > 0 && <h2 className="mb-3 text-lg font-semibold">{tc.misCursos}</h2>}
           <div className="space-y-6">
             {agruparPorColor(tarjetas).map(({ color, items }, _i, todos) => (
               <section key={color?.clave ?? "sin-color"}>
@@ -117,6 +122,38 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
               </section>
             ))}
           </div>
+          {tarjetasArchivadas.length > 0 && (
+            <details id="archivados" className="group mt-8 overflow-visible rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+              <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 rounded-xl px-5 py-3.5 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                <span aria-hidden className="text-slate-400 transition group-open:rotate-90">▸</span>
+                <span className="text-xl" aria-hidden>
+                  🗄️
+                </span>
+                <h2 className="text-base font-semibold text-slate-900">{ta.alumno.titulo}</h2>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{tarjetasArchivadas.length}</span>
+              </summary>
+              <div className="border-t border-slate-100 p-4">
+                <p className="mb-3 text-sm text-slate-500">{ta.alumno.texto}</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {tarjetasArchivadas.map(({ grupo, color: c, resumen }) => (
+                    <TarjetaCursoAlumno
+                      key={grupo.id}
+                      id={grupo.id}
+                      materia={grupo.materia}
+                      nombre={grupo.nombre}
+                      ciclo={grupo.ciclo}
+                      color={c}
+                      actividades={resumen.actividades}
+                      porEntregar={resumen.porEntregar}
+                      promedio={resumen.promedio === null ? undefined : num(resumen.promedio)}
+                      colorPromedio={resumen.promedio === null ? undefined : colorCalificacion(resumen.promedio, 100)}
+                      archivado
+                    />
+                  ))}
+                </div>
+              </div>
+            </details>
+          )}
         </>
       )}
     </>

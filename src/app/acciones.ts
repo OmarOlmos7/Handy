@@ -233,6 +233,21 @@ export async function colorGrupo(grupoId: string, color: string) {
   revalidatePath("/profesor", "layout");
 }
 
+/** Archiva o desarchiva un curso del profesor. No borra nada: solo lo saca del panel. */
+export async function archivarGrupo(grupoId: string, archivar: boolean) {
+  await enGrupoPropio(grupoId, (db) => {
+    const g = db.grupos.find((x) => x.id === grupoId)!;
+    if (archivar) g.archivado = new Date().toISOString();
+    else delete g.archivado;
+  });
+  revalidatePath("/profesor", "layout");
+}
+
+/** Desarchivar desde el formulario de Configuración. */
+export async function desarchivarGrupo(datos: FormData) {
+  await archivarGrupo(String(datos.get("grupoId") ?? ""), false);
+}
+
 export async function colorActividad(actividadId: string, color: string) {
   await enActividadPropia(actividadId, (db) => {
     actividadDe(db, actividadId)!.color = colorValido(color);
