@@ -234,6 +234,13 @@ const proyecto: typeof es = {
     notaProfesor: "Group progress: students or teams with all their evaluations finished. A closed stage counts as complete.",
     notaAlumno: "Each stage turns blue when it is closed with your grade.",
   },
+  grupo: {
+    boton: "Project",
+    titulo: "Group projects",
+    subtitulo: "Stage activities of this group's projects.",
+    sinProyectos: "This group has no projects yet. Create one with “+ New assignment” and the Project type.",
+    abrir: "Open assessment",
+  },
 };
 
 export default proyecto;

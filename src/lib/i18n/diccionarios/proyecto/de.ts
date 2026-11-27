@@ -234,6 +234,13 @@ const proyecto: typeof es = {
     notaProfesor: "Fortschritt der Gruppe: Schüler oder Teams mit allen abgeschlossenen Bewertungen. Eine geschlossene Phase zählt als abgeschlossen.",
     notaAlumno: "Jede Phase wird blau, sobald sie mit deiner Note geschlossen ist.",
   },
+  grupo: {
+    boton: "Projekt",
+    titulo: "Projekte der Gruppe",
+    subtitulo: "Phasenaufgaben der Projekte dieser Gruppe.",
+    sinProyectos: "Diese Gruppe hat noch keine Projekte. Lege eines mit „+ Neue Aufgabe“ und dem Typ Projekt an.",
+    abrir: "Bewertung öffnen",
+  },
 };
 
 export default proyecto;

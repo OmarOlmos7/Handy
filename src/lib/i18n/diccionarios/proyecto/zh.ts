@@ -231,6 +231,13 @@ const proyecto: typeof es = {
     notaProfesor: "小组进度：所有评价都已完成的学生或小组。已关闭的阶段算作完成。",
     notaAlumno: "每个阶段在带着你的成绩关闭后变为蓝色。",
   },
+  grupo: {
+    boton: "项目",
+    titulo: "小组项目",
+    subtitulo: "本小组项目的分阶段作业。",
+    sinProyectos: "本小组还没有项目。请用“+ 新作业”并选择项目类型来创建。",
+    abrir: "打开评价",
+  },
 };
 
 export default proyecto;
