@@ -5,6 +5,7 @@ import { PDFDocument } from "pdf-lib";
 import { guardarArchivo } from "./almacen";
 import { claseDeArchivo, extensionParaGuardar, laIALee, revisarArchivos } from "./contenido";
 import { normalizarFoto } from "./imagenes";
+import { prepararVistaPdf } from "./office-pdf";
 import type { AnexoContenido } from "./tipos";
 
 export class ErrorArchivos extends Error {
@@ -47,6 +48,7 @@ export async function guardarArchivosContenido(
     if (clase !== "pdf" && laIALee(clase)) paginasIA += 1;
     const nombre = f.name.replace(/[\\/]/g, "_").slice(0, 120) || `archivo-${i + 1}.${ext}`;
     const ruta = guardarArchivo(`${carpeta}/${prefijo}${i + 1}.${ext}`, datos);
+    prepararVistaPdf(ruta, clase);
     anexos.push({ ruta, nombre, clase, bytes: datos.length });
   }
   return { anexos, paginasIA };

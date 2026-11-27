@@ -25,8 +25,13 @@ ENV NODE_ENV=production \
 # Chromium (sin interfaz) imprime la página de recomendaciones con las fórmulas de KaTeX.
 # chromium-headless-shell es opcional: si la distribución no lo tiene, se usa chromium.
 # fonts-wqy-microhei: letras japonesas y chinas para los PDF en esos idiomas.
+# LibreOffice sin interfaz convierte a PDF los Word, Excel y PowerPoint para verlos con su formato
+# original. Carlito, Caladea y Liberation miden igual que Calibri, Cambria, Arial y Times New Roman,
+# así los documentos no se descuadran.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends poppler-utils chromium fonts-dejavu-core fonts-wqy-microhei \
+       libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui \
+       fonts-liberation2 fonts-crosextra-carlito fonts-crosextra-caladea \
     && (apt-get install -y --no-install-recommends chromium-headless-shell || true) \
     && rm -rf /var/lib/apt/lists/*
 RUN mkdir -p /datos && chown node:node /datos
