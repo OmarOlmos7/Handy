@@ -33,6 +33,8 @@ export interface AvisoVista {
   responder?: { destino: string; asunto: string; respondeA: string };
   puedeBorrar: boolean;
   correos?: CorreosAviso;
+  /** Lo mandó la app sola (recordatorio de asesoría). */
+  automatico?: boolean;
 }
 
 interface Contexto {
@@ -113,5 +115,6 @@ function comun(a: Aviso, c: Contexto, original: Aviso | undefined) {
     anexos: a.anexos,
     fecha: fechaHoraLarga(a.enviadoEn, c.locale),
     ...(original ? { respondeA: asuntoCorto(original) } : {}),
+    ...(a.automatico ? { automatico: true } : {}),
   };
 }

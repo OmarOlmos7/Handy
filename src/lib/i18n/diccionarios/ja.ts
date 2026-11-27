@@ -10,6 +10,7 @@ import ajustesAlumno from "./ajustes-alumno/ja";
 import contenido from "./contenido/ja";
 import avisos from "./avisos/ja";
 import proyecto from "./proyecto/ja";
+import asesorias from "./asesorias/ja";
 
 const ja: Diccionario = {
   comun: {
@@ -464,6 +465,7 @@ const ja: Diccionario = {
   contenido,
   avisos,
   proyecto,
+  asesorias,
 };
 
 export default ja;

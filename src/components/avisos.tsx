@@ -332,7 +332,8 @@ export function ListaAvisos({ avisos, vacio }: { avisos: AvisoVista[]; vacio: st
 }
 
 function ItemAviso({ aviso: a }: { aviso: AvisoVista }) {
-  const ta = useTextos().t.avisos;
+  const { t } = useTextos();
+  const ta = t.avisos;
   const router = useRouter();
   const [sinLeer, setSinLeer] = useState(a.sinLeer);
   const [respondiendo, setRespondiendo] = useState(false);
@@ -391,6 +392,7 @@ function ItemAviso({ aviso: a }: { aviso: AvisoVista }) {
             <span>{destino}</span>
             <span aria-hidden>·</span>
             <span>{a.fecha}</span>
+            {a.automatico && <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">🔔 {t.asesorias.recordatorio.automatico}</span>}
             {sinLeer && <span className="rounded-full bg-tinta-600 px-2 py-0.5 text-[11px] font-semibold text-white">{ta.nuevoInsignia}</span>}
           </span>
           <span className={`mt-0.5 block truncate text-[15px] ${sinLeer ? "font-semibold text-slate-900" : "font-medium text-slate-800"}`}>

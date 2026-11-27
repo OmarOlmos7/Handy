@@ -175,6 +175,7 @@ export async function borrarGrupo(grupoId: string) {
     // Avisos del curso con sus anexos.
     const avisos = (db.avisos ?? []).filter((a) => a.grupoId === grupoId).map((a) => a.id);
     db.avisos = (db.avisos ?? []).filter((a) => a.grupoId !== grupoId);
+    db.asesorias = (db.asesorias ?? []).filter((a) => a.grupoId !== grupoId);
     return [...acts.map((id) => `actividades/${id}`), ...proyectos.map((id) => `proyectos/${id}`), ...avisos.map((id) => `avisos/${id}`)];
   });
   ids.forEach((carpeta) => borrarCarpeta(carpeta));

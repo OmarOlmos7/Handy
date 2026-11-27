@@ -7,6 +7,8 @@ import { BotonLink, Encabezado, colorCalificacion } from "@/components/ui";
 import { num } from "@/components/tablero";
 import { TarjetaCursoAlumno } from "@/components/tarjeta-curso-alumno";
 import { sinLeerAlumno } from "@/lib/avisos";
+import { resumenAsesorias } from "@/lib/asesorias";
+import { textoPeriodo } from "@/lib/asesorias-vista";
 import { agruparPorColor } from "@/lib/colores";
 import { resumenCursoAlumno } from "@/lib/portal-alumno";
 import { FormIngresoAlumno, FormRegistroAlumno } from "@/components/formularios-alumno";
@@ -23,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">) {
   const alumno = await alumnoActual();
-  const { t } = await textos();
+  const { t, locale } = await textos();
   const tp = t.alumno.panel;
   if (!alumno) {
     const { error, crear } = await searchParams;
@@ -58,6 +60,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
     color: cuenta?.colores?.[grupo.id] ?? grupo.color,
     resumen: resumenCursoAlumno(grupo, db.actividades, db.entregas, enCurso.matricula, ahora),
     avisos: sinLeerAlumno(db.avisos ?? [], grupo.id, enCurso.matricula),
+    asesorias: resumenAsesorias(db.asesorias ?? [], grupo, enCurso.matricula, ahora),
   }));
   // Los que el alumno archivó salen de la vista principal y van a la sección plegable de abajo.
   const archivados = cuenta?.archivados ?? {};
@@ -108,7 +111,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                   </h3>
                 )}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {items.map(({ grupo, color: c, resumen, avisos }) => (
+                  {items.map(({ grupo, color: c, resumen, avisos, asesorias }) => (
                     <TarjetaCursoAlumno
                       key={grupo.id}
                       id={grupo.id}
@@ -121,6 +124,8 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                       promedio={resumen.promedio === null ? undefined : num(resumen.promedio)}
                       colorPromedio={resumen.promedio === null ? undefined : colorCalificacion(resumen.promedio, 100)}
                       avisosSinLeer={avisos}
+                      periodo={textoPeriodo(t.asesorias, grupo.inicio, grupo.fin, locale)}
+                      asesorias={asesorias}
                     />
                   ))}
                 </div>

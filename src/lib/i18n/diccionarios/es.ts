@@ -11,6 +11,7 @@ import ajustesAlumno from "./ajustes-alumno/es";
 import contenido from "./contenido/es";
 import avisos from "./avisos/es";
 import proyecto from "./proyecto/es";
+import asesorias from "./asesorias/es";
 
 const es = {
   comun: {
@@ -467,6 +468,7 @@ const es = {
   contenido,
   avisos,
   proyecto,
+  asesorias,
 };
 
 export default es;
