@@ -8,6 +8,7 @@ import { esAdmin } from "@/lib/admin";
 import { mantenimiento } from "@/lib/archivo";
 import { srcLogo } from "@/lib/logo";
 import { saldo } from "@/lib/almacen";
+import { LECTOR_PROFESOR, sinLeerPara } from "@/lib/avisos";
 import { formato } from "@/lib/i18n/idiomas";
 import { idiomaPublico, textos } from "@/lib/i18n/servidor";
 import { datosProfesor } from "@/lib/sesion";
@@ -15,6 +16,8 @@ import { datosProfesor } from "@/lib/sesion";
 export default async function LayoutProfesor({ children }: LayoutProps<"/profesor">) {
   const { profesor, db } = await datosProfesor();
   const { idioma, t, locale } = await textos();
+  // Mensajes de alumnos sin leer en todos sus cursos (van junto a la pestaña Avisos).
+  const sinLeer = (db.avisos ?? []).filter((a) => sinLeerPara(a, LECTOR_PROFESOR)).length;
   // Archiva fotos y borra lo vencido sin frenar la página (como máximo cada 10 minutos).
   after(() => mantenimiento().catch((e) => console.error("Mantenimiento", e)));
   return (
@@ -23,6 +26,7 @@ export default async function LayoutProfesor({ children }: LayoutProps<"/profeso
       <BarraApp
         enlaces={[
           { href: "/profesor", texto: t.barra.panel, exacto: true },
+          { href: "/profesor/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos },
           { href: "/profesor/actividades/nueva", texto: t.barra.nuevaActividad },
           { href: "/profesor/grupos/nuevo", texto: t.barra.nuevoCurso },
           { href: "/profesor/asignaturas", texto: t.barra.asignaturas },

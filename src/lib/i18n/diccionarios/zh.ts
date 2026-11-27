@@ -8,6 +8,7 @@ import alumnosGrupo from "./alumnos-grupo/zh";
 import archivados from "./archivados/zh";
 import ajustesAlumno from "./ajustes-alumno/zh";
 import contenido from "./contenido/zh";
+import avisos from "./avisos/zh";
 import proyecto from "./proyecto/zh";
 
 const zh: Diccionario = {
@@ -35,6 +36,7 @@ const zh: Diccionario = {
     creditos: "点数",
     administracion: "管理",
     misActividades: "我的作业",
+    avisos: "通知",
     alumno: "学生",
     sinSesion: "未登录",
     tipos: { alumno: "学生", profesor: "教师", administrador: "管理员" },
@@ -431,6 +433,7 @@ const zh: Diccionario = {
   archivados,
   ajustesAlumno,
   contenido,
+  avisos,
   proyecto,
 };
 

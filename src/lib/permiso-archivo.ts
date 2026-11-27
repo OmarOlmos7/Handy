@@ -1,6 +1,7 @@
-// Quién puede ver un archivo guardado (actividades/<id>/...): lo usan la descarga y el
+// Quién puede ver un archivo guardado (actividades/<id>/..., proyectos/<id>/... y avisos/<id>/...): lo usan la descarga y el
 // previsualizador de documentos.
 import "server-only";
+import { puedeVerAviso } from "./avisos";
 import { esDelProfesor } from "./cuentas";
 import { matriculasDeSujeto, puedeEvaluar } from "./proyectos";
 import { resultadosDisponibles } from "./resultados";
@@ -10,6 +11,7 @@ import type { BaseDeDatos } from "./tipos";
 export async function puedeVerArchivo(db: BaseDeDatos, ruta: string[]): Promise<"si" | "no" | "no_encontrado"> {
   const [raiz, actividadId, tipo, matricula] = ruta;
   if (raiz === "proyectos" && actividadId) return puedeVerEvidenciaProyecto(db, ruta);
+  if (raiz === "avisos" && actividadId) return puedeVerAnexoAviso(db, actividadId);
   if (raiz !== "actividades" || !actividadId) return "no_encontrado";
   const profesor = await profesorActual();
   if (profesor && esDelProfesor(db, actividadId, profesor.id)) return "si";
@@ -40,4 +42,15 @@ async function puedeVerEvidenciaProyecto(db: BaseDeDatos, ruta: string[]): Promi
   if (!entrega) return "no";
   const enCurso = matriculaEnCurso(await alumnoActual(), proyecto.grupoId);
   return enCurso && matriculasDeSujeto(proyecto, entrega.sujeto).includes(enCurso) ? "si" : "no";
+}
+
+/** Anexo de un aviso (avisos/<id>/...): lo ven el profesor del curso, quien lo escribió y sus destinatarios. */
+async function puedeVerAnexoAviso(db: BaseDeDatos, avisoId: string): Promise<"si" | "no" | "no_encontrado"> {
+  const aviso = (db.avisos ?? []).find((a) => a.id === avisoId);
+  if (!aviso) return "no_encontrado";
+  const grupo = db.grupos.find((g) => g.id === aviso.grupoId);
+  const profesor = await profesorActual();
+  const profesorDelCurso = Boolean(profesor && grupo?.profesorId === profesor.id);
+  const matricula = profesorDelCurso ? undefined : matriculaEnCurso(await alumnoActual(), aviso.grupoId);
+  return puedeVerAviso(aviso, { profesorDelCurso, matricula }) ? "si" : "no";
 }

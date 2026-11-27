@@ -9,6 +9,7 @@ import alumnosGrupo from "./alumnos-grupo/es";
 import archivados from "./archivados/es";
 import ajustesAlumno from "./ajustes-alumno/es";
 import contenido from "./contenido/es";
+import avisos from "./avisos/es";
 import proyecto from "./proyecto/es";
 
 const es = {
@@ -37,6 +38,7 @@ const es = {
     creditos: "Créditos",
     administracion: "Administración",
     misActividades: "Mis actividades",
+    avisos: "Avisos",
     alumno: "Alumno",
     sinSesion: "Sin sesión",
     tipos: { alumno: "Alumno", profesor: "Profesor", administrador: "Administrador" },
@@ -453,6 +455,7 @@ const es = {
   archivados,
   ajustesAlumno,
   contenido,
+  avisos,
   proyecto,
 };
 

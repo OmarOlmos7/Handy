@@ -106,6 +106,16 @@ export function IconoDesarchivar() {
   );
 }
 
+/** Sobre (avisos del curso). */
+export function IconoSobre() {
+  return (
+    <svg {...base}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3.5 6.5 8.5 6.5 8.5-6.5" />
+    </svg>
+  );
+}
+
 /** Botón redondo con ícono para editar o borrar. */
 export function BotonIcono({
   etiqueta,

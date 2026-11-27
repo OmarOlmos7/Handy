@@ -660,6 +660,55 @@ export interface BaseDeDatos {
   entregasProyecto?: EntregaProyecto[];
   /** Evaluaciones de cada profesor evaluador, una por etapa y alumno o equipo. */
   evaluacionesProyecto?: EvaluacionProyecto[];
+  /** Avisos (mensajes) de cada curso entre el profesor y sus alumnos (ver lib/avisos). */
+  avisos?: Aviso[];
+}
+
+// ---------- Avisos (mensajes) por curso ----------
+
+/**
+ * A quién va un aviso: todo el grupo, un equipo (de un proyecto del curso), uno o varios alumnos
+ * elegidos, o el profesor del curso (cuando lo envía un alumno).
+ */
+export type DestinoAviso =
+  | { tipo: "grupo" }
+  | { tipo: "equipo"; proyectoId: string; equipoId: string; nombre: string }
+  | { tipo: "alumnos"; matriculas: string[] }
+  | { tipo: "profesor" };
+
+/** Quién escribió el aviso. */
+export type AutorAviso = { tipo: "profesor"; profesorId: string } | { tipo: "alumno"; matricula: string; alumnoId?: string };
+
+/** Resultado del aviso por correo a los destinatarios. */
+export interface CorreosAviso {
+  enviados: number;
+  fallidos: number;
+  /** Destinatarios sin correo registrado en la lista del curso. */
+  sinCorreo: number;
+  /** true si el servidor no tiene correo configurado (SMTP): no se envió ninguno. */
+  sinConfigurar?: boolean;
+}
+
+/** Mensaje dentro de un curso, con texto y anexos (archivos, imágenes o video). */
+export interface Aviso {
+  id: string;
+  grupoId: string;
+  autor: AutorAviso;
+  destino: DestinoAviso;
+  /**
+   * Matrículas de los alumnos a quienes llegó, fijadas al enviarlo (un alumno que entra después al
+   * curso no ve los avisos anteriores). Vacío si el aviso es para el profesor.
+   */
+  destinatarios: string[];
+  asunto: string;
+  texto: string;
+  anexos: AnexoContenido[];
+  enviadoEn: string;
+  /** Quién ya lo abrió y cuándo (ISO): la matrícula de cada alumno, o "profesor". */
+  leidos: Record<string, string>;
+  /** Aviso al que responde (opcional). */
+  respondeA?: string;
+  correos?: CorreosAviso;
 }
 
 // ---------- Proyectos (retos) con evaluación de varios profesores ----------

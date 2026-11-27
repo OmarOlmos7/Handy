@@ -7,6 +7,7 @@ import { archivarCursoAlumno, colorCursoAlumno, salirDelCursoAlumno } from "@/ap
 import { colorDe } from "@/lib/colores";
 import { formato } from "@/lib/i18n/idiomas";
 import { BotonIcono, IconoArchivar, IconoBasura, IconoDesarchivar } from "./iconos";
+import { SobreAvisos } from "./avisos";
 import { SelectorColor } from "./selector-color";
 import { useTextos } from "./proveedor-textos";
 
@@ -26,6 +27,7 @@ export function TarjetaCursoAlumno({
   promedio,
   colorPromedio,
   archivado = false,
+  avisosSinLeer = 0,
 }: {
   id: string;
   materia: string;
@@ -39,6 +41,8 @@ export function TarjetaCursoAlumno({
   colorPromedio?: string;
   /** La tarjeta está en "Cursos archivados": muestra el botón para restaurarla. */
   archivado?: boolean;
+  /** Avisos del curso que el alumno aún no abre (número en el sobre). */
+  avisosSinLeer?: number;
 }) {
   const router = useRouter();
   const { t } = useTextos();
@@ -114,6 +118,7 @@ export function TarjetaCursoAlumno({
           )}
         </dl>
         <div className="ml-auto flex gap-1">
+          <SobreAvisos href={`/alumno/cursos/${id}/avisos`} sinLeer={avisosSinLeer} />
           <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
           <BotonIcono etiqueta={archivado ? ta.restaurar : ta.archivar} onClick={archivar} disabled={pendiente}>
             {archivado ? <IconoDesarchivar /> : <IconoArchivar />}

@@ -8,6 +8,7 @@ import alumnosGrupo from "./alumnos-grupo/pt";
 import archivados from "./archivados/pt";
 import ajustesAlumno from "./ajustes-alumno/pt";
 import contenido from "./contenido/pt";
+import avisos from "./avisos/pt";
 import proyecto from "./proyecto/pt";
 
 const pt: Diccionario = {
@@ -36,6 +37,7 @@ const pt: Diccionario = {
     creditos: "Créditos",
     administracion: "Administração",
     misActividades: "Minhas atividades",
+    avisos: "Avisos",
     alumno: "Aluno",
     sinSesion: "Sem sessão",
     tipos: { alumno: "Aluno", profesor: "Professor", administrador: "Administrador" },
@@ -451,6 +453,7 @@ const pt: Diccionario = {
   archivados,
   ajustesAlumno,
   contenido,
+  avisos,
   proyecto,
 };
 

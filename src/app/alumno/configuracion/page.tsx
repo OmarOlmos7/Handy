@@ -5,6 +5,7 @@ import { num } from "@/components/tablero";
 import { TarjetaCursoAlumno } from "@/components/tarjeta-curso-alumno";
 import { Boton, Encabezado, Tarjeta, campo, colorCalificacion } from "@/components/ui";
 import { leer } from "@/lib/almacen";
+import { sinLeerAlumno } from "@/lib/avisos";
 import { LARGO_MINIMO_CLAVE } from "@/lib/cuentas-alumno";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
@@ -33,6 +34,7 @@ export default async function AjustesAlumno({ searchParams }: PageProps<"/alumno
       grupo,
       color: cuenta?.colores?.[grupo.id] ?? grupo.color,
       resumen: resumenCursoAlumno(grupo, db.actividades, db.entregas, enCurso.matricula, ahora),
+      avisos: sinLeerAlumno(db.avisos ?? [], grupo.id, enCurso.matricula),
     }));
 
   const q = await searchParams;
@@ -94,7 +96,7 @@ export default async function AjustesAlumno({ searchParams }: PageProps<"/alumno
               <p className="mt-4 text-sm text-slate-500">{a.archivadosNinguno}</p>
             ) : (
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {tarjetas.map(({ grupo, color, resumen }) => (
+                {tarjetas.map(({ grupo, color, resumen, avisos }) => (
                   <TarjetaCursoAlumno
                     key={grupo.id}
                     id={grupo.id}
@@ -106,6 +108,7 @@ export default async function AjustesAlumno({ searchParams }: PageProps<"/alumno
                     porEntregar={resumen.porEntregar}
                     promedio={resumen.promedio === null ? undefined : num(resumen.promedio)}
                     colorPromedio={resumen.promedio === null ? undefined : colorCalificacion(resumen.promedio, 100)}
+                    avisosSinLeer={avisos}
                     archivado
                   />
                 ))}

@@ -1,6 +1,7 @@
 // Altas, cambios y bajas de alumnos en la lista de un curso (lo usa el profesor).
 // Funciones puras sobre la base de datos: las acciones del servidor las envuelven.
 import { correoValido, normalizarCorreo, normalizarMatricula } from "./cuentas";
+import { quitarAlumnoDeAvisos, renombrarMatriculaAvisos } from "./avisos";
 import type { Alumno, BaseDeDatos, Grupo } from "./tipos";
 
 /** Motivos por los que no se puede guardar un alumno (los textos están en el diccionario). */
@@ -88,6 +89,7 @@ export function cambiarAlumno(db: BaseDeDatos, grupo: Grupo, matriculaAnterior: 
     for (const t of db.tiempos ?? []) if (actividades.has(t.actividadId) && t.matricula === antes) t.matricula = nuevo.matricula;
     for (const a of db.autoactividades ?? []) if (a.grupoId === grupo.id && a.matricula === antes) a.matricula = nuevo.matricula;
     for (const v of db.valoraciones ?? []) if (v.grupoId === grupo.id && v.matricula === antes) v.matricula = nuevo.matricula;
+    renombrarMatriculaAvisos(db.avisos, grupo.id, antes, nuevo.matricula);
   }
   Object.assign(alumno, nuevo);
   return alumno;
@@ -126,6 +128,12 @@ export function bajaAlumno(db: BaseDeDatos, grupo: Grupo, matricula: string): { 
   if (db.tiempos) db.tiempos = db.tiempos.filter((t) => !suya(t));
   if (db.autoactividades) db.autoactividades = db.autoactividades.filter((a) => !autoSuya(a));
   if (db.valoraciones) db.valoraciones = db.valoraciones.filter((v) => !(v.grupoId === grupo.id && v.matricula === m));
+  // Avisos que escribió o que eran solo para él (con sus anexos); de los demás sale.
+  if (db.avisos) {
+    const avisos = quitarAlumnoDeAvisos(db.avisos, grupo.id, m);
+    db.avisos = avisos.avisos;
+    archivos.push(...avisos.carpetas);
+  }
   grupo.alumnos = grupo.alumnos.filter((a) => a !== alumno);
   // Solo rutas dentro de la carpeta de datos, sin "..".
   return { alumno, archivos: [...new Set(archivos)].filter((r) => r && !r.split(/[\\/]/).includes("..") && !/^[\\/]/.test(r)) };
