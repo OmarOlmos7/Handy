@@ -222,6 +222,8 @@ export interface Actividad {
   /** Imágenes de la solución del profesor (rutas relativas a la carpeta de datos). */
   solucion?: string[];
   rubricaConfirmada?: boolean;
+  /** Última vez que el profesor reeditó la rúbrica con entregas ya evaluadas (ISO). */
+  rubricaEditadaEn?: string;
   /**
    * true si la actividad no requiere solución (ensayos, producciones escritas, análisis): se valora
    * la composición escrita (contenido, coherencia y elementos lingüísticos) con los criterios.

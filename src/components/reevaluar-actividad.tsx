@@ -25,6 +25,8 @@ export function ReevaluarActividad({
   entregas,
   evaluadas,
   saldo,
+  abiertoInicial = false,
+  conRubricaAnterior = 0,
 }: {
   actividadId: string;
   motor: MotorIA;
@@ -37,10 +39,14 @@ export function ReevaluarActividad({
   /** Entregas ya evaluadas, tengan o no sus fotos (las de ejemplo y las archivadas no las tienen). */
   evaluadas: number;
   saldo: number;
+  /** Abierto al llegar desde "Reeditar rúbrica". */
+  abiertoInicial?: boolean;
+  /** Entregas evaluadas antes de la última reedición de la rúbrica. */
+  conRubricaAnterior?: number;
 }) {
   const router = useRouter();
   const tr = useTextos().t.profesor.reevaluar;
-  const [abierto, setAbierto] = useState(false);
+  const [abierto, setAbierto] = useState(abiertoInicial);
   const [elegido, setElegido] = useState(() => ESCALA[indiceEscala({ motor, esfuerzo: esfuerzoActual ?? esfuerzos[motor] })].precision);
   const [hechas, setHechas] = useState(0);
   const [actual, setActual] = useState<string | null>(null);
@@ -86,7 +92,7 @@ export function ReevaluarActividad({
   const sinFotos = evaluadas - entregas.length;
 
   return (
-    <section className="mb-6 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+    <section id="reevaluar" className="mb-6 scroll-mt-4 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
       <button
         type="button"
         onClick={() => setAbierto(!abierto)}
@@ -96,6 +102,9 @@ export function ReevaluarActividad({
         <span>
           <span className="block font-semibold text-slate-900">{tr.titulo}</span>
           <span className="mt-0.5 block text-sm text-slate-600">{tr.subtitulo}</span>
+          {conRubricaAnterior > 0 && (
+            <span className="mt-1.5 block text-sm font-medium text-aviso">{formato(tr.rubricaAnterior, { n: conRubricaAnterior })}</span>
+          )}
         </span>
         <span className="shrink-0 text-sm font-medium text-tinta-700">{abierto ? tr.ocultar : tr.abrir}</span>
       </button>

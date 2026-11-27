@@ -99,6 +99,7 @@ const proyecto: typeof es = {
     guardado: "Modelo salvo.",
     borrar: "Excluir projeto",
     confirmarBorrar: "O projeto será excluído com suas evidências e avaliações. Não é possível desfazer. Continuar?",
+    avisoEvaluadas: "Esta etapa já tem {n} avaliações concluídas. Você pode reeditar a rubrica: ao salvar, as notas são recalculadas com as novas porcentagens. Se adicionar um elemento, cada avaliador deve avaliá-lo para que sua avaliação volte a contar.",
   },
   errores: {
     titulo: "Escreva o título do projeto.",

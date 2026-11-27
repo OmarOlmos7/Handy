@@ -103,6 +103,7 @@ const proyecto = {
     guardado: "Modelo guardado.",
     borrar: "Borrar proyecto",
     confirmarBorrar: "Se borrará el proyecto con sus evidencias y evaluaciones. No se puede deshacer. ¿Continuar?",
+    avisoEvaluadas: "Esta etapa ya tiene {n} evaluaciones terminadas. Puedes reeditar su rúbrica: al guardar, las calificaciones se recalculan con los porcentajes nuevos. Si agregas un elemento, cada evaluador debe calificarlo para que su evaluación vuelva a contar.",
   },
   errores: {
     titulo: "Escribe el título del proyecto.",

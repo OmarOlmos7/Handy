@@ -99,6 +99,7 @@ const proyecto: typeof es = {
     guardado: "Model saved.",
     borrar: "Delete project",
     confirmarBorrar: "The project will be deleted with its evidence and assessments. This cannot be undone. Continue?",
+    avisoEvaluadas: "This stage already has {n} finished evaluations. You can re-edit its rubric: when you save, grades are recalculated with the new percentages. If you add an element, each evaluator must grade it for their evaluation to count again.",
   },
   errores: {
     titulo: "Write the project title.",

@@ -156,6 +156,12 @@ export default async function EntregasActividad({ params, searchParams }: PagePr
           evaluadas={entregas.filter((e) => e.estado !== "sin_entregar" && e.resultados.length > 0).length}
           entregas={reevaluables.map((e) => ({ matricula: e.matricula, nombre: nombre(e.matricula), paginas: e.imagenes?.length ?? 0 }))}
           saldo={saldoDe(db, profesor.id)}
+          abiertoInicial={busqueda.reevaluar === "1"}
+          conRubricaAnterior={
+            actividad.rubricaEditadaEn
+              ? entregas.filter((e) => e.estado !== "sin_entregar" && e.resultados.length > 0 && (e.evaluadaEn ?? "") < actividad.rubricaEditadaEn!).length
+              : 0
+          }
         />
       )}
 

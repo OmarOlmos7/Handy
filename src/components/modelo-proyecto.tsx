@@ -33,6 +33,7 @@ export function ModeloProyecto({
   alumnos,
   evaluadoresIniciales,
   grupoId,
+  evaluadasPorEtapa = {},
 }: {
   proyectoId: string;
   inicial: { titulo: string; descripcion: string; etapas: EtapaProyecto[]; equipos: EquipoProyecto[] };
@@ -40,6 +41,8 @@ export function ModeloProyecto({
   /** El dueño primero. */
   evaluadoresIniciales: Evaluador[];
   grupoId: string;
+  /** Evaluaciones terminadas por etapa: al reeditar su rúbrica se avisa qué pasa con ellas. */
+  evaluadasPorEtapa?: Record<string, number>;
 }) {
   const { t } = useTextos();
   const tp = t.proyecto;
@@ -317,6 +320,9 @@ export function ModeloProyecto({
                       {generando === e.id ? tm.generando : tm.generar}
                     </Boton>
                   </div>
+                  {(evaluadasPorEtapa[e.id] ?? 0) > 0 && (
+                    <p className="mt-2 rounded-lg bg-aviso-suave p-2 text-xs text-aviso">{formato(tm.avisoEvaluadas, { n: evaluadasPorEtapa[e.id] })}</p>
+                  )}
                   {errorIA[e.id] && <p className="mt-2 rounded-lg bg-error-suave p-2 text-sm text-error">{errorIA[e.id]}</p>}
                   {e.criterios.length > 0 && (
                     <ol className="mt-3 space-y-3">

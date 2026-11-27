@@ -97,6 +97,7 @@ const proyecto: typeof es = {
     guardado: "模型已保存。",
     borrar: "删除项目",
     confirmarBorrar: "将删除项目及其成果和评价，且无法撤销。继续吗？",
+    avisoEvaluadas: "此阶段已有 {n} 份完成的评价。你可以重新编辑其评分标准：保存后，成绩会按新的百分比重新计算。如果新增要素，每位评价者都需要为其评分，评价才会重新计入。",
   },
   errores: {
     titulo: "请填写项目名称。",

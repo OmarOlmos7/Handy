@@ -31,6 +31,9 @@ export default async function ModeloDelProyecto({ params }: PageProps<"/profesor
         inicial={{ titulo: proyecto.titulo, descripcion: proyecto.descripcion, etapas: proyecto.etapas, equipos: proyecto.equipos }}
         alumnos={grupo.alumnos.filter((a, i) => grupo.alumnos.findIndex((x) => x.matricula === a.matricula) === i).map((a) => ({ matricula: a.matricula, nombre: a.nombre }))}
         evaluadoresIniciales={evaluadoresConNombre(db, proyecto)}
+        evaluadasPorEtapa={Object.fromEntries(
+          proyecto.etapas.map((e) => [e.id, (db.evaluacionesProyecto ?? []).filter((x) => x.proyectoId === proyecto.id && x.etapaId === e.id && x.terminada).length]),
+        )}
       />
     </>
   );

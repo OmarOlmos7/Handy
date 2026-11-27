@@ -4,7 +4,7 @@ import { ElegirPuntaje } from "@/components/elegir-puntaje";
 import { PropuestaEvaluacion } from "@/components/propuesta-evaluacion";
 import { RubricaEditor } from "@/components/rubrica-editor";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
-import { actividadDe, grupoDe } from "@/lib/almacen";
+import { actividadDe, entregasDe, grupoDe } from "@/lib/almacen";
 import { datosProfesor } from "@/lib/sesion";
 import { textos } from "@/lib/i18n/servidor";
 import { listaParaRubrica } from "@/lib/modalidad";
@@ -21,6 +21,8 @@ export default async function Rubrica({ params }: PageProps<"/profesor/actividad
   // La rúbrica existe cuando los reactivos ya tienen respuesta (los generados en el paso 1 llegan sin
   // ella) o cuando la actividad no requiere solución.
   const conSolucion = listaParaRubrica(actividad);
+  const recibidas = entregasDe(db, id).filter((e) => e.estado !== "sin_entregar");
+  const evaluadas = recibidas.filter((e) => e.resultados.length > 0).length;
 
   return (
     <>
@@ -56,7 +58,17 @@ export default async function Rubrica({ params }: PageProps<"/profesor/actividad
           <div className="space-y-6">
             <ElegirPuntaje actividadId={id} sinPuntajeInicial={!!actividad.sinPuntaje} />
             <PropuestaEvaluacion actividad={actividad} />
-            <RubricaEditor actividadId={id} reactivosIniciales={actividad.reactivos} confirmadaInicial={!!actividad.rubricaConfirmada} sinPuntaje={!!actividad.sinPuntaje} />
+            <RubricaEditor
+              actividadId={id}
+              reactivosIniciales={actividad.reactivos}
+              confirmadaInicial={!!actividad.rubricaConfirmada}
+              sinPuntaje={!!actividad.sinPuntaje}
+              criteriosIniciales={actividad.criterios ?? []}
+              recomendacionesIniciales={actividad.recomendaciones ?? []}
+              instruccionesIniciales={actividad.instrucciones ?? ""}
+              evaluadas={evaluadas}
+              conEntregas={recibidas.length > 0}
+            />
           </div>
         )}
       </ConFlujo>
