@@ -2,13 +2,15 @@
 
 // Previsualizador del material de una actividad de contenido y de la evidencia digital del alumno:
 // PDF e imágenes se ven tal cual, audio y video con su reproductor, y Word, Excel y PowerPoint con
-// su texto (párrafos, hojas o diapositivas) leído en el servidor, sin enviarlos a servicios externos.
+// su formato original (el servidor los convierte a PDF con LibreOffice, sin enviarlos a servicios
+// externos). Si la conversión no está disponible, se muestra su texto (párrafos, hojas o diapositivas).
 import { useEffect, useMemo, useState } from "react";
 import { ICONO_CLASE, claseDeArchivo, tamanoLegible } from "@/lib/contenido";
 import { formato } from "@/lib/i18n/idiomas";
 import type { ClaseArchivo } from "@/lib/tipos";
 import type { VistaArchivo as DatosVista } from "@/lib/vista-archivo";
 import { useTextos } from "./proveedor-textos";
+import { VisorPdf } from "./visor-pdf";
 
 /** Archivo guardado (ruta en el servidor) o recién elegido en el navegador. */
 export type ArchivoVisor = { nombre: string; clase: ClaseArchivo; bytes?: number } & ({ ruta: string } | { archivo: File });
@@ -20,22 +22,83 @@ export function archivoDeRuta(ruta: string, nombre?: string): ArchivoVisor | und
 
 const esOffice = (c: ClaseArchivo) => c === "word" || c === "excel" || c === "ppt";
 
+/** Pide al servidor la vista de un documento de Office: guardado (GET) o recién elegido (POST). */
+function pedirVista(api: "vista" | "vista-pdf", archivo: ArchivoVisor) {
+  if ("ruta" in archivo) return fetch(`/api/${api}/${archivo.ruta}`);
+  const datos = new FormData();
+  datos.set("archivo", archivo.archivo);
+  return fetch(`/api/${api}/subido`, { method: "POST", body: datos });
+}
+
+/** Documento de Office con su formato original (PDF hecho en el servidor) o, si no se puede, solo su texto. */
 function VistaOffice({ archivo }: { archivo: ArchivoVisor }) {
+  const tv = useTextos().t.contenido.visor;
+  const [pdf, setPdf] = useState<{ blob: Blob; url: string } | null>(null);
+  const [modo, setModo] = useState<"cargando" | "pdf" | "texto">("cargando");
+  useEffect(() => {
+    let vigente = true;
+    let url: string | undefined;
+    pedirVista("vista-pdf", archivo)
+      .then(async (r) => {
+        if (!r.ok || !r.headers.get("Content-Type")?.includes("pdf")) throw new Error();
+        const blob = await r.blob();
+        if (!vigente) return;
+        url = URL.createObjectURL(blob);
+        setPdf({ blob, url });
+        setModo("pdf");
+      })
+      .catch(() => vigente && setModo("texto"));
+    return () => {
+      vigente = false;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [archivo]);
+
+  if (modo === "cargando") {
+    return (
+      <div className="flex h-[40vh] flex-col items-center justify-center gap-3 bg-slate-50 text-sm text-slate-500" role="status">
+        <span className="size-6 animate-spin rounded-full border-2 border-slate-300 border-t-tinta-600" aria-hidden />
+        {tv.preparando}
+      </div>
+    );
+  }
+  const alternar = pdf && (
+    <div className="flex flex-wrap items-center justify-end gap-3 border-b border-slate-200 bg-slate-50 px-3 py-1.5 text-xs">
+      {modo === "pdf" && (
+        <a href={pdf.url} target="_blank" rel="noopener" className="font-medium text-tinta-700 hover:underline">
+          {tv.abrirPdf}
+        </a>
+      )}
+      <button type="button" onClick={() => setModo(modo === "pdf" ? "texto" : "pdf")} className="font-medium text-tinta-700 hover:underline">
+        {modo === "pdf" ? tv.verTexto : tv.verFormato}
+      </button>
+    </div>
+  );
+  if (modo === "pdf" && pdf) {
+    return (
+      <div>
+        {alternar}
+        <VisorPdf datos={pdf.blob} titulo={archivo.nombre} onError={() => setModo("texto")} />
+      </div>
+    );
+  }
+  return (
+    <div>
+      {alternar}
+      <VistaTexto archivo={archivo} />
+    </div>
+  );
+}
+
+/** Solo el texto del documento (párrafos, hojas o diapositivas), leído en el servidor. */
+function VistaTexto({ archivo }: { archivo: ArchivoVisor }) {
   const tv = useTextos().t.contenido.visor;
   const [vista, setVista] = useState<DatosVista | null>(null);
   const [error, setError] = useState(false);
   const [hoja, setHoja] = useState(0);
   useEffect(() => {
     let vigente = true;
-    const pedir =
-      "ruta" in archivo
-        ? fetch(`/api/vista/${archivo.ruta}`)
-        : (() => {
-            const datos = new FormData();
-            datos.set("archivo", archivo.archivo);
-            return fetch("/api/vista/subido", { method: "POST", body: datos });
-          })();
-    pedir
+    pedirVista("vista", archivo)
       .then(async (r) => {
         if (!r.ok) throw new Error();
         const v = (await r.json()) as DatosVista;
