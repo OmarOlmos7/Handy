@@ -43,7 +43,7 @@ export default async function AsesoriasCursoProfesor({ params, searchParams }: P
         titulo={`🙋 ${ta.meta} · ${grupo.materia} · ${grupo.nombre}`}
         subtitulo={tc.subtituloProfesor}
         acciones={
-          <BotonLink href={`/profesor/agenda?curso=${grupo.id}`}>
+          <BotonLink href={`/profesor/agenda?vista=editar&curso=${grupo.id}`}>
             <IconoCalendario /> {ta.profesor.abrirAgenda}
           </BotonLink>
         }

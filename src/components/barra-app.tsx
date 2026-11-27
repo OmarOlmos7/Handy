@@ -16,7 +16,8 @@ export function BarraApp({
   textoConfiguracion = "Configuración",
   logo,
 }: {
-  enlaces: { href: string; texto: string; exacto?: boolean }[];
+  /** Enlaces del menú; `destacado` lo pinta como botón azul (con su ícono en `icono`). */
+  enlaces: { href: string; texto: string; exacto?: boolean; destacado?: boolean; icono?: string }[];
   /** Nombre, tipo de perfil (va debajo del nombre) y un dato extra, como el correo. */
   usuario: { nombre: string; rol: string; tipo?: string };
   extra?: React.ReactNode;
@@ -85,8 +86,19 @@ export function BarraApp({
                 <Link
                   key={e.href}
                   href={e.href}
-                  className={`whitespace-nowrap rounded-lg px-3 py-1.5 ${activo ? "bg-tinta-50 font-medium text-tinta-700" : "text-slate-600 hover:bg-slate-100"}`}
+                  className={`whitespace-nowrap rounded-lg px-3 py-1.5 ${
+                    e.destacado
+                      ? `bg-tinta-600 font-medium text-white shadow-sm hover:bg-tinta-700 ${activo ? "ring-2 ring-tinta-300" : ""}`
+                      : activo
+                        ? "bg-tinta-50 font-medium text-tinta-700"
+                        : "text-slate-600 hover:bg-slate-100"
+                  }`}
                 >
+                  {e.icono && (
+                    <span aria-hidden className="mr-1">
+                      {e.icono}
+                    </span>
+                  )}
                   {e.texto}
                 </Link>
               );

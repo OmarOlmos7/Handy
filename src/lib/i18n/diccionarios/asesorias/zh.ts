@@ -97,6 +97,7 @@ const asesorias: typeof es = {
     titulo: "日历",
     subtituloAlumno: "你的课程、共同活动、答疑和提交截止。可按课程筛选并切换到月视图。",
     subtituloProfesor: "所有课程的安排都在一个日历里。可按课程筛选并切换到月视图。",
+    vistaDia: "日",
     vistaSemana: "周",
     vistaMes: "月",
     filtro: "课程",

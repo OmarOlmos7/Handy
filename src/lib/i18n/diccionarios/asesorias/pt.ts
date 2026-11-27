@@ -98,6 +98,7 @@ const asesorias: typeof es = {
     titulo: "Calendário",
     subtituloAlumno: "Suas aulas, atividades comuns, atendimentos e entregas. Filtre por turma e mude para a visão do mês.",
     subtituloProfesor: "Tudo das suas turmas em um só calendário. Filtre por turma e mude para a visão do mês.",
+    vistaDia: "Dia",
     vistaSemana: "Semana",
     vistaMes: "Mês",
     filtro: "Turma",

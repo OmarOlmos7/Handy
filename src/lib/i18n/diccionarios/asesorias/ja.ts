@@ -98,6 +98,7 @@ const asesorias: typeof es = {
     titulo: "カレンダー",
     subtituloAlumno: "授業、共通の予定、面談、提出締切。コースで絞り込み、月表示に切り替えられます。",
     subtituloProfesor: "すべてのコースの予定を1つのカレンダーに。コースで絞り込み、月表示に切り替えられます。",
+    vistaDia: "日",
     vistaSemana: "週",
     vistaMes: "月",
     filtro: "コース",

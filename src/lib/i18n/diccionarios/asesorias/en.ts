@@ -98,6 +98,7 @@ const asesorias: typeof es = {
     titulo: "Calendar",
     subtituloAlumno: "Your classes, shared activities, office hours and deadlines. Filter by class and switch to month view.",
     subtituloProfesor: "Everything from your classes in one calendar. Filter by class and switch to month view.",
+    vistaDia: "Day",
     vistaSemana: "Week",
     vistaMes: "Month",
     filtro: "Class",

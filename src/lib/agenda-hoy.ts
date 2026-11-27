@@ -1,6 +1,6 @@
 // Fechas de entrega en el calendario y el resumen "Hoy" (lo que toca hoy, con hora) para el profesor
 // y el alumno. Sin nada del servidor.
-import { FIN_DIA, FRANJAS, INICIO_DIA, MINUTOS_FRANJA, activa, ahoraEnMexico, asuetoDeAgenda, bloqueEn, fechasSemana, lunesDe, sumarDias, type AgendaConAsuetos } from "./asesorias";
+import { FIN_DIA, FRANJAS, INICIO_DIA, MINUTOS_FRANJA, activa, ahoraEnMexico, asuetoDeAgenda, bloqueEn, diaSemana, fechasSemana, lunesDe, sumarDias, type AgendaConAsuetos } from "./asesorias";
 import type { Actividad, Asesoria, BloqueAgenda, Grupo, TipoBloque } from "./tipos";
 
 /** Franja de 30 min que queda justo antes del cierre de entrega (dentro de 7:00 a 18:00). */
@@ -194,4 +194,11 @@ export function semanasDelMes(fecha: string): string[][] {
 export function mesVecino(fecha: string, paso: number): string {
   const d = new Date(Date.UTC(Number(fecha.slice(0, 4)), Number(fecha.slice(5, 7)) - 1 + paso, 1));
   return d.toISOString().slice(0, 10);
+}
+
+/** Día hábil (lunes a viernes) siguiente o anterior; un sábado o domingo pasa al lunes siguiente. */
+export function diaHabil(fecha: string, paso: -1 | 0 | 1 = 0): string {
+  let f = paso === 0 ? fecha : sumarDias(fecha, paso);
+  while (diaSemana(f) >= 6) f = sumarDias(f, paso === -1 ? -1 : 1);
+  return f;
 }

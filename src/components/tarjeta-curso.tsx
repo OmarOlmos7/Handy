@@ -119,7 +119,7 @@ export function TarjetaCurso({
 
   return (
     <div
-      className={`relative flex min-h-[180px] flex-col overflow-visible rounded-2xl bg-white p-5 pt-6 shadow-sm ring-1 ring-slate-200 transition ${
+      className={`relative flex min-h-[180px] min-w-0 flex-col overflow-visible rounded-2xl bg-white p-5 pt-6 shadow-sm ring-1 ring-slate-200 transition ${
         editando ? "" : "hover:-translate-y-0.5 hover:shadow-md hover:ring-tinta-300"
       } ${pendiente ? "opacity-60" : ""}`}
     >
@@ -190,7 +190,8 @@ export function TarjetaCurso({
           )}
         </dl>
         {!editando && (
-          <div className="ml-auto flex gap-1">
+          // Fila propia a lo ancho de la tarjeta: los íconos nunca se salen aunque la tarjeta sea angosta.
+          <div className="relative z-10 -mx-1 flex w-full flex-wrap items-center justify-between gap-1 border-t border-slate-100 pt-2">
             <SobreAvisos href={`/profesor/grupos/${id}/avisos`} sinLeer={avisosSinLeer} />
             <BotonIcono etiqueta={tc.editar} onClick={() => setEditando(true)} disabled={pendiente}>
               <IconoLapiz />

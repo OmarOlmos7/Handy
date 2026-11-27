@@ -30,7 +30,7 @@ export default async function LayoutProfesor({ children }: LayoutProps<"/profeso
           { href: "/profesor/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos },
           { href: "/profesor/actividades/nueva", texto: t.barra.nuevaActividad },
           { href: "/profesor/grupos/nuevo", texto: t.barra.nuevoCurso },
-          { href: "/profesor/asignaturas", texto: t.barra.asignaturas },
+          { href: "/profesor/asignaturas", texto: t.barra.asignaturas, destacado: true, icono: "📚" },
           { href: "/profesor/creditos", texto: t.barra.creditos },
           ...(esAdmin(profesor.correo) ? [{ href: "/admin", texto: t.barra.administracion }] : []),
         ]}

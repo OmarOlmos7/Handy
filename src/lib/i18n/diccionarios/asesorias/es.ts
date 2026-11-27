@@ -96,6 +96,7 @@ const asesorias = {
     titulo: "Calendario",
     subtituloAlumno: "Tus clases, actividades comunes, asesorías y entregas. Filtra por curso y cambia a vista de mes.",
     subtituloProfesor: "Todo lo de tus cursos en un solo calendario. Filtra por curso y cambia a vista de mes.",
+    vistaDia: "Día",
     vistaSemana: "Semana",
     vistaMes: "Mes",
     filtro: "Curso",
