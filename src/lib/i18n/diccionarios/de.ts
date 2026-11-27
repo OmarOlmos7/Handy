@@ -23,6 +23,7 @@ const de: Diccionario = {
     creditos: "{n} Credits",
     ivaIncluido: "inkl. MwSt.",
     ubicacionIp: "IP-Standort: DB-IP",
+    fuenteClima: "Wetter: MET Norway",
   },
   meta: {
     titulo: "iEureka-Grader · KI-Korrektur für gedruckte Aufgaben",
@@ -40,6 +41,15 @@ const de: Diccionario = {
     avisos: "Mitteilungen",
     alumno: "Schüler",
     sinSesion: "Nicht angemeldet",
+    clima: {
+      soleado: "Sonnig",
+      despejado: "Klar",
+      medioNublado: "Teilweise bewölkt",
+      nublado: "Bewölkt",
+      lluvia: "Regen",
+      tormenta: "Gewitter",
+      fuente: "Wetter: MET Norway (met.no) · Ungefährer IP-Standort: DB-IP",
+    },
     tipos: { alumno: "Schüler/in", profesor: "Lehrkraft", administrador: "Administrator" },
   },
   inicio: {

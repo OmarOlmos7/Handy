@@ -213,6 +213,10 @@ export default async function Inicio() {
           <a href="https://db-ip.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
             {t.comun.ubicacionIp}
           </a>
+          {" · "}
+          <a href="https://api.met.no" target="_blank" rel="noopener noreferrer" className="hover:underline">
+            {t.comun.fuenteClima}
+          </a>
         </p>
       </footer>
     </div>

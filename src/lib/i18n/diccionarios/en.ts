@@ -23,6 +23,7 @@ const en: Diccionario = {
     creditos: "{n} credits",
     ivaIncluido: "VAT included",
     ubicacionIp: "IP location: DB-IP",
+    fuenteClima: "Weather: MET Norway",
   },
   meta: {
     titulo: "iEureka-Grader · AI grading for printed assignments",
@@ -40,6 +41,15 @@ const en: Diccionario = {
     avisos: "Messages",
     alumno: "Student",
     sinSesion: "Not signed in",
+    clima: {
+      soleado: "Sunny",
+      despejado: "Clear",
+      medioNublado: "Partly cloudy",
+      nublado: "Cloudy",
+      lluvia: "Rain",
+      tormenta: "Thunderstorm",
+      fuente: "Weather: MET Norway (met.no) · Approximate IP location: DB-IP",
+    },
     tipos: { alumno: "Student", profesor: "Teacher", administrador: "Administrator" },
   },
   inicio: {

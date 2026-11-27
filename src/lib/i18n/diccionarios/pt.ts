@@ -23,6 +23,7 @@ const pt: Diccionario = {
     creditos: "{n} créditos",
     ivaIncluido: "impostos incluídos",
     ubicacionIp: "Localização por IP: DB-IP",
+    fuenteClima: "Clima: MET Norway",
   },
   meta: {
     titulo: "iEureka-Grader · Correção de atividades impressas com IA",
@@ -40,6 +41,15 @@ const pt: Diccionario = {
     avisos: "Avisos",
     alumno: "Aluno",
     sinSesion: "Sem sessão",
+    clima: {
+      soleado: "Ensolarado",
+      despejado: "Céu limpo",
+      medioNublado: "Parcialmente nublado",
+      nublado: "Nublado",
+      lluvia: "Chuva",
+      tormenta: "Tempestade",
+      fuente: "Clima: MET Norway (met.no) · Localização aproximada por IP: DB-IP",
+    },
     tipos: { alumno: "Aluno", profesor: "Professor", administrador: "Administrador" },
   },
   inicio: {

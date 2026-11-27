@@ -23,6 +23,7 @@ const ja: Diccionario = {
     creditos: "{n} クレジット",
     ivaIncluido: "税込",
     ubicacionIp: "IP位置情報：DB-IP",
+    fuenteClima: "天気：MET Norway",
   },
   meta: {
     titulo: "iEureka-Grader · 紙の課題をAIで採点",
@@ -40,6 +41,15 @@ const ja: Diccionario = {
     avisos: "お知らせ",
     alumno: "生徒",
     sinSesion: "未ログイン",
+    clima: {
+      soleado: "晴れ",
+      despejado: "快晴",
+      medioNublado: "晴れ時々曇り",
+      nublado: "曇り",
+      lluvia: "雨",
+      tormenta: "雷雨",
+      fuente: "天気：MET Norway（met.no）・IPによるおおよその位置：DB-IP",
+    },
     tipos: { alumno: "生徒", profesor: "先生", administrador: "管理者" },
   },
   inicio: {
