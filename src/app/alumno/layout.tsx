@@ -12,6 +12,8 @@ export default async function LayoutAlumno({ children }: LayoutProps<"/alumno">)
         enlaces={[{ href: "/alumno", texto: t.barra.misActividades }]}
         usuario={alumno ? { nombre: alumno.nombre, tipo: t.barra.tipos[alumno.tipo], rol: alumno.correo } : { nombre: t.barra.alumno, rol: t.barra.sinSesion }}
         idioma={{ actual: idioma, etiqueta: t.comun.idioma }}
+        configuracion={alumno ? "/alumno/configuracion" : undefined}
+        textoConfiguracion={t.ajustesAlumno.titulo}
         extra={
           alumno && (
             <form action={salirAlumno}>

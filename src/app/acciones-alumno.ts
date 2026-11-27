@@ -1,9 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { borrarCarpeta, modificar } from "@/lib/almacen";
 import { bajaAlumno } from "@/lib/alumnos-grupo";
 import { COLORES } from "@/lib/colores";
+import { hashContrasena, verificarContrasena } from "@/lib/cuentas";
+import { LARGO_MINIMO_CLAVE } from "@/lib/cuentas-alumno";
 import { alumnoActual } from "@/lib/sesion";
 
 /** Color de la tarjeta de un curso en el portal del alumno. Solo cambia su propia vista. */
@@ -71,4 +74,38 @@ export async function salirDelCursoAlumno(grupoId: string) {
   for (const a of archivos) borrarCarpeta(a);
   revalidatePath("/alumno", "layout");
   revalidatePath("/profesor", "layout");
+}
+
+/** Vuelve a Ajustes con el aviso (clave de ajustesAlumno.avisos del diccionario). */
+function volverAjustes(clave: "ok" | "error", texto: string): never {
+  redirect(`/alumno/configuracion?${clave}=${encodeURIComponent(texto)}#cuenta`);
+}
+
+/** Ajustes del alumno: cambia su nombre y, si la escribió, su clave de acceso (pide la actual). */
+export async function guardarCuentaAlumno(form: FormData) {
+  const alumno = await alumnoActual();
+  if (!alumno) redirect("/alumno");
+  const nombre = String(form.get("nombre") ?? "").replace(/\s+/g, " ").trim().slice(0, 120);
+  const actual = String(form.get("actual") ?? "");
+  const nueva = String(form.get("nueva") ?? "");
+  const confirmar = String(form.get("confirmar") ?? "");
+  if (nombre.length < 3) volverAjustes("error", "escribeNombre");
+  if (nueva || confirmar) {
+    if (nueva.length < LARGO_MINIMO_CLAVE) volverAjustes("error", "claveCorta");
+    if (nueva !== confirmar) volverAjustes("error", "noCoinciden");
+  }
+  const hashNueva = nueva ? hashContrasena(nueva) : undefined;
+  const resultado = modificar((db) => {
+    const cuenta = db.cuentasAlumno.find((c) => c.id === alumno.id);
+    if (!cuenta) return "cuentaNoExiste";
+    if (hashNueva) {
+      if (!verificarContrasena(actual, cuenta.contrasena)) return "actualIncorrecta";
+      cuenta.contrasena = hashNueva;
+    }
+    cuenta.nombre = nombre;
+    return undefined;
+  });
+  if (resultado) volverAjustes("error", resultado);
+  revalidatePath("/alumno", "layout");
+  volverAjustes("ok", hashNueva ? "nombreYClave" : "nombreGuardado");
 }

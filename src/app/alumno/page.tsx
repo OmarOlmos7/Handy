@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { formato } from "@/lib/i18n/idiomas";
 import { CompaneroDelAlumno } from "@/components/companero-servidor";
 import { InstalarApp } from "@/components/instalar-app";
 import { BotonLink, Encabezado, colorCalificacion } from "@/components/ui";
@@ -123,36 +125,12 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
             ))}
           </div>
           {tarjetasArchivadas.length > 0 && (
-            <details id="archivados" className="group mt-8 overflow-visible rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-              <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 rounded-xl px-5 py-3.5 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
-                <span aria-hidden className="text-slate-400 transition group-open:rotate-90">▸</span>
-                <span className="text-xl" aria-hidden>
-                  🗄️
-                </span>
-                <h2 className="text-base font-semibold text-slate-900">{ta.alumno.titulo}</h2>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{tarjetasArchivadas.length}</span>
-              </summary>
-              <div className="border-t border-slate-100 p-4">
-                <p className="mb-3 text-sm text-slate-500">{ta.alumno.texto}</p>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {tarjetasArchivadas.map(({ grupo, color: c, resumen }) => (
-                    <TarjetaCursoAlumno
-                      key={grupo.id}
-                      id={grupo.id}
-                      materia={grupo.materia}
-                      nombre={grupo.nombre}
-                      ciclo={grupo.ciclo}
-                      color={c}
-                      actividades={resumen.actividades}
-                      porEntregar={resumen.porEntregar}
-                      promedio={resumen.promedio === null ? undefined : num(resumen.promedio)}
-                      colorPromedio={resumen.promedio === null ? undefined : colorCalificacion(resumen.promedio, 100)}
-                      archivado
-                    />
-                  ))}
-                </div>
-              </div>
-            </details>
+            <p className="mt-6 text-sm">
+              {/* Los archivados se ven y se restauran en Ajustes (engrane). */}
+              <Link href="/alumno/configuracion#archivados" className="inline-flex items-center gap-1.5 text-slate-500 hover:text-tinta-700 hover:underline">
+                🗄️ {tarjetasArchivadas.length === 1 ? ta.verArchivados1 : formato(ta.verArchivadosN, { n: tarjetasArchivadas.length })} →
+              </Link>
+            </p>
           )}
         </>
       )}
