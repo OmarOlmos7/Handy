@@ -234,6 +234,13 @@ const proyecto: typeof es = {
     notaProfesor: "Avancement du groupe : élèves ou équipes dont toutes les évaluations sont terminées. Une étape clôturée compte comme terminée.",
     notaAlumno: "Chaque étape devient bleue lorsqu’elle est clôturée avec ta note.",
   },
+  grupo: {
+    boton: "Projet",
+    titulo: "Projets du groupe",
+    subtitulo: "Activités par étapes des projets de ce groupe.",
+    sinProyectos: "Ce groupe n’a pas encore de projet. Crée-le avec « + Nouvelle activité » et le type Projet.",
+    abrir: "Voir l’évaluation",
+  },
 };
 
 export default proyecto;

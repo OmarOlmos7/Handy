@@ -234,6 +234,13 @@ const proyecto: typeof es = {
     notaProfesor: "Avanço do grupo: alunos ou equipes com todas as avaliações concluídas. Uma etapa encerrada conta como concluída.",
     notaAlumno: "Cada etapa fica azul quando é encerrada com a sua nota.",
   },
+  grupo: {
+    boton: "Projeto",
+    titulo: "Projetos do grupo",
+    subtitulo: "Atividades por etapas dos projetos deste grupo.",
+    sinProyectos: "Este grupo ainda não tem projetos. Crie um com “+ Nova atividade” e o tipo Projeto.",
+    abrir: "Ver avaliação",
+  },
 };
 
 export default proyecto;

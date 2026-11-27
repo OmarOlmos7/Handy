@@ -233,6 +233,13 @@ const proyecto: typeof es = {
     notaProfesor: "グループの進捗：すべての評価が終わった生徒またはチームの割合。締め切ったステージは完了として数えます。",
     notaAlumno: "各ステージは成績つきで締め切られると青くなります。",
   },
+  grupo: {
+    boton: "プロジェクト",
+    titulo: "グループのプロジェクト",
+    subtitulo: "このグループのプロジェクトのステージ別課題。",
+    sinProyectos: "このグループにはまだプロジェクトがありません。「+ 新しい課題」でプロジェクトの種類を選んで作成してください。",
+    abrir: "評価を開く",
+  },
 };
 
 export default proyecto;

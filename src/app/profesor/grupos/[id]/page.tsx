@@ -5,9 +5,12 @@ import { notFound } from "next/navigation";
 import { CodigoCurso } from "@/components/codigo-curso";
 import { FilaActividad } from "@/components/fila-actividad";
 import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
+import { ResumenCategoria } from "@/components/resumen-categoria";
 import { BotonLink, Encabezado, Tarjeta, colorCalificacion } from "@/components/ui";
 import { entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
+import { avanceActividadGrupo, resumenActividadesGrupo } from "@/lib/avance-actividades-grupo";
 import { agruparPorEtiqueta } from "@/lib/colores";
+import { iconoTipoActividad } from "@/lib/iconos-tipo";
 import { reporteGrupo } from "@/lib/estadisticas";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
@@ -32,6 +35,7 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
   const proyectos = (db.proyectos ?? []).filter((p) => p.grupoId === id);
   const tpr = t.proyecto;
   const alumnos = new Set(grupo.alumnos.map((a) => a.matricula)).size;
+  const ahora = new Date();
   // Etiquetas propias del profesor en todos sus cursos, para sugerirlas.
   const etiquetasCurso = [...new Set(db.actividades.map((a) => a.etiqueta?.trim()).filter((e): e is string => !!e))];
 
@@ -59,9 +63,14 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
                 <IconoMapa /> {tc.avanceTemario}
               </BotonLink>
             </div>
-            <BotonLink className="w-full sm:w-auto sm:self-center" href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>
-              {tc.nuevaActividad}
-            </BotonLink>
+            {/* Proyecto arriba de Nueva actividad. */}
+            <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
+              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/proyectos`}>
+                <span aria-hidden>🏆</span> {tpr.grupo.boton}
+                {proyectos.length > 0 && <span className="rounded-full bg-slate-100 px-1.5 text-xs text-slate-600">{proyectos.length}</span>}
+              </BotonLink>
+              <BotonLink href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>{tc.nuevaActividad}</BotonLink>
+            </div>
           </>
         }
       />
@@ -116,45 +125,58 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           {tc.sinActividadesDespues}
         </Tarjeta>
       ) : (
-        <div className="space-y-6">
-          {agruparPorEtiqueta(actividades).map(({ etiqueta, items }) => (
-            <section key={etiqueta ?? "sin-etiqueta"}>
-              <h2 className="mb-2 flex items-baseline gap-2 text-base font-semibold text-slate-800">
-                {etiqueta ?? tc.sinEtiqueta}
-                <span className="text-sm font-normal text-slate-500">
-                  {formato(items.length === 1 ? c.actividad1 : c.actividadN, { n: items.length })}
-                </span>
-              </h2>
-              <div className="rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                <ul className="divide-y divide-slate-100">
-                  {items.map((a) => {
-                    const entregas = entregasDe(db, a.id);
-                    const rep = reporteGrupo(a, entregas, grupo.alumnos);
-                    return (
-                      <FilaActividad
-                        key={a.id}
-                        id={a.id}
-                        titulo={a.titulo}
-                        fecha={a.fechaAplicacion}
-                        resultadosDesde={a.resultadosDesde}
-                        envioDesde={a.envioDesde}
-                        envioHasta={a.envioHasta}
-                        paginas={a.paginas}
-                        entregas={formato(tc.entregas, { n: rep.entregadas, total: grupo.alumnos.length })}
-                        promedio={rep.entregadas > 0 && conPuntaje(a) ? `${rep.promedio} / ${rep.escala}` : undefined}
-                        colorPromedio={colorCalificacion(rep.promedio, rep.escala)}
-                        estado={estadoActividad(db, a)}
-                        recibidas={entregas.filter((e) => e.estado !== "sin_entregar").length}
-                        color={a.color}
-                        etiqueta={a.etiqueta}
-                        etiquetasCurso={etiquetasCurso}
-                      />
-                    );
-                  })}
-                </ul>
-              </div>
-            </section>
-          ))}
+        <div className="space-y-3">
+          {/* Una sección plegable por tipo de actividad, con su resumen de avance del grupo. */}
+          {agruparPorEtiqueta(actividades).map(({ etiqueta, items }) => {
+            const resumen = resumenActividadesGrupo(items, db.entregas, alumnos, ahora);
+            // Abierta si tiene actividades en proceso (recibiendo entregas o por revisar).
+            const abierta = items.some((a) => avanceActividadGrupo(a, db.entregas, alumnos, ahora) === "en_proceso");
+            return (
+              <details key={etiqueta ?? "sin-etiqueta"} open={abierta} className="group rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-2 rounded-xl px-5 py-3.5 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                  <span aria-hidden className="text-slate-400 transition group-open:rotate-90">
+                    ▸
+                  </span>
+                  <span className="text-xl" aria-hidden>
+                    {etiqueta ? iconoTipoActividad(etiqueta) : "🏷️"}
+                  </span>
+                  <h2 className="text-base font-semibold text-slate-900">{etiqueta ?? tc.sinEtiqueta}</h2>
+                  <ResumenCategoria resumen={resumen} t={t} />
+                </summary>
+                <div className="border-t border-slate-100">
+                  <ul className="divide-y divide-slate-100">
+                    {items.map((a) => {
+                      const entregas = entregasDe(db, a.id);
+                      const rep = reporteGrupo(a, entregas, grupo.alumnos);
+                      return (
+                        <FilaActividad
+                          key={a.id}
+                          id={a.id}
+                          titulo={a.titulo}
+                          fecha={a.fechaAplicacion}
+                          resultadosDesde={a.resultadosDesde}
+                          envioDesde={a.envioDesde}
+                          envioHasta={a.envioHasta}
+                          paginas={a.paginas}
+                          entregas={formato(tc.entregas, {
+                            n: rep.entregadas,
+                            total: grupo.alumnos.length,
+                          })}
+                          promedio={rep.entregadas > 0 && conPuntaje(a) ? `${rep.promedio} / ${rep.escala}` : undefined}
+                          colorPromedio={colorCalificacion(rep.promedio, rep.escala)}
+                          estado={estadoActividad(db, a)}
+                          recibidas={entregas.filter((e) => e.estado !== "sin_entregar").length}
+                          color={a.color}
+                          etiqueta={a.etiqueta}
+                          etiquetasCurso={etiquetasCurso}
+                        />
+                      );
+                    })}
+                  </ul>
+                </div>
+              </details>
+            );
+          })}
         </div>
       )}
     </>

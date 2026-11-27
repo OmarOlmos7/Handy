@@ -240,6 +240,13 @@ const proyecto = {
     notaProfesor: "Avance del grupo: alumnos o equipos con todas sus evaluaciones terminadas. Una etapa cerrada cuenta como completa.",
     notaAlumno: "Cada etapa se pinta de azul al cerrarse con tu calificación.",
   },
+  grupo: {
+    boton: "Proyecto",
+    titulo: "Proyectos del grupo",
+    subtitulo: "Actividades por etapas de los proyectos de este grupo.",
+    sinProyectos: "Este grupo aún no tiene proyectos. Créalo con «+ Nueva actividad» y el tipo Proyecto.",
+    abrir: "Ver evaluación",
+  },
 };
 
 export default proyecto;

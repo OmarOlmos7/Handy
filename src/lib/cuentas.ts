@@ -76,6 +76,7 @@ export function datosDeProfesor(db: BaseDeDatos, profesorId: string): BaseDeDato
   const idsGrupos = new Set(grupos.map((g) => g.id));
   const actividades = db.actividades.filter((a) => idsGrupos.has(a.grupoId));
   const idsActividades = new Set(actividades.map((a) => a.id));
+  const idsProyectos = new Set((db.proyectos ?? []).filter((p) => idsGrupos.has(p.grupoId)).map((p) => p.id));
   return {
     version: db.version,
     profesores: [],
@@ -91,6 +92,8 @@ export function datosDeProfesor(db: BaseDeDatos, profesorId: string): BaseDeDato
     valoraciones: (db.valoraciones ?? []).filter((v) => idsGrupos.has(v.grupoId)),
     licencias: (db.licencias ?? []).filter((l) => idsGrupos.has(l.grupoId)),
     proyectos: (db.proyectos ?? []).filter((p) => idsGrupos.has(p.grupoId)),
+    evaluacionesProyecto: (db.evaluacionesProyecto ?? []).filter((e) => idsProyectos.has(e.proyectoId)),
+    entregasProyecto: (db.entregasProyecto ?? []).filter((e) => idsProyectos.has(e.proyectoId)),
   };
 }
 
