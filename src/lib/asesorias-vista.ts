@@ -1,8 +1,8 @@
 // Asesorías listas para dibujarlas (nombres, fechas legibles y estado), según quién mira. Sin nada
 // del servidor: lo usan las páginas del profesor y del alumno.
-import { bloqueEn, duracionTexto, hora, yaEmpezo, yaPaso } from "./asesorias";
+import { type AgendaConAsuetos, bloqueEn, duracionTexto, hora, yaEmpezo, yaPaso } from "./asesorias";
 import { formato } from "./i18n/idiomas";
-import type { AgendaProfesor, Asesoria, EstadoAsesoria, Grupo } from "./tipos";
+import type { Asesoria, EstadoAsesoria, Grupo } from "./tipos";
 
 export type EstadoVista = EstadoAsesoria | "porRegistrar";
 
@@ -50,7 +50,7 @@ export function fechaCorta(fecha: string, locale: string) {
 
 export function vistaAsesoria(
   a: Asesoria,
-  c: { grupo?: Grupo; locale: string; agenda?: Pick<AgendaProfesor, "bloques">; paraProfesor: boolean },
+  c: { grupo?: Grupo; locale: string; agenda?: AgendaConAsuetos; paraProfesor: boolean },
   ahora: Date = new Date(),
 ): AsesoriaVista {
   const pasada = yaPaso(a, ahora);

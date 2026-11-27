@@ -3,10 +3,12 @@ import { notFound, redirect } from "next/navigation";
 import { AgendaAlumno, MisAsesorias } from "@/components/asesorias";
 import { Encabezado, Tarjeta } from "@/components/ui";
 import { leer } from "@/lib/almacen";
-import { MAX_PENDIENTES_ALUMNO, ahoraEnMexico, asesoriasDelCurso, duracionTexto, fechaValida, fechasSemana, lunesDe, resumenAsesorias, semanaParaAlumno, sumarDias } from "@/lib/asesorias";
+import { entregasEnFechas } from "@/lib/agenda-hoy";
+import { MAX_PENDIENTES_ALUMNO, ahoraEnMexico, asuetoDeAgenda, asesoriasDelCurso, duracionTexto, fechaValida, fechasSemana, lunesDe, resumenAsesorias, semanaParaAlumno, sumarDias } from "@/lib/asesorias";
 import { textoPeriodo, vistaAsesoria } from "@/lib/asesorias-vista";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
+import { actividadesVisibles } from "@/lib/portal-alumno";
 import { alumnoActual } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,6 +40,8 @@ export default async function AsesoriasAlumno({ params, searchParams }: PageProp
   const mias = asesoriasDelCurso(asesorias, grupo.id, enCurso.matricula).map((a) => vistaAsesoria(a, { grupo, locale, paraProfesor: false }, ahora));
   const r = resumenAsesorias(asesorias, grupo, enCurso.matricula, ahora);
   const periodo = textoPeriodo(ta, grupo.inicio, grupo.fin, locale);
+  const asuetos = Object.fromEntries(fechas.flatMap((f) => (asuetoDeAgenda(agenda, f) ? [[f, asuetoDeAgenda(agenda, f)!]] : [])));
+  const entregas = entregasEnFechas(actividadesVisibles(db.actividades, grupo.id, ahora), [grupo], fechas);
   const sinAgenda = !agenda?.bloques.some((b) => b.tipo === "asesoria");
 
   return (
@@ -82,6 +86,8 @@ export default async function AsesoriasAlumno({ params, searchParams }: PageProp
             siguiente={sumarDias(semana, 7)}
             actual={actual}
             sinAgenda={sinAgenda}
+            asuetos={asuetos}
+            entregas={entregas}
           />
           <p className="mt-3 text-xs text-slate-500">{formato(ta.alumno.limite, { n: MAX_PENDIENTES_ALUMNO })}</p>
         </section>

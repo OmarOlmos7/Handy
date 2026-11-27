@@ -3,36 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { guardarAgenda } from "@/app/acciones-asesorias";
-import { DIAS, FRANJAS, MINUTOS_FRANJA, TIPOS_AGENDA, hora, type CeldaAgenda } from "@/lib/asesorias";
+import type { EntregaCalendario } from "@/lib/agenda-hoy";
+import { DIAS, FIN_DIA, FRANJAS, INICIO_DIA, MINUTOS_FRANJA, TIPOS_AGENDA, hora, pintarSemanal, rangosSeEnciman, vigente, type CeldaAgenda } from "@/lib/asesorias";
+import { PAISES_ASUETOS, asuetoEn, paisDeAsuetos } from "@/lib/asuetos";
 import { formato } from "@/lib/i18n/idiomas";
-import type { TipoBloque } from "@/lib/tipos";
+import type { EtiquetaAgenda, TipoBloque } from "@/lib/tipos";
+import { COLOR_BLOQUE, COLOR_ETIQUETA, EMOJI_BLOQUE } from "@/lib/colores-agenda";
 import { useTextos } from "./proveedor-textos";
 import { Boton } from "./ui";
 
-/** Colores de cada tipo de bloque (celda y muestra de la herramienta). */
-export const COLOR_BLOQUE: Record<TipoBloque, string> = {
-  clase: "bg-tinta-100 text-tinta-900",
-  comida: "bg-amber-100 text-amber-800",
-  proyecto: "bg-violet-100 text-violet-800",
-  reunion: "bg-rose-100 text-rose-800",
-  otro: "bg-slate-200 text-slate-700",
-  asesoria: "bg-emerald-100 text-emerald-800",
-  libre: "bg-white text-slate-400",
-};
+const COLORES = Object.keys(COLOR_ETIQUETA);
+export const MAX_ETIQUETAS = 12;
 
-export const EMOJI_BLOQUE: Record<TipoBloque, string> = {
-  clase: "📘",
-  comida: "🍴",
-  proyecto: "🛠️",
-  reunion: "👥",
-  otro: "📌",
-  asesoria: "🙋",
-  libre: "",
-};
-
-type Valor = { tipo: TipoBloque; titulo?: string };
-type Herramienta = TipoBloque | "borrar";
-type Modo = "semanal" | "semana";
+type Valor = { tipo: TipoBloque; titulo?: string; grupoId?: string; etiqueta?: string };
+type Herramienta = TipoBloque | "borrar" | `et:${string}`;
+type Modo = "semana" | "semanal";
 
 export interface CitaAgenda {
   id: string;
@@ -45,17 +30,28 @@ export interface CitaAgenda {
   resaltar: boolean;
 }
 
-const k = (a: string | number, m: number) => `${a}|${m}`;
-
-function aMapa(celdas: CeldaAgenda[], porFecha: boolean) {
-  return new Map(celdas.map((c) => [k(porFecha ? c.fecha! : c.dia!, c.inicio), { tipo: c.tipo, ...(c.titulo ? { titulo: c.titulo } : {}) } as Valor]));
+export interface CursoAgenda {
+  id: string;
+  nombre: string;
+  inicio?: string;
+  fin?: string;
 }
+
+const k = (a: string | number, m: number) => `${a}|${m}`;
+const mismo = (a?: Valor, b?: Valor) => (a && b ? a.tipo === b.tipo && a.titulo === b.titulo && a.grupoId === b.grupoId && a.etiqueta === b.etiqueta : !a && !b);
+const valorDe = (c: Valor): Valor => ({
+  tipo: c.tipo,
+  ...(c.titulo ? { titulo: c.titulo } : {}),
+  ...(c.grupoId ? { grupoId: c.grupoId } : {}),
+  ...(c.etiqueta ? { etiqueta: c.etiqueta } : {}),
+});
 
 /**
  * Editor de la agenda semanal del profesor: lunes a viernes, de 7:00 a 18:00, en franjas de 30 min.
- * Se elige qué marcar (clase, comida, proyecto, reunión, otra actividad o asesoría disponible) y se
- * pinta haciendo clic o arrastrando. "Todas las semanas" edita el horario de siempre; "Solo esta
- * semana", los cambios de las fechas que se ven.
+ * Se elige qué marcar (clase, comida, proyecto, reunión, evento, vacaciones, otra actividad, una
+ * etiqueta propia o asesoría disponible) y se pinta haciendo clic o arrastrando. "Solo esta semana"
+ * cambia las fechas que se ven; "Todas las semanas" edita el horario que se repite, entre las fechas
+ * elegidas (por omisión, las del curso). Los asuetos oficiales del país se marcan solos.
  */
 export function AgendaSemanal({
   semana,
@@ -64,7 +60,12 @@ export function AgendaSemanal({
   semanales,
   deLaSemana,
   citas,
+  entregas,
   cursos,
+  cursoInicial,
+  etiquetas: etiquetasIniciales,
+  pais: paisInicial,
+  asuetos: asuetosIniciales,
   rutaBase,
   anterior,
   siguiente,
@@ -76,7 +77,12 @@ export function AgendaSemanal({
   semanales: CeldaAgenda[];
   deLaSemana: CeldaAgenda[];
   citas: CitaAgenda[];
-  cursos: string[];
+  entregas: EntregaCalendario[];
+  cursos: CursoAgenda[];
+  cursoInicial?: string;
+  etiquetas: EtiquetaAgenda[];
+  pais: string;
+  asuetos: boolean;
   /** Ruta de la página con los parámetros que se conservan (termina en "?" o "&"). */
   rutaBase: string;
   anterior: string;
@@ -87,11 +93,21 @@ export function AgendaSemanal({
   const { t, locale } = useTextos();
   const ta = t.asesorias;
   const tp = ta.profesor;
-  const [modo, setModo] = useState<Modo>("semanal");
-  const [herramienta, setHerramienta] = useState<Herramienta>("asesoria");
+  const [modo, setModo] = useState<Modo>("semana");
+  const [herramienta, setHerramienta] = useState<Herramienta>(cursoInicial ? "clase" : "asesoria");
   const [nota, setNota] = useState("");
-  const [sem, setSem] = useState(() => aMapa(semanales, false));
-  const [fec, setFec] = useState(() => aMapa(deLaSemana, true));
+  const curso0 = cursos.find((c) => c.id === cursoInicial);
+  const [grupoId, setGrupoId] = useState(curso0?.id ?? "");
+  const [desde, setDesde] = useState(curso0?.inicio ?? "");
+  const [hasta, setHasta] = useState(curso0?.fin ?? "");
+  const [sem, setSem] = useState<CeldaAgenda[]>(semanales);
+  const [fec, setFec] = useState(() => new Map(deLaSemana.map((c) => [k(c.fecha!, c.inicio), valorDe(c)])));
+  const [etiquetas, setEtiquetas] = useState(etiquetasIniciales);
+  const [pais, setPais] = useState(paisDeAsuetos(paisInicial));
+  const [conAsuetos, setConAsuetos] = useState(asuetosIniciales);
+  const [creando, setCreando] = useState(false);
+  const [nuevoNombre, setNuevoNombre] = useState("");
+  const [nuevoColor, setNuevoColor] = useState(COLORES[0]);
   const [sucio, setSucio] = useState(false);
   const [mensaje, setMensaje] = useState<{ ok: boolean; texto: string } | null>(null);
   const [diaMovil, setDiaMovil] = useState(() => Math.max(0, fechas.indexOf(hoy)));
@@ -116,36 +132,52 @@ export function AgendaSemanal({
     return () => window.removeEventListener("beforeunload", aviso);
   }, [sucio]);
 
+  const nombreCurso = useMemo(() => new Map(cursos.map((c) => [c.id, c.nombre])), [cursos]);
+  const etiquetaDe = useMemo(() => new Map(etiquetas.map((e) => [e.id, e])), [etiquetas]);
+  const asuetoDe = useMemo(() => new Map(fechas.map((f) => [f, conAsuetos ? asuetoEn(pais, f) : undefined])), [fechas, pais, conAsuetos]);
+
+  /** Horario de cada semana tal como vale en la semana que se ve. */
+  const semanalVisible = useMemo(() => {
+    const mapa = new Map<string, Valor>();
+    for (const c of sem) if (c.dia && vigente(c, fechas[c.dia - 1])) mapa.set(k(c.dia, c.inicio), valorDe(c));
+    return mapa;
+  }, [sem, fechas]);
+
+  /** Lo que hay sin los cambios de la semana: el asueto o el horario de cada semana. */
+  function base(fecha: string, dia: number, m: number): Valor | undefined {
+    const asueto = asuetoDe.get(fecha);
+    if (asueto) return { tipo: "asueto", titulo: asueto };
+    return semanalVisible.get(k(dia, m));
+  }
+
   /** Qué se ve en una franja según el modo. */
   function valor(fecha: string, dia: number, m: number): Valor | undefined {
-    const deSemana = sem.get(k(dia, m));
-    if (modo === "semanal") return deSemana;
+    if (modo === "semanal") return semanalVisible.get(k(dia, m));
     const propio = fec.get(k(fecha, m));
     if (propio) return propio.tipo === "libre" ? undefined : propio;
-    return deSemana;
+    return base(fecha, dia, m);
+  }
+
+  function nuevoValor(): Valor | undefined {
+    if (herramienta === "borrar") return undefined;
+    const titulo = nota.trim() || undefined;
+    const tipo: TipoBloque = herramienta.startsWith("et:") ? "personal" : (herramienta as TipoBloque);
+    return valorDe({ tipo, titulo, grupoId: grupoId || undefined, etiqueta: tipo === "personal" ? herramienta.slice(3) : undefined });
   }
 
   function pintarVarias(lista: { fecha: string; dia: number; m: number }[]) {
-    const titulo = nota.trim() || undefined;
+    const nuevo = nuevoValor();
     if (modo === "semanal") {
-      setSem((antes) => {
-        const s = new Map(antes);
-        for (const { dia, m } of lista) {
-          if (herramienta === "borrar") s.delete(k(dia, m));
-          else s.set(k(dia, m), { tipo: herramienta, ...(titulo ? { titulo } : {}) });
-        }
-        return s;
-      });
+      setSem((antes) => lista.reduce((celdas, { dia, m }) => pintarSemanal(celdas, dia, m, { desde, hasta }, nuevo), antes));
     } else {
       setFec((antes) => {
         const f = new Map(antes);
         for (const { fecha, dia, m } of lista) {
-          const base = sem.get(k(dia, m));
-          const nuevo: Valor | undefined = herramienta === "borrar" ? (base ? { tipo: "libre" } : undefined) : { tipo: herramienta, ...(titulo ? { titulo } : {}) };
-          // Si queda igual que el horario de siempre, no hace falta el cambio de la semana.
-          const igual = nuevo && base ? nuevo.tipo === base.tipo && nuevo.titulo === base.titulo : !nuevo && !base;
-          if (!nuevo || igual) f.delete(k(fecha, m));
-          else f.set(k(fecha, m), nuevo);
+          const b = base(fecha, dia, m);
+          const v: Valor | undefined = nuevo ?? (b ? { tipo: "libre" } : undefined);
+          // Si queda igual que lo de siempre, no hace falta el cambio de la semana.
+          if (!v || mismo(v, b)) f.delete(k(fecha, m));
+          else f.set(k(fecha, m), v);
         }
         return f;
       });
@@ -159,17 +191,41 @@ export function AgendaSemanal({
     if (lista.length) pintarVarias(lista);
   }
 
+  function elegirCurso(id: string) {
+    setGrupoId(id);
+    const c = cursos.find((x) => x.id === id);
+    setDesde(c?.inicio ?? "");
+    setHasta(c?.fin ?? "");
+  }
+
+  function crearEtiqueta() {
+    const nombre = nuevoNombre.replace(/\s+/g, " ").trim().slice(0, 30);
+    if (!nombre) return;
+    const id = `e${Date.now().toString(36)}`;
+    setEtiquetas((x) => [...x, { id, nombre, color: nuevoColor }]);
+    setHerramienta(`et:${id}`);
+    setNuevoNombre("");
+    setCreando(false);
+    setSucio(true);
+  }
+
+  function quitarEtiqueta(id: string) {
+    const e = etiquetaDe.get(id);
+    if (!e || !window.confirm(formato(tp.confirmarBorrarEtiqueta, { n: e.nombre }))) return;
+    setEtiquetas((x) => x.filter((y) => y.id !== id));
+    setSem((x) => x.filter((c) => c.etiqueta !== id));
+    setFec((x) => new Map([...x].filter(([, v]) => v.etiqueta !== id)));
+    if (herramienta === `et:${id}`) setHerramienta("asesoria");
+    setSucio(true);
+  }
+
   function guardar() {
-    const semanalesNuevas: CeldaAgenda[] = [...sem].map(([clave, v]) => {
-      const [dia, m] = clave.split("|");
-      return { dia: Number(dia), inicio: Number(m), ...v };
-    });
     const deLaSemanaNuevas: CeldaAgenda[] = [...fec].map(([clave, v]) => {
       const [fecha, m] = clave.split("|");
       return { fecha, inicio: Number(m), ...v };
     });
     iniciar(async () => {
-      const r = await guardarAgenda(semana, semanalesNuevas, deLaSemanaNuevas);
+      const r = await guardarAgenda(semana, sem, deLaSemanaNuevas, { etiquetas, pais, asuetos: conAsuetos });
       if ("error" in r) setMensaje({ ok: false, texto: r.error });
       else {
         setSucio(false);
@@ -190,8 +246,29 @@ export function AgendaSemanal({
     return mapa;
   }, [citas]);
 
+  const entregasEn = useMemo(() => {
+    const mapa = new Map<string, EntregaCalendario[]>();
+    for (const e of entregas) mapa.set(k(e.fecha, e.inicio), [...(mapa.get(k(e.fecha, e.inicio)) ?? []), e]);
+    return mapa;
+  }, [entregas]);
+
   const fechaCorta = (f: string) => new Date(`${f}T12:00:00Z`).toLocaleDateString(locale, { day: "numeric", month: "short", timeZone: "UTC" });
-  const herramientas: Herramienta[] = [...TIPOS_AGENDA, "borrar"];
+  const nombrePais = useMemo(() => {
+    let n: Intl.DisplayNames | undefined;
+    try {
+      n = new Intl.DisplayNames([locale], { type: "region" });
+    } catch {}
+    return (p: string) => n?.of(p) ?? p;
+  }, [locale]);
+
+  const colorDe = (v: Valor) => (v.tipo === "personal" ? (COLOR_ETIQUETA[etiquetaDe.get(v.etiqueta ?? "")?.color ?? ""]?.celda ?? COLOR_BLOQUE.personal) : COLOR_BLOQUE[v.tipo]);
+  const nombreTipo = (v: Valor) => (v.tipo === "personal" ? (etiquetaDe.get(v.etiqueta ?? "")?.nombre ?? ta.tipos.personal) : ta.tipos[v.tipo]);
+  const textoDe = (v: Valor) => v.titulo || (v.grupoId && v.tipo === "clase" ? nombreCurso.get(v.grupoId) : undefined) || nombreTipo(v);
+  const nombreHerramienta = (h: Herramienta) => (h === "borrar" ? tp.borrar : h.startsWith("et:") ? (etiquetaDe.get(h.slice(3))?.nombre ?? "") : ta.tipos[h as TipoBloque]);
+  const emojiHerramienta = (h: Herramienta) => (h === "borrar" ? "⌫" : h.startsWith("et:") ? EMOJI_BLOQUE.personal : EMOJI_BLOQUE[h as TipoBloque]);
+  const fueraDeSemana = modo === "semanal" && !rangosSeEnciman({ desde: desde || undefined, hasta: hasta || undefined }, { desde: fechas[0], hasta: fechas[4] });
+  const chip = "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition";
+  const campo = "mt-1 block rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
 
   return (
     <div className="space-y-4">
@@ -200,7 +277,7 @@ export function AgendaSemanal({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-sm font-medium text-slate-700">{tp.modo}</p>
           <div className="inline-flex rounded-lg bg-slate-100 p-1 text-sm" role="radiogroup" aria-label={tp.modo}>
-            {(["semanal", "semana"] as Modo[]).map((m) => (
+            {(["semana", "semanal"] as Modo[]).map((m) => (
               <button
                 key={m}
                 type="button"
@@ -215,42 +292,141 @@ export function AgendaSemanal({
           </div>
           <p className="text-xs text-slate-500">{modo === "semanal" ? tp.modoSemanalAyuda : tp.modoSemanaAyuda}</p>
         </div>
+
         <p className="mt-3 text-sm font-medium text-slate-700">{tp.herramientas}</p>
         <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={tp.herramientas}>
-          {herramientas.map((h) => (
+          {TIPOS_AGENDA.map((h) => (
             <button
               key={h}
               type="button"
               role="radio"
               aria-checked={herramienta === h}
               onClick={() => setHerramienta(h)}
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition ${
-                h === "borrar" ? "bg-white text-slate-600 ring-slate-300" : `${COLOR_BLOQUE[h]} ring-transparent`
-              } ${herramienta === h ? "ring-2 !ring-tinta-600" : "hover:ring-slate-400"}`}
+              className={`${chip} ${COLOR_BLOQUE[h]} ring-transparent ${herramienta === h ? "ring-2 !ring-tinta-600" : "hover:ring-slate-400"}`}
             >
-              <span aria-hidden>{h === "borrar" ? "⌫" : EMOJI_BLOQUE[h]}</span>
-              {h === "borrar" ? tp.borrar : ta.tipos[h]}
+              <span aria-hidden>{EMOJI_BLOQUE[h]}</span>
+              {ta.tipos[h]}
             </button>
           ))}
+          {etiquetas.map((e) => {
+            const h: Herramienta = `et:${e.id}`;
+            return (
+              <span key={e.id} className="inline-flex items-center">
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked={herramienta === h}
+                  onClick={() => setHerramienta(h)}
+                  className={`${chip} ${COLOR_ETIQUETA[e.color]?.celda ?? COLOR_BLOQUE.personal} ring-transparent ${herramienta === h ? "ring-2 !ring-tinta-600" : "hover:ring-slate-400"}`}
+                >
+                  <span aria-hidden>{EMOJI_BLOQUE.personal}</span>
+                  {e.nombre}
+                </button>
+                {herramienta === h && (
+                  <button
+                    type="button"
+                    onClick={() => quitarEtiqueta(e.id)}
+                    className="ml-0.5 rounded-full px-1.5 text-sm text-slate-400 hover:text-error"
+                    aria-label={`${tp.etiquetaBorrar}: ${e.nombre}`}
+                    title={tp.etiquetaBorrar}
+                  >
+                    ✕
+                  </button>
+                )}
+              </span>
+            );
+          })}
+          {etiquetas.length < MAX_ETIQUETAS && (
+            <button
+              type="button"
+              onClick={() => setCreando((x) => !x)}
+              aria-expanded={creando}
+              className={`${chip} border border-dashed border-slate-400 bg-white text-slate-600 ring-transparent hover:border-tinta-500 hover:text-tinta-700`}
+            >
+              <span aria-hidden>＋</span>
+              {tp.personalizar}
+            </button>
+          )}
+          <button
+            type="button"
+            role="radio"
+            aria-checked={herramienta === "borrar"}
+            onClick={() => setHerramienta("borrar")}
+            className={`${chip} bg-white text-slate-600 ring-slate-300 ${herramienta === "borrar" ? "ring-2 !ring-tinta-600" : "hover:ring-slate-400"}`}
+          >
+            <span aria-hidden>⌫</span>
+            {tp.borrar}
+          </button>
         </div>
-        {herramienta !== "borrar" && (
-          <label className="mt-3 block max-w-sm text-xs font-medium text-slate-500">
-            {tp.nota}
-            <input
-              value={nota}
-              onChange={(e) => setNota(e.target.value)}
-              placeholder={tp.notaAyuda}
-              maxLength={60}
-              list="cursos-agenda"
-              className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100"
-            />
-            <datalist id="cursos-agenda">
-              {cursos.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
-          </label>
+
+        {creando && (
+          <form
+            className="mt-3 flex flex-wrap items-end gap-3 rounded-lg bg-slate-50 px-3 py-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              crearEtiqueta();
+            }}
+          >
+            <label className="text-xs font-medium text-slate-500">
+              {tp.etiquetaNombre}
+              <input autoFocus value={nuevoNombre} onChange={(e) => setNuevoNombre(e.target.value)} maxLength={30} placeholder={tp.etiquetaAyuda} className={`${campo} w-56`} />
+            </label>
+            <fieldset>
+              <legend className="text-xs font-medium text-slate-500">{tp.etiquetaColor}</legend>
+              <div className="mt-1 flex gap-1.5">
+                {COLORES.map((c) => (
+                  <label key={c} className={`flex h-7 w-7 cursor-pointer items-center justify-center rounded-full ring-2 ${nuevoColor === c ? "ring-tinta-600" : "ring-transparent"}`}>
+                    <input type="radio" name="color-etiqueta" className="sr-only" checked={nuevoColor === c} onChange={() => setNuevoColor(c)} aria-label={c} />
+                    <span className={`h-5 w-5 rounded-full ${COLOR_ETIQUETA[c].punto}`} />
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+            <Boton type="submit" className="!px-3 !py-1.5" disabled={!nuevoNombre.trim()}>
+              {tp.etiquetaCrear}
+            </Boton>
+            <Boton type="button" variante="secundario" className="!px-3 !py-1.5" onClick={() => setCreando(false)}>
+              {tp.etiquetaCancelar}
+            </Boton>
+          </form>
         )}
+
+        {herramienta !== "borrar" && (
+          <div className="mt-3 flex flex-wrap items-end gap-3">
+            <label className="text-xs font-medium text-slate-500">
+              {tp.curso}
+              <select value={grupoId} onChange={(e) => elegirCurso(e.target.value)} className={`${campo} max-w-64`}>
+                <option value="">{tp.sinCurso}</option>
+                {cursos.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="text-xs font-medium text-slate-500">
+              {tp.nota}
+              <input value={nota} onChange={(e) => setNota(e.target.value)} placeholder={tp.notaAyuda} maxLength={60} className={`${campo} w-60`} />
+            </label>
+          </div>
+        )}
+        {modo === "semanal" && (
+          <div className="mt-3 rounded-lg bg-tinta-50/60 px-3 py-2">
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="text-xs font-medium text-slate-500">
+                {tp.desde}
+                <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} className={campo} />
+              </label>
+              <label className="text-xs font-medium text-slate-500">
+                {tp.hasta}
+                <input type="date" value={hasta} min={desde || undefined} onChange={(e) => setHasta(e.target.value)} className={campo} />
+              </label>
+              <p className="max-w-md pb-1 text-xs text-slate-500">{desde || hasta ? tp.fechasAyuda : `${tp.sinLimite} ${tp.fechasAyuda}`}</p>
+            </div>
+            {fueraDeSemana && <p className="mt-1 text-xs font-medium text-aviso">{tp.fueraDeRango}</p>}
+          </div>
+        )}
+
         <details className="mt-3 rounded-lg bg-slate-50 px-3 py-2">
           <summary className="cursor-pointer text-sm font-medium text-tinta-700">{tp.rapido}</summary>
           <div className="mt-2 flex flex-wrap items-end gap-3">
@@ -292,11 +468,57 @@ export function AgendaSemanal({
                   ))}
               </select>
             </label>
+            <label className="flex items-center gap-1.5 pb-1 text-xs font-medium text-slate-600">
+              <input
+                type="checkbox"
+                checked={rapDe === INICIO_DIA && rapA === FIN_DIA}
+                onChange={(e) => {
+                  setRapDe(e.target.checked ? INICIO_DIA : FRANJAS[0]);
+                  setRapA(e.target.checked ? FIN_DIA : FRANJAS[2] + MINUTOS_FRANJA);
+                }}
+                className="h-4 w-4 accent-tinta-600"
+              />
+              {tp.todoElDia}
+            </label>
             <Boton type="button" variante="secundario" className="!px-3 !py-1.5" onClick={aplicarRapido} disabled={!rapDias.length || rapA <= rapDe}>
-              {herramienta === "borrar" ? "⌫" : EMOJI_BLOQUE[herramienta]} {tp.rapidoAplicar}: {herramienta === "borrar" ? tp.borrar : ta.tipos[herramienta]}
+              {emojiHerramienta(herramienta)} {tp.rapidoAplicar}: {nombreHerramienta(herramienta)}
             </Boton>
           </div>
         </details>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-sm">
+          <label className="flex items-center gap-2 font-medium text-slate-700">
+            <input
+              type="checkbox"
+              checked={conAsuetos}
+              onChange={(e) => {
+                setConAsuetos(e.target.checked);
+                setSucio(true);
+              }}
+              className="h-4 w-4 accent-tinta-600"
+            />
+            🎉 {tp.asuetosActivos}
+          </label>
+          <select
+            value={pais}
+            onChange={(e) => {
+              setPais(paisDeAsuetos(e.target.value));
+              setSucio(true);
+            }}
+            disabled={!conAsuetos}
+            aria-label={tp.asuetos}
+            className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm disabled:opacity-50"
+          >
+            {[...PAISES_ASUETOS]
+              .sort((a, b) => nombrePais(a).localeCompare(nombrePais(b), locale))
+              .map((p) => (
+                <option key={p} value={p}>
+                  {nombrePais(p)}
+                </option>
+              ))}
+          </select>
+          <p className="basis-full text-xs text-slate-500">{tp.asuetosAyuda}</p>
+        </div>
       </section>
 
       {/* Navegación de semanas y guardar */}
@@ -339,6 +561,7 @@ export function AgendaSemanal({
             className={`flex-1 rounded-lg px-1 py-1.5 text-xs font-medium ${diaMovil === i ? "bg-tinta-600 text-white" : "bg-white text-slate-600 ring-1 ring-slate-200"}`}
           >
             {ta.diasCortos[i]}
+            {asuetoDe.get(f) && " 🎉"}
             <span className="block text-[11px] opacity-80">{fechaCorta(f)}</span>
           </button>
         ))}
@@ -349,7 +572,7 @@ export function AgendaSemanal({
         <div className="flex">
           {/* Horas */}
           <div className="w-14 shrink-0 border-r border-slate-200 bg-slate-50">
-            <div className="h-12 border-b border-slate-200" />
+            <div className="h-14 border-b border-slate-200" />
             {FRANJAS.map((m) => (
               <div key={m} className={`flex h-8 items-start justify-end pr-1.5 text-[11px] text-slate-500 ${m % 60 === 0 ? "border-t border-slate-200" : "border-t border-dashed border-slate-100"}`}>
                 {hora(m)}
@@ -358,22 +581,35 @@ export function AgendaSemanal({
           </div>
           {fechas.map((fecha, i) => {
             const dia = i + 1;
+            const asueto = asuetoDe.get(fecha);
             return (
               <div key={fecha} className={`min-w-0 flex-1 border-r border-slate-100 last:border-r-0 ${diaMovil === i ? "" : "hidden sm:block"}`}>
-                <div className={`flex h-12 flex-col items-center justify-center border-b border-slate-200 text-center ${fecha === hoy ? "bg-tinta-50" : ""}`}>
+                <div className={`flex h-14 flex-col items-center justify-center border-b border-slate-200 px-1 text-center ${fecha === hoy ? "bg-tinta-50" : ""}`}>
                   <span className="text-xs font-semibold text-slate-700">
                     <span className="hidden lg:inline">{ta.dias[i]}</span>
                     <span className="lg:hidden">{ta.diasCortos[i]}</span>
                   </span>
                   <span className={`text-[11px] ${fecha === hoy ? "font-semibold text-tinta-700" : "text-slate-500"}`}>{fechaCorta(fecha)}</span>
+                  {asueto && (
+                    <span className="w-full truncate text-[10px] font-medium text-red-700" title={asueto}>
+                      🎉 {asueto}
+                    </span>
+                  )}
                 </div>
                 {FRANJAS.map((m, j) => {
                   const v = valor(fecha, dia, m);
                   const previo = j > 0 ? valor(fecha, dia, FRANJAS[j - 1]) : undefined;
-                  const inicioDeTramo = v && !(previo && previo.tipo === v.tipo && previo.titulo === v.titulo);
+                  const inicioDeTramo = v && !mismo(previo, v);
                   const cambioSemana = modo === "semana" && fec.has(k(fecha, m));
                   const cita = citaEn.get(k(fecha, m));
-                  const etiqueta = `${ta.dias[i]} ${hora(m)}: ${v ? ta.tipos[v.tipo] : ta.tipos.libre}${v?.titulo ? ` (${v.titulo})` : ""}${cita ? ` · ${cita.cita.alumno}` : ""}`;
+                  const ents = entregasEn.get(k(fecha, m)) ?? [];
+                  const etiqueta = [
+                    `${ta.dias[i]} ${hora(m)}: ${v ? nombreTipo(v) : ta.tipos.libre}${v && textoDe(v) !== nombreTipo(v) ? ` (${textoDe(v)})` : ""}`,
+                    cita && `🙋 ${cita.cita.alumno}`,
+                    ...ents.map((e) => `📥 ${e.titulo} · ${e.curso} (${formato(tp.cierra, { h: hora(e.cierre) })})`),
+                  ]
+                    .filter(Boolean)
+                    .join(" · ");
                   return (
                     <button
                       key={m}
@@ -398,11 +634,11 @@ export function AgendaSemanal({
                       }}
                       className={`relative block h-8 w-full overflow-hidden px-1.5 text-left text-[11px] leading-tight transition-colors ${
                         m % 60 === 0 ? "border-t border-slate-200" : "border-t border-dashed border-slate-100"
-                      } ${v ? COLOR_BLOQUE[v.tipo] : "bg-white hover:bg-slate-50"} ${cambioSemana ? "shadow-[inset_3px_0_0_var(--color-aviso)]" : ""}`}
+                      } ${v ? colorDe(v) : "bg-white hover:bg-slate-50"} ${cambioSemana ? "shadow-[inset_3px_0_0_var(--color-aviso)]" : ""}`}
                     >
                       {inicioDeTramo && !cita && (
                         <span className="block truncate pt-0.5 font-medium">
-                          {EMOJI_BLOQUE[v.tipo]} {v.titulo || ta.tipos[v.tipo]}
+                          {EMOJI_BLOQUE[v.tipo]} {textoDe(v)}
                         </span>
                       )}
                       {cita && (
@@ -412,6 +648,14 @@ export function AgendaSemanal({
                           } ${cita.primera ? "" : "opacity-90"}`}
                         >
                           {cita.primera && <span className="truncate pt-0.5 font-medium">🙋 {cita.cita.alumno}</span>}
+                        </span>
+                      )}
+                      {ents.length > 0 && (
+                        <span className="pointer-events-none absolute top-0.5 right-0.5 bottom-0.5 flex max-w-[75%] items-center gap-0.5 rounded bg-orange-500 px-1 text-[10px] font-semibold text-white shadow-sm">
+                          <span className="truncate">
+                            📥 {ents[0].titulo} · {hora(ents[0].cierre)}
+                          </span>
+                          {ents.length > 1 && <span className="shrink-0">{formato(tp.masEntregas, { n: String(ents.length - 1) })}</span>}
                         </span>
                       )}
                     </button>
@@ -429,8 +673,21 @@ export function AgendaSemanal({
             <span className={`h-3 w-3 rounded ${COLOR_BLOQUE[tipo]} ring-1 ring-black/5`} /> {ta.tipos[tipo]}
           </li>
         ))}
+        {etiquetas.map((e) => (
+          <li key={e.id} className="flex items-center gap-1.5">
+            <span className={`h-3 w-3 rounded ${COLOR_ETIQUETA[e.color]?.celda ?? COLOR_BLOQUE.personal} ring-1 ring-black/5`} /> {e.nombre}
+          </li>
+        ))}
+        {conAsuetos && (
+          <li className="flex items-center gap-1.5">
+            <span className={`h-3 w-3 rounded ${COLOR_BLOQUE.asueto} ring-1 ring-black/5`} /> {ta.tipos.asueto}
+          </li>
+        )}
         <li className="flex items-center gap-1.5">
           <span className="h-3 w-3 rounded bg-tinta-600" /> {tp.citaLeyenda}
+        </li>
+        <li className="flex items-center gap-1.5">
+          <span className="h-3 w-3 rounded bg-orange-500" /> {tp.entregaLeyenda}
         </li>
         {modo === "semana" && (
           <li className="flex items-center gap-1.5">

@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { AgendaSemanal, type CitaAgenda } from "@/components/agenda-semanal";
 import { FichaAsesoriaProfesor } from "@/components/asesorias";
 import { Encabezado, Tarjeta } from "@/components/ui";
 import { activa, ahoraEnMexico, celdasDeBloques, duracionTexto, fechaValida, fechasSemana, lunesDe, minutosDisponibles, sumarDias, yaPaso } from "@/lib/asesorias";
+import { entregasEnFechas } from "@/lib/agenda-hoy";
+import { paisDeAsuetos } from "@/lib/asuetos";
 import { vistaAsesoria } from "@/lib/asesorias-vista";
+import { paisDeIp } from "@/lib/clima-servidor";
 import { formato } from "@/lib/i18n/idiomas";
-import { textos } from "@/lib/i18n/servidor";
+import { ipDeCabeceras, textos } from "@/lib/i18n/servidor";
 import { datosProfesor } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -48,11 +52,16 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
       resaltar: !curso || a.grupoId === curso.id,
     };
   });
+  const activos = db.grupos.filter((g) => !g.archivado);
+  // Asuetos del país elegido por el profesor; si aún no elige, el de su conexión (México si no se sabe).
+  const pais = agenda?.pais ?? (await paisDeIp(ipDeCabeceras(await headers())));
+  const agendaVista = agenda && { ...agenda, pais };
+  const entregas = entregasEnFechas(db.actividades, activos, fechas);
   const vistas = asesorias
     .filter((a) => a.estado !== "cancelada")
     .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.inicio - b.inicio)
     .filter((a) => !curso || a.grupoId === curso.id)
-    .map((a) => vistaAsesoria(a, { grupo: grupoDe(a.grupoId), locale, agenda, paraProfesor: true }, ahora));
+    .map((a) => vistaAsesoria(a, { grupo: grupoDe(a.grupoId), locale, agenda: agendaVista, paraProfesor: true }, ahora));
   const porRegistrar = (db.asesorias ?? []).filter((a) => a.estado === "agendada" && yaPaso(a, ahora)).length;
   const parametros = curso ? `curso=${curso.id}&` : "";
 
@@ -77,7 +86,7 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
       <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <Tarjeta className="!p-4">
           <p className="text-xs text-slate-500">{tp.disponibleSemana}</p>
-          <p className="mt-1 text-2xl font-semibold text-emerald-700">{duracionTexto(minutosDisponibles(agenda, fechas))}</p>
+          <p className="mt-1 text-2xl font-semibold text-emerald-700">{duracionTexto(minutosDisponibles(agendaVista, fechas))}</p>
         </Tarjeta>
         <Tarjeta className="!p-4">
           <p className="text-xs text-slate-500">{tp.agendadasSemana}</p>
@@ -97,7 +106,12 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
         semanales={celdasDeBloques(bloques.filter((b) => !b.fecha))}
         deLaSemana={celdasDeBloques(bloques.filter((b) => b.fecha && enSemana.has(b.fecha)))}
         citas={citas}
-        cursos={db.grupos.filter((g) => !g.archivado).map((g) => `${g.materia} ${g.nombre}`)}
+        entregas={entregas}
+        cursos={activos.map((g) => ({ id: g.id, nombre: `${g.materia} · ${g.nombre}`, ...(g.inicio ? { inicio: g.inicio } : {}), ...(g.fin ? { fin: g.fin } : {}) }))}
+        cursoInicial={curso?.id}
+        etiquetas={agenda?.etiquetas ?? []}
+        pais={paisDeAsuetos(pais)}
+        asuetos={agenda?.asuetos !== false}
         rutaBase={`/profesor/agenda?${parametros}`}
         anterior={sumarDias(semana, -7)}
         siguiente={sumarDias(semana, 7)}

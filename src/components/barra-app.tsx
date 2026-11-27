@@ -31,25 +31,13 @@ export function BarraApp({
   const ruta = usePathname();
   return (
     <header className="no-imprimir border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
+      <div className="mx-auto max-w-6xl px-4 py-3">
+        {/* Logo a la izquierda; a la derecha, centrados a la altura del logo, fecha, clima y cuenta. */}
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
         <Link href="/">
           <Logo grande src={logo} />
         </Link>
-        <nav className="order-3 flex w-full gap-1 overflow-x-auto text-sm sm:order-none sm:w-auto">
-          {enlaces.map((e) => {
-            const activo = e.exacto ? ruta === e.href : ruta.startsWith(e.href);
-            return (
-              <Link
-                key={e.href}
-                href={e.href}
-                className={`whitespace-nowrap rounded-lg px-3 py-1.5 ${activo ? "bg-tinta-50 font-medium text-tinta-700" : "text-slate-600 hover:bg-slate-100"}`}
-              >
-                {e.texto}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="ml-auto flex flex-col items-end gap-1.5">
+        <div className="ml-auto flex flex-col items-end justify-center gap-1.5 self-center">
           {/* Fecha, hora y clima, encima del nombre del usuario. */}
           <FechaClima />
           <div className="flex items-center gap-3">
@@ -86,6 +74,24 @@ export function BarraApp({
               </span>
             </div>
           </div>
+        </div>
+        </div>
+        {/* Menú debajo del logo, al centro. */}
+        <div className="mt-2 flex">
+          <nav className="mx-auto flex max-w-full justify-start gap-1 overflow-x-auto pb-1 text-sm sm:justify-center">
+            {enlaces.map((e) => {
+              const activo = e.exacto ? ruta === e.href : ruta.startsWith(e.href);
+              return (
+                <Link
+                  key={e.href}
+                  href={e.href}
+                  className={`whitespace-nowrap rounded-lg px-3 py-1.5 ${activo ? "bg-tinta-50 font-medium text-tinta-700" : "text-slate-600 hover:bg-slate-100"}`}
+                >
+                  {e.texto}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
       </div>
     </header>
