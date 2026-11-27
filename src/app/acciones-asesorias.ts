@@ -22,7 +22,8 @@ import {
 import { avisarCancelacion } from "@/lib/asesorias-avisos";
 import { textos } from "@/lib/i18n/servidor";
 import { alumnoActual, matriculaEnCurso, requerirProfesor } from "@/lib/sesion";
-import type { Asesoria } from "@/lib/tipos";
+import { paisDeAsuetos } from "@/lib/asuetos";
+import type { Asesoria, EtiquetaAgenda } from "@/lib/tipos";
 
 type Resultado = { ok: true } | { error: string };
 
@@ -38,30 +39,68 @@ function revalidar() {
   revalidatePath("/alumno", "layout");
 }
 
+const texto = (x: unknown, max = 80) => (typeof x === "string" && x ? x.slice(0, max) : undefined);
+
 const celdas = (lista: unknown): CeldaAgenda[] =>
   Array.isArray(lista)
     ? lista
         .filter((c): c is CeldaAgenda => Boolean(c) && typeof c === "object" && typeof (c as CeldaAgenda).inicio === "number" && typeof (c as CeldaAgenda).tipo === "string")
-        .map((c) => ({ dia: c.dia, fecha: c.fecha, inicio: c.inicio, tipo: c.tipo, titulo: typeof c.titulo === "string" ? c.titulo : undefined }))
+        .slice(0, 20000)
+        .map((c) => ({
+          dia: typeof c.dia === "number" ? c.dia : undefined,
+          fecha: texto(c.fecha, 10),
+          inicio: c.inicio,
+          tipo: c.tipo,
+          titulo: texto(c.titulo),
+          desde: texto(c.desde, 10),
+          hasta: texto(c.hasta, 10),
+          grupoId: texto(c.grupoId),
+          etiqueta: texto(c.etiqueta, 40),
+        }))
     : [];
+
+function etiquetasLimpias(lista: unknown): EtiquetaAgenda[] {
+  if (!Array.isArray(lista)) return [];
+  const vistas = new Set<string>();
+  return lista
+    .filter((e): e is EtiquetaAgenda => Boolean(e) && typeof e === "object" && typeof e.id === "string" && typeof e.nombre === "string")
+    .map((e) => ({ id: e.id.slice(0, 40), nombre: e.nombre.replace(/\s+/g, " ").trim().slice(0, 30), color: typeof e.color === "string" ? e.color.slice(0, 20) : "cian" }))
+    .filter((e) => e.nombre && !vistas.has(e.id) && vistas.add(e.id))
+    .slice(0, 12);
+}
 
 /**
  * Guarda la agenda del profesor desde el editor de una semana: el horario de cada semana completo y
  * los cambios de esa semana.
  */
-export async function guardarAgenda(semana: string, semanales: CeldaAgenda[], deLaSemana: CeldaAgenda[]): Promise<Resultado> {
+export async function guardarAgenda(
+  semana: string,
+  semanales: CeldaAgenda[],
+  deLaSemana: CeldaAgenda[],
+  ajustes?: { etiquetas?: EtiquetaAgenda[]; pais?: string; asuetos?: boolean },
+): Promise<Resultado> {
   const profesor = await requerirProfesor();
   try {
     const lunes = fechaValida(semana);
     if (!lunes) throw new ErrorAsesoriaCurso("agenda");
     const fechas = fechasSemana(lunesDe(lunes));
-    const validos = new Set(["clase", "comida", "proyecto", "reunion", "otro", "asesoria", "libre"]);
-    const filtrar = (l: CeldaAgenda[]) => celdas(l).filter((c) => validos.has(c.tipo));
     modificar((db) => {
       const agendas = (db.agendas ??= []);
       let agenda = agendas.find((a) => a.profesorId === profesor.id);
       if (!agenda) agendas.push((agenda = { profesorId: profesor.id, bloques: [], actualizadaEn: "" }));
-      agenda.bloques = podarAgenda(agendaNueva(agenda.bloques, filtrar(semanales), filtrar(deLaSemana), fechas), ahoraEnMexico().fecha);
+      if (ajustes) {
+        agenda.etiquetas = etiquetasLimpias(ajustes.etiquetas);
+        if (typeof ajustes.pais === "string") agenda.pais = paisDeAsuetos(ajustes.pais);
+        if (typeof ajustes.asuetos === "boolean") agenda.asuetos = ajustes.asuetos;
+      }
+      // Solo cursos del profesor y etiquetas que existen.
+      const suyos = new Set(db.grupos.filter((g) => g.profesorId === profesor.id).map((g) => g.id));
+      const etiquetas = new Set((agenda.etiquetas ?? []).map((e) => e.id));
+      const filtrar = (l: CeldaAgenda[]) =>
+        celdas(l).map((c) => ({ ...c, grupoId: c.grupoId && suyos.has(c.grupoId) ? c.grupoId : undefined })).filter((c) => c.tipo !== "personal" || etiquetas.has(c.etiqueta ?? ""));
+      agenda.bloques = podarAgenda(agendaNueva(agenda.bloques, filtrar(semanales), filtrar(deLaSemana), fechas), ahoraEnMexico().fecha).filter(
+        (b) => b.tipo !== "personal" || etiquetas.has(b.etiqueta ?? ""),
+      );
       agenda.actualizadaEn = new Date().toISOString();
     });
     revalidar();

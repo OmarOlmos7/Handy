@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
+import { ActividadesHoy } from "@/components/actividades-hoy";
 import { TarjetaCurso } from "@/components/tarjeta-curso";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { estadoActividad, leer, saldo } from "@/lib/almacen";
@@ -10,7 +12,11 @@ import { agruparPorColor } from "@/lib/colores";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
 import { resumenTemario } from "@/lib/asignaturas";
-import { textos } from "@/lib/i18n/servidor";
+import { ipDeCabeceras, textos } from "@/lib/i18n/servidor";
+import { hoyProfesor } from "@/lib/agenda-hoy";
+import { diaLargoLocal } from "@/lib/asesorias-vista";
+import { ahoraEnMexico } from "@/lib/asesorias";
+import { paisDeIp } from "@/lib/clima-servidor";
 import { proyectosComoEvaluador } from "@/lib/proyectos-servidor";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,6 +39,16 @@ export default async function PanelProfesor() {
   // Proyectos de otros profesores donde me invitaron a evaluar.
   const comoEvaluador = proyectosComoEvaluador(await leer(), profesor.id);
   const tpr = t.proyecto;
+  // "Actividades de hoy": agenda, asesorías y cierres de entrega de los cursos activos.
+  const agenda = (db.agendas ?? [])[0];
+  const pais = agenda?.pais ?? (await paisDeIp(ipDeCabeceras(await headers())));
+  const hoy = hoyProfesor({
+    agenda: agenda && { ...agenda, pais },
+    asesorias: db.asesorias ?? [],
+    actividades: db.actividades,
+    grupos,
+    etiquetas: new Map((agenda?.etiquetas ?? []).map((e) => [e.id, e.nombre])),
+  });
 
   return (
     <>
@@ -52,8 +68,8 @@ export default async function PanelProfesor() {
       />
 
       {/* A la izquierda, el acceso a Asignaturas (el syllabus de cada materia). */}
-      <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-6">
-      <aside className="mb-6 lg:sticky lg:top-4 lg:mb-0">
+      <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[14rem_minmax(0,1fr)_17rem]">
+      <aside className="mb-6 lg:sticky lg:top-4 lg:row-span-2 lg:mb-0 xl:row-span-1">
         <Link
           href="/profesor/asignaturas"
           className="flex items-center gap-3 rounded-xl bg-tinta-600 px-4 py-3 text-white shadow-sm transition hover:bg-tinta-700"
@@ -79,7 +95,11 @@ export default async function PanelProfesor() {
           </ul>
         )}
       </aside>
-      <div className="min-w-0">
+      {/* A la derecha (arriba en el teléfono), lo que toca hoy. */}
+      <aside className="mb-6 lg:col-start-2 lg:row-start-1 xl:sticky xl:top-4 xl:col-start-3 xl:mb-0">
+        <ActividadesHoy items={hoy} t={t} fecha={diaLargoLocal(ahoraEnMexico().fecha, locale)} agendaHref="/profesor/agenda" />
+      </aside>
+      <div className="min-w-0 lg:col-start-2 lg:row-start-2 xl:row-start-1">
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <Tarjeta>
           <p className="text-sm text-slate-500">{tp.cursos}</p>

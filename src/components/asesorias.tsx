@@ -12,6 +12,7 @@ import {
 } from "@/app/acciones-asesorias";
 import { DURACIONES, FRANJAS, MAX_COMENTARIOS, MAX_NOTAS, MAX_TEMA, MINUTOS_FRANJA, MOTIVOS, duracionTexto, hora, type FranjaAlumno } from "@/lib/asesorias";
 import type { AsesoriaVista, EstadoVista } from "@/lib/asesorias-vista";
+import type { EntregaCalendario } from "@/lib/agenda-hoy";
 import { formato } from "@/lib/i18n/idiomas";
 import { BotonIcono, IconoCalendario, IconoEngrane } from "./iconos";
 import { useTextos } from "./proveedor-textos";
@@ -408,7 +409,13 @@ export function AgendaAlumno({
   actual,
   semana,
   sinAgenda,
+  asuetos = {},
+  entregas = [],
 }: {
+  /** Asuetos oficiales de la semana (fecha → nombre). */
+  asuetos?: Record<string, string>;
+  /** Cierres de entrega del curso en la semana. */
+  entregas?: EntregaCalendario[];
   grupoId: string;
   fechas: string[];
   hoy: string;
@@ -432,6 +439,17 @@ export function AgendaAlumno({
   const [pendiente, iniciar] = useTransition();
   const fechaCorta = (f: string) => new Date(`${f}T12:00:00Z`).toLocaleDateString(locale, { day: "numeric", month: "short", timeZone: "UTC" });
   const hayLibres = Object.values(franjas).some((l) => l.includes("libre"));
+  const entregasEn = new Map<string, EntregaCalendario[]>();
+  for (const x of entregas) entregasEn.set(`${x.fecha}|${x.inicio}`, [...(entregasEn.get(`${x.fecha}|${x.inicio}`) ?? []), x]);
+  const pildora = (lista: EntregaCalendario[] | undefined) =>
+    lista?.length ? (
+      <span className="pointer-events-none absolute top-0.5 right-0.5 bottom-0.5 flex max-w-[75%] items-center gap-0.5 rounded bg-orange-500 px-1 text-[10px] font-semibold text-white shadow-sm">
+        <span className="truncate">
+          📥 {lista[0].titulo} · {hora(lista[0].cierre)}
+        </span>
+        {lista.length > 1 && <span className="shrink-0">+{lista.length - 1}</span>}
+      </span>
+    ) : null;
 
   /** ¿Se puede pedir una hora completa desde esta franja? */
   const cabeHora = (fecha: string, inicio: number) => {
@@ -512,7 +530,7 @@ export function AgendaAlumno({
       <div className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <div className="flex">
           <div className="w-14 shrink-0 border-r border-slate-200 bg-slate-50">
-            <div className="h-12 border-b border-slate-200" />
+            <div className="h-14 border-b border-slate-200" />
             {FRANJAS.map((m) => (
               <div key={m} className={`flex h-8 items-start justify-end pr-1.5 text-[11px] text-slate-500 ${m % 60 === 0 ? "border-t border-slate-200" : "border-t border-dashed border-slate-100"}`}>
                 {hora(m)}
@@ -521,17 +539,23 @@ export function AgendaAlumno({
           </div>
           {fechas.map((fecha, i) => (
             <div key={fecha} className={`min-w-0 flex-1 border-r border-slate-100 last:border-r-0 ${diaMovil === i ? "" : "hidden sm:block"}`}>
-              <div className={`flex h-12 flex-col items-center justify-center border-b border-slate-200 text-center ${fecha === hoy ? "bg-tinta-50" : ""}`}>
+              <div className={`flex h-14 flex-col items-center justify-center border-b border-slate-200 px-1 text-center ${fecha === hoy ? "bg-tinta-50" : ""}`}>
                 <span className="text-xs font-semibold text-slate-700">
                   <span className="hidden lg:inline">{ta.dias[i]}</span>
                   <span className="lg:hidden">{ta.diasCortos[i]}</span>
                 </span>
                 <span className={`text-[11px] ${fecha === hoy ? "font-semibold text-tinta-700" : "text-slate-500"}`}>{fechaCorta(fecha)}</span>
+                {asuetos[fecha] && (
+                  <span className="w-full truncate text-[10px] font-medium text-red-700" title={formato(tal.asueto, { n: asuetos[fecha] })}>
+                    🎉 {asuetos[fecha]}
+                  </span>
+                )}
               </div>
               {FRANJAS.map((m, j) => {
                 const e = franjas[fecha]?.[j] ?? "no";
+                const ents = entregasEn.get(`${fecha}|${m}`);
                 const elegidaAqui = elegida && elegida.fecha === fecha && m >= elegida.inicio && m < elegida.inicio + duracion;
-                const etiqueta = `${ta.dias[i]} ${hora(m)}: ${tal.leyenda[e]}`;
+                const etiqueta = [`${ta.dias[i]} ${hora(m)}: ${tal.leyenda[e]}`, ...(ents ?? []).map((x) => `📥 ${x.titulo} (${formato(ta.profesor.cierra, { h: hora(x.cierre) })})`)].join(" · ");
                 const borde = m % 60 === 0 ? "border-t border-slate-200" : "border-t border-dashed border-slate-100";
                 return e === "libre" ? (
                   <button
@@ -540,13 +564,15 @@ export function AgendaAlumno({
                     aria-label={etiqueta}
                     title={etiqueta}
                     onClick={() => elegir(fecha, m, i)}
-                    className={`block h-8 w-full px-1.5 text-left text-[11px] font-medium ${borde} ${elegidaAqui ? "bg-tinta-500 text-white" : COLOR_FRANJA.libre}`}
+                    className={`relative block h-8 w-full px-1.5 text-left text-[11px] font-medium ${borde} ${elegidaAqui ? "bg-tinta-500 text-white" : COLOR_FRANJA.libre}`}
                   >
                     {hora(m)}
+                    {pildora(ents)}
                   </button>
                 ) : (
-                  <div key={m} title={etiqueta} className={`h-8 px-1.5 pt-0.5 text-[11px] ${borde} ${COLOR_FRANJA[e]}`}>
+                  <div key={m} title={etiqueta} className={`relative h-8 px-1.5 pt-0.5 text-[11px] ${borde} ${COLOR_FRANJA[e]}`}>
                     {e === "mia" && (j === 0 || franjas[fecha]?.[j - 1] !== "mia") && <span className="font-medium">🙋 {tal.leyenda.mia}</span>}
+                    {pildora(ents)}
                   </div>
                 );
               })}
@@ -560,6 +586,11 @@ export function AgendaAlumno({
             <span className={`h-3 w-3 rounded ring-1 ring-black/5 ${COLOR_FRANJA[e]}`} /> {tal.leyenda[e]}
           </li>
         ))}
+        {entregas.length > 0 && (
+          <li className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded bg-orange-500" /> {tal.entregaLeyenda}
+          </li>
+        )}
       </ul>
 
       {elegida && (

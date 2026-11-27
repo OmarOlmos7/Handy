@@ -60,6 +60,18 @@ export async function ubicacionDeIp(ip: string | undefined, idioma = "es"): Prom
   return { ciudad, lat, lon };
 }
 
+/** País (ISO de 2 letras) de la IP, o undefined si no se sabe. Para los asuetos de la agenda. */
+export async function paisDeIp(ip: string | undefined): Promise<string | undefined> {
+  if (!ip || esIpLocal(ip)) return undefined;
+  const base = await abrirBase();
+  if (!base) return undefined;
+  try {
+    return base.get(ip.replace(/^::ffff:/i, ""))?.country?.iso_code ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // --- Clima ---------------------------------------------------------------------------------
 
 /** Al menos 20 minutos entre consultas del mismo lugar (MET Norway pide respetar "Expires"). */

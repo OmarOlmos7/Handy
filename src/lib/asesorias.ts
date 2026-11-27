@@ -1,6 +1,7 @@
 // Agenda semanal del profesor y asesorías con sus alumnos. Aquí van las reglas (franjas de 30 min de
 // lunes a viernes, de 7:00 a 18:00, en hora del centro de México), la disponibilidad y los resúmenes
 // del curso. No usa nada del servidor para poder probarlo.
+import { asuetoEn } from "./asuetos";
 import type { AgendaProfesor, Asesoria, BloqueAgenda, Grupo, TipoBloque } from "./tipos";
 
 export const MINUTOS_FRANJA = 30;
@@ -11,7 +12,7 @@ export const FRANJAS = Array.from({ length: (FIN_DIA - INICIO_DIA) / MINUTOS_FRA
 /** Días de la agenda: 1 = lunes … 5 = viernes. */
 export const DIAS = [1, 2, 3, 4, 5] as const;
 /** Tipos que bloquean la agenda (no se puede atender) y el de asesoría. */
-export const TIPOS_BLOQUEO = ["clase", "comida", "proyecto", "reunion", "otro"] as const;
+export const TIPOS_BLOQUEO = ["clase", "comida", "proyecto", "reunion", "evento", "vacaciones", "otro"] as const;
 export const TIPOS_AGENDA: TipoBloque[] = [...TIPOS_BLOQUEO, "asesoria"];
 /** Duraciones que puede pedir el alumno (minutos). */
 export const DURACIONES = [30, 60] as const;
@@ -123,23 +124,89 @@ export interface CeldaAgenda {
   inicio: number;
   tipo: TipoBloque;
   titulo?: string;
+  /** Solo en las de cada semana: fechas en que valen y curso al que pertenecen. */
+  desde?: string;
+  hasta?: string;
+  grupoId?: string;
+  etiqueta?: string;
 }
 
-const claveDe = (b: { dia?: number; fecha?: string }) => (b.fecha ? `f:${b.fecha}` : `d:${b.dia}`);
+/** Clave del "renglón" de la celda: la fecha, o el día de la semana con sus fechas de validez. */
+const claveDe = (b: { dia?: number; fecha?: string; desde?: string; hasta?: string }) => (b.fecha ? `f:${b.fecha}` : `d:${b.dia}|${b.desde ?? ""}|${b.hasta ?? ""}`);
+const mismoContenido = (a: Omit<CeldaAgenda, "inicio">, b: Omit<CeldaAgenda, "inicio">) =>
+  a.tipo === b.tipo && a.titulo === b.titulo && a.grupoId === b.grupoId && a.etiqueta === b.etiqueta;
 
-/** Une celdas seguidas del mismo tipo y nota en bloques (lo que se guarda). */
+/** ¿Se enciman dos rangos de fechas? (sin fecha = sin límite). */
+export function rangosSeEnciman(a: { desde?: string; hasta?: string }, b: { desde?: string; hasta?: string }) {
+  return (a.desde ?? "") <= (b.hasta ?? "9999-12-31") && (b.desde ?? "") <= (a.hasta ?? "9999-12-31");
+}
+
+/** ¿El bloque de cada semana vale en esa fecha? */
+export function vigente(b: { desde?: string; hasta?: string }, fecha: string) {
+  return (!b.desde || fecha >= b.desde) && (!b.hasta || fecha <= b.hasta);
+}
+
+type Rango = { desde?: string; hasta?: string };
+
+/** Quita a un bloque de cada semana las fechas de r: queda igual, en un pedazo, en dos o en nada. */
+export function restarRango<T extends Rango>(c: T, r: Rango): T[] {
+  if (!rangosSeEnciman(c, r)) return [c];
+  const piezas: T[] = [];
+  if (r.desde && (!c.desde || c.desde < r.desde)) piezas.push({ ...c, hasta: sumarDias(r.desde, -1) });
+  if (r.hasta && (!c.hasta || c.hasta > r.hasta)) piezas.push({ ...c, desde: sumarDias(r.hasta, 1) });
+  return piezas;
+}
+
+/**
+ * Pinta (o borra, sin `nuevo`) una franja del horario de cada semana solo entre las fechas del rango:
+ * lo que había en esas fechas se reemplaza y lo de otras fechas se conserva.
+ */
+export function pintarSemanal(
+  celdas: CeldaAgenda[],
+  dia: number,
+  inicio: number,
+  rango: Rango,
+  nuevo?: Pick<CeldaAgenda, "tipo" | "titulo" | "grupoId" | "etiqueta">,
+): CeldaAgenda[] {
+  let desde = rango.desde || undefined;
+  let hasta = rango.hasta || undefined;
+  if (desde && hasta && desde > hasta) [desde, hasta] = [hasta, desde];
+  const r = { desde, hasta };
+  const aqui = (c: CeldaAgenda) => c.dia === dia && c.inicio === inicio && !c.fecha;
+  return [
+    ...celdas.filter((c) => !aqui(c)),
+    ...celdas.filter(aqui).flatMap((c) => restarRango(c, r)),
+    ...(nuevo ? [{ dia, inicio, ...nuevo, ...(desde ? { desde } : {}), ...(hasta ? { hasta } : {}) }] : []),
+  ];
+}
+
+const TIPOS_VALIDOS = new Set<TipoBloque>([...TIPOS_BLOQUEO, "personal", "asesoria", "libre"]);
+
+/** Une celdas seguidas del mismo tipo, nota, curso y fechas en bloques (lo que se guarda). */
 export function bloquesDeCeldas(celdas: CeldaAgenda[]): BloqueAgenda[] {
   const limpias = celdas
-    .filter((c) => FRANJAS.includes(c.inicio) && (c.fecha ? esFecha(c.fecha) && diaSemana(c.fecha) <= 5 : DIAS.includes(c.dia as 1)))
+    .filter((c) => TIPOS_VALIDOS.has(c.tipo) && FRANJAS.includes(c.inicio) && (c.fecha ? esFecha(c.fecha) && diaSemana(c.fecha) <= 5 : DIAS.includes(c.dia as 1)))
     .filter((c) => (c.fecha ? true : c.tipo !== "libre"))
-    .map((c) => ({ ...c, titulo: c.titulo?.replace(/\s+/g, " ").trim().slice(0, MAX_TITULO_BLOQUE) || undefined }));
-  // Una celda por día y hora (la última manda).
+    .filter((c) => c.tipo !== "personal" || Boolean(c.etiqueta))
+    .map((c) => {
+      const desde = !c.fecha && c.desde && esFecha(c.desde) ? c.desde : undefined;
+      const hasta = !c.fecha && c.hasta && esFecha(c.hasta) ? c.hasta : undefined;
+      return {
+        ...c,
+        titulo: c.titulo?.replace(/\s+/g, " ").trim().slice(0, MAX_TITULO_BLOQUE) || undefined,
+        desde: desde && hasta && desde > hasta ? hasta : desde,
+        hasta: desde && hasta && desde > hasta ? desde : hasta,
+        grupoId: c.grupoId || undefined,
+        etiqueta: c.tipo === "personal" ? c.etiqueta : undefined,
+      };
+    });
+  // Una celda por renglón y hora (la última manda).
   const unicas = new Map(limpias.map((c) => [`${claveDe(c)}|${c.inicio}`, c]));
   const orden = [...unicas.values()].sort((a, b) => claveDe(a).localeCompare(claveDe(b)) || a.inicio - b.inicio);
   const bloques: BloqueAgenda[] = [];
   for (const c of orden) {
     const ultimo = bloques.at(-1);
-    if (ultimo && claveDe(ultimo) === claveDe(c) && ultimo.fin === c.inicio && ultimo.tipo === c.tipo && ultimo.titulo === c.titulo) {
+    if (ultimo && claveDe(ultimo) === claveDe(c) && ultimo.fin === c.inicio && mismoContenido(ultimo, c)) {
       ultimo.fin += MINUTOS_FRANJA;
       continue;
     }
@@ -149,6 +216,10 @@ export function bloquesDeCeldas(celdas: CeldaAgenda[]): BloqueAgenda[] {
       inicio: c.inicio,
       fin: c.inicio + MINUTOS_FRANJA,
       ...(c.titulo ? { titulo: c.titulo } : {}),
+      ...(c.desde ? { desde: c.desde } : {}),
+      ...(c.hasta ? { hasta: c.hasta } : {}),
+      ...(c.grupoId ? { grupoId: c.grupoId } : {}),
+      ...(c.etiqueta ? { etiqueta: c.etiqueta } : {}),
     });
   }
   return bloques;
@@ -162,6 +233,10 @@ export function celdasDeBloques(bloques: BloqueAgenda[]): CeldaAgenda[] {
       inicio,
       tipo: b.tipo,
       ...(b.titulo ? { titulo: b.titulo } : {}),
+      ...(b.desde ? { desde: b.desde } : {}),
+      ...(b.hasta ? { hasta: b.hasta } : {}),
+      ...(b.grupoId ? { grupoId: b.grupoId } : {}),
+      ...(b.etiqueta ? { etiqueta: b.etiqueta } : {}),
     })),
   );
 }
@@ -175,19 +250,32 @@ export function agendaNueva(anteriores: BloqueAgenda[], semanales: CeldaAgenda[]
   const otrasFechas = anteriores.filter((b) => b.fecha && !enSemana.has(b.fecha));
   return [
     ...bloquesDeCeldas(semanales.map((c) => ({ ...c, fecha: undefined }))),
-    ...bloquesDeCeldas(deLaSemana.filter((c) => c.fecha && enSemana.has(c.fecha))),
+    ...bloquesDeCeldas(deLaSemana.filter((c) => c.fecha && enSemana.has(c.fecha)).map((c) => ({ ...c, desde: undefined, hasta: undefined }))),
     ...otrasFechas,
   ];
 }
 
-/** Qué hay en la agenda en una fecha y hora: lo de esa fecha manda sobre lo de cada semana. */
-export function bloqueEn(agenda: Pick<AgendaProfesor, "bloques"> | undefined, fecha: string, minutos: number): BloqueAgenda | undefined {
+export type AgendaConAsuetos = Pick<AgendaProfesor, "bloques"> & Partial<Pick<AgendaProfesor, "pais" | "asuetos">>;
+
+/** Asueto oficial de esa fecha según el país de la agenda (si los asuetos están activos). */
+export function asuetoDeAgenda(agenda: AgendaConAsuetos | undefined, fecha: string): string | undefined {
+  if (agenda?.asuetos === false) return undefined;
+  return asuetoEn(agenda?.pais, fecha);
+}
+
+/**
+ * Qué hay en la agenda en una fecha y hora. Manda lo marcado para esa fecha; luego el asueto
+ * oficial (todo el día); al final lo de cada semana que esté vigente en esa fecha.
+ */
+export function bloqueEn(agenda: AgendaConAsuetos | undefined, fecha: string, minutos: number): BloqueAgenda | undefined {
   if (!agenda) return undefined;
   const cubre = (b: BloqueAgenda) => minutos >= b.inicio && minutos < b.fin;
   const deFecha = agenda.bloques.find((b) => b.fecha === fecha && cubre(b));
   if (deFecha) return deFecha.tipo === "libre" ? undefined : deFecha;
+  const asueto = asuetoDeAgenda(agenda, fecha);
+  if (asueto) return { tipo: "asueto", fecha, inicio: INICIO_DIA, fin: FIN_DIA, titulo: asueto };
   const dia = diaSemana(fecha);
-  return agenda.bloques.find((b) => !b.fecha && b.dia === dia && cubre(b));
+  return agenda.bloques.findLast((b) => !b.fecha && b.dia === dia && cubre(b) && vigente(b, fecha));
 }
 
 /** Borra los bloques de una sola fecha que ya pasaron (para que la agenda no crezca sin fin). */
@@ -197,7 +285,7 @@ export function podarAgenda(bloques: BloqueAgenda[], hoy: string): BloqueAgenda[
 }
 
 /** Minutos de asesoría que ofrece el profesor en una semana. */
-export function minutosDisponibles(agenda: Pick<AgendaProfesor, "bloques"> | undefined, fechas: string[]): number {
+export function minutosDisponibles(agenda: AgendaConAsuetos | undefined, fechas: string[]): number {
   return fechas.reduce((s, f) => s + FRANJAS.filter((m) => bloqueEn(agenda, f, m)?.tipo === "asesoria").length * MINUTOS_FRANJA, 0);
 }
 
@@ -214,7 +302,7 @@ export function seCruza(asesorias: Asesoria[], profesorId: string, fecha: string
 
 /** Revisa si el alumno puede tomar esa franja; lanza el motivo si no. */
 export function revisarFranja(
-  datos: { agenda?: Pick<AgendaProfesor, "bloques">; asesorias: Asesoria[]; grupo: Pick<Grupo, "id" | "profesorId" | "inicio" | "fin">; matricula: string },
+  datos: { agenda?: AgendaConAsuetos; asesorias: Asesoria[]; grupo: Pick<Grupo, "id" | "profesorId" | "inicio" | "fin">; matricula: string },
   fecha: string,
   inicio: number,
   duracion: number,
@@ -331,7 +419,7 @@ export type FranjaAlumno = "libre" | "mia" | "ocupada" | "no" | "pasada" | "fuer
  * o no disponible (no ve si es clase, comida o reunión).
  */
 export function semanaParaAlumno(
-  datos: { agenda?: Pick<AgendaProfesor, "bloques">; asesorias: Asesoria[]; grupo: Pick<Grupo, "id" | "profesorId" | "inicio" | "fin">; matricula: string },
+  datos: { agenda?: AgendaConAsuetos; asesorias: Asesoria[]; grupo: Pick<Grupo, "id" | "profesorId" | "inicio" | "fin">; matricula: string },
   fechas: string[],
   ahora: Date = new Date(),
 ): Record<string, FranjaAlumno[]> {

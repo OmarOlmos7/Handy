@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { formato } from "@/lib/i18n/idiomas";
+import { ActividadesHoy } from "@/components/actividades-hoy";
 import { CompaneroDelAlumno } from "@/components/companero-servidor";
 import { InstalarApp } from "@/components/instalar-app";
 import { BotonLink, Encabezado, colorCalificacion } from "@/components/ui";
 import { num } from "@/components/tablero";
 import { TarjetaCursoAlumno } from "@/components/tarjeta-curso-alumno";
 import { sinLeerAlumno } from "@/lib/avisos";
-import { resumenAsesorias } from "@/lib/asesorias";
-import { textoPeriodo } from "@/lib/asesorias-vista";
+import { hoyAlumno } from "@/lib/agenda-hoy";
+import { ahoraEnMexico, resumenAsesorias } from "@/lib/asesorias";
+import { diaLargoLocal, textoPeriodo } from "@/lib/asesorias-vista";
 import { agruparPorColor } from "@/lib/colores";
-import { resumenCursoAlumno } from "@/lib/portal-alumno";
+import { actividadesVisibles, resumenCursoAlumno } from "@/lib/portal-alumno";
 import { FormIngresoAlumno, FormRegistroAlumno } from "@/components/formularios-alumno";
 import { SelectorPerfil } from "@/components/selector-perfil";
 import { leer } from "@/lib/almacen";
@@ -66,12 +68,26 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
   const archivados = cuenta?.archivados ?? {};
   const tarjetas = todas.filter((x) => !archivados[x.grupo.id]);
   const tarjetasArchivadas = todas.filter((x) => archivados[x.grupo.id]);
+  // "Actividades de hoy" de los cursos que no archivó: clases, asesorías y cierres de entrega.
+  const activos = alumno.cursos.filter(({ grupo }) => !archivados[grupo.id]);
+  const hoy = hoyAlumno({
+    cursos: activos.map(({ grupo, alumno: enCurso }) => ({ grupo, matricula: enCurso.matricula, agenda: (db.agendas ?? []).find((a) => a.profesorId === grupo.profesorId) })),
+    asesorias: db.asesorias ?? [],
+    actividades: activos.flatMap(({ grupo }) => actividadesVisibles(db.actividades, grupo.id, ahora)),
+    ahora,
+  });
   return (
     <>
       <Encabezado
         titulo={tp.titulo}
         subtitulo={`${alumno.nombre} · ${alumno.correo}. ${tp.subtituloSesion}`}
       />
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:items-start xl:gap-6">
+      {/* A la derecha (arriba en el teléfono), lo que toca hoy. */}
+      <aside className="mb-6 xl:sticky xl:top-4 xl:col-start-2 xl:row-start-1 xl:mb-0">
+        <ActividadesHoy items={hoy} t={t} fecha={diaLargoLocal(ahoraEnMexico(ahora).fecha, locale)} />
+      </aside>
+      <div className="min-w-0 xl:col-start-1 xl:row-start-1">
       <CompaneroDelAlumno db={db} alumno={alumno} />
       {alumno.porActivar.length > 0 && (
         <section className="mb-6 rounded-xl border border-aviso/30 bg-aviso-suave p-5" aria-labelledby="por-activar">
@@ -142,6 +158,8 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
           )}
         </>
       )}
+      </div>
+      </div>
     </>
   );
 }

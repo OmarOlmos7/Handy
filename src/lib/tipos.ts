@@ -681,7 +681,18 @@ export interface BaseDeDatos {
  * reunión u otra) o "asesoria", la franja en que el profesor puede atender alumnos. "libre" solo
  * se usa en un bloque de una fecha para quitar, esa semana, lo que trae la agenda de cada semana.
  */
-export type TipoBloque = "clase" | "comida" | "proyecto" | "reunion" | "otro" | "asesoria" | "libre";
+export type TipoBloque =
+  | "clase"
+  | "comida"
+  | "proyecto"
+  | "reunion"
+  | "evento"
+  | "vacaciones"
+  | "otro"
+  | "personal"
+  | "asesoria"
+  | "libre"
+  | "asueto";
 
 /** Bloque de la agenda: se repite cada semana (con `dia`) o es de una sola fecha (con `fecha`). */
 export interface BloqueAgenda {
@@ -695,11 +706,35 @@ export interface BloqueAgenda {
   fin: number;
   /** Nota corta (ej. "Física 3° B", "Junta de academia"). Solo la ve el profesor. */
   titulo?: string;
+  /**
+   * Fechas (AAAA-MM-DD) en que vale un bloque de cada semana; sin ellas, siempre. Por omisión son
+   * las del curso, para que la clase de un curso no aparezca antes ni después de él.
+   */
+  desde?: string;
+  hasta?: string;
+  /** Curso al que pertenece el bloque (por ejemplo, su clase). Sus alumnos lo ven en "Hoy". */
+  grupoId?: string;
+  /** Id de la etiqueta propia del profesor (tipo "personal"). */
+  etiqueta?: string;
+}
+
+/** Etiqueta que crea el profesor para su agenda ("Personalizar"). */
+export interface EtiquetaAgenda {
+  id: string;
+  nombre: string;
+  /** Clave del color (ver COLOR_ETIQUETA en el editor). */
+  color: string;
 }
 
 export interface AgendaProfesor {
   profesorId: string;
   bloques: BloqueAgenda[];
+  /** Etiquetas propias del profesor. */
+  etiquetas?: EtiquetaAgenda[];
+  /** País de los asuetos oficiales (ISO, ej. "MX"); sin valor, el de su IP o México. */
+  pais?: string;
+  /** false si el profesor apagó los asuetos oficiales (por omisión están activos). */
+  asuetos?: boolean;
   actualizadaEn: string;
 }
 
