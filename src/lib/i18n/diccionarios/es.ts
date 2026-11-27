@@ -7,6 +7,7 @@ import ruta from "./ruta/es";
 import licencias from "./licencias/es";
 import alumnosGrupo from "./alumnos-grupo/es";
 import archivados from "./archivados/es";
+import ajustesAlumno from "./ajustes-alumno/es";
 import contenido from "./contenido/es";
 import proyecto from "./proyecto/es";
 
@@ -450,6 +451,7 @@ const es = {
   licencias,
   alumnosGrupo,
   archivados,
+  ajustesAlumno,
   contenido,
   proyecto,
 };
