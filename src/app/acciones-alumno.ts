@@ -38,3 +38,24 @@ export async function archivarCursoAlumno(grupoId: string, archivar: boolean) {
   });
   revalidatePath("/alumno", "layout");
 }
+
+/**
+ * Quita un curso del portal del alumno (bote de la tarjeta). Solo cambia su vista: el profesor
+ * conserva la lista, las entregas y las calificaciones. Vuelve si el alumno ingresa el código del curso.
+ */
+export async function quitarCursoAlumno(grupoId: string) {
+  const alumno = await alumnoActual();
+  if (!alumno) throw new Error("No autorizado");
+  if (![...alumno.cursos, ...alumno.porActivar].some((c) => c.grupo.id === grupoId)) throw new Error("No autorizado");
+  modificar((db) => {
+    const cuenta = db.cuentasAlumno.find((c) => c.id === alumno.id);
+    if (!cuenta) return;
+    cuenta.quitados = [...new Set([...(cuenta.quitados ?? []), grupoId])];
+    if (cuenta.archivados?.[grupoId]) {
+      const resto = { ...cuenta.archivados };
+      delete resto[grupoId];
+      cuenta.archivados = Object.keys(resto).length ? resto : undefined;
+    }
+  });
+  revalidatePath("/alumno", "layout");
+}

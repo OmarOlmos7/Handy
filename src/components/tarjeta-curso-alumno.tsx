@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { archivarCursoAlumno, colorCursoAlumno } from "@/app/acciones-alumno";
+import { archivarCursoAlumno, colorCursoAlumno, quitarCursoAlumno } from "@/app/acciones-alumno";
 import { colorDe } from "@/lib/colores";
 import { formato } from "@/lib/i18n/idiomas";
-import { BotonIcono, IconoArchivar, IconoDesarchivar } from "./iconos";
+import { BotonIcono, IconoArchivar, IconoBasura, IconoDesarchivar } from "./iconos";
 import { SelectorColor } from "./selector-color";
 import { useTextos } from "./proveedor-textos";
 
 /**
  * Tarjeta de un curso en el portal del alumno: abre el curso; el círculo cambia el color de la tarjeta
- * y la caja la archiva (o, si ya está archivada, la restaura). Todo solo en la vista del alumno.
+ * la caja la archiva (o, si ya está archivada, la restaura) y el bote la quita. Todo solo en la vista del alumno.
  */
 export function TarjetaCursoAlumno({
   id,
@@ -69,6 +69,18 @@ export function TarjetaCursoAlumno({
     });
   }
 
+  function quitar() {
+    if (!window.confirm(formato(ta.confirmarQuitar, { curso: `${materia} · ${nombre}` }))) return;
+    iniciar(async () => {
+      try {
+        await quitarCursoAlumno(id);
+        router.refresh();
+      } catch {
+        setError(ta.noSeQuito);
+      }
+    });
+  }
+
   return (
     <div
       className={`relative flex min-h-[170px] flex-col overflow-visible rounded-2xl bg-white p-5 pt-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-tinta-300 ${
@@ -104,6 +116,9 @@ export function TarjetaCursoAlumno({
           <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
           <BotonIcono etiqueta={archivado ? ta.restaurar : ta.archivar} onClick={archivar} disabled={pendiente}>
             {archivado ? <IconoDesarchivar /> : <IconoArchivar />}
+          </BotonIcono>
+          <BotonIcono etiqueta={ta.quitar} peligro onClick={quitar} disabled={pendiente}>
+            <IconoBasura />
           </BotonIcono>
         </div>
       </div>

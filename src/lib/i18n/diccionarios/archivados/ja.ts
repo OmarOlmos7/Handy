@@ -3,6 +3,9 @@ import type es from "./es";
 const archivados: typeof es = {
   archivar: "コースをアーカイブ",
   desarchivar: "アーカイブ解除",
+  quitar: "マイコースから削除",
+  confirmarQuitar: "「{curso}」をマイコースから削除しますか？あなたの画面に表示されなくなります。提出物と成績は先生のもとに残ります。再び表示するには、コースコードをもう一度入力してください。",
+  noSeQuito: "コースを削除できませんでした。",
   restaurar: "元に戻す",
   noSeArchivo: "コースをアーカイブできませんでした。",
   noSeRestauro: "コースを元に戻せませんでした。",

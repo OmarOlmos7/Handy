@@ -2,6 +2,9 @@
 const archivados = {
   archivar: "Archivar curso",
   desarchivar: "Desarchivar",
+  quitar: "Quitar de mis cursos",
+  confirmarQuitar: "¿Quitar «{curso}» de tus cursos? Dejará de aparecer en tu vista. Tu profesor conserva tus entregas y calificaciones. Para verlo de nuevo, ingresa otra vez el código del curso.",
+  noSeQuito: "No se pudo quitar el curso.",
   restaurar: "Restaurar",
   noSeArchivo: "No se pudo archivar el curso.",
   noSeRestauro: "No se pudo restaurar el curso.",

@@ -3,6 +3,9 @@ import type es from "./es";
 const archivados: typeof es = {
   archivar: "Archiver le cours",
   desarchivar: "Désarchiver",
+  quitar: "Retirer de mes cours",
+  confirmarQuitar: "Retirer « {curso} » de vos cours ? Il n’apparaîtra plus dans votre vue. Votre professeur conserve vos remises et vos notes. Pour le revoir, saisissez à nouveau le code du cours.",
+  noSeQuito: "Le cours n’a pas pu être retiré.",
   restaurar: "Restaurer",
   noSeArchivo: "Le cours n’a pas pu être archivé.",
   noSeRestauro: "Le cours n’a pas pu être restauré.",

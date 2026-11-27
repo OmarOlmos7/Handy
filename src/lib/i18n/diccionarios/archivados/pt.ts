@@ -3,6 +3,9 @@ import type es from "./es";
 const archivados: typeof es = {
   archivar: "Arquivar curso",
   desarchivar: "Desarquivar",
+  quitar: "Remover dos meus cursos",
+  confirmarQuitar: "Remover “{curso}” dos seus cursos? Ele deixará de aparecer na sua visualização. Seu professor mantém suas entregas e notas. Para vê-lo de novo, digite outra vez o código do curso.",
+  noSeQuito: "Não foi possível remover o curso.",
   restaurar: "Restaurar",
   noSeArchivo: "Não foi possível arquivar o curso.",
   noSeRestauro: "Não foi possível restaurar o curso.",

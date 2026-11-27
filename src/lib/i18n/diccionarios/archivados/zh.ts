@@ -3,6 +3,9 @@ import type es from "./es";
 const archivados: typeof es = {
   archivar: "归档课程",
   desarchivar: "取消归档",
+  quitar: "从我的课程中移除",
+  confirmarQuitar: "要将“{curso}”从你的课程中移除吗？它将不再显示在你的视图中。老师仍保留你的提交和成绩。如需再次查看，请重新输入课程代码。",
+  noSeQuito: "无法移除该课程。",
   restaurar: "恢复",
   noSeArchivo: "无法归档该课程。",
   noSeRestauro: "无法恢复该课程。",

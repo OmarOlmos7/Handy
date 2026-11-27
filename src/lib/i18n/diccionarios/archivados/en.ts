@@ -3,6 +3,9 @@ import type es from "./es";
 const archivados: typeof es = {
   archivar: "Archive class",
   desarchivar: "Unarchive",
+  quitar: "Remove from my classes",
+  confirmarQuitar: "Remove “{curso}” from your classes? It will no longer appear in your view. Your teacher keeps your submissions and grades. To see it again, enter the class code again.",
+  noSeQuito: "The class could not be removed.",
   restaurar: "Restore",
   noSeArchivo: "The class could not be archived.",
   noSeRestauro: "The class could not be restored.",

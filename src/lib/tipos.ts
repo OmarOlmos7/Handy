@@ -504,6 +504,11 @@ export interface CuentaAlumno {
   colores?: Record<string, string>;
   /** Cursos que el alumno archivó (id del grupo → fecha ISO). Solo los oculta de su propia vista. */
   archivados?: Record<string, string>;
+  /**
+   * Cursos que el alumno quitó de su vista con el bote (ids de grupo). No se borra nada del profesor;
+   * el curso vuelve si el alumno ingresa otra vez su código.
+   */
+  quitados?: string[];
 }
 
 /** Sesión abierta. Se guarda solo el hash SHA-256 del token de la cookie. */
