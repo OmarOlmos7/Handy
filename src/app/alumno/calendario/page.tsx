@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CalendarioGeneral, type DiaCalendario } from "@/components/calendario-general";
 import { Encabezado } from "@/components/ui";
-import { hoyAlumno, mesVecino, semanasDelMes } from "@/lib/agenda-hoy";
+import { diaHabil, hoyAlumno, mesVecino, semanasDelMes } from "@/lib/agenda-hoy";
 import { ahoraEnMexico, fechaValida, fechasSemana, lunesDe, sumarDias } from "@/lib/asesorias";
 import { leer } from "@/lib/almacen";
 import { textos } from "@/lib/i18n/servidor";
@@ -27,7 +27,7 @@ export default async function CalendarioAlumno({ searchParams }: PageProps<"/alu
   const db = await leer();
   const ahora = new Date();
   const hoy = ahoraEnMexico(ahora).fecha;
-  const vista = q.vista === "mes" ? "mes" : "semana";
+  const vista = q.vista === "mes" ? "mes" : q.vista === "semana" ? "semana" : "dia";
   const fecha = fechaValida(q.fecha) ?? hoy;
   const archivados = db.cuentasAlumno.find((c) => c.id === alumno.id)?.archivados ?? {};
   const activos = alumno.cursos.filter(({ grupo }) => !archivados[grupo.id]);
@@ -38,17 +38,20 @@ export default async function CalendarioAlumno({ searchParams }: PageProps<"/alu
 
   const mes = fecha.slice(0, 7);
   const lunes = lunesDe(fecha);
-  const fechas = vista === "mes" ? semanasDelMes(fecha).flat() : fechasSemana(lunes);
-  const dias: DiaCalendario[] = fechas.map((f) => ({ fecha: f, items: itemsDe(f), delMes: vista === "semana" || f.startsWith(mes) }));
+  const dia = diaHabil(fecha);
+  const fechas = vista === "mes" ? semanasDelMes(fecha).flat() : vista === "semana" ? fechasSemana(lunes) : [dia];
+  const dias: DiaCalendario[] = fechas.map((f) => ({ fecha: f, items: itemsDe(f), delMes: vista !== "mes" || f.startsWith(mes) }));
   const fmt = (f: string, o: Intl.DateTimeFormatOptions) => new Date(`${f}T12:00:00Z`).toLocaleDateString(locale, { ...o, timeZone: "UTC" });
   const titulo =
     vista === "mes"
       ? fmt(`${mes}-01`, { month: "long", year: "numeric" })
-      : `${fmt(fechas[0], { day: "numeric", month: "short" })} – ${fmt(fechas[4], { day: "numeric", month: "short", year: "numeric" })}`;
+      : vista === "dia"
+        ? fmt(dia, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+        : `${fmt(fechas[0], { day: "numeric", month: "short" })} – ${fmt(fechas[4], { day: "numeric", month: "short", year: "numeric" })}`;
   const ruta = (c: { vista?: string; fecha?: string; curso?: string | null }) => {
     const p = new URLSearchParams();
     const v = c.vista ?? vista;
-    if (v === "mes") p.set("vista", "mes");
+    if (v !== "dia") p.set("vista", v);
     p.set("fecha", c.fecha ?? fecha);
     const cu = c.curso === null ? undefined : (c.curso ?? curso);
     if (cu) p.set("curso", cu);
@@ -66,8 +69,8 @@ export default async function CalendarioAlumno({ searchParams }: PageProps<"/alu
         hoy={hoy}
         titulo={titulo}
         ruta={ruta}
-        anterior={vista === "mes" ? mesVecino(fecha, -1) : sumarDias(lunes, -7)}
-        siguiente={vista === "mes" ? mesVecino(fecha, 1) : sumarDias(lunes, 7)}
+        anterior={vista === "mes" ? mesVecino(fecha, -1) : vista === "dia" ? diaHabil(dia, -1) : sumarDias(lunes, -7)}
+        siguiente={vista === "mes" ? mesVecino(fecha, 1) : vista === "dia" ? diaHabil(dia, 1) : sumarDias(lunes, 7)}
         actual={hoy}
         cursos={activos.map(({ grupo }) => ({ id: grupo.id, nombre: `${grupo.materia} · ${grupo.nombre}` }))}
         curso={curso}

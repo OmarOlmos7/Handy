@@ -11,7 +11,6 @@ import { textoPeriodo } from "@/lib/asesorias-vista";
 import { agruparPorColor } from "@/lib/colores";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
-import { resumenTemario } from "@/lib/asignaturas";
 import { ipDeCabeceras, textos } from "@/lib/i18n/servidor";
 import { hoyProfesor } from "@/lib/agenda-hoy";
 import { diaLargoLocal } from "@/lib/asesorias-vista";
@@ -32,7 +31,6 @@ export default async function PanelProfesor() {
   const grupos = db.grupos.filter((g) => !g.archivado);
   const archivados = db.grupos.length - grupos.length;
   const ta = t.archivados;
-  const asignaturas = db.asignaturas ?? [];
   const saldoCreditos = saldo(db);
   const actividadesDeGrupo = (id: string) => db.actividades.filter((a) => a.grupoId === id);
   const porRevisar = db.actividades.filter((a) => estadoActividad(db, a) === "en_revision");
@@ -67,39 +65,13 @@ export default async function PanelProfesor() {
         }
       />
 
-      {/* A la izquierda, el acceso a Asignaturas (el syllabus de cada materia). */}
-      <div className="lg:grid lg:grid-cols-[14rem_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[14rem_minmax(0,1fr)_17rem]">
-      <aside className="mb-6 lg:sticky lg:top-4 lg:row-span-2 lg:mb-0 xl:row-span-1">
-        <Link
-          href="/profesor/asignaturas"
-          className="flex items-center gap-3 rounded-xl bg-tinta-600 px-4 py-3 text-white shadow-sm transition hover:bg-tinta-700"
-        >
-          <span className="text-2xl" aria-hidden>
-            📚
-          </span>
-          <span>
-            <span className="block font-semibold">{tp.asignaturas}</span>
-            <span className="block text-xs text-tinta-100">{tp.asignaturasTexto}</span>
-          </span>
-        </Link>
-        {asignaturas.length > 0 && (
-          <ul className="mt-2 hidden space-y-1 lg:block">
-            {asignaturas.slice(0, 8).map((a) => (
-              <li key={a.id}>
-                <Link href={`/profesor/asignaturas/${a.id}`} className="block rounded-lg px-3 py-1.5 text-sm text-slate-700 hover:bg-white hover:shadow-sm">
-                  <span className="block truncate font-medium">{a.nombre}</span>
-                  <span className="block text-xs text-slate-500">{formato(tp.unidadesTemas, { u: resumenTemario(a.unidades).unidades, t: resumenTemario(a.unidades).temas })}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </aside>
+      {/* Los cursos al centro; a la derecha (arriba en pantallas angostas), lo que toca hoy. */}
+      <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:items-start xl:gap-6">
       {/* A la derecha (arriba en el teléfono), lo que toca hoy. */}
-      <aside className="mb-6 lg:col-start-2 lg:row-start-1 xl:sticky xl:top-4 xl:col-start-3 xl:mb-0">
+      <aside className="mb-6 xl:sticky xl:top-4 xl:col-start-2 xl:row-start-1 xl:mb-0">
         <ActividadesHoy items={hoy} t={t} fecha={diaLargoLocal(ahoraEnMexico().fecha, locale)} agendaHref="/profesor/agenda" />
       </aside>
-      <div className="min-w-0 lg:col-start-2 lg:row-start-2 xl:row-start-1">
+      <div className="min-w-0 xl:col-start-1 xl:row-start-1">
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <Tarjeta>
           <p className="text-sm text-slate-500">{tp.cursos}</p>
@@ -162,7 +134,7 @@ export default async function PanelProfesor() {
                     {color ? t.profesor.comun.nombresColores[color.clave as keyof typeof t.profesor.comun.nombresColores] : t.profesor.comun.sinColor}
                   </h3>
                 )}
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))] gap-4">
                   {items.map((g) => (
                     <TarjetaCurso
                       key={g.id}

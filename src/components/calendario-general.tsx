@@ -17,6 +17,8 @@ const COLOR_ITEM: Partial<Record<ItemHoy["tipo"], string>> = {
   entrega: "bg-orange-500 text-white",
 };
 
+export type VistaCalendario = "dia" | "semana" | "mes";
+
 /** Liga con los parámetros de la vista cambiados. */
 export type HacerRuta = (cambios: { vista?: string; fecha?: string; curso?: string | null }) => string;
 
@@ -44,7 +46,7 @@ export function CalendarioGeneral({
   pestanas?: React.ReactNode;
   t: Diccionario;
   locale: string;
-  vista: "semana" | "mes";
+  vista: VistaCalendario;
   dias: DiaCalendario[];
   hoy: string;
   titulo: string;
@@ -67,7 +69,7 @@ export function CalendarioGeneral({
   const numeroDia = (f: string) => Number(f.slice(8, 10));
   const fechaCorta = (f: string) => new Date(`${f}T12:00:00Z`).toLocaleDateString(locale, { day: "numeric", month: "short", timeZone: "UTC" });
 
-  const item = (it: ItemHoy, i: number, compacto: boolean) => {
+  const item = (it: ItemHoy, i: number, compacto: boolean, grande = false) => {
     const nombre = it.texto || nombreTipo(it);
     const etiqueta = [
       it.tipo === "asueto" ? undefined : `${hora(it.inicio)}${it.fin && it.tipo !== "entrega" ? `–${hora(it.fin)}` : ""}`,
@@ -94,7 +96,7 @@ export function CalendarioGeneral({
         {(it.detalle || it.comun) && <span className="block truncate text-[11px] opacity-80">{[it.comun ? tc.comun : undefined, it.detalle].filter(Boolean).join(" · ")}</span>}
       </>
     );
-    const clase = `block rounded-md px-1.5 py-1 text-xs leading-snug ${color(it)} ${it.comun ? "ring-2 ring-fuchsia-400" : ""}`;
+    const clase = `block rounded-md leading-snug ${grande ? "px-3 py-2 text-sm" : "px-1.5 py-1 text-xs"} ${color(it)} ${it.comun ? "ring-2 ring-fuchsia-400" : ""}`;
     return (
       <li key={i} title={etiqueta}>
         {it.href ? (
@@ -125,7 +127,7 @@ export function CalendarioGeneral({
         </div>
         {pestanas ?? (
         <div className="inline-flex rounded-lg bg-slate-100 p-1 text-sm" role="tablist">
-          {(["semana", "mes"] as const).map((v) => (
+          {(["dia", "semana", "mes"] as const).map((v) => (
             <Link
               key={v}
               href={ruta({ vista: v })}
@@ -133,7 +135,7 @@ export function CalendarioGeneral({
               aria-selected={vista === v}
               className={`rounded-md px-3 py-1.5 font-medium ${vista === v ? "bg-white text-tinta-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
             >
-              {v === "semana" ? tc.vistaSemana : tc.vistaMes}
+              {v === "dia" ? tc.vistaDia : v === "semana" ? tc.vistaSemana : tc.vistaMes}
             </Link>
           ))}
         </div>
@@ -153,7 +155,15 @@ export function CalendarioGeneral({
         </nav>
       )}
 
-      {vista === "semana" ? (
+      {vista === "dia" ? (
+        <section className={`rounded-xl bg-white p-4 shadow-sm ring-1 ${dias[0]?.fecha === hoy ? "ring-2 ring-tinta-400" : "ring-slate-200"}`}>
+          {dias[0]?.items.length ? (
+            <ul className="space-y-2">{dias[0].items.map((it, j) => item(it, j, false, true))}</ul>
+          ) : (
+            <p className="py-6 text-center text-sm text-slate-400">{tc.sinNada}</p>
+          )}
+        </section>
+      ) : vista === "semana" ? (
         <div className="grid gap-3 sm:grid-cols-5">
           {dias.map((d, i) => (
             <section key={d.fecha} className={`min-w-0 rounded-xl bg-white p-2 shadow-sm ring-1 ${d.fecha === hoy ? "ring-2 ring-tinta-400" : "ring-slate-200"}`}>

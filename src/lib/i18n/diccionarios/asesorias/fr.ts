@@ -98,6 +98,7 @@ const asesorias: typeof es = {
     titulo: "Calendrier",
     subtituloAlumno: "Tes cours, activités communes, permanences et remises. Filtre par cours et passe à la vue mois.",
     subtituloProfesor: "Tout ce qui concerne tes cours dans un seul calendrier. Filtre par cours et passe à la vue mois.",
+    vistaDia: "Jour",
     vistaSemana: "Semaine",
     vistaMes: "Mois",
     filtro: "Cours",

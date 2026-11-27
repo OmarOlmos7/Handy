@@ -6,7 +6,7 @@ import { CalendarioGeneral } from "@/components/calendario-general";
 import { FichaAsesoriaProfesor } from "@/components/asesorias";
 import { Encabezado, Tarjeta } from "@/components/ui";
 import { activa, ahoraEnMexico, celdasDeBloques, duracionTexto, fechaValida, fechasSemana, lunesDe, minutosDisponibles, sumarDias, yaPaso } from "@/lib/asesorias";
-import { entregasEnFechas, hoyProfesor, mesVecino, semanasDelMes } from "@/lib/agenda-hoy";
+import { diaHabil, entregasEnFechas, hoyProfesor, mesVecino, semanasDelMes } from "@/lib/agenda-hoy";
 import { paisDeAsuetos } from "@/lib/asuetos";
 import { vistaAsesoria } from "@/lib/asesorias-vista";
 import { paisDeIp } from "@/lib/clima-servidor";
@@ -66,12 +66,13 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
   const porRegistrar = (db.asesorias ?? []).filter((a) => a.estado === "agendada" && yaPaso(a, ahora)).length;
   const parametros = curso ? `curso=${curso.id}&` : "";
   const tc = ta.calendario;
-  const vista = q.vista === "mes" ? "mes" : q.vista === "semana" ? "semana" : "editar";
+  // Por omisión, las actividades del día; ?semana= sin vista (enlaces de antes) abre el editor.
+  const vista = q.vista === "mes" || q.vista === "semana" || q.vista === "editar" ? q.vista : q.semana ? "editar" : "dia";
   const fechaVista = fechaValida(q.fecha) ?? fechaValida(q.semana) ?? hoy;
   const ruta = (c: { vista?: string; fecha?: string; curso?: string | null }) => {
     const p = new URLSearchParams();
     const v = c.vista ?? vista;
-    if (v !== "editar") p.set("vista", v);
+    if (v !== "dia") p.set("vista", v);
     const f = c.fecha ?? fechaVista;
     if (v === "editar") p.set("semana", lunesDe(f));
     else p.set("fecha", f);
@@ -79,25 +80,26 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
     if (cu) p.set("curso", cu);
     return `/profesor/agenda?${p}`;
   };
+  const pestana = (v: string, texto: string) => (
+    <Link
+      key={v}
+      href={ruta({ vista: v })}
+      role="tab"
+      aria-selected={vista === v}
+      className={`rounded-md px-3 py-1.5 font-medium ${vista === v ? "bg-white text-tinta-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+    >
+      {texto}
+    </Link>
+  );
+  // Día, Semana y Mes; a la derecha, "Editar mi agenda".
   const pestanas = (
-    <div className="inline-flex rounded-lg bg-slate-100 p-1 text-sm" role="tablist">
-      {(
-        [
-          ["editar", `✏️ ${tc.editar}`],
-          ["semana", tc.vistaSemana],
-          ["mes", tc.vistaMes],
-        ] as const
-      ).map(([v, texto]) => (
-        <Link
-          key={v}
-          href={ruta({ vista: v })}
-          role="tab"
-          aria-selected={vista === v}
-          className={`rounded-md px-3 py-1.5 font-medium ${vista === v ? "bg-white text-tinta-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
-        >
-          {texto}
-        </Link>
-      ))}
+    <div className="flex flex-wrap items-center gap-2" role="tablist">
+      <div className="inline-flex rounded-lg bg-slate-100 p-1 text-sm">
+        {pestana("dia", tc.vistaDia)}
+        {pestana("semana", tc.vistaSemana)}
+        {pestana("mes", tc.vistaMes)}
+      </div>
+      <div className="inline-flex rounded-lg bg-slate-100 p-1 text-sm">{pestana("editar", `✏️ ${tc.editar}`)}</div>
     </div>
   );
 
@@ -105,7 +107,8 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
     // Calendario general (solo lectura) de todos los cursos o de uno.
     const mes = fechaVista.slice(0, 7);
     const lunes = lunesDe(fechaVista);
-    const dias = vista === "mes" ? semanasDelMes(fechaVista).flat() : fechasSemana(lunes);
+    const dia = diaHabil(fechaVista);
+    const dias = vista === "mes" ? semanasDelMes(fechaVista).flat() : vista === "semana" ? fechasSemana(lunes) : [dia];
     const fmt = (f: string, o: Intl.DateTimeFormatOptions) => new Date(`${f}T12:00:00Z`).toLocaleDateString(locale, { ...o, timeZone: "UTC" });
     return (
       <>
@@ -121,18 +124,20 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
           vista={vista}
           dias={dias.map((f) => ({
             fecha: f,
-            delMes: vista === "semana" || f.startsWith(mes),
+            delMes: vista !== "mes" || f.startsWith(mes),
             items: hoyProfesor({ agenda: agendaVista, asesorias: db.asesorias ?? [], actividades: db.actividades, grupos: activos, fecha: f, grupoId: curso?.id }),
           }))}
           hoy={hoy}
           titulo={
             vista === "mes"
               ? fmt(`${mes}-01`, { month: "long", year: "numeric" })
-              : `${fmt(dias[0], { day: "numeric", month: "short" })} – ${fmt(dias[4], { day: "numeric", month: "short", year: "numeric" })}`
+              : vista === "dia"
+                ? fmt(dia, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
+                : `${fmt(dias[0], { day: "numeric", month: "short" })} – ${fmt(dias[4], { day: "numeric", month: "short", year: "numeric" })}`
           }
           ruta={ruta}
-          anterior={vista === "mes" ? mesVecino(fechaVista, -1) : sumarDias(lunes, -7)}
-          siguiente={vista === "mes" ? mesVecino(fechaVista, 1) : sumarDias(lunes, 7)}
+          anterior={vista === "mes" ? mesVecino(fechaVista, -1) : vista === "dia" ? diaHabil(dia, -1) : sumarDias(lunes, -7)}
+          siguiente={vista === "mes" ? mesVecino(fechaVista, 1) : vista === "dia" ? diaHabil(dia, 1) : sumarDias(lunes, 7)}
           actual={hoy}
           cursos={activos.map((g) => ({ id: g.id, nombre: `${g.materia} · ${g.nombre}` }))}
           curso={curso?.id}
@@ -190,7 +195,7 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
         etiquetas={agenda?.etiquetas ?? []}
         pais={paisDeAsuetos(pais)}
         asuetos={agenda?.asuetos !== false}
-        rutaBase={`/profesor/agenda?${parametros}`}
+        rutaBase={`/profesor/agenda?vista=editar&${parametros}`}
         anterior={sumarDias(semana, -7)}
         siguiente={sumarDias(semana, 7)}
         actual={actual}

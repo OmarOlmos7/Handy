@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { entregasEnFechas, franjaEntrega, hoyAlumno, hoyProfesor, mesVecino, semanasDelMes } from "../agenda-hoy";
+import { diaHabil, entregasEnFechas, franjaEntrega, hoyAlumno, hoyProfesor, mesVecino, semanasDelMes } from "../agenda-hoy";
 import { bloqueEn, bloquesDeCeldas, celdasDeBloques, pintarSemanal, restarRango, semanaParaAlumno, vigente } from "../asesorias";
 import { asuetoEn, asuetosDelAnio, paisDeAsuetos, pascua } from "../asuetos";
 import type { Asesoria, Grupo } from "../tipos";
@@ -169,5 +169,10 @@ describe("calendario general", () => {
     expect(semanasDelMes("2026-12-01")[0][0]).toBe("2026-11-30");
     expect(mesVecino("2026-12-15", 1)).toBe("2027-01-01");
     expect(mesVecino("2026-01-15", -1)).toBe("2025-12-01");
+    // Vista de día: solo días hábiles.
+    expect(diaHabil("2026-11-28")).toBe("2026-11-30");
+    expect(diaHabil("2026-11-27", 1)).toBe("2026-11-30");
+    expect(diaHabil("2026-11-30", -1)).toBe("2026-11-27");
+    expect(diaHabil("2026-12-01", 1)).toBe("2026-12-02");
   });
 });
