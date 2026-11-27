@@ -16,7 +16,12 @@ export default async function LayoutAlumno({ children }: LayoutProps<"/alumno">)
       <BarraApp
         enlaces={[
           { href: "/alumno", texto: t.barra.misActividades, exacto: true },
-          ...(alumno ? [{ href: "/alumno/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos }] : []),
+          ...(alumno
+            ? [
+                { href: "/alumno/calendario", texto: t.asesorias.calendario.titulo },
+                { href: "/alumno/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos },
+              ]
+            : []),
         ]}
         usuario={alumno ? { nombre: alumno.nombre, tipo: t.barra.tipos[alumno.tipo], rol: alumno.correo } : { nombre: t.barra.alumno, rol: t.barra.sinSesion }}
         idioma={{ actual: idioma, etiqueta: t.comun.idioma }}

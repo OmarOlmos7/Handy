@@ -56,6 +56,7 @@ const celdas = (lista: unknown): CeldaAgenda[] =>
           hasta: texto(c.hasta, 10),
           grupoId: texto(c.grupoId),
           etiqueta: texto(c.etiqueta, 40),
+          comun: c.comun === true ? true : undefined,
         }))
     : [];
 
