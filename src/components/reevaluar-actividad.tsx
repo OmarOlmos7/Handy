@@ -10,6 +10,7 @@ import type { EsfuerzoIA, MotorIA } from "@/lib/tipos";
 import { DeslizadorPrecision } from "./precision-ia";
 import { useTextos } from "./proveedor-textos";
 import { Boton } from "./ui";
+import { TextoAjustable } from "./texto-ajustable";
 
 /**
  * Re-evaluación de una actividad ya calificada: el profesor ajusta el nivel de precisión,
@@ -128,9 +129,9 @@ export function ReevaluarActividad({
             </div>
             <label className="mt-3 block text-sm font-medium text-slate-700">
               {tr.indicaciones}
-              <textarea
+              <TextoAjustable
                 name="indicaciones"
-                rows={4}
+                minFilas={4}
                 maxLength={2000}
                 defaultValue={instrucciones}
                 placeholder={tr.indicacionesEjemplo}

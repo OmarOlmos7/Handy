@@ -1,5 +1,6 @@
 "use client";
 
+import { TextoAjustable } from "./texto-ajustable";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -207,16 +208,16 @@ export function RubricaEditor({
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
                   <label className="text-xs font-medium text-slate-500">
                     {tr.tema}
-                    <input value={r.tema} onChange={(e) => cambiar(r.numero, { tema: e.target.value })} className={entrada} />
+                    <TextoAjustable unaLinea value={r.tema} onChange={(e) => cambiar(r.numero, { tema: e.target.value })} className={entrada} />
                   </label>
                   <label className="text-xs font-medium text-slate-500">
                     {tr.habilidad}
-                    <input value={r.habilidad} onChange={(e) => cambiar(r.numero, { habilidad: e.target.value })} className={entrada} />
+                    <TextoAjustable unaLinea value={r.habilidad} onChange={(e) => cambiar(r.numero, { habilidad: e.target.value })} className={entrada} />
                   </label>
                 </div>
                 <label className="mt-3 block text-xs font-medium text-slate-500">
                   {r.tipo === "abierto" ? tr.criterios : r.tipo === "desarrollo" ? tr.resultadoFinal : tr.respuestaCorrecta}
-                  <input value={r.respuesta} onChange={(e) => cambiar(r.numero, { respuesta: e.target.value })} className={entrada} />
+                  <TextoAjustable unaLinea value={r.respuesta} onChange={(e) => cambiar(r.numero, { respuesta: e.target.value })} className={entrada} />
                 </label>
                 {r.pasos && (
                   <div className="mt-3">
@@ -263,7 +264,7 @@ export function RubricaEditor({
               <li key={c.clave} className="grid gap-2 rounded-lg bg-slate-50 p-3 ring-1 ring-slate-200 sm:grid-cols-[1fr_6rem_9rem_auto]">
                 <label className="text-xs font-medium text-slate-500">
                   {formato(tr.criterio, { n: i + 1 })}
-                  <input value={c.nombre} onChange={(e) => cambiarCriterio(c.clave, { nombre: e.target.value })} maxLength={120} className={entrada} />
+                  <TextoAjustable unaLinea value={c.nombre} onChange={(e) => cambiarCriterio(c.clave, { nombre: e.target.value })} maxLength={120} className={entrada} />
                 </label>
                 {!sinPuntaje ? (
                   <label className="text-xs font-medium text-slate-500">
@@ -297,10 +298,10 @@ export function RubricaEditor({
                 </div>
                 <label className="text-xs font-medium text-slate-500 sm:col-span-4">
                   {tr.descripcion}
-                  <textarea
+                  <TextoAjustable
                     value={c.descripcion}
                     onChange={(e) => cambiarCriterio(c.clave, { descripcion: e.target.value })}
-                    rows={2}
+                    minFilas={2}
                     maxLength={600}
                     className={entrada}
                   />
@@ -325,14 +326,14 @@ export function RubricaEditor({
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <label className="text-xs font-medium text-slate-500">
               {tr.recomendaciones}
-              <textarea value={recomendaciones} onChange={(e) => { if (!reedicion) setConfirmada(false); setRecomendaciones(e.target.value); }} rows={4} className={entrada} />
+              <TextoAjustable value={recomendaciones} onChange={(e) => { if (!reedicion) setConfirmada(false); setRecomendaciones(e.target.value); }} minFilas={3} className={entrada} />
             </label>
             <label className="text-xs font-medium text-slate-500">
               {tr.indicaciones}
-              <textarea
+              <TextoAjustable
                 value={instrucciones}
                 onChange={(e) => { if (!reedicion) setConfirmada(false); setInstrucciones(e.target.value); }}
-                rows={4}
+                minFilas={3}
                 maxLength={2000}
                 placeholder={tr.indicacionesEjemplo}
                 className={entrada}

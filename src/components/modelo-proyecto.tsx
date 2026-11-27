@@ -3,6 +3,7 @@
 // Modelo de trabajo del proyecto (pestaña del profesor del curso): fases y avances a entregar, la
 // rúbrica de cada etapa (editable o generada con IA), los profesores evaluadores, los equipos y la
 // ponderación de cada etapa para la calificación final del reto.
+import { TextoAjustable } from "./texto-ajustable";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { borrarProyecto, guardarModelo, invitarEvaluador, quitarEvaluador } from "@/app/acciones-proyecto";
@@ -165,7 +166,7 @@ export function ModeloProyecto({
           </label>
           <label className="block text-sm font-medium text-slate-700">
             {tp.descripcion}
-            <textarea rows={3} value={descripcion} onChange={(e) => (setDescripcion(e.target.value), cambiado())} className={campo} placeholder={tp.ejemploDescripcion} />
+            <TextoAjustable minFilas={3} value={descripcion} onChange={(e) => (setDescripcion(e.target.value), cambiado())} className={campo} placeholder={tp.ejemploDescripcion} />
           </label>
         </div>
       </section>
@@ -294,7 +295,7 @@ export function ModeloProyecto({
                 </div>
                 <label className="block text-sm font-medium text-slate-700">
                   {tm.instrucciones}
-                  <textarea rows={3} value={e.instrucciones} onChange={(ev) => cambiarEtapa(e.id, { instrucciones: ev.target.value })} className={campo} placeholder={tm.ejemploInstrucciones} />
+                  <TextoAjustable minFilas={3} value={e.instrucciones} onChange={(ev) => cambiarEtapa(e.id, { instrucciones: ev.target.value })} className={campo} placeholder={tm.ejemploInstrucciones} />
                 </label>
 
                 {/* Rúbrica de la etapa */}
@@ -328,14 +329,14 @@ export function ModeloProyecto({
                     <ol className="mt-3 space-y-3">
                       {e.criterios.map((c, k) => (
                         <li key={c.id} className="rounded-lg bg-white p-3 ring-1 ring-slate-200">
-                          <div className="grid gap-2 sm:grid-cols-[1fr_2fr_5rem_auto] sm:items-end">
+                          <div className="grid gap-2 sm:grid-cols-[1fr_2fr_5rem_auto] sm:items-start">
                             <label className="block text-xs font-medium text-slate-600">
                               {tm.elemento} {k + 1}
-                              <input value={c.nombre} onChange={(ev) => cambiarCriterio(e.id, k, { nombre: ev.target.value })} className={campo} />
+                              <TextoAjustable unaLinea value={c.nombre} onChange={(ev) => cambiarCriterio(e.id, k, { nombre: ev.target.value })} className={campo} />
                             </label>
                             <label className="block text-xs font-medium text-slate-600">
                               {tm.que}
-                              <input value={c.descripcion} onChange={(ev) => cambiarCriterio(e.id, k, { descripcion: ev.target.value })} className={campo} />
+                              <TextoAjustable value={c.descripcion} onChange={(ev) => cambiarCriterio(e.id, k, { descripcion: ev.target.value })} className={campo} />
                             </label>
                             <label className="block text-xs font-medium text-slate-600">
                               {tm.porcentaje}
@@ -344,7 +345,7 @@ export function ModeloProyecto({
                             <Boton
                               type="button"
                               variante="fantasma"
-                              className="px-2 py-2 text-error hover:bg-error-suave"
+                              className="px-2 py-2 text-error hover:bg-error-suave sm:mt-5"
                               aria-label={tm.quitarElemento}
                               onClick={() => cambiarEtapa(e.id, { criterios: e.criterios.filter((_, x) => x !== k) })}
                             >
@@ -355,8 +356,8 @@ export function ModeloProyecto({
                             {NIVELES_RUBRICA.map((n, x) => (
                               <label key={n.clave} className="block text-[11px] font-semibold text-slate-500">
                                 {tp.niveles[n.clave]} · {n.valor}
-                                <textarea
-                                  rows={3}
+                                <TextoAjustable
+                                  minFilas={3}
                                   value={c.niveles[x] ?? ""}
                                   onChange={(ev) => cambiarCriterio(e.id, k, { niveles: c.niveles.map((v, y) => (y === x ? ev.target.value : v)) })}
                                   className={`${campo} text-xs font-normal`}
