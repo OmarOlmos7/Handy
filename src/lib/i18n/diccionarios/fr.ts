@@ -6,6 +6,7 @@ import ruta from "./ruta/fr";
 import licencias from "./licencias/fr";
 import alumnosGrupo from "./alumnos-grupo/fr";
 import archivados from "./archivados/fr";
+import ajustesAlumno from "./ajustes-alumno/fr";
 import contenido from "./contenido/fr";
 import avisos from "./avisos/fr";
 import proyecto from "./proyecto/fr";
@@ -450,6 +451,7 @@ const fr: Diccionario = {
   licencias,
   alumnosGrupo,
   archivados,
+  ajustesAlumno,
   contenido,
   avisos,
   proyecto,

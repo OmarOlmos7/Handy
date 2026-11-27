@@ -6,6 +6,7 @@ import ruta from "./ruta/de";
 import licencias from "./licencias/de";
 import alumnosGrupo from "./alumnos-grupo/de";
 import archivados from "./archivados/de";
+import ajustesAlumno from "./ajustes-alumno/de";
 import contenido from "./contenido/de";
 import avisos from "./avisos/de";
 import proyecto from "./proyecto/de";
@@ -450,6 +451,7 @@ const de: Diccionario = {
   licencias,
   alumnosGrupo,
   archivados,
+  ajustesAlumno,
   contenido,
   avisos,
   proyecto,
