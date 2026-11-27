@@ -2,6 +2,7 @@
 // con KaTeX como texto tipográfico: se ve nítido en pantalla, en PDF y al imprimir.
 // También admite **negritas** al estilo Markdown fuera de las fórmulas.
 import katex from "katex";
+import { opcionesKatex } from "@/lib/latex";
 import "katex/dist/katex.min.css";
 // \ce{…} para fórmulas químicas (H₂O, reacciones).
 import "katex/contrib/mhchem";
@@ -9,7 +10,7 @@ import "katex/contrib/mhchem";
 const PARTES = /(\$\$[^$]+\$\$|\$[^$\n]+\$|\*\*[^*]+\*\*)/g;
 
 function formula(tex: string, bloque: boolean) {
-  return katex.renderToString(tex, { displayMode: bloque, throwOnError: false, strict: "ignore", output: "html" });
+  return katex.renderToString(tex, opcionesKatex(bloque));
 }
 
 export function TextoMat({ texto, negritas = "font-semibold text-slate-900" }: { texto: string; negritas?: string }) {

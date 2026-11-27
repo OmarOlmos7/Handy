@@ -17,6 +17,19 @@ import { ResponderActividad } from "@/components/responder-actividad";
 import { esPlataforma, reactivosParaAlumno } from "@/lib/plataforma";
 import { formato } from "@/lib/i18n/idiomas";
 import { MaterialContenido } from "@/components/material-contenido";
+import { FichaInstrucciones } from "@/components/ficha-instrucciones";
+
+/** Enlace de la página de entrega, al pie de la ficha, para compartirlo con los alumnos. */
+function Enlace({ enlace, titulo }: { enlace: string; titulo: string }) {
+  return (
+    <div className="min-w-0 text-sm">
+      <p className="font-semibold text-slate-800">{titulo}</p>
+      <a href={enlace} target="_blank" className="mt-1 block break-all font-medium text-tinta-700 hover:underline">
+        {enlace}
+      </a>
+    </div>
+  );
+}
 
 export default async function HojaImprimible({ params }: PageProps<"/profesor/actividades/[id]/hoja">) {
   const { id } = await params;
@@ -43,6 +56,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
       {th.siguiente}
     </BotonLink>
   );
+  const logo = srcLogo(profesor.config);
   const resumen = <ResumenAlta actividad={actividad} grupo={grupo} />;
   const migas = [
     { texto: t.profesor.comun.panel, href: "/profesor" },
@@ -60,20 +74,12 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
         <ConFlujo vista={1} db={db} actividad={actividad}>
           <div className="mx-auto max-w-3xl space-y-6">
             {resumen}
-            <Tarjeta className="flex flex-col items-center gap-4 p-5 sm:flex-row">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qr} alt="QR" className="h-32 w-32 shrink-0" />
-              <div className="min-w-0 text-sm">
-                <p className="font-semibold text-slate-800">{th.enlaceAlumnos}</p>
-                <a href={enlace} target="_blank" className="mt-1 block break-all font-medium text-tinta-700 hover:underline">
-                  {enlace}
-                </a>
-              </div>
-            </Tarjeta>
+            <FichaInstrucciones actividad={actividad} curso={curso} t={impreso.t} locale={impreso.locale} logo={logo} qrSrc={qr}>
+              <Enlace enlace={enlace} titulo={th.enlaceAlumnos} />
+            </FichaInstrucciones>
             <ProveedorTextos valor={impreso}>
               <section className="space-y-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:p-6">
-                <h2 className="text-lg font-semibold text-slate-900">{actividad.titulo}</h2>
-                <MaterialContenido instrucciones={actividad.instruccionesAlumno ?? []} anexos={actividad.contenido.anexos} entrega={actividad.contenido.entrega} />
+                <MaterialContenido instrucciones={[]} anexos={actividad.contenido.anexos} entrega={actividad.contenido.entrega} />
                 {esPlataforma(actividad) && (
                   <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(actividad)} vistaPrevia evidenciaDigital />
                 )}
@@ -100,22 +106,15 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
               puedeDeshacer={!!actividad.hojaAnterior}
               bloqueada={db.entregas.some((e) => e.actividadId === id && e.estado !== "sin_entregar")}
             />
-            <Tarjeta className="flex flex-col items-center gap-4 p-5 sm:flex-row">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={qr} alt="QR" className="h-32 w-32 shrink-0" />
-              <div className="min-w-0 text-sm">
-                <p className="font-semibold text-slate-800">{th.enlaceAlumnos}</p>
-                <a href={enlace} target="_blank" className="mt-1 block break-all font-medium text-tinta-700 hover:underline">
-                  {enlace}
-                </a>
-                {lista.length > 1 && <p className="mt-2 text-xs text-slate-500">{th.plataformaVersiones}</p>}
-              </div>
-            </Tarjeta>
+            <FichaInstrucciones actividad={actividad} curso={curso} t={impreso.t} locale={impreso.locale} logo={logo} qrSrc={qr}>
+              <Enlace enlace={enlace} titulo={th.enlaceAlumnos} />
+              {lista.length > 1 && <p className="mt-2 text-xs text-slate-500">{th.plataformaVersiones}</p>}
+            </FichaInstrucciones>
             <ProveedorTextos valor={impreso}>
               {lista.map((v) => (
                 <section key={v.letra} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:p-6">
                   {lista.length > 1 && <h2 className="mb-3 text-sm font-semibold text-slate-500">{formato(th.versionN, { v: v.letra })}</h2>}
-                  <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(v.actividad)} instrucciones={v.actividad.instruccionesAlumno} vistaPrevia />
+                  <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(v.actividad)} vistaPrevia />
                 </section>
               ))}
             </ProveedorTextos>
