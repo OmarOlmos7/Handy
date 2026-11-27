@@ -81,7 +81,7 @@ export function HojaRubrica({ actividad, t }: { actividad: Actividad; t: Diccion
                   </div>
                 )}
                 {c.reactivos && c.reactivos.length > 0 && actividad.reactivos.length > 1 && (
-                  <p className="mt-1.5 text-xs font-medium text-slate-500">{formato(tf.aplicaA, { n: c.reactivos.join(", ") })}</p>
+                  <p className="mt-1.5 text-xs font-medium text-slate-500">{formato(c.reactivos.length === 1 ? tf.aplicaUno : tf.aplicaA, { n: c.reactivos.join(", ") })}</p>
                 )}
               </div>
             </li>
