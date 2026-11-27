@@ -8,6 +8,7 @@ import { colorDe } from "@/lib/colores";
 import { formato } from "@/lib/i18n/idiomas";
 import { BotonIcono, IconoArchivar, IconoBasura, IconoDesarchivar } from "./iconos";
 import { SobreAvisos } from "./avisos";
+import { BotonCalendario, ResumenTarjeta } from "./asesorias";
 import { SelectorColor } from "./selector-color";
 import { useTextos } from "./proveedor-textos";
 
@@ -28,6 +29,8 @@ export function TarjetaCursoAlumno({
   colorPromedio,
   archivado = false,
   avisosSinLeer = 0,
+  periodo,
+  asesorias,
 }: {
   id: string;
   materia: string;
@@ -43,6 +46,10 @@ export function TarjetaCursoAlumno({
   archivado?: boolean;
   /** Avisos del curso que el alumno aún no abre (número en el sobre). */
   avisosSinLeer?: number;
+  /** Fechas del curso ya formateadas. */
+  periodo?: string;
+  /** Resumen de sus asesorías en el curso: realizadas, minutos y próximas. */
+  asesorias?: { realizadas: number; minutos: number; proximas: number };
 }) {
   const router = useRouter();
   const { t } = useTextos();
@@ -94,11 +101,16 @@ export function TarjetaCursoAlumno({
     >
       {colorDe(color) && <span className={`absolute inset-x-0 top-0 h-2 rounded-t-2xl ${colorDe(color)!.franja}`} aria-hidden />}
       {/* El enlace cubre toda la tarjeta; el selector de color queda encima. */}
-      <Link href={`/alumno/cursos/${id}`} className="after:absolute after:inset-0 after:rounded-2xl">
+      <Link href={`/alumno/cursos/${id}`} className="pr-10 after:absolute after:inset-0 after:rounded-2xl">
         <span className="block text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
         <span className="mt-0.5 block text-xl font-semibold text-slate-900">{nombre}</span>
       </Link>
       {ciclo && <span className="text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>}
+      <ResumenTarjeta href={`/alumno/cursos/${id}/asesorias`} realizadas={asesorias?.realizadas ?? 0} minutos={asesorias?.minutos ?? 0} periodo={periodo} />
+      {/* Arriba a la derecha: agendar asesoría con el profesor. */}
+      <div className="absolute top-3 right-3">
+        <BotonCalendario href={`/alumno/cursos/${id}/asesorias`} etiqueta={t.asesorias.agendaAlumnoBoton} pendientes={asesorias?.proximas ?? 0} />
+      </div>
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
       <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-4">
         <dl className="flex gap-4 text-sm">

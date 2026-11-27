@@ -10,6 +10,7 @@ import ajustesAlumno from "./ajustes-alumno/zh";
 import contenido from "./contenido/zh";
 import avisos from "./avisos/zh";
 import proyecto from "./proyecto/zh";
+import asesorias from "./asesorias/zh";
 
 const zh: Diccionario = {
   comun: {
@@ -445,6 +446,7 @@ const zh: Diccionario = {
   contenido,
   avisos,
   proyecto,
+  asesorias,
 };
 
 export default zh;

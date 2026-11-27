@@ -7,6 +7,7 @@ import { archivarGrupo, borrarGrupo, colorGrupo, renombrarGrupo } from "@/app/ac
 import { colorDe } from "@/lib/colores";
 import { BotonIcono, IconoAlumnos, IconoArchivar, IconoBasura, IconoLapiz } from "./iconos";
 import { SobreAvisos } from "./avisos";
+import { AjustesCurso, BotonCalendario, ResumenTarjeta } from "./asesorias";
 import { SelectorColor } from "./selector-color";
 import { Boton } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
@@ -29,6 +30,10 @@ export function TarjetaCurso({
   porRevisar,
   color,
   avisosSinLeer = 0,
+  inicio,
+  fin,
+  periodo,
+  asesorias,
 }: {
   id: string;
   materia: string;
@@ -40,6 +45,12 @@ export function TarjetaCurso({
   color?: string;
   /** Mensajes de alumnos del curso que el profesor aún no abre (número en el sobre). */
   avisosSinLeer?: number;
+  /** Fechas del curso (engrane) y su texto ya formateado. */
+  inicio?: string;
+  fin?: string;
+  periodo?: string;
+  /** Resumen de asesorías del curso: realizadas, minutos y próximas. */
+  asesorias?: { realizadas: number; minutos: number; proximas: number };
 }) {
   const router = useRouter();
   const { t } = useTextos();
@@ -47,6 +58,7 @@ export function TarjetaCurso({
   const tc = t.profesor.tarjetaCurso;
   const tal = t.alumnosGrupo;
   const ta = t.archivados;
+  const tas = t.asesorias;
   const [editando, setEditando] = useState(false);
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
@@ -140,7 +152,7 @@ export function TarjetaCurso({
       ) : (
         <>
           {/* El enlace cubre toda la tarjeta; los botones de abajo quedan encima. */}
-          <Link href={`/profesor/grupos/${id}`} className="after:absolute after:inset-0 after:rounded-2xl">
+          <Link href={`/profesor/grupos/${id}`} className="pr-20 after:absolute after:inset-0 after:rounded-2xl">
             <span className="block text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
             <span className="mt-0.5 block text-xl font-semibold text-slate-900">{nombre}</span>
           </Link>
@@ -151,6 +163,12 @@ export function TarjetaCurso({
           >
             <IconoAlumnos /> {tal.boton}
           </Link>
+          <ResumenTarjeta href={`/profesor/grupos/${id}/asesorias`} realizadas={asesorias?.realizadas ?? 0} minutos={asesorias?.minutos ?? 0} periodo={periodo} />
+          {/* Arriba a la derecha: agenda de asesorías y ajustes del curso (fechas de inicio y fin). */}
+          <div className="absolute top-3 right-3 z-30 flex gap-0.5">
+            <BotonCalendario href={`/profesor/agenda?curso=${id}`} etiqueta={tas.agendaBoton} pendientes={asesorias?.proximas ?? 0} />
+            <AjustesCurso grupoId={id} inicio={inicio} fin={fin} />
+          </div>
         </>
       )}
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}

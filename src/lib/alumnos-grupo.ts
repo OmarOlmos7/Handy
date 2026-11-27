@@ -1,6 +1,7 @@
 // Altas, cambios y bajas de alumnos en la lista de un curso (lo usa el profesor).
 // Funciones puras sobre la base de datos: las acciones del servidor las envuelven.
 import { correoValido, normalizarCorreo, normalizarMatricula } from "./cuentas";
+import { quitarAlumnoDeAsesorias, renombrarMatriculaAsesorias } from "./asesorias";
 import { quitarAlumnoDeAvisos, renombrarMatriculaAvisos } from "./avisos";
 import type { Alumno, BaseDeDatos, Grupo } from "./tipos";
 
@@ -90,6 +91,7 @@ export function cambiarAlumno(db: BaseDeDatos, grupo: Grupo, matriculaAnterior: 
     for (const a of db.autoactividades ?? []) if (a.grupoId === grupo.id && a.matricula === antes) a.matricula = nuevo.matricula;
     for (const v of db.valoraciones ?? []) if (v.grupoId === grupo.id && v.matricula === antes) v.matricula = nuevo.matricula;
     renombrarMatriculaAvisos(db.avisos, grupo.id, antes, nuevo.matricula);
+    renombrarMatriculaAsesorias(db.asesorias, grupo.id, antes, nuevo.matricula);
   }
   Object.assign(alumno, nuevo);
   return alumno;
@@ -134,6 +136,7 @@ export function bajaAlumno(db: BaseDeDatos, grupo: Grupo, matricula: string): { 
     db.avisos = avisos.avisos;
     archivos.push(...avisos.carpetas);
   }
+  if (db.asesorias) db.asesorias = quitarAlumnoDeAsesorias(db.asesorias, grupo.id, m);
   grupo.alumnos = grupo.alumnos.filter((a) => a !== alumno);
   // Solo rutas dentro de la carpeta de datos, sin "..".
   return { alumno, archivos: [...new Set(archivos)].filter((r) => r && !r.split(/[\\/]/).includes("..") && !/^[\\/]/.test(r)) };

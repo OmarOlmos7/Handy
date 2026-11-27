@@ -95,6 +95,8 @@ export function datosDeProfesor(db: BaseDeDatos, profesorId: string): BaseDeDato
     evaluacionesProyecto: (db.evaluacionesProyecto ?? []).filter((e) => idsProyectos.has(e.proyectoId)),
     entregasProyecto: (db.entregasProyecto ?? []).filter((e) => idsProyectos.has(e.proyectoId)),
     avisos: (db.avisos ?? []).filter((a) => idsGrupos.has(a.grupoId)),
+    agendas: (db.agendas ?? []).filter((a) => a.profesorId === profesorId),
+    asesorias: (db.asesorias ?? []).filter((a) => a.profesorId === profesorId),
   };
 }
 

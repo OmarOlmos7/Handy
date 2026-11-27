@@ -10,6 +10,7 @@ import ajustesAlumno from "./ajustes-alumno/de";
 import contenido from "./contenido/de";
 import avisos from "./avisos/de";
 import proyecto from "./proyecto/de";
+import asesorias from "./asesorias/de";
 
 const de: Diccionario = {
   comun: {
@@ -465,6 +466,7 @@ const de: Diccionario = {
   contenido,
   avisos,
   proyecto,
+  asesorias,
 };
 
 export default de;

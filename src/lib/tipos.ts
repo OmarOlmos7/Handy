@@ -120,6 +120,12 @@ export interface Grupo {
    * actividades; no se borra nada y puede desarchivarlo en Configuración.
    */
   archivado?: string;
+  /**
+   * Fechas (AAAA-MM-DD) en que empieza y termina el curso. Delimitan cuándo se pueden agendar
+   * asesorías y qué asesorías cuentan en el resumen del curso. Sin valor, no hay límite.
+   */
+  inicio?: string;
+  fin?: string;
 }
 
 /** Peso de un tipo de actividad (etiqueta) en la nota final. "" es el de las actividades sin etiqueta. */
@@ -662,6 +668,74 @@ export interface BaseDeDatos {
   evaluacionesProyecto?: EvaluacionProyecto[];
   /** Avisos (mensajes) de cada curso entre el profesor y sus alumnos (ver lib/avisos). */
   avisos?: Aviso[];
+  /** Agenda semanal de cada profesor: clases, comida, reuniones y franjas de asesoría. */
+  agendas?: AgendaProfesor[];
+  /** Asesorías que los alumnos agendan con su profesor (ver lib/asesorias). */
+  asesorias?: Asesoria[];
+}
+
+// ---------- Agenda del profesor y asesorías ----------
+
+/**
+ * Qué hay en una franja de la agenda: actividades que la bloquean (clase, comida, proyecto,
+ * reunión u otra) o "asesoria", la franja en que el profesor puede atender alumnos. "libre" solo
+ * se usa en un bloque de una fecha para quitar, esa semana, lo que trae la agenda de cada semana.
+ */
+export type TipoBloque = "clase" | "comida" | "proyecto" | "reunion" | "otro" | "asesoria" | "libre";
+
+/** Bloque de la agenda: se repite cada semana (con `dia`) o es de una sola fecha (con `fecha`). */
+export interface BloqueAgenda {
+  tipo: TipoBloque;
+  /** Día de la semana, 1 = lunes … 5 = viernes (bloque que se repite cada semana). */
+  dia?: number;
+  /** Fecha AAAA-MM-DD (bloque de una sola vez; manda sobre el de cada semana). */
+  fecha?: string;
+  /** Minutos desde las 0:00 (múltiplos de 30). `fin` no se incluye. */
+  inicio: number;
+  fin: number;
+  /** Nota corta (ej. "Física 3° B", "Junta de academia"). Solo la ve el profesor. */
+  titulo?: string;
+}
+
+export interface AgendaProfesor {
+  profesorId: string;
+  bloques: BloqueAgenda[];
+  actualizadaEn: string;
+}
+
+export type EstadoAsesoria = "agendada" | "realizada" | "no_asistio" | "cancelada";
+
+/** Asesoría que un alumno pide en una franja libre de su profesor. */
+export interface Asesoria {
+  id: string;
+  grupoId: string;
+  profesorId: string;
+  matricula: string;
+  alumnoId?: string;
+  /** Fecha AAAA-MM-DD y hora de inicio (minutos desde las 0:00, hora del centro de México). */
+  fecha: string;
+  inicio: number;
+  /** Minutos agendados (30 o 60). */
+  duracion: number;
+  /** Tema a abordar. */
+  tema: string;
+  /** Motivo de la asesoría (ej. terminar un problema, entrevista de explicación, problema de equipo). */
+  motivo?: string;
+  /** Avances o contexto que escribe el alumno. */
+  comentarios: string;
+  estado: EstadoAsesoria;
+  creadaEn: string;
+  /** Lo que el profesor anota de la reunión: lo revisado y las acciones tomadas. */
+  revisado?: string;
+  acuerdos?: string;
+  /** Minutos que duró de verdad (si el profesor lo ajusta); si no, cuenta `duracion`. */
+  duracionReal?: number;
+  cerradaEn?: string;
+  canceladaPor?: "alumno" | "profesor";
+  /** Idioma en que el alumno la pidió (para el recordatorio). */
+  idioma?: string;
+  /** Cuándo salió el recordatorio de la mañana (ISO). */
+  recordatorio?: string;
 }
 
 // ---------- Avisos (mensajes) por curso ----------
@@ -709,6 +783,8 @@ export interface Aviso {
   /** Aviso al que responde (opcional). */
   respondeA?: string;
   correos?: CorreosAviso;
+  /** Aviso que mandó la app sola (por ejemplo, el recordatorio de una asesoría). */
+  automatico?: boolean;
 }
 
 // ---------- Proyectos (retos) con evaluación de varios profesores ----------
