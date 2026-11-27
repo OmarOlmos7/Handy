@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { archivarFotosDesde, debeArchivarse, diasRestantes, fechaBorrado, liberadaEn, porBorrarse } from "../retencion";
+import { agruparPorCurso, archivarFotosDesde, debeArchivarse, diasRestantes, fechaBorrado, liberadaEn, porBorrarse } from "../retencion";
 import { texAPlano } from "../tex-plano";
 import type { Entrega } from "../tipos";
 
@@ -57,5 +57,20 @@ describe("fórmulas en el PDF", () => {
   it("convierte LaTeX sencillo a texto", () => {
     expect(texAPlano("Calcula $\\alpha = \\frac{\\tau}{I}$ con $I = 0.09\\,\\text{kg m}^2$")).toBe("Calcula alfa = (tau)/(I) con I = 0.09 kg m^2");
     expect(texAPlano("$v = \\omega \\cdot r$")).toBe("v = omega · r");
+  });
+});
+
+describe("agruparPorCurso", () => {
+  const f = (grupoId: string | undefined, dia: string) => ({ grupoId, borrado: new Date(`2027-${dia}T00:00:00Z`) });
+
+  it("junta las actividades de cada curso y ordena por el borrado más próximo", () => {
+    const grupos = agruparPorCurso([f("b", "05-10"), f("a", "03-01"), f("b", "02-01"), f(undefined, "09-09"), f("a", "01-15")]);
+    expect(grupos.map((g) => g.grupoId)).toEqual(["a", "b", undefined]);
+    expect(grupos[0].filas.map((x) => x.borrado.toISOString().slice(5, 10))).toEqual(["01-15", "03-01"]);
+    expect(grupos[1].proximo.toISOString().slice(5, 10)).toBe("02-01");
+  });
+
+  it("sin actividades no hay grupos", () => {
+    expect(agruparPorCurso([])).toEqual([]);
   });
 });

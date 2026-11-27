@@ -3,13 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { colorCursoAlumno } from "@/app/acciones-alumno";
+import { archivarCursoAlumno, colorCursoAlumno, salirDelCursoAlumno } from "@/app/acciones-alumno";
 import { colorDe } from "@/lib/colores";
 import { formato } from "@/lib/i18n/idiomas";
+import { BotonIcono, IconoArchivar, IconoBasura, IconoDesarchivar } from "./iconos";
 import { SelectorColor } from "./selector-color";
 import { useTextos } from "./proveedor-textos";
 
-/** Tarjeta de un curso en el portal del alumno: abre el curso; el círculo cambia el color de la tarjeta. */
+/**
+ * Tarjeta de un curso en el portal del alumno: abre el curso; el círculo cambia el color de la tarjeta
+ * la caja la archiva (o, si ya está archivada, la restaura); ambos solo en su vista. El bote lo saca
+ * del curso por completo y borra su trabajo en él.
+ */
 export function TarjetaCursoAlumno({
   id,
   materia,
@@ -20,6 +25,7 @@ export function TarjetaCursoAlumno({
   porEntregar,
   promedio,
   colorPromedio,
+  archivado = false,
 }: {
   id: string;
   materia: string;
@@ -31,11 +37,14 @@ export function TarjetaCursoAlumno({
   /** Texto del promedio (ya formateado) o undefined si aún no hay evaluadas. */
   promedio?: string;
   colorPromedio?: string;
+  /** La tarjeta está en "Cursos archivados": muestra el botón para restaurarla. */
+  archivado?: boolean;
 }) {
   const router = useRouter();
   const { t } = useTextos();
   const c = t.profesor.comun;
   const tc = t.alumno.cursos;
+  const ta = t.archivados;
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
 
@@ -46,6 +55,29 @@ export function TarjetaCursoAlumno({
         router.refresh();
       } catch {
         setError(tc.noColor);
+      }
+    });
+  }
+
+  function archivar() {
+    iniciar(async () => {
+      try {
+        await archivarCursoAlumno(id, !archivado);
+        router.refresh();
+      } catch {
+        setError(archivado ? ta.noSeRestauro : ta.noSeArchivo);
+      }
+    });
+  }
+
+  function quitar() {
+    if (!window.confirm(formato(ta.confirmarQuitar, { curso: `${materia} · ${nombre}` }))) return;
+    iniciar(async () => {
+      try {
+        await salirDelCursoAlumno(id);
+        router.refresh();
+      } catch {
+        setError(ta.noSeQuito);
       }
     });
   }
@@ -64,7 +96,7 @@ export function TarjetaCursoAlumno({
       </Link>
       {ciclo && <span className="text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>}
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
-      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-4">
         <dl className="flex gap-4 text-sm">
           <div>
             <dt className="whitespace-nowrap text-xs text-slate-500">{tc.actividades}</dt>
@@ -81,7 +113,15 @@ export function TarjetaCursoAlumno({
             </div>
           )}
         </dl>
-        <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
+        <div className="ml-auto flex gap-1">
+          <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
+          <BotonIcono etiqueta={archivado ? ta.restaurar : ta.archivar} onClick={archivar} disabled={pendiente}>
+            {archivado ? <IconoDesarchivar /> : <IconoArchivar />}
+          </BotonIcono>
+          <BotonIcono etiqueta={ta.quitar} peligro onClick={quitar} disabled={pendiente}>
+            <IconoBasura />
+          </BotonIcono>
+        </div>
       </div>
     </div>
   );

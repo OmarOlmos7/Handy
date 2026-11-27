@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
-import { borrarGrupo, colorGrupo, renombrarGrupo } from "@/app/acciones";
+import { archivarGrupo, borrarGrupo, colorGrupo, renombrarGrupo } from "@/app/acciones";
 import { colorDe } from "@/lib/colores";
-import { BotonIcono, IconoAlumnos, IconoBasura, IconoLapiz } from "./iconos";
+import { BotonIcono, IconoAlumnos, IconoArchivar, IconoBasura, IconoLapiz } from "./iconos";
 import { SelectorColor } from "./selector-color";
 import { Boton } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
@@ -15,7 +15,7 @@ const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm 
 
 /**
  * Tarjeta de un curso en el panel: abre la vista del curso; botón a la lista de alumnos; lápiz para
- * renombrar (y entrar a altas, bajas y cambios de alumnos) y bote para borrar.
+ * renombrar (y entrar a altas, bajas y cambios de alumnos), caja para archivar y bote para borrar.
  */
 export function TarjetaCurso({
   id,
@@ -41,6 +41,7 @@ export function TarjetaCurso({
   const c = t.profesor.comun;
   const tc = t.profesor.tarjetaCurso;
   const tal = t.alumnosGrupo;
+  const ta = t.archivados;
   const [editando, setEditando] = useState(false);
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
@@ -67,6 +68,18 @@ export function TarjetaCurso({
         router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : tc.noColor);
+      }
+    });
+  }
+
+  // Archivar no borra nada: el curso pasa a "Cursos archivados" en Configuración.
+  function archivar() {
+    iniciar(async () => {
+      try {
+        await archivarGrupo(id, true);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : ta.noSeArchivo);
       }
     });
   }
@@ -136,7 +149,7 @@ export function TarjetaCurso({
         </>
       )}
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
-      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-4">
         <dl className="flex gap-4 text-sm">
           <div>
             <dt className="whitespace-nowrap text-xs text-slate-500">{c.actividades}</dt>
@@ -154,11 +167,14 @@ export function TarjetaCurso({
           )}
         </dl>
         {!editando && (
-          <div className="flex gap-1">
+          <div className="ml-auto flex gap-1">
             <BotonIcono etiqueta={tc.editar} onClick={() => setEditando(true)} disabled={pendiente}>
               <IconoLapiz />
             </BotonIcono>
             <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
+            <BotonIcono etiqueta={ta.archivar} onClick={archivar} disabled={pendiente}>
+              <IconoArchivar />
+            </BotonIcono>
             <BotonIcono etiqueta={tc.borrar} peligro onClick={borrar} disabled={pendiente}>
               <IconoBasura />
             </BotonIcono>

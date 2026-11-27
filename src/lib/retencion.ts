@@ -45,3 +45,18 @@ export function diasRestantes(fecha: Date, ahora = new Date()): number {
 export function porBorrarse(fecha: Date, ahora = new Date()): boolean {
   return diasRestantes(fecha, ahora) <= DIAS_AVISO;
 }
+
+/**
+ * Agrupa por curso las filas de "Conservación de la información" (cada una con su fecha de borrado).
+ * Dentro de cada curso, de la que se borra antes a la última; los cursos, por su borrado más próximo.
+ */
+export function agruparPorCurso<T extends { grupoId?: string; borrado: Date }>(filas: T[]): { grupoId?: string; filas: T[]; proximo: Date }[] {
+  const mapa = new Map<string | undefined, T[]>();
+  for (const f of filas) mapa.set(f.grupoId, [...(mapa.get(f.grupoId) ?? []), f]);
+  return [...mapa.entries()]
+    .map(([grupoId, lista]) => {
+      const ordenadas = [...lista].sort((x, y) => x.borrado.getTime() - y.borrado.getTime());
+      return { grupoId, filas: ordenadas, proximo: ordenadas[0].borrado };
+    })
+    .sort((x, y) => x.proximo.getTime() - y.proximo.getTime());
+}

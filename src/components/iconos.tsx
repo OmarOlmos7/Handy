@@ -84,6 +84,28 @@ export function IconoBasura() {
   );
 }
 
+/** Caja de archivo (archivar un curso). */
+export function IconoArchivar() {
+  return (
+    <svg {...base}>
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+      <path d="M10 12h4" />
+    </svg>
+  );
+}
+
+/** Caja con flecha hacia arriba (desarchivar o restaurar). */
+export function IconoDesarchivar() {
+  return (
+    <svg {...base}>
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+      <path d="M12 18v-6M9.5 14.5 12 12l2.5 2.5" />
+    </svg>
+  );
+}
+
 /** Botón redondo con ícono para editar o borrar. */
 export function BotonIcono({
   etiqueta,

@@ -115,6 +115,11 @@ export interface Grupo {
    * (0 a 100). Sin valor, 0 %: no cuentan hasta que el profesor lo ajuste.
    */
   pesoAutoestudio?: number;
+  /**
+   * Fecha (ISO) en que el profesor archivó el curso. Archivado no aparece en su panel ni al crear
+   * actividades; no se borra nada y puede desarchivarlo en Configuración.
+   */
+  archivado?: string;
 }
 
 /** Peso de un tipo de actividad (etiqueta) en la nota final. "" es el de las actividades sin etiqueta. */
@@ -497,6 +502,8 @@ export interface CuentaAlumno {
   aceptacion?: AceptacionLegal;
   /** Color que el alumno eligió para la tarjeta de cada curso (id del grupo → clave de la paleta). */
   colores?: Record<string, string>;
+  /** Cursos que el alumno archivó (id del grupo → fecha ISO). Solo los oculta de su propia vista. */
+  archivados?: Record<string, string>;
 }
 
 /** Sesión abierta. Se guarda solo el hash SHA-256 del token de la cookie. */

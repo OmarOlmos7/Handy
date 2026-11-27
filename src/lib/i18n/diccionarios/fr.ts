@@ -5,6 +5,7 @@ import profesor from "./profesor/fr";
 import ruta from "./ruta/fr";
 import licencias from "./licencias/fr";
 import alumnosGrupo from "./alumnos-grupo/fr";
+import archivados from "./archivados/fr";
 import contenido from "./contenido/fr";
 import proyecto from "./proyecto/fr";
 
@@ -446,6 +447,7 @@ const fr: Diccionario = {
   ruta,
   licencias,
   alumnosGrupo,
+  archivados,
   contenido,
   proyecto,
 };

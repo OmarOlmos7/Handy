@@ -23,7 +23,7 @@ export default async function Nueva({ searchParams }: PageProps<"/profesor/activ
       <Encabezado titulo={tn.titulo} subtitulo={tn.subtitulo} migas={[{ texto: t.profesor.comun.panel, href: "/profesor" }]} />
       <ConFlujo vista={1}>
       <NuevaActividad
-        grupos={db.grupos.map((g) => ({ id: g.id, materia: g.materia, nombre: g.nombre }))} hoy={new Date().toISOString().slice(0, 10)}
+        grupos={db.grupos.filter((g) => !g.archivado || g.id === grupo).map((g) => ({ id: g.id, materia: g.materia, nombre: g.nombre }))} hoy={new Date().toISOString().slice(0, 10)}
         grupoInicial={typeof grupo === "string" ? grupo : undefined}
         motorInicial={conf.motor}
         esfuerzos={conf.esfuerzos}
