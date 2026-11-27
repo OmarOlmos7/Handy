@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cuadernoCurso } from "../cuaderno";
 import {
   avanceEtapa,
+  avanceRuta,
   columnasDeProyectos,
   calificacionEvaluacion,
   evaluadoresDe,
@@ -12,6 +13,8 @@ import {
   resultadoEtapa,
   resumenAlumno,
   revisarModelo,
+  rutaAlumno,
+  rutaGrupo,
   sujetoDe,
   sujetosDeEtapa,
 } from "../proyectos";
@@ -191,5 +194,27 @@ describe("cuaderno", () => {
     // Etapa cerrada sin evaluación: 0 para A2 y A3.
     expect(fila("A2").celdas["proyecto:p1"].valor).toBe(0);
     expect(c.grupos[0].etiqueta).toBe("Proyecto");
+  });
+});
+
+describe("ruta de avance del proyecto", () => {
+  it("el profesor ve el porcentaje de sujetos con evaluación terminada por etapa", () => {
+    const evals = [
+      ev("e2", "equipo:q1", "prof", 100, 100),
+      ev("e2", "equipo:q1", "otro", 100, 100),
+      ev("e3", "A1", "prof", 100, 100),
+    ];
+    const pasos = rutaGrupo(proyecto, alumnos, evals);
+    // e1 cerrada; e2: equipo listo de 2 sujetos (equipo + Caro); e3: nadie con los dos evaluadores.
+    expect(pasos.map((x) => x.avance)).toEqual([100, 50, 0]);
+    expect(avanceRuta(pasos)).toBe(45);
+  });
+
+  it("el alumno ve completa solo la etapa cerrada", () => {
+    const r = resumenAlumno(proyecto, [], [], "A3");
+    const pasos = rutaAlumno(r);
+    expect(pasos[0].avance).toBe(100);
+    expect(pasos[1].avance).toBe(0);
+    expect(avanceRuta(pasos)).toBe(30);
   });
 });

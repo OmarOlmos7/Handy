@@ -1,48 +1,6 @@
-// Gráficas del proyecto para el alumno: la línea de etapas (de Inicio a Final) con el estado de
-// cada una y las columnas con la calificación por etapa y la acumulada al cierre. SVG sin librerías.
+// Gráficas del proyecto para el alumno: las columnas con la calificación por etapa y la acumulada al cierre. SVG sin librerías.
 import type { Diccionario } from "@/lib/i18n/diccionario";
-import { ICONO_ETAPA, type EtapaAlumno, type ResumenAlumnoProyecto } from "@/lib/proyectos";
-
-const COLOR_ESTADO: Record<EtapaAlumno["estado"], { circulo: string; texto: string }> = {
-  cerrada: { circulo: "bg-acierto text-white ring-acierto", texto: "text-acierto" },
-  en_evaluacion: { circulo: "bg-amber-400 text-white ring-amber-400", texto: "text-aviso" },
-  entregada: { circulo: "bg-tinta-500 text-white ring-tinta-500", texto: "text-tinta-700" },
-  pendiente: { circulo: "bg-white text-slate-500 ring-slate-300", texto: "text-slate-500" },
-};
-
-/** Línea de etapas con su estado; la línea se rellena hasta la última etapa cerrada. */
-export function LineaEtapas({ resumen, t }: { resumen: ResumenAlumnoProyecto; t: Diccionario }) {
-  const ta = t.proyecto.alumno;
-  const n = resumen.etapas.length;
-  const ultimaCerrada = resumen.etapas.reduce((u, e, i) => (e.estado === "cerrada" ? i : u), -1);
-  return (
-    <div className="overflow-x-auto pb-2">
-      <ol className="relative flex min-w-max gap-0" style={{ minWidth: `${Math.max(n, 3) * 8.5}rem` }}>
-        {resumen.etapas.map((e, i) => {
-          const c = COLOR_ESTADO[e.estado];
-          return (
-            <li key={e.etapa.id} className="relative flex flex-1 flex-col items-center px-2 text-center">
-              {/* Tramo hacia la etapa siguiente. */}
-              {i < n - 1 && <span aria-hidden className={`absolute top-6 left-1/2 h-1 w-full ${i < ultimaCerrada ? "bg-acierto" : "bg-slate-200"}`} />}
-              <span className={`relative z-10 grid h-12 w-12 place-items-center rounded-full text-lg font-bold ring-4 ${c.circulo}`}>
-                {e.estado === "cerrada" && e.resultado?.calificacion !== null && e.resultado ? (
-                  <span className="text-sm">{Math.round(e.resultado.calificacion ?? 0)}</span>
-                ) : (
-                  <span aria-hidden>{ICONO_ETAPA[e.etapa.tipo]}</span>
-                )}
-              </span>
-              <span className="mt-2 max-w-[9rem] text-xs font-semibold text-slate-800">
-                {i + 1}. {e.etapa.nombre}
-              </span>
-              <span className={`text-[11px] font-medium ${c.texto}`}>{ta.estados[e.estado]}</span>
-              <span className="text-[11px] text-slate-400">{e.etapa.peso} %</span>
-            </li>
-          );
-        })}
-      </ol>
-    </div>
-  );
-}
+import { ICONO_ETAPA, type ResumenAlumnoProyecto } from "@/lib/proyectos";
 
 /** Columnas: calificación de cada etapa cerrada (0-100) y línea de la acumulada (puntos de 100). */
 export function GraficaProyecto({ resumen, t }: { resumen: ResumenAlumnoProyecto; t: Diccionario }) {

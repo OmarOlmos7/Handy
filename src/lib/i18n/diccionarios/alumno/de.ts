@@ -31,6 +31,13 @@ const alumno: Diccionario["alumno"] = {
     solucionRetro: "Lösung und Feedback",
   },
   cursos: {
+    categoriaSinTipo: "Ohne Typ",
+    resumenCategoria: "{n} Aufgaben",
+    resumenCategoria1: "1 Aufgabe",
+    terminadas: "Erledigt: {n}",
+    enProceso: "In Bearbeitung: {n}",
+    sinIniciar: "Nicht begonnen: {n}",
+    autoasignadas: "Meine selbst zugewiesenen",
     misCursos: "Meine Kurse",
     actividades: "Aufgaben",
     porEntregar: "Abzugeben",

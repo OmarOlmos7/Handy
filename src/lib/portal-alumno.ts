@@ -347,3 +347,59 @@ export function resumenCursoAlumno(grupo: Grupo, actividades: Actividad[], entre
   const an = analiticasAlumnoCurso(grupo, actividades, entregas, matricula, ahora);
   return { actividades: visibles.length, porEntregar, promedio: an.promedio, evaluadas: an.evaluadas.length };
 }
+
+/** Avance del alumno en una actividad, para el resumen de cada categoría. */
+export type AvanceActividad = "terminada" | "en_proceso" | "sin_iniciar";
+
+/**
+ * Terminada si ya la envió y el profesor la aprobó; en proceso si la envió y falta evaluarla o si
+ * empezó a contestarla (páginas o respuestas en la app sin enviar); sin iniciar en otro caso.
+ */
+export function avanceActividad(entrega?: Entrega): AvanceActividad {
+  if (enviada(entrega)) return entrega!.estado === "aprobada" ? "terminada" : "en_proceso";
+  if (entrega && (entrega.paginasRecibidas > 0 || (entrega.respuestas?.length ?? 0) > 0)) return "en_proceso";
+  return "sin_iniciar";
+}
+
+export interface ResumenAvance {
+  total: number;
+  terminadas: number;
+  enProceso: number;
+  sinIniciar: number;
+}
+
+/** Cuenta cuántas hay en cada estado de avance. */
+export function resumenAvance(estados: AvanceActividad[]): ResumenAvance {
+  return {
+    total: estados.length,
+    terminadas: estados.filter((e) => e === "terminada").length,
+    enProceso: estados.filter((e) => e === "en_proceso").length,
+    sinIniciar: estados.filter((e) => e === "sin_iniciar").length,
+  };
+}
+
+export interface CategoriaAlumno {
+  /** Tipo de actividad (etiqueta); "" para las que no tienen. */
+  etiqueta: string;
+  items: (ActividadDelAlumno & { avance: AvanceActividad })[];
+  resumen: ResumenAvance;
+}
+
+/**
+ * Agrupa las actividades por categoría (tipo de actividad). Dentro de cada una van primero las
+ * por entregar (por fecha de cierre), luego las sin programar y al final las entregadas. Las
+ * categorías salen en el orden de su actividad más urgente, y las que no tienen tipo, al final.
+ */
+export function categoriasAlumno(items: ActividadDelAlumno[], ahora: Date = new Date()): CategoriaAlumno[] {
+  const s = seccionesAlumno(items, ahora);
+  const mapa = new Map<string, CategoriaAlumno>();
+  for (const i of [...s.por_entregar, ...s.sin_programar, ...s.entregadas]) {
+    const etiqueta = i.actividad.etiqueta?.trim() ?? "";
+    const clave = etiqueta.toLocaleLowerCase("es");
+    const c = mapa.get(clave) ?? { etiqueta, items: [], resumen: resumenAvance([]) };
+    c.items.push({ ...i, avance: avanceActividad(i.entrega) });
+    mapa.set(clave, c);
+  }
+  const lista = [...mapa.values()].map((c) => ({ ...c, resumen: resumenAvance(c.items.map((x) => x.avance)) }));
+  return [...lista.filter((c) => c.etiqueta), ...lista.filter((c) => !c.etiqueta)];
+}

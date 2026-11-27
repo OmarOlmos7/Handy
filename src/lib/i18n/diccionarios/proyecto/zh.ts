@@ -177,7 +177,7 @@ const proyecto: typeof es = {
     final: "最终",
   },
   alumno: {
-    boton: "项目",
+    boton: "挑战（项目）",
     titulo: "项目",
     sinProyectos: "老师还没有在本课程中创建项目。",
     avance: "项目进度",
@@ -217,6 +217,19 @@ const proyecto: typeof es = {
     grafica: "各阶段成绩与累计",
     leyendaEtapa: "阶段成绩",
     leyendaAcumulada: "累计（分）",
+  },
+  ruta: {
+    titulo: "项目进度路线",
+    inicio: "开始",
+    cierre: "结束",
+    avance: "已完成 {p}%",
+    completa: "已完成",
+    iniciado: "已开始",
+    porIniciar: "未开始",
+    completo: "项目已完成！",
+    pendiente: "待完成",
+    notaProfesor: "小组进度：所有评价都已完成的学生或小组。已关闭的阶段算作完成。",
+    notaAlumno: "每个阶段在带着你的成绩关闭后变为蓝色。",
   },
 };
 

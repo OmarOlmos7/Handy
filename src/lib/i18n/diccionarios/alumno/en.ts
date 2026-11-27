@@ -31,6 +31,13 @@ const alumno: Diccionario["alumno"] = {
     solucionRetro: "Solution and feedback",
   },
   cursos: {
+    categoriaSinTipo: "No type",
+    resumenCategoria: "{n} assignments",
+    resumenCategoria1: "1 assignment",
+    terminadas: "Finished: {n}",
+    enProceso: "In progress: {n}",
+    sinIniciar: "Not started: {n}",
+    autoasignadas: "My self-assigned",
     misCursos: "My courses",
     actividades: "Assignments",
     porEntregar: "To submit",

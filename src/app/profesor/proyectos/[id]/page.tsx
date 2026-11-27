@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CerrarEtapa } from "@/components/cerrar-etapa";
 import { EncabezadoProyecto } from "@/components/encabezado-proyecto";
+import { RutaProyecto } from "@/components/ruta-proyecto";
 import { BotonLink, Insignia, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
 import { leer } from "@/lib/almacen";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
-import { ICONO_ETAPA, avanceEtapa, calificacionEvaluacion } from "@/lib/proyectos";
+import { ICONO_ETAPA, avanceEtapa, avanceRuta, calificacionEvaluacion, rutaGrupo } from "@/lib/proyectos";
 import { accesoProyecto } from "@/lib/proyectos-servidor";
 import { requerirProfesor } from "@/lib/sesion";
 
@@ -32,40 +33,23 @@ export default async function EvaluacionProyecto({ params, searchParams }: PageP
   const evaluaciones = (db.evaluacionesProyecto ?? []).filter((e) => e.proyectoId === id);
   const entregas = (db.entregasProyecto ?? []).filter((e) => e.proyectoId === id);
   const filas = etapa ? avanceEtapa(proyecto, etapa, grupo.alumnos, evaluaciones, entregas, profesor.id) : [];
+  const pasos = rutaGrupo(proyecto, grupo.alumnos, evaluaciones);
   const enlaceEvaluar = (sujeto: string) => `/profesor/proyectos/${id}/evaluar/${etapa!.id}/${encodeURIComponent(sujeto)}`;
 
   return (
     <>
       <EncabezadoProyecto t={t} proyecto={proyecto} grupo={grupo} esDueno={esDueno} activa="evaluacion" />
-      {/* Etapas: una ficha por etapa con su estado. */}
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-        {proyecto.etapas.map((e, i) => {
-          const activa = e.id === etapa?.id;
-          return (
-            <Link
-              key={e.id}
-              href={`/profesor/proyectos/${id}?etapa=${e.id}`}
-              aria-current={activa ? "true" : undefined}
-              className={`flex min-w-44 shrink-0 items-start gap-2 rounded-xl px-3 py-2 text-left ring-2 transition ${
-                activa ? "bg-tinta-50 ring-tinta-500" : "bg-white ring-slate-200 hover:ring-slate-300"
-              }`}
-            >
-              <span className="text-xl" aria-hidden>
-                {ICONO_ETAPA[e.tipo]}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-xs font-semibold text-slate-500">
-                  {formato(tp.modelo.etapa, { n: i + 1 })} · {e.peso} %
-                </span>
-                <span className="block truncate text-sm font-semibold text-slate-900">{e.nombre}</span>
-                <span className={`mt-0.5 block text-xs ${e.cerradaEn ? "text-acierto" : "text-slate-500"}`}>
-                  {e.cerradaEn ? `✓ ${formato(te.cerrada, { f: fechaLarga(e.cerradaEn.slice(0, 10), locale) })}` : te.abierta}
-                </span>
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+      {/* Ruta de avance del grupo: cada etapa es un vínculo a su evaluación. */}
+      <Tarjeta className="mb-4">
+        <RutaProyecto
+          pasos={pasos}
+          avanceTotal={avanceRuta(pasos)}
+          t={t}
+          enlace={(etapaId) => `/profesor/proyectos/${id}?etapa=${etapaId}`}
+          activa={etapa?.id}
+          nota={tp.ruta.notaProfesor}
+        />
+      </Tarjeta>
 
       {etapa && (
         <Tarjeta className="mb-4">

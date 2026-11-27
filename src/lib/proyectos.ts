@@ -341,6 +341,45 @@ export function avanceEtapa(
   });
 }
 
+/** Un paso del diagrama de ruta del proyecto: una etapa con su porcentaje de avance (0 a 100). */
+export interface PasoRuta {
+  etapa: EtapaProyecto;
+  numero: number;
+  avance: number;
+}
+
+/** Avance que representa cada estado de la etapa para el alumno. */
+const AVANCE_ESTADO: Record<EstadoEtapaAlumno, number> = { pendiente: 0, entregada: 34, en_evaluacion: 67, cerrada: 100 };
+
+/** Ruta de avance del alumno: cada etapa según su estado (completa al cerrarse). */
+export function rutaAlumno(resumen: ResumenAlumnoProyecto): PasoRuta[] {
+  return resumen.etapas.map((e) => ({ etapa: e.etapa, numero: e.numero, avance: AVANCE_ESTADO[e.estado] }));
+}
+
+/**
+ * Ruta de avance del grupo (vista del profesor): en cada etapa, el porcentaje de alumnos o equipos
+ * que ya tienen todas sus evaluaciones terminadas; una etapa cerrada cuenta como completa.
+ */
+export function rutaGrupo(p: Proyecto, alumnos: Alumno[], evaluaciones: EvaluacionProyecto[]): PasoRuta[] {
+  return p.etapas.map((etapa, i) => {
+    if (etapa.cerradaEn) return { etapa, numero: i + 1, avance: 100 };
+    const sujetos = sujetosDeEtapa(p, etapa, alumnos);
+    const listos = sujetos.filter((s) => {
+      const r = resultadoEtapa(p, etapa, evaluaciones, s.sujeto);
+      return r.esperadas > 0 && r.terminadas >= r.esperadas;
+    }).length;
+    return { etapa, numero: i + 1, avance: sujetos.length ? Math.floor((listos / sujetos.length) * 100) : 0 };
+  });
+}
+
+/** Avance total de la ruta, ponderado por el peso de cada etapa (0 a 100). */
+export function avanceRuta(pasos: PasoRuta[]): number {
+  const total = sumaPesos(pasos.map((x) => x.etapa));
+  if (!pasos.length) return 0;
+  if (total <= 0) return Math.floor(pasos.reduce((s, x) => s + x.avance, 0) / pasos.length);
+  return Math.floor(pasos.reduce((s, x) => s + (x.avance * Math.max(0, x.etapa.peso)) / total, 0));
+}
+
 /** Nota del proyecto para el cuaderno: promedio ponderado de las etapas cerradas; null si ninguna. */
 export function notaProyecto(p: Proyecto, evaluaciones: EvaluacionProyecto[], matricula: string): number | null {
   return resumenAlumno(p, evaluaciones, [], matricula).promedioALaFecha;

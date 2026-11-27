@@ -180,7 +180,7 @@ const proyecto: typeof es = {
     final: "Final",
   },
   alumno: {
-    boton: "Project",
+    boton: "Challenge (project)",
     titulo: "Project",
     sinProyectos: "Your teacher hasn't created projects in this course yet.",
     avance: "Project progress",
@@ -220,6 +220,19 @@ const proyecto: typeof es = {
     grafica: "Grade per stage and cumulative",
     leyendaEtapa: "Stage grade",
     leyendaAcumulada: "Cumulative (points)",
+  },
+  ruta: {
+    titulo: "Project progress path",
+    inicio: "Start",
+    cierre: "Finish",
+    avance: "{p}% complete",
+    completa: "Completed",
+    iniciado: "Started",
+    porIniciar: "Not started",
+    completo: "Project complete!",
+    pendiente: "Pending",
+    notaProfesor: "Group progress: students or teams with all their evaluations finished. A closed stage counts as complete.",
+    notaAlumno: "Each stage turns blue when it is closed with your grade.",
   },
 };
 
