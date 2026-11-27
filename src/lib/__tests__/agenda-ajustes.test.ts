@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { entregasEnFechas, franjaEntrega, hoyAlumno, hoyProfesor } from "../agenda-hoy";
+import { entregasEnFechas, franjaEntrega, hoyAlumno, hoyProfesor, mesVecino, semanasDelMes } from "../agenda-hoy";
 import { bloqueEn, bloquesDeCeldas, celdasDeBloques, pintarSemanal, restarRango, semanaParaAlumno, vigente } from "../asesorias";
 import { asuetoEn, asuetosDelAnio, paisDeAsuetos, pascua } from "../asuetos";
 import type { Asesoria, Grupo } from "../tipos";
@@ -126,5 +126,48 @@ describe("entregas y actividades de hoy", () => {
     expect(items.map((i) => i.tipo)).toEqual(["clase", "cita", "entrega"]);
     const asueto = hoyAlumno({ cursos: [{ grupo, matricula: "A1", agenda }], asesorias: [], actividades: [], ahora: mx("2026-11-16", 8) });
     expect(asueto).toEqual([{ inicio: 420, fin: 1080, tipo: "asueto", texto: "Día de la Revolución" }]);
+  });
+});
+
+describe("calendario general", () => {
+  const otro: Grupo = { ...grupo, id: "g2", nombre: "3° C", alumnos: [{ matricula: "A1", nombre: "Ana" }] } as Grupo;
+  const agenda = {
+    bloques: bloquesDeCeldas([
+      { dia: 3, inicio: 420, tipo: "clase", grupoId: "g1" },
+      { dia: 3, inicio: 480, tipo: "clase", grupoId: "g2" },
+      { fecha: "2026-12-02", inicio: 600, tipo: "evento", titulo: "Feria de ciencias", comun: true },
+      { fecha: "2026-12-02", inicio: 660, tipo: "reunion", titulo: "Junta privada" },
+      { fecha: "2026-12-02", inicio: 720, tipo: "comida", comun: true },
+    ]),
+  };
+  const cursos = [
+    { grupo, matricula: "A1", agenda },
+    { grupo: otro, matricula: "A1", agenda },
+  ];
+
+  it("la actividad común se publica una sola vez; lo privado y la comida no", () => {
+    const items = hoyAlumno({ cursos, asesorias: [], actividades: [], fecha: "2026-12-02" });
+    expect(items.map((i) => [i.inicio, i.tipo, Boolean(i.comun)])).toEqual([
+      [420, "clase", false],
+      [480, "clase", false],
+      [600, "evento", true],
+    ]);
+  });
+
+  it("filtra por curso", () => {
+    const alumno = hoyAlumno({ cursos, asesorias: [], actividades: [], fecha: "2026-12-02", grupoId: "g2" });
+    expect(alumno.map((i) => i.inicio)).toEqual([480, 600]);
+    const profesor = hoyProfesor({ agenda, asesorias: [], actividades: [], grupos: [grupo, otro], fecha: "2026-12-02", grupoId: "g1" });
+    expect(profesor.map((i) => i.inicio)).toEqual([420, 600, 660, 720]);
+  });
+
+  it("semanas del mes (lunes a viernes) y meses vecinos", () => {
+    const semanas = semanasDelMes("2026-11-15");
+    expect(semanas[0][0]).toBe("2026-11-02");
+    expect(semanas.at(-1)![0]).toBe("2026-11-30");
+    expect(semanas).toHaveLength(5);
+    expect(semanasDelMes("2026-12-01")[0][0]).toBe("2026-11-30");
+    expect(mesVecino("2026-12-15", 1)).toBe("2027-01-01");
+    expect(mesVecino("2026-01-15", -1)).toBe("2025-12-01");
   });
 });

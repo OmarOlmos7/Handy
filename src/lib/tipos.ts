@@ -716,6 +716,11 @@ export interface BloqueAgenda {
   grupoId?: string;
   /** Id de la etiqueta propia del profesor (tipo "personal"). */
   etiqueta?: string;
+  /**
+   * "Actividad común": se publica en el calendario de los alumnos (los del curso del bloque o, sin
+   * curso, los de todos los cursos del profesor).
+   */
+  comun?: boolean;
 }
 
 /** Etiqueta que crea el profesor para su agenda ("Personalizar"). */

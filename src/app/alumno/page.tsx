@@ -85,7 +85,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
       <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_17rem] xl:items-start xl:gap-6">
       {/* A la derecha (arriba en el teléfono), lo que toca hoy. */}
       <aside className="mb-6 xl:sticky xl:top-4 xl:col-start-2 xl:row-start-1 xl:mb-0">
-        <ActividadesHoy items={hoy} t={t} fecha={diaLargoLocal(ahoraEnMexico(ahora).fecha, locale)} />
+        <ActividadesHoy items={hoy} t={t} fecha={diaLargoLocal(ahoraEnMexico(ahora).fecha, locale)} agendaHref="/alumno/calendario" />
       </aside>
       <div className="min-w-0 xl:col-start-1 xl:row-start-1">
       <CompaneroDelAlumno db={db} alumno={alumno} />

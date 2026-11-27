@@ -26,6 +26,7 @@ export default async function LayoutProfesor({ children }: LayoutProps<"/profeso
       <BarraApp
         enlaces={[
           { href: "/profesor", texto: t.barra.panel, exacto: true },
+          { href: "/profesor/agenda", texto: t.asesorias.calendario.titulo },
           { href: "/profesor/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos },
           { href: "/profesor/actividades/nueva", texto: t.barra.nuevaActividad },
           { href: "/profesor/grupos/nuevo", texto: t.barra.nuevoCurso },

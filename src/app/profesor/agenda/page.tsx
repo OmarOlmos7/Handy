@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { AgendaSemanal, type CitaAgenda } from "@/components/agenda-semanal";
+import { CalendarioGeneral } from "@/components/calendario-general";
 import { FichaAsesoriaProfesor } from "@/components/asesorias";
 import { Encabezado, Tarjeta } from "@/components/ui";
 import { activa, ahoraEnMexico, celdasDeBloques, duracionTexto, fechaValida, fechasSemana, lunesDe, minutosDisponibles, sumarDias, yaPaso } from "@/lib/asesorias";
-import { entregasEnFechas } from "@/lib/agenda-hoy";
+import { entregasEnFechas, hoyProfesor, mesVecino, semanasDelMes } from "@/lib/agenda-hoy";
 import { paisDeAsuetos } from "@/lib/asuetos";
 import { vistaAsesoria } from "@/lib/asesorias-vista";
 import { paisDeIp } from "@/lib/clima-servidor";
@@ -56,7 +57,7 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
   // Asuetos del país elegido por el profesor; si aún no elige, el de su conexión (México si no se sabe).
   const pais = agenda?.pais ?? (await paisDeIp(ipDeCabeceras(await headers())));
   const agendaVista = agenda && { ...agenda, pais };
-  const entregas = entregasEnFechas(db.actividades, activos, fechas);
+  const entregas = entregasEnFechas(db.actividades, curso ? [curso] : activos, fechas);
   const vistas = asesorias
     .filter((a) => a.estado !== "cancelada")
     .sort((a, b) => a.fecha.localeCompare(b.fecha) || a.inicio - b.inicio)
@@ -64,6 +65,82 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
     .map((a) => vistaAsesoria(a, { grupo: grupoDe(a.grupoId), locale, agenda: agendaVista, paraProfesor: true }, ahora));
   const porRegistrar = (db.asesorias ?? []).filter((a) => a.estado === "agendada" && yaPaso(a, ahora)).length;
   const parametros = curso ? `curso=${curso.id}&` : "";
+  const tc = ta.calendario;
+  const vista = q.vista === "mes" ? "mes" : q.vista === "semana" ? "semana" : "editar";
+  const fechaVista = fechaValida(q.fecha) ?? fechaValida(q.semana) ?? hoy;
+  const ruta = (c: { vista?: string; fecha?: string; curso?: string | null }) => {
+    const p = new URLSearchParams();
+    const v = c.vista ?? vista;
+    if (v !== "editar") p.set("vista", v);
+    const f = c.fecha ?? fechaVista;
+    if (v === "editar") p.set("semana", lunesDe(f));
+    else p.set("fecha", f);
+    const cu = c.curso === null ? undefined : (c.curso ?? curso?.id);
+    if (cu) p.set("curso", cu);
+    return `/profesor/agenda?${p}`;
+  };
+  const pestanas = (
+    <div className="inline-flex rounded-lg bg-slate-100 p-1 text-sm" role="tablist">
+      {(
+        [
+          ["editar", `✏️ ${tc.editar}`],
+          ["semana", tc.vistaSemana],
+          ["mes", tc.vistaMes],
+        ] as const
+      ).map(([v, texto]) => (
+        <Link
+          key={v}
+          href={ruta({ vista: v })}
+          role="tab"
+          aria-selected={vista === v}
+          className={`rounded-md px-3 py-1.5 font-medium ${vista === v ? "bg-white text-tinta-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+        >
+          {texto}
+        </Link>
+      ))}
+    </div>
+  );
+
+  if (vista !== "editar") {
+    // Calendario general (solo lectura) de todos los cursos o de uno.
+    const mes = fechaVista.slice(0, 7);
+    const lunes = lunesDe(fechaVista);
+    const dias = vista === "mes" ? semanasDelMes(fechaVista).flat() : fechasSemana(lunes);
+    const fmt = (f: string, o: Intl.DateTimeFormatOptions) => new Date(`${f}T12:00:00Z`).toLocaleDateString(locale, { ...o, timeZone: "UTC" });
+    return (
+      <>
+        <Encabezado
+          migas={[{ texto: t.profesor.comun.panel, href: "/profesor" }]}
+          rutaEtiqueta={t.profesor.comun.ruta}
+          titulo={`🗓️ ${tc.titulo}`}
+          subtitulo={tc.subtituloProfesor}
+        />
+        <CalendarioGeneral
+          t={t}
+          locale={locale}
+          vista={vista}
+          dias={dias.map((f) => ({
+            fecha: f,
+            delMes: vista === "semana" || f.startsWith(mes),
+            items: hoyProfesor({ agenda: agendaVista, asesorias: db.asesorias ?? [], actividades: db.actividades, grupos: activos, fecha: f, grupoId: curso?.id }),
+          }))}
+          hoy={hoy}
+          titulo={
+            vista === "mes"
+              ? fmt(`${mes}-01`, { month: "long", year: "numeric" })
+              : `${fmt(dias[0], { day: "numeric", month: "short" })} – ${fmt(dias[4], { day: "numeric", month: "short", year: "numeric" })}`
+          }
+          ruta={ruta}
+          anterior={vista === "mes" ? mesVecino(fechaVista, -1) : sumarDias(lunes, -7)}
+          siguiente={vista === "mes" ? mesVecino(fechaVista, 1) : sumarDias(lunes, 7)}
+          actual={hoy}
+          cursos={activos.map((g) => ({ id: g.id, nombre: `${g.materia} · ${g.nombre}` }))}
+          curso={curso?.id}
+          pestanas={pestanas}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -83,6 +160,7 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
           )
         }
       />
+      <div className="mb-4">{pestanas}</div>
       <div className="mb-5 grid gap-3 sm:grid-cols-3">
         <Tarjeta className="!p-4">
           <p className="text-xs text-slate-500">{tp.disponibleSemana}</p>
@@ -99,7 +177,7 @@ export default async function AgendaProfesor({ searchParams }: PageProps<"/profe
         </Tarjeta>
       </div>
       <AgendaSemanal
-        key={`${semana}-${agenda?.actualizadaEn ?? ""}`}
+        key={semana}
         semana={semana}
         fechas={fechas}
         hoy={hoy}

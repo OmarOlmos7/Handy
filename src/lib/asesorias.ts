@@ -129,12 +129,13 @@ export interface CeldaAgenda {
   hasta?: string;
   grupoId?: string;
   etiqueta?: string;
+  comun?: boolean;
 }
 
 /** Clave del "renglón" de la celda: la fecha, o el día de la semana con sus fechas de validez. */
 const claveDe = (b: { dia?: number; fecha?: string; desde?: string; hasta?: string }) => (b.fecha ? `f:${b.fecha}` : `d:${b.dia}|${b.desde ?? ""}|${b.hasta ?? ""}`);
 const mismoContenido = (a: Omit<CeldaAgenda, "inicio">, b: Omit<CeldaAgenda, "inicio">) =>
-  a.tipo === b.tipo && a.titulo === b.titulo && a.grupoId === b.grupoId && a.etiqueta === b.etiqueta;
+  a.tipo === b.tipo && a.titulo === b.titulo && a.grupoId === b.grupoId && a.etiqueta === b.etiqueta && Boolean(a.comun) === Boolean(b.comun);
 
 /** ¿Se enciman dos rangos de fechas? (sin fecha = sin límite). */
 export function rangosSeEnciman(a: { desde?: string; hasta?: string }, b: { desde?: string; hasta?: string }) {
@@ -166,7 +167,7 @@ export function pintarSemanal(
   dia: number,
   inicio: number,
   rango: Rango,
-  nuevo?: Pick<CeldaAgenda, "tipo" | "titulo" | "grupoId" | "etiqueta">,
+  nuevo?: Pick<CeldaAgenda, "tipo" | "titulo" | "grupoId" | "etiqueta" | "comun">,
 ): CeldaAgenda[] {
   let desde = rango.desde || undefined;
   let hasta = rango.hasta || undefined;
@@ -198,6 +199,8 @@ export function bloquesDeCeldas(celdas: CeldaAgenda[]): BloqueAgenda[] {
         hasta: desde && hasta && desde > hasta ? desde : hasta,
         grupoId: c.grupoId || undefined,
         etiqueta: c.tipo === "personal" ? c.etiqueta : undefined,
+        // Solo lo que se puede publicar (no la comida ni las franjas de asesoría).
+        comun: c.comun && c.tipo !== "asesoria" && c.tipo !== "libre" && c.tipo !== "comida" ? true : undefined,
       };
     });
   // Una celda por renglón y hora (la última manda).
@@ -220,6 +223,7 @@ export function bloquesDeCeldas(celdas: CeldaAgenda[]): BloqueAgenda[] {
       ...(c.hasta ? { hasta: c.hasta } : {}),
       ...(c.grupoId ? { grupoId: c.grupoId } : {}),
       ...(c.etiqueta ? { etiqueta: c.etiqueta } : {}),
+      ...(c.comun ? { comun: true } : {}),
     });
   }
   return bloques;
@@ -237,6 +241,7 @@ export function celdasDeBloques(bloques: BloqueAgenda[]): CeldaAgenda[] {
       ...(b.hasta ? { hasta: b.hasta } : {}),
       ...(b.grupoId ? { grupoId: b.grupoId } : {}),
       ...(b.etiqueta ? { etiqueta: b.etiqueta } : {}),
+      ...(b.comun ? { comun: true } : {}),
     })),
   );
 }
