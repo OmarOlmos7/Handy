@@ -94,6 +94,7 @@ export function datosDeProfesor(db: BaseDeDatos, profesorId: string): BaseDeDato
     proyectos: (db.proyectos ?? []).filter((p) => idsGrupos.has(p.grupoId)),
     evaluacionesProyecto: (db.evaluacionesProyecto ?? []).filter((e) => idsProyectos.has(e.proyectoId)),
     entregasProyecto: (db.entregasProyecto ?? []).filter((e) => idsProyectos.has(e.proyectoId)),
+    avisos: (db.avisos ?? []).filter((a) => idsGrupos.has(a.grupoId)),
   };
 }
 

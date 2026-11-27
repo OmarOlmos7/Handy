@@ -6,6 +6,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { archivarGrupo, borrarGrupo, colorGrupo, renombrarGrupo } from "@/app/acciones";
 import { colorDe } from "@/lib/colores";
 import { BotonIcono, IconoAlumnos, IconoArchivar, IconoBasura, IconoLapiz } from "./iconos";
+import { SobreAvisos } from "./avisos";
 import { SelectorColor } from "./selector-color";
 import { Boton } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
@@ -15,7 +16,8 @@ const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm 
 
 /**
  * Tarjeta de un curso en el panel: abre la vista del curso; botón a la lista de alumnos; lápiz para
- * renombrar (y entrar a altas, bajas y cambios de alumnos), caja para archivar y bote para borrar.
+ * renombrar (y entrar a altas, bajas y cambios de alumnos), sobre de avisos, caja para archivar y bote
+ * para borrar.
  */
 export function TarjetaCurso({
   id,
@@ -26,6 +28,7 @@ export function TarjetaCurso({
   alumnos,
   porRevisar,
   color,
+  avisosSinLeer = 0,
 }: {
   id: string;
   materia: string;
@@ -35,6 +38,8 @@ export function TarjetaCurso({
   alumnos: number;
   porRevisar: number;
   color?: string;
+  /** Mensajes de alumnos del curso que el profesor aún no abre (número en el sobre). */
+  avisosSinLeer?: number;
 }) {
   const router = useRouter();
   const { t } = useTextos();
@@ -168,6 +173,7 @@ export function TarjetaCurso({
         </dl>
         {!editando && (
           <div className="ml-auto flex gap-1">
+            <SobreAvisos href={`/profesor/grupos/${id}/avisos`} sinLeer={avisosSinLeer} />
             <BotonIcono etiqueta={tc.editar} onClick={() => setEditando(true)} disabled={pendiente}>
               <IconoLapiz />
             </BotonIcono>

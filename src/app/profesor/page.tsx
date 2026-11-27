@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TarjetaCurso } from "@/components/tarjeta-curso";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { estadoActividad, leer, saldo } from "@/lib/almacen";
+import { sinLeerProfesor } from "@/lib/avisos";
 import { agruparPorColor } from "@/lib/colores";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
@@ -151,6 +152,7 @@ export default async function PanelProfesor() {
                       actividades={actividadesDeGrupo(g.id).length}
                       alumnos={new Set(g.alumnos.map((a) => a.matricula)).size}
                       porRevisar={porRevisar.filter((a) => a.grupoId === g.id).length}
+                      avisosSinLeer={sinLeerProfesor(db.avisos ?? [], g.id)}
                     />
                   ))}
                 </div>

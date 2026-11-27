@@ -4,6 +4,7 @@ import { InstalarApp } from "@/components/instalar-app";
 import { BotonLink, Encabezado, colorCalificacion } from "@/components/ui";
 import { num } from "@/components/tablero";
 import { TarjetaCursoAlumno } from "@/components/tarjeta-curso-alumno";
+import { sinLeerAlumno } from "@/lib/avisos";
 import { agruparPorColor } from "@/lib/colores";
 import { resumenCursoAlumno } from "@/lib/portal-alumno";
 import { FormIngresoAlumno, FormRegistroAlumno } from "@/components/formularios-alumno";
@@ -54,6 +55,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
     // El color que eligió el alumno; si no eligió, el que puso el profesor.
     color: cuenta?.colores?.[grupo.id] ?? grupo.color,
     resumen: resumenCursoAlumno(grupo, db.actividades, db.entregas, enCurso.matricula, ahora),
+    avisos: sinLeerAlumno(db.avisos ?? [], grupo.id, enCurso.matricula),
   }));
   // Los que el alumno archivó salen de la vista principal y van a la sección plegable de abajo.
   const archivados = cuenta?.archivados ?? {};
@@ -104,7 +106,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                   </h3>
                 )}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {items.map(({ grupo, color: c, resumen }) => (
+                  {items.map(({ grupo, color: c, resumen, avisos }) => (
                     <TarjetaCursoAlumno
                       key={grupo.id}
                       id={grupo.id}
@@ -116,6 +118,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                       porEntregar={resumen.porEntregar}
                       promedio={resumen.promedio === null ? undefined : num(resumen.promedio)}
                       colorPromedio={resumen.promedio === null ? undefined : colorCalificacion(resumen.promedio, 100)}
+                      avisosSinLeer={avisos}
                     />
                   ))}
                 </div>
@@ -135,7 +138,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
               <div className="border-t border-slate-100 p-4">
                 <p className="mb-3 text-sm text-slate-500">{ta.alumno.texto}</p>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {tarjetasArchivadas.map(({ grupo, color: c, resumen }) => (
+                  {tarjetasArchivadas.map(({ grupo, color: c, resumen, avisos }) => (
                     <TarjetaCursoAlumno
                       key={grupo.id}
                       id={grupo.id}
@@ -147,6 +150,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
                       porEntregar={resumen.porEntregar}
                       promedio={resumen.promedio === null ? undefined : num(resumen.promedio)}
                       colorPromedio={resumen.promedio === null ? undefined : colorCalificacion(resumen.promedio, 100)}
+                      avisosSinLeer={avisos}
                       archivado
                     />
                   ))}

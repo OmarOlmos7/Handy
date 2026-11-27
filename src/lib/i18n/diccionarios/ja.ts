@@ -7,6 +7,7 @@ import licencias from "./licencias/ja";
 import alumnosGrupo from "./alumnos-grupo/ja";
 import archivados from "./archivados/ja";
 import contenido from "./contenido/ja";
+import avisos from "./avisos/ja";
 import proyecto from "./proyecto/ja";
 
 const ja: Diccionario = {
@@ -35,6 +36,7 @@ const ja: Diccionario = {
     creditos: "クレジット",
     administracion: "管理",
     misActividades: "自分の課題",
+    avisos: "お知らせ",
     alumno: "生徒",
     sinSesion: "未ログイン",
     tipos: { alumno: "生徒", profesor: "先生", administrador: "管理者" },
@@ -448,6 +450,7 @@ const ja: Diccionario = {
   alumnosGrupo,
   archivados,
   contenido,
+  avisos,
   proyecto,
 };
 

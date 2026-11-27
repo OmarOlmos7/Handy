@@ -7,6 +7,7 @@ import licencias from "./licencias/en";
 import alumnosGrupo from "./alumnos-grupo/en";
 import archivados from "./archivados/en";
 import contenido from "./contenido/en";
+import avisos from "./avisos/en";
 import proyecto from "./proyecto/en";
 
 const en: Diccionario = {
@@ -35,6 +36,7 @@ const en: Diccionario = {
     creditos: "Credits",
     administracion: "Administration",
     misActividades: "My assignments",
+    avisos: "Messages",
     alumno: "Student",
     sinSesion: "Not signed in",
     tipos: { alumno: "Student", profesor: "Teacher", administrador: "Administrator" },
@@ -449,6 +451,7 @@ const en: Diccionario = {
   alumnosGrupo,
   archivados,
   contenido,
+  avisos,
   proyecto,
 };
 

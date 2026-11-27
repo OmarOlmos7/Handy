@@ -172,7 +172,10 @@ export async function borrarGrupo(grupoId: string) {
     db.proyectos = (db.proyectos ?? []).filter((p) => p.grupoId !== grupoId);
     db.entregasProyecto = (db.entregasProyecto ?? []).filter((e) => !proyectos.includes(e.proyectoId));
     db.evaluacionesProyecto = (db.evaluacionesProyecto ?? []).filter((e) => !proyectos.includes(e.proyectoId));
-    return [...acts.map((id) => `actividades/${id}`), ...proyectos.map((id) => `proyectos/${id}`)];
+    // Avisos del curso con sus anexos.
+    const avisos = (db.avisos ?? []).filter((a) => a.grupoId === grupoId).map((a) => a.id);
+    db.avisos = (db.avisos ?? []).filter((a) => a.grupoId !== grupoId);
+    return [...acts.map((id) => `actividades/${id}`), ...proyectos.map((id) => `proyectos/${id}`), ...avisos.map((id) => `avisos/${id}`)];
   });
   ids.forEach((carpeta) => borrarCarpeta(carpeta));
   revalidatePath("/profesor", "layout");
