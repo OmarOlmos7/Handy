@@ -8,7 +8,7 @@ import { Logo } from "@/components/ui";
 import { actividadDe, grupoDe, leer } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
 import { textos, textosDeActividad } from "@/lib/i18n/servidor";
-import { FichaInstrucciones } from "@/components/ficha-instrucciones";
+import { FichaInstrucciones, HojaRubrica, HojaWeb } from "@/components/ficha-instrucciones";
 import { LOGO_ORIGINAL, srcLogoDeActividad } from "@/lib/logo";
 import { qrDataUrl, urlBase } from "@/lib/qr";
 import { datosResponsable } from "@/lib/legal/documentos";
@@ -47,57 +47,18 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
   const { t: tf, locale: localeFicha } = await textosDeActividad(actividad);
   const duenio = grupo.profesorId ? db.profesores.find((p) => p.id === grupo.profesorId) : undefined;
   const logo = srcLogoDeActividad(id, duenio?.config);
-  return (
-    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
-      {/* Con el logo propio del profesor en la ficha, el de iEureka-Grader queda arriba y pequeño. */}
-      {logo !== LOGO_ORIGINAL && <Logo />}
-      <div className={logo !== LOGO_ORIGINAL ? "mt-4" : ""}>
-        <FichaInstrucciones
-          actividad={actividad}
-          curso={`${grupo.materia} · ${grupo.nombre}`}
-          t={tf}
-          locale={localeFicha}
-          logo={logo}
-          qrSrc={await qrDataUrl(`${await urlBase()}/entregar/${id}`)}
-          qrEnCelular={false}
-        />
-      </div>
-      {alumno && (
-        <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-tinta-50 px-4 py-3 text-sm">
-          <span>
-            {t.alumno.entregar.entregasComo} <strong>{alumno.nombre}</strong>
-            <span className="block text-xs text-slate-500">{alumno.correo}</span>
-          </span>
-          <form action={salirAlumno}>
-            <button type="submit" className="text-xs text-tinta-700 underline">
-              {t.alumno.entregar.noEresTu}
-            </button>
-          </form>
-        </div>
-      )}
-      {/* Actividad de contenido: instrucciones y material con su previsualizador. */}
-      {actividad.contenido && (
-        <div className="mt-5">
-          <MaterialContenido
-            instrucciones={[]}
-            anexos={actividad.contenido.anexos}
-            entrega={actividad.contenido.entrega}
-            sinSesion={!comoProfesor && !matricula}
-          />
-        </div>
-      )}
-      {actividad.entregasSuspendidas && !comoProfesor ? (
-        <p className="mt-5 rounded-xl bg-error-suave px-4 py-4 text-sm font-medium text-error">{t.alumno.entregar.suspendidas}</p>
+  const vistaEntrega = actividad.entregasSuspendidas && !comoProfesor ? (
+        <p className="rounded-xl bg-error-suave px-4 py-4 text-sm font-medium text-error">{t.alumno.entregar.suspendidas}</p>
       ) : recepcion === "proximo" && !comoProfesor ? (
-        <p className="mt-5 rounded-xl bg-tinta-50 px-4 py-4 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200">
+        <p className="rounded-xl bg-tinta-50 px-4 py-4 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200">
           {formato(t.alumno.entregar.proximo, { f: fechaHoraLarga(aperturaEnvio(actividad)!, locale) })}
         </p>
       ) : recepcion === "cerrado" && !comoProfesor ? (
-        <p className="mt-5 rounded-xl bg-error-suave px-4 py-4 text-sm font-medium text-error">
+        <p className="rounded-xl bg-error-suave px-4 py-4 text-sm font-medium text-error">
           {formato(t.alumno.entregar.cerrado, { f: fechaHoraLarga(actividad.envioHasta!, locale) })}
         </p>
       ) : (
-        <div className={`mt-5 ${esPlataforma(actividad) ? "" : "mx-auto max-w-lg"}`}>
+        <div>
           {actividad.envioHasta && (
             <p className="mb-4 rounded-lg bg-tinta-50 px-3 py-2 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200">
               {formato(t.alumno.entregar.hasta, { f: fechaHoraLarga(actividad.envioHasta, locale) })}
@@ -107,6 +68,7 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
             <EnPlataforma />
           ) : (
           <EntregarForm
+            enHoja
             actividadId={id}
             titulo={actividad.titulo}
             correoPrivacidad={datosResponsable(process.env).correo}
@@ -124,6 +86,60 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
           />
           )}
         </div>
+      );
+  return (
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
+      {/* Con el logo propio del profesor en la ficha, el de iEureka-Grader queda arriba y pequeño. */}
+      {logo !== LOGO_ORIGINAL && <Logo />}
+      <div className={logo !== LOGO_ORIGINAL ? "mt-4" : ""}>
+        <FichaInstrucciones
+          actividad={actividad}
+          curso={`${grupo.materia} · ${grupo.nombre}`}
+          t={tf}
+          locale={localeFicha}
+          logo={logo}
+          qrSrc={await qrDataUrl(`${await urlBase()}/entregar/${id}`)}
+          qrEnCelular={false}
+        />
+      </div>
+      {/* 2. Apoyos: el material de la actividad (PDF, Word, PowerPoint, video…) en su hoja. */}
+      {actividad.contenido && actividad.contenido.anexos.length > 0 && (
+        <HojaWeb className="hoja-apoyos mt-5" antetitulo={tf.contenido.ficha.apoyosTitulo} titulo={tf.contenido.ficha.apoyosSubtitulo}>
+          <MaterialContenido
+            instrucciones={[]}
+            anexos={actividad.contenido.anexos}
+            entrega={actividad.contenido.entrega}
+            sinSesion={!comoProfesor && !matricula}
+            sinTitulo
+          />
+        </HojaWeb>
+      )}
+      {/* 3. Rúbrica con la que se evaluará: criterios y puntos, sin respuestas. */}
+      <div className="mt-5">
+        <HojaRubrica actividad={actividad} t={tf} />
+      </div>
+      {/* 4. Entrega al final. */}
+      {alumno && (
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-tinta-50 px-4 py-3 text-sm">
+          <span>
+            {t.alumno.entregar.entregasComo} <strong>{alumno.nombre}</strong>
+            <span className="block text-xs text-slate-500">{alumno.correo}</span>
+          </span>
+          <form action={salirAlumno}>
+            <button type="submit" className="text-xs text-tinta-700 underline">
+              {t.alumno.entregar.noEresTu}
+            </button>
+          </form>
+        </div>
+      )}
+      {/* La entrega va al final, en una hoja del mismo ancho que la actividad; en plataforma el
+          alumno ya responde sobre la actividad misma. */}
+      {esPlataforma(actividad) && !actividad.contenido ? (
+        <div className="mt-5">{vistaEntrega}</div>
+      ) : (
+        <HojaWeb className="hoja-entrega mt-5" antetitulo={tf.contenido.ficha.entregaTitulo} titulo={actividad.titulo}>
+          {vistaEntrega}
+        </HojaWeb>
       )}
     </main>
   );

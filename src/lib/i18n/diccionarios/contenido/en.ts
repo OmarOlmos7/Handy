@@ -58,7 +58,7 @@ const contenido: typeof es = {
   material: "Material",
   instruccionesTitulo: "Instructions",
   /** Ficha de instrucciones en la web. */
-  ficha: { manuscrita: "By hand: photos or PDF of your sheets", digital: "Digital evidence: upload your files", entrega: "Submission:", evaluacion: "Assessment:", enPlataforma: "Answer on the platform", impresa: "Photos or PDF of your completed sheet", puntos: "{p} points" },
+  ficha: { apoyosTitulo: "Resources", apoyosSubtitulo: "Material for the activity", entregaTitulo: "Submit your evidence", rubricaTitulo: "Assessment rubric", rubricaSubtitulo: "How your work will be assessed", rubricaEscala: "How your work will be assessed · graded out of {e}", aplicaA: "Applies to items {n}", puntosPorReactivo: "Points per item", manuscrita: "By hand: photos or PDF of your sheets", digital: "Digital evidence: upload your files", entrega: "Submission:", evaluacion: "Assessment:", enPlataforma: "Answer on the platform", impresa: "Photos or PDF of your completed sheet", puntos: "{p} points" },
   materialSinSesion: "Sign in to see the activity material.",
   evidencia: {
     titulo: "Your evidence",

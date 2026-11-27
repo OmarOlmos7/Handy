@@ -58,7 +58,7 @@ const contenido: typeof es = {
   material: "Material",
   instruccionesTitulo: "Anweisungen",
   /** Ficha de instrucciones en la web. */
-  ficha: { manuscrita: "Handschriftlich: Fotos oder PDF deiner Blätter", digital: "Digitaler Nachweis: lade deine Dateien hoch", entrega: "Abgabe:", evaluacion: "Bewertung:", enPlataforma: "Auf der Plattform beantworten", impresa: "Fotos oder PDF deines bearbeiteten Blatts", puntos: "{p} Punkte" },
+  ficha: { apoyosTitulo: "Materialien", apoyosSubtitulo: "Material für die Aktivität", entregaTitulo: "Nachweis abgeben", rubricaTitulo: "Bewertungsraster", rubricaSubtitulo: "So wird deine Arbeit bewertet", rubricaEscala: "So wird deine Arbeit bewertet · Note von {e}", aplicaA: "Gilt für Aufgaben {n}", puntosPorReactivo: "Punkte pro Aufgabe", manuscrita: "Handschriftlich: Fotos oder PDF deiner Blätter", digital: "Digitaler Nachweis: lade deine Dateien hoch", entrega: "Abgabe:", evaluacion: "Bewertung:", enPlataforma: "Auf der Plattform beantworten", impresa: "Fotos oder PDF deines bearbeiteten Blatts", puntos: "{p} Punkte" },
   materialSinSesion: "Melde dich an, um das Material der Aktivität zu sehen.",
   evidencia: {
     titulo: "Dein Nachweis",

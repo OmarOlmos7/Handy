@@ -60,6 +60,7 @@ export function EntregarForm({
   previa,
   versiones,
   versionInicial,
+  enHoja = false,
 }: {
   actividadId: string;
   titulo: string;
@@ -77,7 +78,11 @@ export function EntregarForm({
   versiones?: string[];
   /** Versión que trae el QR de la hoja. */
   versionInicial?: string;
+  /** Va dentro de una hoja (página de entrega): sin tarjetas propias, a todo el ancho de la hoja. */
+  enHoja?: boolean;
 }) {
+  const caja = enHoja ? "" : "rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200";
+  const cajaAviso = enHoja ? "py-2 text-center" : "rounded-xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200";
   const { t, locale } = useTextos();
   const tf = t.alumno.formulario;
   const tc = t.alumno.campos;
@@ -159,7 +164,7 @@ export function EntregarForm({
 
   if (estado === "enviado") {
     return (
-      <div className="rounded-xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
+      <div className={cajaAviso}>
         <p className="text-4xl text-acierto">✓</p>
         <h2 className="mt-2 text-lg font-semibold">{tf.entregaRecibida}</h2>
         <p className="mt-1 text-sm text-slate-600">{mensaje}</p>
@@ -218,7 +223,7 @@ export function EntregarForm({
   const yaEntrego = modo !== "profesor" && (Boolean(previa) || reenviando);
   if (yaEntrego && !plazoAbierto && previa?.evaluada && !reenviando) {
     return (
-      <div className="rounded-xl bg-white p-6 text-center shadow-sm ring-1 ring-slate-200">
+      <div className={cajaAviso}>
         <p className="text-4xl text-acierto">✓</p>
         <h2 className="mt-2 text-lg font-semibold">{tf.yaEntregaste}</h2>
         <p className="mt-1 text-sm text-slate-600">
@@ -244,7 +249,7 @@ export function EntregarForm({
         </div>
       )}
       {modo !== "sesion" && (
-        <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+        <div className={caja}>
           <p className="text-sm font-medium text-slate-700">
             {modo === "profesor" ? tf.deQueAlumno : tf.quienEres}
           </p>
@@ -333,8 +338,8 @@ export function EntregarForm({
         </div>
       )}
 
-      <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
-        <p className="text-sm font-medium text-slate-700">
+      <div className={enHoja && modo !== "sesion" ? "border-t border-slate-200 pt-5" : caja}>
+        <p className={enHoja ? "text-[15px] font-semibold text-slate-900" : "text-sm font-medium text-slate-700"}>
           {modo === "sesion" ? "1." : "2."} {formato(tf.comoEntregas, { titulo })}
         </p>
         {versiones && versiones.length > 1 && (

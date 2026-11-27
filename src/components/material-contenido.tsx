@@ -12,12 +12,15 @@ export function MaterialContenido({
   anexos,
   entrega,
   sinSesion,
+  sinTitulo,
 }: {
   instrucciones: string[];
   anexos: AnexoContenido[];
   entrega: "manuscrita" | "digital";
   /** El alumno aún no inicia sesión: ve las instrucciones, pero el material no. */
   sinSesion?: boolean;
+  /** Ya va dentro de una hoja con su propio título ("Apoyos"). */
+  sinTitulo?: boolean;
 }) {
   const tc = useTextos().t.contenido;
   return (
@@ -41,7 +44,7 @@ export function MaterialContenido({
       )}
       {anexos.length > 0 && (
         <section>
-          <h2 className="mb-2 text-sm font-semibold text-slate-700">📎 {tc.material}</h2>
+          {!sinTitulo && <h2 className="mb-2 text-sm font-semibold text-slate-700">📎 {tc.material}</h2>}
           {sinSesion ? (
             <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-600 ring-1 ring-slate-200">{tc.materialSinSesion}</p>
           ) : (

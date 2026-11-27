@@ -17,7 +17,7 @@ import { ResponderActividad } from "@/components/responder-actividad";
 import { esPlataforma, reactivosParaAlumno } from "@/lib/plataforma";
 import { formato } from "@/lib/i18n/idiomas";
 import { MaterialContenido } from "@/components/material-contenido";
-import { FichaInstrucciones } from "@/components/ficha-instrucciones";
+import { FichaInstrucciones, HojaRubrica, HojaWeb } from "@/components/ficha-instrucciones";
 
 /** Enlace de la página de entrega, al pie de la ficha, para compartirlo con los alumnos. */
 function Enlace({ enlace, titulo }: { enlace: string; titulo: string }) {
@@ -78,12 +78,18 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
               <Enlace enlace={enlace} titulo={th.enlaceAlumnos} />
             </FichaInstrucciones>
             <ProveedorTextos valor={impreso}>
-              <section className="space-y-4 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:p-6">
-                <MaterialContenido instrucciones={[]} anexos={actividad.contenido.anexos} entrega={actividad.contenido.entrega} />
-                {esPlataforma(actividad) && (
+              {/* Mismo orden que ve el alumno: actividad, apoyos, rúbrica y entrega. */}
+              {actividad.contenido.anexos.length > 0 && (
+                <HojaWeb antetitulo={impreso.t.contenido.ficha.apoyosTitulo} titulo={impreso.t.contenido.ficha.apoyosSubtitulo}>
+                  <MaterialContenido instrucciones={[]} anexos={actividad.contenido.anexos} entrega={actividad.contenido.entrega} sinTitulo />
+                </HojaWeb>
+              )}
+              <HojaRubrica actividad={actividad} t={impreso.t} />
+              {esPlataforma(actividad) && (
+                <HojaWeb antetitulo={impreso.t.contenido.ficha.entregaTitulo} titulo={actividad.titulo}>
                   <ResponderActividad actividadId={id} reactivos={reactivosParaAlumno(actividad)} vistaPrevia evidenciaDigital />
-                )}
-              </section>
+                </HojaWeb>
+              )}
             </ProveedorTextos>
           </div>
         </ConFlujo>
@@ -110,6 +116,7 @@ export default async function HojaImprimible({ params }: PageProps<"/profesor/ac
               <Enlace enlace={enlace} titulo={th.enlaceAlumnos} />
               {lista.length > 1 && <p className="mt-2 text-xs text-slate-500">{th.plataformaVersiones}</p>}
             </FichaInstrucciones>
+            <HojaRubrica actividad={actividad} t={impreso.t} />
             <ProveedorTextos valor={impreso}>
               {lista.map((v) => (
                 <section key={v.letra} className="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:p-6">

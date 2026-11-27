@@ -12,6 +12,98 @@ import { esPlataforma } from "@/lib/plataforma";
 import { esEvidenciaDigital } from "@/lib/contenido";
 import { TextoMat } from "./texto-mat";
 import { fechaLarga } from "./ui";
+import { escalaDe } from "@/lib/estadisticas";
+
+/** Estilo de hoja de la web: el mismo ancho y papel en la ficha, la entrega y la rúbrica. */
+export const HOJA = "rounded-2xl bg-white px-4 py-5 font-hoja text-slate-800 shadow-sm ring-1 ring-slate-200 sm:px-8 sm:py-7";
+
+/** Hoja con encabezado (antetítulo, título y dato) y la raya gruesa, como la ficha de instrucciones. */
+export function HojaWeb({
+  antetitulo,
+  titulo,
+  dato,
+  className = "",
+  children,
+}: {
+  antetitulo: string;
+  titulo: string;
+  dato?: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className={`${HOJA} ${className}`}>
+      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-tinta-600 sm:text-xs sm:tracking-[0.3em]">{antetitulo}</p>
+      <h2 className="mt-1 break-words text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-2xl">{titulo}</h2>
+      {dato && <p className="mt-1 text-sm text-slate-500">{dato}</p>}
+      <div className="mt-4 border-t-[3px] border-slate-800" />
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+/**
+ * Rúbrica con la que se evaluará la actividad, para el alumno: criterios con su peso y
+ * descripción, y los puntos de cada reactivo. Nunca muestra respuestas ni pasos de la solución.
+ */
+export function HojaRubrica({ actividad, t }: { actividad: Actividad; t: Diccionario }) {
+  const tf = t.contenido.ficha;
+  const th = t.profesor.hojaImpresa;
+  const criterios = (actividad.criterios ?? []).filter((c) => c.nombre.trim());
+  const puntos = conPuntaje(actividad) && actividad.reactivos.length > 1 ? actividad.reactivos : [];
+  if (!criterios.length && !puntos.length) return null;
+  const conPeso = criterios.some((c) => c.porcentaje > 0);
+  return (
+    <HojaWeb
+      antetitulo={tf.rubricaTitulo}
+      titulo={actividad.titulo}
+      dato={conPuntaje(actividad) ? formato(tf.rubricaEscala, { e: escalaDe(actividad) }) : tf.rubricaSubtitulo}
+      className="hoja-rubrica"
+    >
+      {criterios.length > 0 && (
+        <ol className="divide-y divide-slate-200">
+          {criterios.map((c, i) => (
+            <li key={`${c.nombre}-${i}`} className="flex gap-3 py-3 first:pt-0 sm:gap-4">
+              <span className="w-4 shrink-0 text-right text-[15px] font-bold text-tinta-600">{i + 1}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <h3 className="text-[15px] font-bold text-slate-900">{c.nombre}</h3>
+                  {conPeso && <span className="rounded-full bg-tinta-50 px-3 py-0.5 text-[13px] font-semibold text-tinta-600">{c.porcentaje}%</span>}
+                </div>
+                {c.descripcion.trim() && (
+                  <p className="mt-1 text-[14px] leading-snug text-slate-600 [overflow-wrap:anywhere]">
+                    <TextoMat texto={c.descripcion} />
+                  </p>
+                )}
+                {conPeso && (
+                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100" aria-hidden>
+                    <div className="h-full rounded-full bg-tinta-500" style={{ width: `${Math.min(100, Math.max(0, c.porcentaje))}%` }} />
+                  </div>
+                )}
+                {c.reactivos && c.reactivos.length > 0 && actividad.reactivos.length > 1 && (
+                  <p className="mt-1.5 text-xs font-medium text-slate-500">{formato(tf.aplicaA, { n: c.reactivos.join(", ") })}</p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+      {puntos.length > 0 && (
+        <div className={criterios.length ? "mt-4 border-t border-slate-200 pt-4" : ""}>
+          <p className="text-[13px] font-bold text-slate-900">{tf.puntosPorReactivo}</p>
+          <ul className="mt-2 flex flex-wrap gap-2 text-[13px]">
+            {puntos.map((r) => (
+              <li key={r.numero} className="flex items-center gap-1.5 rounded-full border border-slate-300 py-0.5 pl-0.5 pr-3 font-semibold text-slate-800">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-tinta-600 text-xs font-bold text-white">{r.numero}</span>
+                {r.puntos} {r.puntos === 1 ? th.pt : th.pts}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </HojaWeb>
+  );
+}
 
 /** Flechas escritas como "->" se ven como en la hoja impresa. */
 const conFlechas = (s: string) => s.replace(/\s->\s/g, " → ").replace(/\s=>\s/g, " ⇒ ");
@@ -67,7 +159,7 @@ export function FichaInstrucciones({
   const modalidad = modalidadEntrega(actividad, t);
 
   return (
-    <article className="ficha-instrucciones rounded-2xl bg-white px-4 py-5 font-hoja text-slate-800 shadow-sm ring-1 ring-slate-200 sm:px-8 sm:py-7">
+    <article className={`ficha-instrucciones ${HOJA}`}>
       <header className="flex items-start gap-4 sm:gap-5">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logo} alt="" className="h-12 w-auto max-w-[6rem] shrink-0 object-contain sm:h-[74px] sm:max-w-[10rem]" />
