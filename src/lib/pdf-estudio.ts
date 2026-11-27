@@ -9,6 +9,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import katex from "katex";
+import { opcionesKatex } from "@/lib/latex";
 import { guardarArchivo, leerArchivo, rutaAbsoluta } from "./almacen";
 import alumnoEs from "./i18n/diccionarios/alumno/es";
 import { formato } from "./i18n/idiomas";
@@ -45,7 +46,7 @@ export function htmlConFormulas(texto: string): string {
       const linea = !bloque && parte.startsWith("$") && parte.endsWith("$") && parte.length > 2;
       if (bloque || linea) {
         const tex = bloque ? parte.slice(2, -2) : parte.slice(1, -1);
-        return katex.renderToString(tex, { displayMode: bloque, throwOnError: false, strict: "ignore", output: "html" });
+        return katex.renderToString(tex, opcionesKatex(bloque));
       }
       return escapar(parte).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     })

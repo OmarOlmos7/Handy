@@ -57,6 +57,8 @@ const contenido: typeof es = {
   entregaDigital: "デジタル提出物で提出",
   material: "教材",
   instruccionesTitulo: "指示",
+  /** Ficha de instrucciones en la web. */
+  ficha: { manuscrita: "手書き: シートの写真またはPDF", digital: "デジタル提出: ファイルをアップロード", entrega: "提出:", evaluacion: "評価:", enPlataforma: "プラットフォーム上で解答", impresa: "記入したシートの写真またはPDF", puntos: "{p}点" },
   materialSinSesion: "課題の教材を見るにはログインしてください。",
   evidencia: {
     titulo: "あなたの提出物",

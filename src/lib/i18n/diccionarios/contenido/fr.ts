@@ -57,6 +57,8 @@ const contenido: typeof es = {
   entregaDigital: "Rendu avec preuve numérique",
   material: "Matériel",
   instruccionesTitulo: "Consignes",
+  /** Ficha de instrucciones en la web. */
+  ficha: { manuscrita: "À la main : photos ou PDF de tes feuilles", digital: "Preuve numérique : envoie tes fichiers", entrega: "Rendu :", evaluacion: "Évaluation :", enPlataforma: "Réponds sur la plateforme", impresa: "Photos ou PDF de ta feuille complétée", puntos: "{p} points" },
   materialSinSesion: "Connecte-toi pour voir le matériel de l'activité.",
   evidencia: {
     titulo: "Ta preuve",

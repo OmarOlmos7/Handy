@@ -57,6 +57,8 @@ const contenido: typeof es = {
   entregaDigital: "Abgabe mit digitalem Nachweis",
   material: "Material",
   instruccionesTitulo: "Anweisungen",
+  /** Ficha de instrucciones en la web. */
+  ficha: { manuscrita: "Handschriftlich: Fotos oder PDF deiner Blätter", digital: "Digitaler Nachweis: lade deine Dateien hoch", entrega: "Abgabe:", evaluacion: "Bewertung:", enPlataforma: "Auf der Plattform beantworten", impresa: "Fotos oder PDF deines bearbeiteten Blatts", puntos: "{p} Punkte" },
   materialSinSesion: "Melde dich an, um das Material der Aktivität zu sehen.",
   evidencia: {
     titulo: "Dein Nachweis",

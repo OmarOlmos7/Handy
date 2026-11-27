@@ -57,6 +57,8 @@ const contenido: typeof es = {
   entregaDigital: "Entrega com evidência digital",
   material: "Material",
   instruccionesTitulo: "Instruções",
+  /** Ficha de instrucciones en la web. */
+  ficha: { manuscrita: "À mão: fotos ou PDF das suas folhas", digital: "Evidência digital: envie seus arquivos", entrega: "Entrega:", evaluacion: "Avaliação:", enPlataforma: "Responda na plataforma", impresa: "Fotos ou PDF da sua folha resolvida", puntos: "{p} pontos" },
   materialSinSesion: "Entre para ver o material da atividade.",
   evidencia: {
     titulo: "Sua evidência",

@@ -5,12 +5,13 @@ import type { Diccionario } from "@/lib/i18n/diccionario";
 import type { LecturaAuto, RecursoEstudio } from "@/lib/tipos";
 import { TextoMat } from "./texto-mat";
 import katex from "katex";
+import { opcionesKatex } from "@/lib/latex";
 
 const svgUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
 function Formula({ tex }: { tex: string }) {
   const limpia = tex.replace(/^\$+|\$+$/g, "");
-  return <span className="block overflow-x-auto py-1" dangerouslySetInnerHTML={{ __html: katex.renderToString(limpia, { displayMode: true, throwOnError: false, strict: "ignore", output: "html" }) }} />;
+  return <span className="block overflow-x-auto py-1" dangerouslySetInnerHTML={{ __html: katex.renderToString(limpia, opcionesKatex(true)) }} />;
 }
 
 export function LecturaVista({ lectura, t }: { lectura: LecturaAuto; t: Diccionario }) {

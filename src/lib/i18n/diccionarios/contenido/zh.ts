@@ -57,6 +57,8 @@ const contenido: typeof es = {
   entregaDigital: "以电子作业提交",
   material: "资料",
   instruccionesTitulo: "说明",
+  /** Ficha de instrucciones en la web. */
+  ficha: { manuscrita: "手写：作业纸的照片或PDF", digital: "电子作业：上传你的文件", entrega: "提交：", evaluacion: "评分：", enPlataforma: "在平台上作答", impresa: "已完成作业纸的照片或PDF", puntos: "{p} 分" },
   materialSinSesion: "登录后即可查看活动资料。",
   evidencia: {
     titulo: "你的作业",

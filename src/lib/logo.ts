@@ -44,3 +44,8 @@ export function bytesLogo(profesor?: { id: string; config?: ConfiguracionProfeso
   }
   return fs.readFileSync(path.join(/*turbopackIgnore: true*/ process.cwd(), "public", "logo.png"));
 }
+
+/** Logo del profesor dueño de una actividad, para que el alumno lo vea en la ficha de instrucciones. */
+export function srcLogoDeActividad(actividadId: string, config?: ConfiguracionProfesor) {
+  return config?.logo ? `/api/logo?a=${encodeURIComponent(actividadId)}&v=${encodeURIComponent(config.logo)}` : LOGO_ORIGINAL;
+}

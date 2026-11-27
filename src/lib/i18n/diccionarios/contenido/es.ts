@@ -58,6 +58,8 @@ const contenido = {
   entregaDigital: "Entrega con evidencia digital",
   material: "Material",
   instruccionesTitulo: "Instrucciones",
+  /** Ficha de instrucciones en la web. */
+  ficha: { manuscrita: "A mano: fotos o PDF de tus hojas", digital: "Evidencia digital: sube tus archivos", entrega: "Entrega:", evaluacion: "Evaluación:", enPlataforma: "Responde en la plataforma", impresa: "Fotos o PDF de tu hoja resuelta", puntos: "{p} puntos" },
   materialSinSesion: "Inicia sesión para ver el material de la actividad.",
   evidencia: {
     titulo: "Tu evidencia",

@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
-import { borrarCarpeta, guardarArchivo, leerArchivo, modificar } from "@/lib/almacen";
-import { MAX_BYTES_LOGO, normalizarLogo, rutaLogo } from "@/lib/logo";
+import { actividadDe, borrarCarpeta, grupoDe, guardarArchivo, leer, leerArchivo, modificar } from "@/lib/almacen";
+import { LOGO_ORIGINAL, MAX_BYTES_LOGO, normalizarLogo, rutaLogo } from "@/lib/logo";
+import type { BaseDeDatos } from "@/lib/tipos";
 import { profesorActual } from "@/lib/sesion";
 
 const VOLVER = "/profesor/configuracion";
@@ -10,9 +11,14 @@ function volver(clave: "ok" | "error", aviso: string) {
   return new Response(null, { status: 303, headers: { Location: `${VOLVER}?${clave}=${aviso}&s=logo#logo` } });
 }
 
-/** Sirve el logo propio del profesor con sesión. */
-export async function GET() {
-  const profesor = await profesorActual();
+/**
+ * Sirve el logo propio del profesor con sesión o, con ?a=<actividad>, el del profesor dueño de esa
+ * actividad (lo ve el alumno en la ficha de instrucciones). Si no tiene logo, manda el original.
+ */
+export async function GET(req: Request) {
+  const actividadId = new URL(req.url).searchParams.get("a");
+  const profesor = actividadId ? profesorDeActividad(await leer(), actividadId) : await profesorActual();
+  if (actividadId && !profesor?.config?.logo) return Response.redirect(new URL(LOGO_ORIGINAL, req.url), 302);
   if (!profesor?.config?.logo) return new Response("No encontrado", { status: 404 });
   try {
     return new Response(new Uint8Array(leerArchivo(rutaLogo(profesor.id))), {
@@ -21,6 +27,12 @@ export async function GET() {
   } catch {
     return new Response("No encontrado", { status: 404 });
   }
+}
+
+function profesorDeActividad(db: BaseDeDatos, actividadId: string) {
+  const actividad = actividadDe(db, actividadId);
+  const grupo = actividad && grupoDe(db, actividad.grupoId);
+  return grupo?.profesorId ? db.profesores.find((p) => p.id === grupo.profesorId) : undefined;
 }
 
 /** Sube una imagen nueva o, con accion=restaurar, vuelve al logo de iEureka-Grader. */

@@ -7,7 +7,10 @@ import { ResponderActividad } from "@/components/responder-actividad";
 import { Logo } from "@/components/ui";
 import { actividadDe, grupoDe, leer } from "@/lib/almacen";
 import { esDelProfesor } from "@/lib/cuentas";
-import { textos } from "@/lib/i18n/servidor";
+import { textos, textosDeActividad } from "@/lib/i18n/servidor";
+import { FichaInstrucciones } from "@/components/ficha-instrucciones";
+import { LOGO_ORIGINAL, srcLogoDeActividad } from "@/lib/logo";
+import { qrDataUrl, urlBase } from "@/lib/qr";
 import { datosResponsable } from "@/lib/legal/documentos";
 import { primeraEntrega } from "@/lib/reenvio";
 import { aperturaEnvio, estadoEnvio } from "@/lib/periodo";
@@ -40,15 +43,27 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
   const primera = entrega && primeraEntrega(entrega);
   const { t, locale } = await textos();
   const recepcion = estadoEnvio(actividad);
+  // La ficha va en el idioma de la actividad, como la hoja impresa.
+  const { t: tf, locale: localeFicha } = await textosDeActividad(actividad);
+  const duenio = grupo.profesorId ? db.profesores.find((p) => p.id === grupo.profesorId) : undefined;
+  const logo = srcLogoDeActividad(id, duenio?.config);
   return (
-    <main className={`mx-auto w-full flex-1 px-4 py-6 ${actividad.contenido ? "max-w-3xl" : "max-w-lg"}`}>
-      <Logo grande />
-      <h1 className="mt-5 text-xl font-semibold">{actividad.titulo}</h1>
-      <p className="text-sm text-slate-500">
-        {grupo.materia} · {grupo.nombre}
-      </p>
+    <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6">
+      {/* Con el logo propio del profesor en la ficha, el de iEureka-Grader queda arriba y pequeño. */}
+      {logo !== LOGO_ORIGINAL && <Logo />}
+      <div className={logo !== LOGO_ORIGINAL ? "mt-4" : ""}>
+        <FichaInstrucciones
+          actividad={actividad}
+          curso={`${grupo.materia} · ${grupo.nombre}`}
+          t={tf}
+          locale={localeFicha}
+          logo={logo}
+          qrSrc={await qrDataUrl(`${await urlBase()}/entregar/${id}`)}
+          qrEnCelular={false}
+        />
+      </div>
       {alumno && (
-        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-tinta-50 px-4 py-3 text-sm">
+        <div className="mt-5 flex items-center justify-between gap-3 rounded-xl bg-tinta-50 px-4 py-3 text-sm">
           <span>
             {t.alumno.entregar.entregasComo} <strong>{alumno.nombre}</strong>
             <span className="block text-xs text-slate-500">{alumno.correo}</span>
@@ -64,7 +79,7 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
       {actividad.contenido && (
         <div className="mt-5">
           <MaterialContenido
-            instrucciones={actividad.instruccionesAlumno ?? []}
+            instrucciones={[]}
             anexos={actividad.contenido.anexos}
             entrega={actividad.contenido.entrega}
             sinSesion={!comoProfesor && !matricula}
@@ -82,7 +97,7 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
           {formato(t.alumno.entregar.cerrado, { f: fechaHoraLarga(actividad.envioHasta!, locale) })}
         </p>
       ) : (
-        <div className="mt-5">
+        <div className={`mt-5 ${esPlataforma(actividad) ? "" : "mx-auto max-w-lg"}`}>
           {actividad.envioHasta && (
             <p className="mb-4 rounded-lg bg-tinta-50 px-3 py-2 text-sm font-medium text-tinta-700 ring-1 ring-tinta-200">
               {formato(t.alumno.entregar.hasta, { f: fechaHoraLarga(actividad.envioHasta, locale) })}
@@ -124,7 +139,6 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
         <ResponderActividad
           actividadId={id}
           reactivos={reactivosParaAlumno(suya)}
-          instrucciones={actividad.contenido ? undefined : suya.instruccionesAlumno}
           version={version}
           vistaPrevia
           evidenciaDigital={esEvidenciaDigital(actividad)}
@@ -175,7 +189,6 @@ export default async function Entregar({ params, searchParams }: PageProps<"/ent
         <ResponderActividad
           actividadId={id}
           reactivos={reactivosParaAlumno(suya)}
-          instrucciones={actividad.contenido ? undefined : suya.instruccionesAlumno}
           version={actividad.versiones?.length ? (version ?? "A") : undefined}
           evidenciaDigital={esEvidenciaDigital(actividad)}
         />
