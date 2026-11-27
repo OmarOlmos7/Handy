@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { modificar } from "@/lib/almacen";
+import { borrarCarpeta, modificar } from "@/lib/almacen";
+import { bajaAlumno } from "@/lib/alumnos-grupo";
 import { COLORES } from "@/lib/colores";
 import { alumnoActual } from "@/lib/sesion";
 
@@ -40,22 +41,34 @@ export async function archivarCursoAlumno(grupoId: string, archivar: boolean) {
 }
 
 /**
- * Quita un curso del portal del alumno (bote de la tarjeta). Solo cambia su vista: el profesor
- * conserva la lista, las entregas y las calificaciones. Vuelve si el alumno ingresa el código del curso.
+ * El alumno sale del curso por completo (bote de su tarjeta): deja la lista del profesor y se borra
+ * su trabajo en ese curso (entregas, calificaciones, autoestudio, valoración y tiempos) con sus
+ * archivos. Es la misma baja que hace el profesor. No se puede deshacer; su cuenta y sus otros cursos
+ * no cambian.
  */
-export async function quitarCursoAlumno(grupoId: string) {
+export async function salirDelCursoAlumno(grupoId: string) {
   const alumno = await alumnoActual();
   if (!alumno) throw new Error("No autorizado");
-  if (![...alumno.cursos, ...alumno.porActivar].some((c) => c.grupo.id === grupoId)) throw new Error("No autorizado");
-  modificar((db) => {
+  const enCurso = [...alumno.cursos, ...alumno.porActivar].find((c) => c.grupo.id === grupoId);
+  if (!enCurso) throw new Error("No autorizado");
+  const archivos = modificar((db) => {
+    const grupo = db.grupos.find((g) => g.id === grupoId);
+    if (!grupo) throw new Error("Curso no encontrado");
+    const { archivos } = bajaAlumno(db, grupo, enCurso.alumno.matricula);
     const cuenta = db.cuentasAlumno.find((c) => c.id === alumno.id);
-    if (!cuenta) return;
-    cuenta.quitados = [...new Set([...(cuenta.quitados ?? []), grupoId])];
-    if (cuenta.archivados?.[grupoId]) {
+    if (cuenta?.archivados?.[grupoId]) {
       const resto = { ...cuenta.archivados };
       delete resto[grupoId];
       cuenta.archivados = Object.keys(resto).length ? resto : undefined;
     }
+    if (cuenta?.colores?.[grupoId]) {
+      const resto = { ...cuenta.colores };
+      delete resto[grupoId];
+      cuenta.colores = resto;
+    }
+    return archivos;
   });
+  for (const a of archivos) borrarCarpeta(a);
   revalidatePath("/alumno", "layout");
+  revalidatePath("/profesor", "layout");
 }

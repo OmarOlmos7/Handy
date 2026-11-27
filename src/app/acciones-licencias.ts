@@ -38,8 +38,6 @@ export async function iniciarLicencia(form: FormData) {
     licencia = modificar((d) => {
       const c = d.cuentasAlumno.find((x) => x.id === cuenta.id)!;
       const g = d.grupos.find((x) => x.id === grupo.id)!;
-      // Si lo había quitado de su vista, al ingresar de nuevo el código vuelve a aparecer.
-      if (c.quitados?.includes(g.id)) c.quitados = c.quitados.filter((x) => x !== g.id);
       return { ...crearLicencia(d, c, g, tipo) };
     });
   } catch (e) {

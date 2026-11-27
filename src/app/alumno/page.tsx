@@ -49,10 +49,7 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
   const tc = t.alumno.cursos;
   const tl = t.licencias.alumno;
   const ta = t.archivados;
-  // Los cursos que el alumno quitó con el bote ya no se muestran (vuelven si ingresa su código).
-  const quitados = new Set(cuenta?.quitados ?? []);
-  const porActivar = alumno.porActivar.filter(({ grupo }) => !quitados.has(grupo.id));
-  const todas = alumno.cursos.filter(({ grupo }) => !quitados.has(grupo.id)).map(({ grupo, alumno: enCurso }) => ({
+  const todas = alumno.cursos.map(({ grupo, alumno: enCurso }) => ({
     grupo,
     // El color que eligió el alumno; si no eligió, el que puso el profesor.
     color: cuenta?.colores?.[grupo.id] ?? grupo.color,
@@ -69,14 +66,14 @@ export default async function PanelAlumno({ searchParams }: PageProps<"/alumno">
         subtitulo={`${alumno.nombre} · ${alumno.correo}. ${tp.subtituloSesion}`}
       />
       <CompaneroDelAlumno db={db} alumno={alumno} />
-      {porActivar.length > 0 && (
+      {alumno.porActivar.length > 0 && (
         <section className="mb-6 rounded-xl border border-aviso/30 bg-aviso-suave p-5" aria-labelledby="por-activar">
           <h2 id="por-activar" className="font-semibold text-slate-900">
             {tl.porActivarTitulo}
           </h2>
           <p className="mt-1 text-sm text-slate-700">{tl.porActivarTexto}</p>
           <ul className="mt-3 flex flex-wrap gap-2">
-            {porActivar.map(({ grupo }) => (
+            {alumno.porActivar.map(({ grupo }) => (
               <li key={grupo.id}>
                 <BotonLink href={`/alumno/licencias?codigo=${encodeURIComponent(grupo.codigo ?? "")}`}>
                   {tl.activar}: {grupo.materia} · {grupo.nombre}
