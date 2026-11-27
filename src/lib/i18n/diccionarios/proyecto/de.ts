@@ -99,6 +99,7 @@ const proyecto: typeof es = {
     guardado: "Modell gespeichert.",
     borrar: "Projekt löschen",
     confirmarBorrar: "Das Projekt wird mit seinen Nachweisen und Bewertungen gelöscht. Das kann nicht rückgängig gemacht werden. Fortfahren?",
+    avisoEvaluadas: "Diese Etappe hat bereits {n} abgeschlossene Bewertungen. Du kannst ihr Raster bearbeiten: Beim Speichern werden die Noten mit den neuen Prozenten neu berechnet. Wenn du ein Element hinzufügst, muss jede bewertende Person es bewerten, damit ihre Bewertung wieder zählt.",
   },
   errores: {
     titulo: "Gib den Projekttitel ein.",

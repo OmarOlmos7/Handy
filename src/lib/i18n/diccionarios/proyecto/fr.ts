@@ -99,6 +99,7 @@ const proyecto: typeof es = {
     guardado: "Modèle enregistré.",
     borrar: "Supprimer le projet",
     confirmarBorrar: "Le projet sera supprimé avec ses preuves et évaluations. Action irréversible. Continuer ?",
+    avisoEvaluadas: "Cette étape a déjà {n} évaluations terminées. Vous pouvez modifier sa grille : à l'enregistrement, les notes sont recalculées avec les nouveaux pourcentages. Si vous ajoutez un élément, chaque évaluateur doit le noter pour que son évaluation compte à nouveau.",
   },
   errores: {
     titulo: "Écrivez le titre du projet.",

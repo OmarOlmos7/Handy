@@ -15,6 +15,7 @@ import { aCampoFechaHora, deCampoFechaHora } from "@/lib/resultados";
 import { leerFechas } from "@/lib/periodo";
 import { limpiarEtiqueta } from "@/lib/etiquetas";
 import { leerTemarioActividad } from "@/lib/asignaturas";
+import { cambioEstructura, limpiarCriterios, limpiarRecomendaciones, reacomodarValores, type CambiosRubrica } from "@/lib/rubrica";
 
 /** Corre el cambio solo si la actividad es de un curso del profesor con sesión. */
 async function enActividadPropia<T>(actividadId: string, cambio: (db: BaseDeDatos) => T) {
@@ -53,11 +54,38 @@ export async function crearGrupo(form: FormData) {
   redirect("/profesor");
 }
 
-export async function guardarRubrica(actividadId: string, reactivos: Reactivo[], confirmar: boolean) {
-  await enActividadPropia(actividadId, (db) => {
+/**
+ * Guarda la rúbrica: reactivos y, si vienen, los criterios, las recomendaciones y las indicaciones
+ * para la IA. Sirve para confirmarla la primera vez y para reeditarla después. Las entregas ya
+ * evaluadas conservan su calificación (se recalifican con "Re-evaluar actividad"); si cambia la
+ * lista de criterios, sus valores por criterio se reacomodan para seguir alineados.
+ * Devuelve cuántas entregas ya estaban evaluadas.
+ */
+export async function guardarRubrica(actividadId: string, reactivos: Reactivo[], confirmar: boolean, cambios: CambiosRubrica = {}) {
+  const evaluadas = await enActividadPropia(actividadId, (db) => {
     const a = actividadDe(db, actividadId)!;
-    a.reactivos = reactivos;
+    const entregas = db.entregas.filter((e) => e.actividadId === actividadId);
+    const hechas = entregas.filter((e) => e.estado !== "sin_entregar" && e.resultados.length > 0);
+    const conEntregas = entregas.some((e) => e.estado !== "sin_entregar");
+    const previos = new Map(a.reactivos.map((r) => [r.numero, r]));
+    // Con entregas, el tipo de cada reactivo queda fijo (los alumnos ya contestaron con él), como al reeditar la actividad.
+    a.reactivos = reactivos.map((r) => (conEntregas && previos.has(r.numero) ? { ...r, tipo: previos.get(r.numero)!.tipo } : r));
+    if (cambios.criterios) {
+      const anteriores = a.criterios?.length ?? 0;
+      const { criterios, origenes } = limpiarCriterios(cambios.criterios, a.reactivos, anteriores);
+      if (cambioEstructura(origenes, anteriores)) {
+        for (const e of entregas) for (const res of e.resultados) res.criterios = reacomodarValores(res.criterios, origenes);
+      }
+      a.criterios = criterios.length ? criterios : undefined;
+    }
+    if (cambios.recomendaciones) {
+      const recs = limpiarRecomendaciones(cambios.recomendaciones);
+      a.recomendaciones = recs.length ? recs : undefined;
+    }
+    if (cambios.instrucciones !== undefined) a.instrucciones = cambios.instrucciones.trim().slice(0, 2000) || undefined;
+    if (a.rubricaConfirmada && hechas.length) a.rubricaEditadaEn = new Date().toISOString();
     a.rubricaConfirmada = confirmar;
+    return hechas.length;
   });
   // Al confirmar, las entregas que ya llegaron se evalúan solas.
   if (confirmar) {
@@ -68,6 +96,7 @@ export async function guardarRubrica(actividadId: string, reactivos: Reactivo[],
     }
   }
   revalidatePath(`/profesor/actividades/${actividadId}`, "layout");
+  return { evaluadas };
 }
 
 export async function guardarRevision(
