@@ -179,7 +179,7 @@ const proyecto: typeof es = {
     final: "最終",
   },
   alumno: {
-    boton: "プロジェクト",
+    boton: "チャレンジ（プロジェクト）",
     titulo: "プロジェクト",
     sinProyectos: "このコースにはまだプロジェクトがありません。",
     avance: "プロジェクトの進捗",
@@ -219,6 +219,19 @@ const proyecto: typeof es = {
     grafica: "段階ごとの成績と累積",
     leyendaEtapa: "段階の成績",
     leyendaAcumulada: "累積（点）",
+  },
+  ruta: {
+    titulo: "プロジェクトの進捗ルート",
+    inicio: "開始",
+    cierre: "完了",
+    avance: "{p}% 完了",
+    completa: "完了",
+    iniciado: "開始済み",
+    porIniciar: "未開始",
+    completo: "プロジェクト完了！",
+    pendiente: "未完了",
+    notaProfesor: "グループの進捗：すべての評価が終わった生徒またはチームの割合。締め切ったステージは完了として数えます。",
+    notaAlumno: "各ステージは成績つきで締め切られると青くなります。",
   },
 };
 

@@ -3,6 +3,8 @@ import {
   MINIMO_COMPARACION,
   analiticasAlumnoActividad,
   analiticasAlumnoCurso,
+  avanceActividad,
+  categoriasAlumno,
   cuadernoAlumno,
   resumenCursoAlumno,
   seccionesAlumno,
@@ -64,6 +66,36 @@ describe("secciones del alumno", () => {
     expect(s.por_entregar.map((x) => x.actividad.id)).toEqual(["cierra-pronto", "cierra-tarde", "cerrada"]);
     expect(s.entregadas.map((x) => x.actividad.id)).toEqual(["enviada-2", "enviada-1"]);
     expect(s.sin_programar.map((x) => x.actividad.id)).toEqual(["libre-nueva", "libre-vieja"]);
+  });
+});
+
+describe("categorías del alumno", () => {
+  it("clasifica el avance de cada actividad", () => {
+    expect(avanceActividad(undefined)).toBe("sin_iniciar");
+    expect(avanceActividad(entrega("a", "A0", 0, 0, { estado: "sin_entregar", paginasRecibidas: 0 }))).toBe("sin_iniciar");
+    expect(avanceActividad(entrega("a", "A0", 0, 0, { estado: "sin_entregar", paginasRecibidas: 1 }))).toBe("en_proceso");
+    expect(avanceActividad(entrega("a", "A0", 0, 0, { estado: "entregada" }))).toBe("en_proceso");
+    expect(avanceActividad(entrega("a", "A0", 0, 0, { estado: "evaluada" }))).toBe("en_proceso");
+    expect(avanceActividad(entrega("a", "A0", 0, 0))).toBe("terminada");
+  });
+
+  it("agrupa por tipo con su resumen y deja al final las que no tienen tipo", () => {
+    const acts = [
+      actividad("libre", { etiqueta: undefined }),
+      actividad("q-enviada", { etiqueta: "Quiz" }),
+      actividad("q-pendiente", { etiqueta: "quiz ", envioHasta: "2026-11-22T12:00:00Z" }),
+      actividad("t-evaluando", { etiqueta: "Tarea" }),
+    ];
+    const ent: Record<string, Entrega> = {
+      "q-enviada": entrega("q-enviada", "A0", 1, 1, { entregadaEn: "2026-11-12T00:00:00Z" }),
+      "t-evaluando": entrega("t-evaluando", "A0", 1, 1, { estado: "entregada", entregadaEn: "2026-11-12T00:00:00Z" }),
+    };
+    const c = categoriasAlumno(acts.map((a) => ({ actividad: a, entrega: ent[a.id] })), ahora);
+    expect(c.map((x) => x.etiqueta)).toEqual(["quiz", "Tarea", ""]);
+    expect(c[0].items.map((x) => x.actividad.id)).toEqual(["q-pendiente", "q-enviada"]);
+    expect(c[0].resumen).toEqual({ total: 2, terminadas: 1, enProceso: 0, sinIniciar: 1 });
+    expect(c[1].resumen).toEqual({ total: 1, terminadas: 0, enProceso: 1, sinIniciar: 0 });
+    expect(c[2].resumen.sinIniciar).toBe(1);
   });
 });
 

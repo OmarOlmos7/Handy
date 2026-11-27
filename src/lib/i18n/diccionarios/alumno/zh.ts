@@ -30,6 +30,13 @@ const alumno: Diccionario["alumno"] = {
     solucionRetro: "解答与反馈",
   },
   cursos: {
+    categoriaSinTipo: "无类型",
+    resumenCategoria: "{n} 项作业",
+    resumenCategoria1: "1 项作业",
+    terminadas: "已完成 {n}",
+    enProceso: "进行中 {n}",
+    sinIniciar: "未开始 {n}",
+    autoasignadas: "我的自选作业",
     misCursos: "我的课程",
     actividades: "作业",
     porEntregar: "待提交",

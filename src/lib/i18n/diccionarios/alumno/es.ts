@@ -31,6 +31,13 @@ const alumno = {
     solucionRetro: "Solución y Retro",
   },
   cursos: {
+    categoriaSinTipo: "Sin tipo",
+    resumenCategoria: "{n} actividades",
+    resumenCategoria1: "1 actividad",
+    terminadas: "Terminadas: {n}",
+    enProceso: "En proceso: {n}",
+    sinIniciar: "Sin iniciar: {n}",
+    autoasignadas: "Mis autoasignadas",
     misCursos: "Mis cursos",
     actividades: "Actividades",
     porEntregar: "Por entregar",

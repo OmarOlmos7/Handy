@@ -180,7 +180,7 @@ const proyecto: typeof es = {
     final: "Endnote",
   },
   alumno: {
-    boton: "Projekt",
+    boton: "Challenge (Projekt)",
     titulo: "Projekt",
     sinProyectos: "Deine Lehrkraft hat in diesem Kurs noch keine Projekte erstellt.",
     avance: "Projektfortschritt",
@@ -220,6 +220,19 @@ const proyecto: typeof es = {
     grafica: "Note pro Etappe und kumuliert",
     leyendaEtapa: "Note der Etappe",
     leyendaAcumulada: "Kumuliert (Punkte)",
+  },
+  ruta: {
+    titulo: "Fortschrittspfad des Projekts",
+    inicio: "Start",
+    cierre: "Abschluss",
+    avance: "{p} % erledigt",
+    completa: "Abgeschlossen",
+    iniciado: "Begonnen",
+    porIniciar: "Nicht begonnen",
+    completo: "Projekt abgeschlossen!",
+    pendiente: "Ausstehend",
+    notaProfesor: "Fortschritt der Gruppe: Schüler oder Teams mit allen abgeschlossenen Bewertungen. Eine geschlossene Phase zählt als abgeschlossen.",
+    notaAlumno: "Jede Phase wird blau, sobald sie mit deiner Note geschlossen ist.",
   },
 };
 

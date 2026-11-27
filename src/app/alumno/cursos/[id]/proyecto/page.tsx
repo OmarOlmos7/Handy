@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { AnilloAvance, GraficaProyecto, LineaEtapas } from "@/components/avance-proyecto";
+import { AnilloAvance, GraficaProyecto } from "@/components/avance-proyecto";
+import { RutaProyecto } from "@/components/ruta-proyecto";
 import { SubirEvidenciaProyecto } from "@/components/subir-evidencia-proyecto";
 import { Barra, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
 import { VisorArchivos, type ArchivoVisor } from "@/components/visor-archivos";
@@ -9,7 +10,7 @@ import { leer } from "@/lib/almacen";
 import { claseDeArchivo } from "@/lib/contenido";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
-import { ICONO_ETAPA, equipoDe, resumenAlumno } from "@/lib/proyectos";
+import { ICONO_ETAPA, equipoDe, resumenAlumno, rutaAlumno } from "@/lib/proyectos";
 import { alumnoActual } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -55,6 +56,7 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
       <div className="space-y-8">
         {proyectos.map((p) => {
           const r = resumenAlumno(p, evaluaciones, entregas, enCurso.matricula);
+          const pasos = rutaAlumno(r);
           const equipo = equipoDe(p, enCurso.matricula);
           const total = p.etapas.reduce((s, e) => s + Math.max(0, e.peso), 0);
           return (
@@ -91,7 +93,7 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
                   </div>
                 </div>
                 <div className="mt-5">
-                  <LineaEtapas resumen={r} t={t} />
+                  <RutaProyecto pasos={pasos} avanceTotal={r.avance} t={t} enlace={(etapaId) => `#etapa-${etapaId}`} nota={tp.ruta.notaAlumno} />
                 </div>
                 <div className="mt-4">
                   <GraficaProyecto resumen={r} t={t} />
@@ -105,7 +107,7 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
                 });
                 const res = e.resultado;
                 return (
-                  <article key={e.etapa.id} className="rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                  <article key={e.etapa.id} id={`etapa-${e.etapa.id}`} className="scroll-mt-4 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
                     <header className="flex flex-wrap items-start gap-3 border-b border-slate-100 px-5 py-3">
                       <span className="text-2xl" aria-hidden>
                         {ICONO_ETAPA[e.etapa.tipo]}

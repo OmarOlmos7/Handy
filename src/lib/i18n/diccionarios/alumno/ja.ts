@@ -31,6 +31,13 @@ const alumno: Diccionario["alumno"] = {
     solucionRetro: "解答とフィードバック",
   },
   cursos: {
+    categoriaSinTipo: "種類なし",
+    resumenCategoria: "課題 {n} 件",
+    resumenCategoria1: "課題 1 件",
+    terminadas: "完了 {n}",
+    enProceso: "進行中 {n}",
+    sinIniciar: "未着手 {n}",
+    autoasignadas: "自分で選んだ課題",
     misCursos: "マイコース",
     actividades: "課題",
     porEntregar: "提出待ち",

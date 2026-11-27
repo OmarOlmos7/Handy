@@ -4,12 +4,15 @@ import { CompaneroDelAlumno } from "@/components/companero-servidor";
 import { FilaActividadAlumno } from "@/components/fila-actividad-alumno";
 import { TablaAutoestudio } from "@/components/tabla-autoestudio";
 import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
+import { ResumenCategoria } from "@/components/resumen-categoria";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { leer } from "@/lib/almacen";
 import { asignaturaDelCurso } from "@/lib/asignaturas";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
-import { actividadesVisibles, seccionesAlumno, type SeccionActividad } from "@/lib/portal-alumno";
+import { iconoTipoActividad } from "@/lib/iconos-tipo";
+import { estadoEnvio } from "@/lib/periodo";
+import { actividadesVisibles, categoriasAlumno, resumenAvance, seccionesAlumno } from "@/lib/portal-alumno";
 import { alumnoActual } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -31,10 +34,10 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
   const db = await leer();
   const ahora = new Date();
   const actividades = actividadesVisibles(db.actividades, grupo.id, ahora);
-  const secciones = seccionesAlumno(
-    actividades.map((a) => ({ actividad: a, entrega: db.entregas.find((e) => e.actividadId === a.id && e.matricula === enCurso.matricula) })),
-    ahora,
-  );
+  const items = actividades.map((a) => ({ actividad: a, entrega: db.entregas.find((e) => e.actividadId === a.id && e.matricula === enCurso.matricula) }));
+  const secciones = seccionesAlumno(items, ahora);
+  // Actividades agrupadas por categoría (tipo de actividad), cada una plegable con su resumen.
+  const categorias = categoriasAlumno(items, ahora);
   const propias = (db.autoactividades ?? [])
     .filter((a) => a.alumnoId === alumno.id && a.grupoId === grupo.id)
     .sort((a, b) => (b.completadaEn ?? b.creadaEn).localeCompare(a.completadaEn ?? a.creadaEn));
@@ -44,11 +47,7 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
   const sinValoracion =
     conTemario && !(db.valoraciones ?? []).some((v) => v.alumnoId === alumno.id && v.grupoId === grupo.id && v.asignaturaId === asignatura!.id);
   const evaluadas = secciones.entregadas.filter((x) => x.entrega?.estado === "aprobada").length;
-  const orden: { clave: SeccionActividad; titulo: string; nota: string }[] = [
-    { clave: "por_entregar", titulo: tc.porEntregar, nota: tc.porEntregarNota },
-    { clave: "entregadas", titulo: tc.entregadas, nota: tc.entregadasNota },
-    { clave: "sin_programar", titulo: tc.sinProgramar, nota: tc.sinProgramarNota },
-  ];
+  const resumenPropias = resumenAvance(propias.map((a) => (a.estado === "completada" ? "terminada" : a.estado === "evaluando" ? "en_proceso" : "sin_iniciar")));
 
   return (
     <>
@@ -61,28 +60,28 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
           b: formato(evaluadas === 1 ? tc.evaluadas1 : tc.evaluadasN, { n: evaluadas }),
         })}
         acciones={
-          <>
-            <BotonLink href={`/alumno/cursos/${grupo.id}/ruta`}>
-              <IconoRuta /> {t.ruta.boton}
-            </BotonLink>
-            {(db.proyectos ?? []).some((p) => p.grupoId === grupo.id) && (
-              <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/proyecto`}>
-                🛠️ {t.proyecto.alumno.boton}
-              </BotonLink>
-            )}
-            <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/analiticas`}>
+          // Tres columnas de botones por tipo: datos (Analíticas, Cuaderno), avance (Ruta, Mapa del
+          // temario) y retos (Proyecto, Autoasignadas). En el teléfono cada par queda en un renglón.
+          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:grid-flow-col sm:grid-cols-3 sm:grid-rows-2">
+            <BotonLink variante="secundario" className="justify-start" href={`/alumno/cursos/${grupo.id}/analiticas`}>
               <IconoGrafica /> {tc.analiticas}
             </BotonLink>
-            <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/cuaderno`}>
+            <BotonLink variante="secundario" className="justify-start" href={`/alumno/cursos/${grupo.id}/cuaderno`}>
               <IconoCuaderno /> {tc.cuaderno}
             </BotonLink>
-            <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/mapa`}>
+            <BotonLink className="justify-start" href={`/alumno/cursos/${grupo.id}/ruta`}>
+              <IconoRuta /> {t.ruta.boton}
+            </BotonLink>
+            <BotonLink variante="secundario" className="justify-start" href={`/alumno/cursos/${grupo.id}/mapa`}>
               <IconoMapa /> {tc.mapa}
             </BotonLink>
-            <BotonLink variante="secundario" href={`/alumno/cursos/${grupo.id}/autoestudio`}>
-              ✨ {ta.tabla.ver}
+            <BotonLink variante="secundario" className="justify-start" href={`/alumno/cursos/${grupo.id}/proyecto`}>
+              <span aria-hidden>🏆</span> {t.proyecto.alumno.boton}
             </BotonLink>
-          </>
+            <BotonLink variante="secundario" className="justify-start" href={`/alumno/cursos/${grupo.id}/autoestudio`}>
+              <span aria-hidden>✨</span> {ta.tabla.ver}
+            </BotonLink>
+          </div>
         }
       />
       {sinValoracion && (
@@ -98,35 +97,45 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
       {actividades.length === 0 ? (
         <Tarjeta className="text-sm text-slate-600">{tc.sinActividadesCurso}</Tarjeta>
       ) : (
-        <div className="space-y-6">
-          {orden.map(({ clave, titulo, nota }) => (
-            <section key={clave} aria-labelledby={`seccion-${clave}`}>
-              <h2 id={`seccion-${clave}`} className="mb-2 flex items-baseline gap-2 text-base font-semibold text-slate-800">
-                {titulo}
-                <span className="rounded-full bg-slate-100 px-2 text-xs font-medium text-slate-600">{secciones[clave].length}</span>
-                <span className="text-sm font-normal text-slate-500">{nota}</span>
-              </h2>
-              {secciones[clave].length === 0 ? (
-                <p className="rounded-xl bg-white px-5 py-3 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">{tc.vacioSeccion}</p>
-              ) : (
-                <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                  {secciones[clave].map(({ actividad, entrega }) => (
+        <div className="space-y-3">
+          {categorias.map((c) => {
+            // Abierta si tiene algo que puede entregar ya; si no, plegada con su resumen.
+            const abierta = c.items.some((x) => x.avance === "sin_iniciar" && estadoEnvio(x.actividad, ahora) === "abierto");
+            const titulo = c.etiqueta || tc.categoriaSinTipo;
+            return (
+              <details key={c.etiqueta || "-"} open={abierta} className="group overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+                <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+                  <span aria-hidden className="text-slate-400 transition group-open:rotate-90">▸</span>
+                  <span className="text-xl" aria-hidden>
+                    {c.etiqueta ? iconoTipoActividad(c.etiqueta) : "🏷️"}
+                  </span>
+                  <h2 className="text-base font-semibold text-slate-900">{titulo}</h2>
+                  <ResumenCategoria resumen={c.resumen} t={t} />
+                </summary>
+                <ul className="divide-y divide-slate-100 border-t border-slate-100">
+                  {c.items.map(({ actividad, entrega }) => (
                     <FilaActividadAlumno key={actividad.id} actividad={actividad} entrega={entrega} ahora={ahora} />
                   ))}
                 </ul>
-              )}
-            </section>
-          ))}
+              </details>
+            );
+          })}
         </div>
       )}
-      <section aria-labelledby="seccion-autoestudio" className="mt-6">
-        <h2 id="seccion-autoestudio" className="mb-2 flex items-baseline gap-2 text-base font-semibold text-slate-800">
-          {ta.tabla.seccion}
-          <span className="rounded-full bg-violet-100 px-2 text-xs font-medium text-violet-800">{propias.length}</span>
-          <span className="text-sm font-normal text-slate-500">{ta.tabla.seccionNota}</span>
-        </h2>
-        <TablaAutoestudio lista={propias.slice(0, 5)} t={t} locale={locale} enlaces />
-      </section>
+      <details className="group mt-3 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+        <summary className="flex cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-2 px-5 py-3.5 hover:bg-slate-50 [&::-webkit-details-marker]:hidden">
+          <span aria-hidden className="text-slate-400 transition group-open:rotate-90">▸</span>
+          <span className="text-xl" aria-hidden>
+            ✨
+          </span>
+          <h2 className="text-base font-semibold text-slate-900">{tc.autoasignadas}</h2>
+          <ResumenCategoria resumen={resumenPropias} t={t} />
+        </summary>
+        <div className="border-t border-slate-100 p-4">
+          <p className="mb-3 text-sm text-slate-500">{ta.tabla.seccionNota}</p>
+          <TablaAutoestudio lista={propias.slice(0, 5)} t={t} locale={locale} enlaces />
+        </div>
+      </details>
     </>
   );
 }

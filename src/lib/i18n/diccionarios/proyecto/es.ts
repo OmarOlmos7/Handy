@@ -186,7 +186,7 @@ const proyecto = {
   },
   // Vista del alumno
   alumno: {
-    boton: "Proyecto",
+    boton: "Reto (proyecto)",
     titulo: "Proyecto",
     sinProyectos: "Tu profesor aún no crea proyectos en este curso.",
     avance: "Avance del proyecto",
@@ -226,6 +226,19 @@ const proyecto = {
     grafica: "Calificación por etapa y acumulada",
     leyendaEtapa: "Calificación de la etapa",
     leyendaAcumulada: "Acumulada (puntos)",
+  },
+  ruta: {
+    titulo: "Ruta de avance del proyecto",
+    inicio: "Inicio",
+    cierre: "Cierre",
+    avance: "{p} % completado",
+    completa: "Completada",
+    iniciado: "Iniciado",
+    porIniciar: "Por iniciar",
+    completo: "¡Proyecto completo!",
+    pendiente: "Pendiente",
+    notaProfesor: "Avance del grupo: alumnos o equipos con todas sus evaluaciones terminadas. Una etapa cerrada cuenta como completa.",
+    notaAlumno: "Cada etapa se pinta de azul al cerrarse con tu calificación.",
   },
 };
 

@@ -180,7 +180,7 @@ const proyecto: typeof es = {
     final: "Finale",
   },
   alumno: {
-    boton: "Projet",
+    boton: "Défi (projet)",
     titulo: "Projet",
     sinProyectos: "Votre enseignant n'a pas encore créé de projets dans ce cours.",
     avance: "Progression du projet",
@@ -220,6 +220,19 @@ const proyecto: typeof es = {
     grafica: "Note par étape et cumulée",
     leyendaEtapa: "Note de l'étape",
     leyendaAcumulada: "Cumulée (points)",
+  },
+  ruta: {
+    titulo: "Parcours d’avancement du projet",
+    inicio: "Début",
+    cierre: "Clôture",
+    avance: "{p} % terminé",
+    completa: "Terminée",
+    iniciado: "Commencé",
+    porIniciar: "Pas commencé",
+    completo: "Projet terminé !",
+    pendiente: "En attente",
+    notaProfesor: "Avancement du groupe : élèves ou équipes dont toutes les évaluations sont terminées. Une étape clôturée compte comme terminée.",
+    notaAlumno: "Chaque étape devient bleue lorsqu’elle est clôturée avec ta note.",
   },
 };
 
