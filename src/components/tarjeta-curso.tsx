@@ -119,7 +119,7 @@ export function TarjetaCurso({
 
   return (
     <div
-      className={`relative flex min-h-[180px] min-w-0 flex-col overflow-visible rounded-2xl bg-white p-5 pt-6 shadow-sm ring-1 ring-slate-200 transition ${
+      className={`relative flex min-w-0 flex-col overflow-visible rounded-2xl bg-white p-4 pt-5 shadow-sm ring-1 ring-slate-200 transition ${
         editando ? "" : "hover:-translate-y-0.5 hover:shadow-md hover:ring-tinta-300"
       } ${pendiente ? "opacity-60" : ""}`}
     >
@@ -152,14 +152,16 @@ export function TarjetaCurso({
       ) : (
         <>
           {/* El enlace cubre toda la tarjeta; los botones de abajo quedan encima. */}
-          <Link href={`/profesor/grupos/${id}`} className="pr-20 after:absolute after:inset-0 after:rounded-2xl">
-            <span className="block text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
-            <span className="mt-0.5 block text-xl font-semibold text-slate-900">{nombre}</span>
+          <Link href={`/profesor/grupos/${id}`} className="min-w-0 pr-20 after:absolute after:inset-0 after:rounded-2xl" title={`${materia} · ${nombre}`}>
+            <span className="line-clamp-2 text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
+            <span className="mt-0.5 flex min-w-0 items-baseline gap-2">
+              <span className="truncate text-lg font-semibold text-slate-900">{nombre}</span>
+              <span className="shrink-0 text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>
+            </span>
           </Link>
-          <span className="text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>
           <Link
             href={`/profesor/grupos/${id}/alumnos`}
-            className="relative z-10 mt-3 inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-tinta-50 hover:text-tinta-700 hover:ring-tinta-300"
+            className="relative z-10 mt-2 inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-tinta-50 hover:text-tinta-700 hover:ring-tinta-300"
           >
             <IconoAlumnos /> {tal.boton}
           </Link>
@@ -172,26 +174,26 @@ export function TarjetaCurso({
         </>
       )}
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
-      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-4">
-        <dl className="flex gap-4 text-sm">
-          <div>
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-2">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <div className="flex flex-row-reverse items-baseline justify-end gap-1">
             <dt className="whitespace-nowrap text-xs text-slate-500">{c.actividades}</dt>
-            <dd className="text-2xl font-semibold text-slate-900">{actividades}</dd>
+            <dd className="text-xl font-semibold leading-none text-slate-900">{actividades}</dd>
           </div>
-          <div>
+          <div className="flex flex-row-reverse items-baseline justify-end gap-1">
             <dt className="whitespace-nowrap text-xs text-slate-500">{c.alumnos}</dt>
-            <dd className="text-2xl font-semibold text-slate-900">{alumnos}</dd>
+            <dd className="text-xl font-semibold leading-none text-slate-900">{alumnos}</dd>
           </div>
           {porRevisar > 0 && (
-            <div>
+            <div className="flex flex-row-reverse items-baseline justify-end gap-1">
               <dt className="whitespace-nowrap text-xs text-slate-500">{tc.porRevisar}</dt>
-              <dd className="text-2xl font-semibold text-aviso">{porRevisar}</dd>
+              <dd className="text-xl font-semibold leading-none text-aviso">{porRevisar}</dd>
             </div>
           )}
         </dl>
         {!editando && (
           // Fila propia a lo ancho de la tarjeta: los íconos nunca se salen aunque la tarjeta sea angosta.
-          <div className="relative z-10 -mx-1 flex w-full flex-wrap items-center justify-between gap-1 border-t border-slate-100 pt-2">
+          <div className="relative z-10 -mx-1 flex w-full flex-wrap items-center justify-between gap-1 border-t border-slate-100 pt-1.5">
             <SobreAvisos href={`/profesor/grupos/${id}/avisos`} sinLeer={avisosSinLeer} />
             <BotonIcono etiqueta={tc.editar} onClick={() => setEditando(true)} disabled={pendiente}>
               <IconoLapiz />

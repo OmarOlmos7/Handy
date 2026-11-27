@@ -95,41 +95,44 @@ export function TarjetaCursoAlumno({
 
   return (
     <div
-      className={`relative flex min-h-[170px] flex-col overflow-visible rounded-2xl bg-white p-5 pt-6 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-tinta-300 ${
+      className={`relative flex min-w-0 flex-col overflow-visible rounded-2xl bg-white p-4 pt-5 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-tinta-300 ${
         pendiente ? "opacity-60" : ""
       }`}
     >
       {colorDe(color) && <span className={`absolute inset-x-0 top-0 h-2 rounded-t-2xl ${colorDe(color)!.franja}`} aria-hidden />}
       {/* El enlace cubre toda la tarjeta; el selector de color queda encima. */}
-      <Link href={`/alumno/cursos/${id}`} className="pr-10 after:absolute after:inset-0 after:rounded-2xl">
-        <span className="block text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
-        <span className="mt-0.5 block text-xl font-semibold text-slate-900">{nombre}</span>
+      <Link href={`/alumno/cursos/${id}`} className="min-w-0 pr-10 after:absolute after:inset-0 after:rounded-2xl" title={`${materia} · ${nombre}`}>
+        <span className="line-clamp-2 text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
+        <span className="mt-0.5 flex min-w-0 items-baseline gap-2">
+          <span className="truncate text-lg font-semibold text-slate-900">{nombre}</span>
+          {ciclo && <span className="shrink-0 text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>}
+        </span>
       </Link>
-      {ciclo && <span className="text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>}
       <ResumenTarjeta href={`/alumno/cursos/${id}/asesorias`} realizadas={asesorias?.realizadas ?? 0} minutos={asesorias?.minutos ?? 0} periodo={periodo} />
       {/* Arriba a la derecha: agendar asesoría con el profesor. */}
       <div className="absolute top-3 right-3">
         <BotonCalendario href={`/alumno/cursos/${id}/asesorias`} etiqueta={t.asesorias.agendaAlumnoBoton} pendientes={asesorias?.proximas ?? 0} />
       </div>
       {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
-      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-4">
-        <dl className="flex gap-4 text-sm">
-          <div>
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-2">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <div className="flex flex-row-reverse items-baseline justify-end gap-1">
             <dt className="whitespace-nowrap text-xs text-slate-500">{tc.actividades}</dt>
-            <dd className="text-2xl font-semibold text-slate-900">{actividades}</dd>
+            <dd className="text-xl font-semibold leading-none text-slate-900">{actividades}</dd>
           </div>
-          <div>
+          <div className="flex flex-row-reverse items-baseline justify-end gap-1">
             <dt className="whitespace-nowrap text-xs text-slate-500">{tc.porEntregar}</dt>
-            <dd className={`text-2xl font-semibold ${porEntregar > 0 ? "text-aviso" : "text-slate-900"}`}>{porEntregar}</dd>
+            <dd className={`text-xl font-semibold leading-none ${porEntregar > 0 ? "text-aviso" : "text-slate-900"}`}>{porEntregar}</dd>
           </div>
           {promedio && (
-            <div>
+            <div className="flex flex-row-reverse items-baseline justify-end gap-1">
               <dt className="whitespace-nowrap text-xs text-slate-500">{tc.miPromedio}</dt>
-              <dd className={`text-2xl font-semibold ${colorPromedio ?? "text-slate-900"}`}>{promedio}</dd>
+              <dd className={`text-xl font-semibold leading-none ${colorPromedio ?? "text-slate-900"}`}>{promedio}</dd>
             </div>
           )}
         </dl>
-        <div className="ml-auto flex gap-1">
+        {/* Fila propia a lo ancho: los íconos no se salen aunque la tarjeta sea angosta. */}
+        <div className="relative z-10 -mx-1 flex w-full flex-wrap items-center justify-between gap-1 border-t border-slate-100 pt-1.5">
           <SobreAvisos href={`/alumno/cursos/${id}/avisos`} sinLeer={avisosSinLeer} />
           <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
           <BotonIcono etiqueta={archivado ? ta.restaurar : ta.archivar} onClick={archivar} disabled={pendiente}>

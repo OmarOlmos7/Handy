@@ -134,7 +134,7 @@ export default async function PanelProfesor() {
                     {color ? t.profesor.comun.nombresColores[color.clave as keyof typeof t.profesor.comun.nombresColores] : t.profesor.comun.sinColor}
                   </h3>
                 )}
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,17rem),1fr))] gap-4">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {items.map((g) => (
                     <TarjetaCurso
                       key={g.id}
