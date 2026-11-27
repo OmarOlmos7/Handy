@@ -23,6 +23,7 @@ const fr: Diccionario = {
     creditos: "{n} crédits",
     ivaIncluido: "TVA incluse",
     ubicacionIp: "Localisation IP : DB-IP",
+    fuenteClima: "Météo : MET Norway",
   },
   meta: {
     titulo: "iEureka-Grader · Correction des devoirs imprimés par IA",
@@ -40,6 +41,15 @@ const fr: Diccionario = {
     avisos: "Messages",
     alumno: "Élève",
     sinSesion: "Non connecté",
+    clima: {
+      soleado: "Ensoleillé",
+      despejado: "Dégagé",
+      medioNublado: "Partiellement nuageux",
+      nublado: "Nuageux",
+      lluvia: "Pluie",
+      tormenta: "Orage",
+      fuente: "Météo : MET Norway (met.no) · Localisation IP approximative : DB-IP",
+    },
     tipos: { alumno: "Élève", profesor: "Enseignant", administrador: "Administrateur" },
   },
   inicio: {

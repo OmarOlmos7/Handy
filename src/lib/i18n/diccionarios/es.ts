@@ -24,6 +24,7 @@ const es = {
     creditos: "{n} créditos",
     ivaIncluido: "IVA incluido",
     ubicacionIp: "Ubicación por IP: DB-IP",
+    fuenteClima: "Clima: MET Norway",
   },
   meta: {
     titulo: "iEureka-Grader · Evaluación de actividades impresas con IA",
@@ -41,6 +42,15 @@ const es = {
     avisos: "Avisos",
     alumno: "Alumno",
     sinSesion: "Sin sesión",
+    clima: {
+      soleado: "Soleado",
+      despejado: "Despejado",
+      medioNublado: "Medio nublado",
+      nublado: "Nublado",
+      lluvia: "Lluvia",
+      tormenta: "Tormenta",
+      fuente: "Clima: MET Norway (met.no) · Ubicación aproximada por IP: DB-IP",
+    },
     tipos: { alumno: "Alumno", profesor: "Profesor", administrador: "Administrador" },
   },
   inicio: {

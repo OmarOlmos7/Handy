@@ -23,6 +23,7 @@ const zh: Diccionario = {
     creditos: "{n} 点数",
     ivaIncluido: "含税",
     ubicacionIp: "IP 定位：DB-IP",
+    fuenteClima: "天气：MET Norway",
   },
   meta: {
     titulo: "iEureka-Grader · 用 AI 批改纸质作业",
@@ -39,6 +40,15 @@ const zh: Diccionario = {
     avisos: "通知",
     alumno: "学生",
     sinSesion: "未登录",
+    clima: {
+      soleado: "晴",
+      despejado: "晴朗",
+      medioNublado: "多云间晴",
+      nublado: "多云",
+      lluvia: "雨",
+      tormenta: "雷暴",
+      fuente: "天气：MET Norway（met.no）· IP 大致位置：DB-IP",
+    },
     tipos: { alumno: "学生", profesor: "教师", administrador: "管理员" },
   },
   inicio: {

@@ -10,9 +10,17 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
-# Base libre de países por IP (DB-IP Lite, CC BY 4.0) para elegir el idioma del visitante.
-# Si no se puede descargar, la app usa el idioma del navegador.
-RUN node scripts/descargar-geoip.mjs geoip
+
+# Bases libres de DB-IP Lite (CC BY 4.0): país por IP (idioma y divisa del visitante) y ciudad por IP
+# (clima del encabezado). Van en su propia etapa para que Docker las guarde en caché y no se
+# vuelvan a descargar (~130 MB) en cada actualización. Para renovarlas (una vez al mes basta):
+#   docker compose build --build-arg GEOIP_MES=$(date +%Y-%m) && docker compose up -d
+# Si no se pueden descargar, la app funciona igual (idioma del navegador; encabezado sin clima).
+FROM node:22-bookworm-slim AS geoip
+WORKDIR /app
+ARG GEOIP_MES=inicial
+COPY scripts/descargar-geoip.mjs ./
+RUN echo "Bases de IP: ${GEOIP_MES}" && node descargar-geoip.mjs geoip
 
 FROM node:22-bookworm-slim AS app
 WORKDIR /app
@@ -38,7 +46,7 @@ RUN mkdir -p /datos && chown node:node /datos
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
 COPY --from=build --chown=node:node /app/public ./public
-COPY --from=build --chown=node:node /app/geoip ./geoip
+COPY --from=geoip --chown=node:node /app/geoip ./geoip
 # Hoja de estilos y fuentes de KaTeX para imprimir fórmulas en el PDF.
 COPY --from=build --chown=node:node /app/node_modules/katex/dist ./node_modules/katex/dist
 USER node
