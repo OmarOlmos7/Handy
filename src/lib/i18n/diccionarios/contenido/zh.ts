@@ -58,7 +58,7 @@ const contenido: typeof es = {
   material: "资料",
   instruccionesTitulo: "说明",
   /** Ficha de instrucciones en la web. */
-  ficha: { manuscrita: "手写：作业纸的照片或PDF", digital: "电子作业：上传你的文件", entrega: "提交：", evaluacion: "评分：", enPlataforma: "在平台上作答", impresa: "已完成作业纸的照片或PDF", puntos: "{p} 分" },
+  ficha: { aplicaUno: "适用于第 {n} 题", apoyosTitulo: "辅助资料", apoyosSubtitulo: "完成活动所需的资料", entregaTitulo: "提交作业", rubricaTitulo: "评分量规", rubricaSubtitulo: "你的作业将按以下方式评分", rubricaEscala: "你的作业将按以下方式评分 · 满分 {e}", aplicaA: "适用于第 {n} 题", puntosPorReactivo: "每题分值", manuscrita: "手写：作业纸的照片或PDF", digital: "电子作业：上传你的文件", entrega: "提交：", evaluacion: "评分：", enPlataforma: "在平台上作答", impresa: "已完成作业纸的照片或PDF", puntos: "{p} 分" },
   materialSinSesion: "登录后即可查看活动资料。",
   evidencia: {
     titulo: "你的作业",

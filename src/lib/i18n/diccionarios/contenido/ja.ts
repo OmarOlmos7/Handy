@@ -58,7 +58,7 @@ const contenido: typeof es = {
   material: "教材",
   instruccionesTitulo: "指示",
   /** Ficha de instrucciones en la web. */
-  ficha: { manuscrita: "手書き: シートの写真またはPDF", digital: "デジタル提出: ファイルをアップロード", entrega: "提出:", evaluacion: "評価:", enPlataforma: "プラットフォーム上で解答", impresa: "記入したシートの写真またはPDF", puntos: "{p}点" },
+  ficha: { aplicaUno: "対象の設問: {n}", apoyosTitulo: "資料", apoyosSubtitulo: "課題に取り組むための資料", entregaTitulo: "提出物を送る", rubricaTitulo: "評価ルーブリック", rubricaSubtitulo: "あなたの課題はこのように評価されます", rubricaEscala: "あなたの課題はこのように評価されます · {e}点満点", aplicaA: "対象の設問: {n}", puntosPorReactivo: "設問ごとの配点", manuscrita: "手書き: シートの写真またはPDF", digital: "デジタル提出: ファイルをアップロード", entrega: "提出:", evaluacion: "評価:", enPlataforma: "プラットフォーム上で解答", impresa: "記入したシートの写真またはPDF", puntos: "{p}点" },
   materialSinSesion: "課題の教材を見るにはログインしてください。",
   evidencia: {
     titulo: "あなたの提出物",
