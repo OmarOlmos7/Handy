@@ -50,6 +50,18 @@ const marco: typeof es = {
     cuerpo:
       "{nombre} 你好：\n\n{profesor} 老师已将你加入课程 {curso}。\n\n课程 ID 代码：{codigo}\n\n用此代码支付会员（许可证）并完成注册：\n1. 打开 {url}\n2. 用此邮箱创建账号或登录。\n3. 输入代码，选择时长并付款。\n\n如有疑问，请询问你的老师。\n\niEureka-Grader",
   },
+  unidades: {
+    titulo: "按单元查看活动",
+    pista: "点击时间线上的某个单元，只查看该单元的活动。",
+    verTodas: "查看所有单元",
+    verUnidad: "查看“{nombre}”的活动",
+    mostrando: "单元 {n}：{nombre}",
+    sinUnidad: "无大纲单元",
+    actividades1: "1 个活动",
+    actividadesN: "{n} 个活动",
+    vacia: "此单元还没有活动。创建活动时，在大纲选择器中选择此单元。",
+    unidad: "单元 {n}",
+  },
 };
 
 export default marco;

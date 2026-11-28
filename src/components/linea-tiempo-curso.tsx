@@ -7,6 +7,7 @@ import { formato } from "@/lib/i18n/idiomas";
 import type { IconoUnidad, UnidadEnTiempo } from "@/lib/linea-tiempo";
 import { colorProgreso, colorUnidad } from "@/lib/mapa-temario";
 import { AjustesCurso } from "./asesorias";
+import { BotonUnidad } from "./unidades-curso";
 import { fechaLarga } from "./ui";
 
 const trazo = {
@@ -150,6 +151,10 @@ function IconoDeUnidad({ icono }: { icono: IconoUnidad }) {
   }
 }
 
+function SinBoton({ children }: { indice: number; nombre: string; children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
 export interface UnidadLinea extends UnidadEnTiempo {
   icono: IconoUnidad;
   /** Avance del grupo en la unidad (0 a 100); null si no tiene actividades ligadas. */
@@ -166,6 +171,7 @@ export function LineaTiempoCurso({
   hayTemario,
   t,
   locale,
+  conteos,
 }: {
   grupoId: string;
   inicio?: string;
@@ -178,8 +184,12 @@ export function LineaTiempoCurso({
   hayTemario: boolean;
   t: Diccionario;
   locale: string;
+  /** Actividades por unidad: con ellas cada tarjeta es un botón que muestra solo esa unidad. */
+  conteos?: number[];
 }) {
   const tl = t.marco.lineaTiempo;
+  const tu = t.marco.unidades;
+  const Envoltura = conteos ? BotonUnidad : SinBoton;
   const corta = (iso: string) => fechaLarga(iso, locale);
 
   return (
@@ -216,7 +226,7 @@ export function LineaTiempoCurso({
       ) : (
         <>
           {/* Barra del periodo: un tramo por unidad y la marca de hoy. */}
-          <div className="relative mb-5">
+          <div className="relative mt-8 mb-5">
             <div className="flex h-3 overflow-hidden rounded-full ring-1 ring-slate-200">
               {unidades.map((u) => {
                 const c = colorUnidad(u.indice);
@@ -231,9 +241,9 @@ export function LineaTiempoCurso({
               })}
             </div>
             {transcurrido !== null && transcurrido > 0 && transcurrido < 100 && (
-              <span className="absolute -top-1.5 flex -translate-x-1/2 flex-col items-center" style={{ left: `${transcurrido}%` }}>
-                <span className="h-6 w-0.5 rounded bg-slate-900" />
-                <span className="mt-0.5 rounded bg-slate-900 px-1.5 text-[10px] font-semibold text-white">{corta(hoy)}</span>
+              <span className="absolute -top-6 flex -translate-x-1/2 flex-col items-center" style={{ left: `${transcurrido}%` }}>
+                <span className="whitespace-nowrap rounded bg-slate-900 px-1.5 text-[10px] font-semibold text-white">{corta(hoy)}</span>
+                <span className="h-5 w-0.5 rounded bg-slate-900" />
               </span>
             )}
             <div className="mt-1 flex justify-between text-[11px] text-slate-500">
@@ -251,6 +261,7 @@ export function LineaTiempoCurso({
               const estado = u.estado === "cubierta" ? tl.cubierta : u.estado === "en_curso" ? tl.enCurso : tl.pendiente;
               return (
                 <li key={u.indice} className="relative">
+                  <Envoltura indice={u.indice} nombre={u.nombre}>
                   <div
                     className={`flex h-full min-h-[6.5rem] overflow-hidden rounded-2xl shadow-sm ring-1 ${u.estado === "en_curso" ? "ring-2 ring-slate-900" : "ring-slate-200"}`}
                     style={{ background: bloque }}
@@ -274,8 +285,13 @@ export function LineaTiempoCurso({
                       <p className="text-[11px] text-slate-500">
                         {corta(u.desde)} – {corta(u.hasta)}
                       </p>
+                      {conteos && (
+                        <p className={`text-[11px] font-medium ${conteos[u.indice] ? "text-tinta-700" : "text-slate-400"}`}>
+                          {conteos[u.indice] === 1 ? tu.actividades1 : formato(tu.actividadesN, { n: conteos[u.indice] ?? 0 })}
+                        </p>
+                      )}
                       {u.avance === null ? (
-                        <p className="text-[11px] text-slate-400">{tl.sinActividades}</p>
+                        !conteos && <p className="text-[11px] text-slate-400">{tl.sinActividades}</p>
                       ) : (
                         <div title={formato(tl.avance, { p: u.avance })}>
                           <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
@@ -286,6 +302,7 @@ export function LineaTiempoCurso({
                       )}
                     </div>
                   </div>
+                  </Envoltura>
                   {i < unidades.length - 1 && (
                     <svg viewBox="0 0 24 12" className="absolute top-1/2 -right-8 hidden h-3 w-7 -translate-y-1/2 text-slate-400 sm:block" aria-hidden>
                       <path d="M1 6h20M16 1.5 21 6l-5 4.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />

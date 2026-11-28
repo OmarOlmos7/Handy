@@ -109,3 +109,39 @@ export function iconoUnidad(nombre: string, indice: number): IconoUnidad {
   for (const [re, icono] of REGLAS_ICONO) if (re.test(limpio)) return icono;
   return RESPALDO[indice % RESPALDO.length];
 }
+
+/** Unidad del temario (índice) a la que está ligada una actividad, o null si no tiene. */
+export function unidadDeActividad(
+  asignatura: { id: string; unidades: { nombre: string }[] },
+  actividad: { temario?: { asignaturaId: string; unidad: string } },
+): number | null {
+  const t = actividad.temario;
+  if (!t || t.asignaturaId !== asignatura.id) return null;
+  const i = asignatura.unidades.findIndex((u) => u.nombre === t.unidad);
+  return i >= 0 ? i : null;
+}
+
+export interface GrupoUnidad<A> {
+  /** Índice de la unidad; null para las actividades sin unidad del temario. */
+  indice: number | null;
+  items: A[];
+}
+
+/**
+ * Actividades agrupadas por unidad, en el orden del temario (todas las unidades, aunque no tengan
+ * actividades) y al final las que no están ligadas a ninguna unidad (solo si hay).
+ */
+export function agruparPorUnidad<A extends { temario?: { asignaturaId: string; unidad: string } }>(
+  asignatura: { id: string; unidades: { nombre: string }[] },
+  actividades: A[],
+): GrupoUnidad<A>[] {
+  const grupos: GrupoUnidad<A>[] = asignatura.unidades.map((_, indice) => ({ indice, items: [] }));
+  const sinUnidad: A[] = [];
+  for (const a of actividades) {
+    const i = unidadDeActividad(asignatura, a);
+    if (i === null) sinUnidad.push(a);
+    else grupos[i].items.push(a);
+  }
+  if (sinUnidad.length) grupos.push({ indice: null, items: sinUnidad });
+  return grupos;
+}

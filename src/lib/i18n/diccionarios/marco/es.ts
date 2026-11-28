@@ -52,6 +52,18 @@ const marco = {
     cuerpo:
       "Hola, {nombre}:\n\nTu profesor(a) {profesor} te inscribió en el curso {curso}.\n\nCódigo ID del curso: {codigo}\n\nCon este código pagas tu membresía (licencia) y quedas inscrito:\n1. Entra a {url}\n2. Crea tu cuenta o inicia sesión con este correo.\n3. Escribe el código, elige la duración y paga.\n\nSi tienes dudas, pregúntale a tu profesor(a).\n\niEureka-Grader",
   },
+  unidades: {
+    titulo: "Actividades por unidad",
+    pista: "Da clic en una unidad de la línea de tiempo para ver solo sus actividades.",
+    verTodas: "Ver todas las unidades",
+    verUnidad: "Ver las actividades de «{nombre}»",
+    mostrando: "Unidad {n}: {nombre}",
+    sinUnidad: "Sin unidad del temario",
+    actividades1: "1 actividad",
+    actividadesN: "{n} actividades",
+    vacia: "Aún no hay actividades en esta unidad. Al crear una actividad, elige esta unidad en el selector de temario.",
+    unidad: "Unidad {n}",
+  },
 };
 
 export default marco;
