@@ -13,6 +13,7 @@ import avisos from "./avisos/de";
 import proyecto from "./proyecto/de";
 import altaProyecto from "./alta-proyecto/de";
 import asesorias from "./asesorias/de";
+import perfil from "./perfil/de";
 import marco from "./marco/de";
 import asistencia from "./asistencia/de";
 
@@ -473,6 +474,7 @@ const de: Diccionario = {
   proyecto,
   altaProyecto,
   asesorias,
+  perfil,
   marco,
   asistencia,
 };

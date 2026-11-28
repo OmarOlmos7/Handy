@@ -14,6 +14,7 @@ import avisos from "./avisos/es";
 import proyecto from "./proyecto/es";
 import altaProyecto from "./alta-proyecto/es";
 import asesorias from "./asesorias/es";
+import perfil from "./perfil/es";
 import marco from "./marco/es";
 import asistencia from "./asistencia/es";
 
@@ -475,6 +476,7 @@ const es = {
   proyecto,
   altaProyecto,
   asesorias,
+  perfil,
   marco,
   asistencia,
 };

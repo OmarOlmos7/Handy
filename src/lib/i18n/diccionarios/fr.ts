@@ -13,6 +13,7 @@ import avisos from "./avisos/fr";
 import proyecto from "./proyecto/fr";
 import altaProyecto from "./alta-proyecto/fr";
 import asesorias from "./asesorias/fr";
+import perfil from "./perfil/fr";
 import marco from "./marco/fr";
 import asistencia from "./asistencia/fr";
 
@@ -473,6 +474,7 @@ const fr: Diccionario = {
   proyecto,
   altaProyecto,
   asesorias,
+  perfil,
   marco,
   asistencia,
 };

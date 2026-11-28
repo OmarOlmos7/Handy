@@ -1,5 +1,6 @@
 // Herramientas del curso en la franja izquierda, para todas las vistas de un curso (va en sus layouts).
 import { grupoDe } from "@/lib/almacen";
+import { perfilActivo } from "@/lib/banderas";
 import { directorioActividades } from "@/lib/copiar";
 import { datosProfesor } from "@/lib/sesion";
 import { Lateral } from "./franja-lateral";
@@ -17,6 +18,7 @@ export async function LateralCurso({ grupoId }: { grupoId: string | undefined })
         nombre={`${grupo.materia} · ${grupo.nombre}`}
         proyectos={(db.proyectos ?? []).filter((p) => p.grupoId === grupo.id).length}
         directorio={directorioActividades(db, profesor.id)}
+        perfil={perfilActivo()}
       />
     </Lateral>
   );
