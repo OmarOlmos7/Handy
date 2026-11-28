@@ -32,6 +32,8 @@ import { leerFiltro, leerOrden, ordenarEntregas } from "@/lib/listas";
 import { OrdenLista } from "@/components/orden-lista";
 import { AlumnosEnActividad } from "@/components/administrar-alumnos";
 import { filasAlumnos } from "@/lib/alumnos-grupo";
+import { CopiarActividad } from "@/components/copiar-elemento";
+import { tituloCopia } from "@/lib/copiar";
 
 export default async function EntregasActividad({ params, searchParams }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
@@ -116,6 +118,13 @@ export default async function EntregasActividad({ params, searchParams }: PagePr
             <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
               {tc.hojaQr}
             </BotonLink>
+            <CopiarActividad
+              actividadId={id}
+              grupoId={grupo.id}
+              cursoActual={`${grupo.materia} · ${grupo.nombre}`}
+              tituloCopia={tituloCopia(actividad.titulo, db.actividades.filter((a) => a.grupoId === grupo.id).map((a) => a.titulo), t.copiar.sufijo)}
+              cursos={db.grupos.filter((g) => g.id !== grupo.id && !g.archivado).map((g) => ({ id: g.id, nombre: `${g.materia} · ${g.nombre}` }))}
+            />
             {entregas.some((e) => e.resultados.length > 0 && (e.imagenes?.length || e.pdf)) && (
               <a
                 href={`/api/pdf/${id}/grupo`}

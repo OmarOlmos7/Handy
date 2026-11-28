@@ -7,6 +7,7 @@ import ruta from "./ruta/es";
 import licencias from "./licencias/es";
 import alumnosGrupo from "./alumnos-grupo/es";
 import archivados from "./archivados/es";
+import copiar from "./copiar/es";
 import ajustesAlumno from "./ajustes-alumno/es";
 import contenido from "./contenido/es";
 import avisos from "./avisos/es";
@@ -464,6 +465,7 @@ const es = {
   licencias,
   alumnosGrupo,
   archivados,
+  copiar,
   ajustesAlumno,
   contenido,
   avisos,

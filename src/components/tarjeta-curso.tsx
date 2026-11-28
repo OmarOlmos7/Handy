@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 import { archivarGrupo, borrarGrupo, colorGrupo, renombrarGrupo } from "@/app/acciones";
+import { duplicarGrupo } from "@/app/acciones-copiar";
 import { colorDe } from "@/lib/colores";
-import { BotonIcono, IconoAlumnos, IconoArchivar, IconoBasura, IconoLapiz } from "./iconos";
+import { BotonIcono, IconoAlumnos, IconoArchivar, IconoBasura, IconoDuplicar, IconoLapiz } from "./iconos";
 import { SobreAvisos } from "./avisos";
 import { AjustesCurso, BotonCalendario, ResumenTarjeta } from "./asesorias";
 import { SelectorColor } from "./selector-color";
@@ -17,8 +18,8 @@ const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm 
 
 /**
  * Tarjeta de un curso en el panel: abre la vista del curso; botón a la lista de alumnos; lápiz para
- * renombrar (y entrar a altas, bajas y cambios de alumnos), sobre de avisos, caja para archivar y bote
- * para borrar.
+ * renombrar (y entrar a altas, bajas y cambios de alumnos), sobre de avisos, duplicar (copia vacía),
+ * caja para archivar y bote para borrar.
  */
 export function TarjetaCurso({
   id,
@@ -59,6 +60,7 @@ export function TarjetaCurso({
   const tal = t.alumnosGrupo;
   const ta = t.archivados;
   const tas = t.asesorias;
+  const tdu = t.copiar.curso;
   const [editando, setEditando] = useState(false);
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
@@ -98,6 +100,18 @@ export function TarjetaCurso({
       } catch (err) {
         setError(err instanceof Error ? err.message : ta.noSeArchivo);
       }
+    });
+  }
+
+  // Duplicar: copia idéntica y vacía (sin alumnos, entregas ni calificaciones) con código nuevo.
+  function duplicar() {
+    const curso = `${materia} · ${nombre}`;
+    if (!window.confirm(actividades > 0 ? formato(tdu.confirmar, { curso, n: actividades }) : formato(tdu.confirmar0, { curso }))) return;
+    setError("");
+    iniciar(async () => {
+      const r = await duplicarGrupo(id);
+      if ("error" in r) setError(r.error);
+      else router.refresh();
     });
   }
 
@@ -154,8 +168,8 @@ export function TarjetaCurso({
           {/* El enlace cubre toda la tarjeta; los botones de abajo quedan encima. */}
           <Link href={`/profesor/grupos/${id}`} className="min-w-0 pr-20 after:absolute after:inset-0 after:rounded-2xl" title={`${materia} · ${nombre}`}>
             <span className="line-clamp-2 text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
-            <span className="mt-0.5 flex min-w-0 items-baseline gap-2">
-              <span className="truncate text-lg font-semibold text-slate-900">{nombre}</span>
+            <span className="mt-0.5 flex min-w-0 flex-wrap items-baseline gap-x-2">
+              <span className="min-w-0 max-w-full truncate text-lg font-semibold text-slate-900">{nombre}</span>
               <span className="shrink-0 text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>
             </span>
           </Link>
@@ -192,13 +206,16 @@ export function TarjetaCurso({
           )}
         </dl>
         {!editando && (
-          // Fila propia a lo ancho de la tarjeta: los íconos nunca se salen aunque la tarjeta sea angosta.
-          <div className="relative z-10 -mx-1 flex w-full flex-wrap items-center justify-between gap-1 border-t border-slate-100 pt-1.5">
+          // Fila propia a lo ancho de la tarjeta: los seis íconos caben en un renglón (sin espacio extra entre ellos).
+          <div className="relative z-10 -mx-1 flex w-full flex-wrap items-center justify-between gap-x-0 gap-y-1 border-t border-slate-100 pt-1.5">
             <SobreAvisos href={`/profesor/grupos/${id}/avisos`} sinLeer={avisosSinLeer} />
             <BotonIcono etiqueta={tc.editar} onClick={() => setEditando(true)} disabled={pendiente}>
               <IconoLapiz />
             </BotonIcono>
             <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
+            <BotonIcono etiqueta={tdu.duplicar} onClick={duplicar} disabled={pendiente}>
+              <IconoDuplicar />
+            </BotonIcono>
             <BotonIcono etiqueta={ta.archivar} onClick={archivar} disabled={pendiente}>
               <IconoArchivar />
             </BotonIcono>

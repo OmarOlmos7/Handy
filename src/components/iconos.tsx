@@ -95,6 +95,27 @@ export function IconoArchivar() {
   );
 }
 
+/** Dos hojas encimadas ("Copiar elemento"). */
+export function IconoCopiar() {
+  return (
+    <svg {...base}>
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" />
+    </svg>
+  );
+}
+
+/** Dos tarjetas encimadas con un "+" (duplicar un curso). */
+export function IconoDuplicar() {
+  return (
+    <svg {...base}>
+      <rect x="8" y="8" width="13" height="13" rx="2" />
+      <path d="M4 16a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1" />
+      <path d="M14.5 11.5v6M11.5 14.5h6" />
+    </svg>
+  );
+}
+
 /** Caja con flecha hacia arriba (desarchivar o restaurar). */
 export function IconoDesarchivar() {
   return (
