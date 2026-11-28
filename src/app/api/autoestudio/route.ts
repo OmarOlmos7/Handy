@@ -7,6 +7,9 @@ import { ErrorIA, iaDisponible } from "@/lib/ia";
 import { PeticionInapropiada, generarAutoactividad } from "@/lib/ia-autoestudio";
 import { idiomaPublico, textos } from "@/lib/i18n/servidor";
 import { alumnoActual } from "@/lib/sesion";
+import { perfilActivo } from "@/lib/banderas";
+import { licenciasObligatorias } from "@/lib/licencias";
+import { cobrarAlumno, saldoAlumno } from "@/lib/perfil/bolsa";
 import type { Autoactividad, TipoEjercicio } from "@/lib/tipos";
 
 export const maxDuration = 300;
@@ -43,7 +46,11 @@ export async function POST(req: Request) {
   if (!grupo?.profesorId) return Response.json({ error: te.sinCreditos }, { status: 402 });
   if (restantesHoy(db.autoactividades ?? [], cuenta.id) <= 0) return Response.json({ error: te.limite }, { status: 429 });
   const costo = costoGenerar(tipo);
-  if (saldoDe(db, grupo.profesorId) < costo) return Response.json({ error: te.sinCreditos }, { status: 402 });
+  // Con el perfil CREAR, el autoestudio se paga de la bolsa de créditos del alumno.
+  const pagaAlumno = perfilActivo();
+  if (pagaAlumno ? saldoAlumno(db, cuenta.id, licenciasObligatorias()).total < costo : saldoDe(db, grupo.profesorId) < costo) {
+    return Response.json({ error: pagaAlumno ? t.perfil.bolsa.sinCreditos : te.sinCreditos }, { status: 402 });
+  }
   if (!iaDisponible()) return Response.json({ error: te.ia }, { status: 503 });
 
   const idioma = await idiomaPublico();
@@ -78,9 +85,14 @@ export async function POST(req: Request) {
       videos: generada.videos,
       estado: "pendiente",
       creditos: costo,
+      ...(pagaAlumno ? { pagadoPor: "alumno" as const } : {}),
     };
     modificar((d) => {
       (d.autoactividades ??= []).push(nueva);
+      if (pagaAlumno) {
+        cobrarAlumno(d, { alumnoId: cuenta.id, cantidad: costo, concepto: `autoestudio:${tipo}:${tema}`, grupoId }, licenciasObligatorias());
+        return;
+      }
       d.movimientos.unshift({
         profesorId: grupo.profesorId,
         fecha: new Date().toISOString().slice(0, 10),

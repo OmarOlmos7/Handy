@@ -22,6 +22,10 @@ import { formato, esIdioma } from "@/lib/i18n/idiomas";
 import { ErrorPaginasPdf, normalizarFoto, pdfAImagenes } from "@/lib/imagenes";
 import { alumnoActual } from "@/lib/sesion";
 import type { ResultadoAuto } from "@/lib/tipos";
+import { perfilActivo } from "@/lib/banderas";
+import { licenciasObligatorias } from "@/lib/licencias";
+import { cobrarAlumno, saldoAlumno } from "@/lib/perfil/bolsa";
+import { cerrarCaso } from "@/lib/perfil/casos";
 
 export const maxDuration = 300;
 
@@ -137,9 +141,11 @@ export async function POST(req: Request, ctx: RouteContext<"/api/autoestudio/[id
     const nFotos = paraIA.reduce((s, r) => s + (r.imagenes?.length ?? 0), 0);
     const nTextos = paraIA.filter((r) => r.texto !== undefined && !r.imagenes?.length).length;
     costo = costoEvaluar(nTextos, nFotos);
-    if (!grupo?.profesorId || saldoDe(db, grupo.profesorId) < costo) return Response.json({ error: te.sinCreditos }, { status: 402 });
+    if (act.pagadoPor === "alumno") {
+      if (saldoAlumno(db, cuenta.id, licenciasObligatorias()).total < costo) return Response.json({ error: t.perfil.bolsa.sinCreditos }, { status: 402 });
+    } else if (!grupo?.profesorId || saldoDe(db, grupo.profesorId) < costo) return Response.json({ error: te.sinCreditos }, { status: 402 });
     try {
-      const ia = await evaluarAutoRespuestas(ejercicios, paraIA, { profesorId: grupo.profesorId, idioma: esIdioma(act.idioma) ? act.idioma : undefined });
+      const ia = await evaluarAutoRespuestas(ejercicios, paraIA, { profesorId: grupo?.profesorId, idioma: esIdioma(act.idioma) ? act.idioma : undefined });
       for (const r of ia) {
         const res = resultados.find((x) => x.numero === r.numero);
         if (!res) continue;
@@ -168,7 +174,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/autoestudio/[id
       archivos: Object.values(fotos).flat(),
       creditos: sumarCreditos(a.creditos ?? 0, costo),
     });
-    if (costo > 0 && grupo?.profesorId) {
+    if (costo > 0 && a.pagadoPor === "alumno") {
+      cobrarAlumno(d, { alumnoId: a.alumnoId, cantidad: costo, concepto: `revision:${a.casoDe ? "caso" : a.tipo}:${act.tema}`, grupoId: a.grupoId }, licenciasObligatorias());
+    } else if (costo > 0 && grupo?.profesorId) {
       d.movimientos.unshift({
         profesorId: grupo.profesorId,
         fecha: ahora.slice(0, 10),
@@ -177,5 +185,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/autoestudio/[id
       });
     }
   });
+  // Caso equivalente (perfil CREAR): cuenta como el último intento de la actividad.
+  if (act.casoDe && perfilActivo()) modificar((d) => cerrarCaso(d, act.id));
   return Response.json({ ok: true, calificacion, resultados, segundos, alerta });
 }

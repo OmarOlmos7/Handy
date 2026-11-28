@@ -1,6 +1,7 @@
 import { modificar } from "@/lib/almacen";
 import { confirmarPago, ErrorDeLicencia } from "@/lib/licencias";
 import { consultarPago, ErrorMercadoPago, firmaValida } from "@/lib/mercadopago";
+import { confirmarCompra, esLlaveCompra } from "@/lib/perfil/bolsa";
 
 // Webhook de Mercado Pago. Solo confía en lo que devuelve la API: con el id del aviso se consulta el
 // pago con el token del servidor y se activa la licencia si está aprobado, en pesos, por el monto
@@ -23,6 +24,12 @@ export async function POST(req: Request) {
   try {
     const pago = await consultarPago(dataId);
     if (pago.status !== "approved" || pago.currency_id !== "MXN" || !pago.external_reference) return Response.json({ ok: true });
+    // Paquete de créditos del alumno (CRE-…): se abona a su bolsa.
+    if (esLlaveCompra(pago.external_reference)) {
+      const r = modificar((db) => confirmarCompra(db, pago.external_reference!, { proveedor: "mercadopago", pagoId: String(pago.id), monto: pago.transaction_amount }));
+      if ("error" in r) console.error(`[pagos] aviso de Mercado Pago ${dataId} rechazado: ${r.error}`);
+      return Response.json({ ok: !("error" in r) });
+    }
     modificar((db) =>
       confirmarPago(db, pago.external_reference!, { proveedor: "mercadopago", pagoId: String(pago.id), monto: pago.transaction_amount }),
     );

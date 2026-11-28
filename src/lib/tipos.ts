@@ -56,6 +56,8 @@ export interface PasoRubrica {
   nombre: string;
   /** Peso del paso dentro del reactivo, de 0 a 1. Los pesos de un reactivo suman 1. */
   peso: number;
+  /** Etapa del Modelo CREAR que evidencia el paso (la fija el profesor; sin valor, la sugiere el código). */
+  etapaCrear?: EtapaCrear;
 }
 
 export interface Reactivo {
@@ -88,6 +90,8 @@ export interface Reactivo {
   imagenes?: ImagenReactivo[];
   /** Respuesta numérica: margen aceptado (±) en las mismas unidades; sin valor, 1 % del resultado. */
   tolerancia?: number;
+  /** Etapa del Modelo CREAR que evidencia el reactivo (la fija el profesor; sin valor, la sugiere el código). */
+  etapaCrear?: EtapaCrear;
 }
 
 export interface Alumno {
@@ -185,6 +189,8 @@ export interface CriterioEvaluacion {
    * califica el reactivo 2). Sin valor o vacío: aplica a todos los reactivos abiertos.
    */
   reactivos?: number[];
+  /** Etapa del Modelo CREAR que evidencia el criterio (la fija el profesor; sin valor, la sugiere el código). */
+  etapaCrear?: EtapaCrear;
 }
 
 export type OrigenActividad = "ia" | "escaneada" | "contenido";
@@ -413,6 +419,11 @@ export interface Entrega {
    * Si existe, reemplaza a la calculada con los puntos de los reactivos.
    */
   calificacionManual?: number;
+  /**
+   * Calificación del último caso equivalente que resolvió el alumno (perfil CREAR), en la escala de
+   * la actividad. Reemplaza a la calculada; la escrita a mano por el profesor tiene prioridad.
+   */
+  calificacionCaso?: number;
   /** Hora en que empezó la evaluación automática (mientras está en curso). */
   evaluandoDesde?: string;
   /** Recomendaciones de estudio: videos sugeridos y ejercicios de repaso con su respuesta. */
@@ -702,6 +713,12 @@ export interface BaseDeDatos {
   stroop?: AplicacionStroop[];
   /** Modelo CREAR adaptado por el profesor a la disciplina de cada curso. */
   modelosCrear?: ModeloCrearCurso[];
+  /** Cada intento del alumno en una actividad o en sus casos equivalentes (ver lib/perfil/intentos). */
+  intentosPerfil?: IntentoActividad[];
+  /** Movimientos de la bolsa de créditos de cada alumno (ver lib/perfil/bolsa). */
+  movimientosAlumno?: MovimientoAlumno[];
+  /** Compras de paquetes de créditos del alumno en la tienda. */
+  comprasCreditos?: CompraCreditos[];
   /** Listas de asistencia tomadas, una por sesión de clase (ver lib/asistencia). */
   asistencias?: RegistroAsistencia[];
   /**
@@ -1202,6 +1219,10 @@ export interface Autoactividad {
   archivos?: string[];
   /** Créditos que costó (generar y evaluar). */
   creditos?: number;
+  /** Quién pagó los créditos: el profesor del curso (por omisión) o la bolsa del alumno. */
+  pagadoPor?: "profesor" | "alumno";
+  /** Caso equivalente de una actividad del profesor (perfil CREAR): de cuál y qué número de caso. */
+  casoDe?: { actividadId: string; numero: number };
   error?: string;
 }
 
@@ -1308,4 +1329,64 @@ export interface ModeloCrearCurso {
   actualizadoEn: string;
   /** Versiones anteriores, la más reciente al final. */
   anteriores?: { version: number; disciplina: string; etapas: Record<EtapaCrear, DefinicionEtapaCrear>; actualizadoEn: string }[];
+}
+
+/** De dónde viene un intento: la entrega de la actividad o un caso equivalente. */
+export type OrigenIntento = "actividad" | "caso";
+
+/**
+ * Un intento del alumno, para el análisis de su trabajo: logro general y por etapa CREAR, tiempo y
+ * cuándo trabajó. Nunca se sustituye: una re-evaluación de la misma entrega actualiza su registro.
+ */
+export interface IntentoActividad {
+  alumnoId: string;
+  grupoId: string;
+  actividadId: string;
+  origen: OrigenIntento;
+  /** Entrega (su fecha de envío) o caso (id de la autoactividad) que lo produjo. */
+  clave: string;
+  /** 1 la entrega, 2 en adelante los casos equivalentes. */
+  numero: number;
+  /** Sobre 100, calculada por código. */
+  calificacion: number;
+  /** Logro (0-100) de cada etapa que la actividad evidencia. */
+  porEtapa: Partial<Record<EtapaCrear, number>>;
+  /** Nivel SOLO alcanzado (ver lib/perfil/crear). */
+  nivel: string;
+  /** Tiempo activo con la actividad, si se midió. */
+  segundos?: number;
+  /** Cuándo se entregó (ISO), con día de la semana (0 domingo) y hora (0-23) del centro de México. */
+  fecha: string;
+  dia: number;
+  hora: number;
+  /** Versión del modelo CREAR del curso con que se analizó. */
+  versionModelo?: number;
+}
+
+/** Movimiento de la bolsa de créditos del alumno: consumo (negativo) o abono de una compra. */
+export interface MovimientoAlumno {
+  alumnoId: string;
+  fecha: string;
+  /** Semestre en que ocurrió ("AAAA-1" o "AAAA-2"). */
+  semestre: string;
+  concepto: string;
+  cantidad: number;
+  /** De un consumo, cuánto salió de la bolsa del semestre (el resto, de créditos comprados). */
+  deBolsa?: number;
+  grupoId?: string;
+}
+
+/** Compra de un paquete de créditos del alumno (múltiplos de 100, hasta 500). */
+export interface CompraCreditos {
+  /** Referencia que viaja a la pasarela (CRE-XXXX-XXXX-XXXX). */
+  llave: string;
+  alumnoId: string;
+  creditos: number;
+  /** MXN con IVA. */
+  precio: number;
+  estado: "pendiente" | "pagada" | "cancelada";
+  creadaEn: string;
+  pagadaEn?: string;
+  proveedor?: "mercadopago" | "demo";
+  pagoId?: string;
 }
