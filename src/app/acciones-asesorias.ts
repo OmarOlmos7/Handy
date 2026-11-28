@@ -20,10 +20,11 @@ import {
   type CeldaAgenda,
 } from "@/lib/asesorias";
 import { avisarCancelacion } from "@/lib/asesorias-avisos";
+import { ErrorAsistencia, leerFrecuencia, leerHorario } from "@/lib/asistencia";
 import { textos } from "@/lib/i18n/servidor";
 import { alumnoActual, matriculaEnCurso, requerirProfesor } from "@/lib/sesion";
 import { paisDeAsuetos } from "@/lib/asuetos";
-import type { Asesoria, EtiquetaAgenda } from "@/lib/tipos";
+import type { Asesoria, ClaseHorario, EtiquetaAgenda } from "@/lib/tipos";
 
 type Resultado = { ok: true } | { error: string };
 
@@ -111,17 +112,41 @@ export async function guardarAgenda(
   }
 }
 
-/** Fechas de inicio y fin del curso (engrane de la tarjeta). */
-export async function fechasCurso(grupoId: string, inicio: string, fin: string): Promise<Resultado> {
+/**
+ * Fechas de inicio y fin del curso y, si viene, su horario de clase (engrane de la tarjeta). Con el
+ * horario y las fechas se arman las sesiones de la lista de asistencia.
+ */
+export async function fechasCurso(
+  grupoId: string,
+  inicio: string,
+  fin: string,
+  horario?: { clases: unknown; cadaSemanas: unknown },
+): Promise<Resultado> {
   const profesor = await requerirProfesor();
   try {
     const fechas = leerFechasCurso(inicio, fin);
+    let clases: ClaseHorario[] | undefined;
+    try {
+      clases = horario ? leerHorario(horario.clases) : undefined;
+    } catch (e) {
+      if (e instanceof ErrorAsistencia) {
+        const { t } = await textos();
+        return { error: t.asistencia.horario.invalido };
+      }
+      throw e;
+    }
     modificar((db) => {
       const g = db.grupos.find((x) => x.id === grupoId && x.profesorId === profesor.id);
       if (!g) throw new ErrorAsesoriaCurso("noEncontrada");
       delete g.inicio;
       delete g.fin;
       Object.assign(g, fechas);
+      if (clases && horario) {
+        if (clases.length) g.horario = clases;
+        else delete g.horario;
+        if (leerFrecuencia(horario.cadaSemanas) === 2) g.cadaSemanas = 2;
+        else delete g.cadaSemanas;
+      }
     });
     revalidar();
     return { ok: true };

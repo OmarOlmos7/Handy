@@ -14,6 +14,7 @@ import proyecto from "./proyecto/de";
 import altaProyecto from "./alta-proyecto/de";
 import asesorias from "./asesorias/de";
 import marco from "./marco/de";
+import asistencia from "./asistencia/de";
 
 const de: Diccionario = {
   comun: {
@@ -473,6 +474,7 @@ const de: Diccionario = {
   altaProyecto,
   asesorias,
   marco,
+  asistencia,
 };
 
 export default de;

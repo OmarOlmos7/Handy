@@ -1,5 +1,6 @@
 "use client";
 
+import type { ClaseHorario } from "@/lib/tipos";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
@@ -34,6 +35,8 @@ export function TarjetaCurso({
   avisosSinLeer = 0,
   inicio,
   fin,
+  horario,
+  cadaSemanas,
   periodo,
   asesorias,
   asignaturas = [],
@@ -52,6 +55,9 @@ export function TarjetaCurso({
   /** Fechas del curso (engrane) y su texto ya formateado. */
   inicio?: string;
   fin?: string;
+  /** Horario de clase del curso (también en el engrane). */
+  horario?: ClaseHorario[];
+  cadaSemanas?: number;
   periodo?: string;
   /** Resumen de asesorías del curso: realizadas, minutos y próximas. */
   asesorias?: { realizadas: number; minutos: number; proximas: number };
@@ -197,7 +203,7 @@ export function TarjetaCurso({
           {/* Arriba a la derecha: agenda de asesorías y ajustes del curso (fechas de inicio y fin). */}
           <div className="absolute top-3 right-3 z-30 flex gap-0.5">
             <BotonCalendario href={`/profesor/agenda?curso=${id}`} etiqueta={tas.agendaBoton} pendientes={asesorias?.proximas ?? 0} />
-            <AjustesCurso grupoId={id} inicio={inicio} fin={fin} />
+            <AjustesCurso grupoId={id} inicio={inicio} fin={fin} horario={horario} cadaSemanas={cadaSemanas} />
           </div>
         </>
       )}

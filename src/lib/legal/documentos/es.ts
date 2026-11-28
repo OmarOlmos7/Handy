@@ -34,7 +34,8 @@ const es: TextosLegales = {
         id: "sensibles",
         titulo: "3. Datos sensibles y de menores",
         parrafos: [
-          "No pedimos datos sensibles (salud, religión, origen étnico, datos biométricos, etc.). Te pedimos no escribirlos en las hojas ni en los comentarios. Si una hoja los contiene por accidente, solo se usan para revisarla.",
+          "No pedimos datos sensibles (salud, religión, origen étnico, etc.). Te pedimos no escribirlos en las hojas ni en los comentarios. Si una hoja los contiene por accidente, solo se usan para revisarla.",
+          "La única excepción es opcional: si el profesor usa la asistencia con foto, se guarda una huella numérica del rostro (dato biométrico) solo de los alumnos que den su consentimiento expreso y por escrito (firmado por su madre, padre o tutor si son menores de edad). La foto se analiza en el dispositivo del profesor y no se sube, no se guarda ni se envía a la inteligencia artificial; la huella solo sirve para la asistencia de ese curso y se borra al archivar o borrar el curso, al dar de baja al alumno o al retirar el consentimiento. Negarse no afecta al alumno: su asistencia se toma a mano.",
           "Muchos alumnos son menores de edad. Por eso la escuela o el profesor debe contar con la autorización de la madre, el padre o el tutor cuando la ley lo exija, y el alumno menor de edad debe crear su cuenta con el conocimiento de su tutor. Si un tutor nos pide borrar los datos de su hijo o hija, lo hacemos.",
         ],
       },

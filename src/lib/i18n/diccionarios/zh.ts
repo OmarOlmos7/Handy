@@ -14,6 +14,7 @@ import proyecto from "./proyecto/zh";
 import altaProyecto from "./alta-proyecto/zh";
 import asesorias from "./asesorias/zh";
 import marco from "./marco/zh";
+import asistencia from "./asistencia/zh";
 
 const zh: Diccionario = {
   comun: {
@@ -453,6 +454,7 @@ const zh: Diccionario = {
   altaProyecto,
   asesorias,
   marco,
+  asistencia,
 };
 
 export default zh;

@@ -1,12 +1,12 @@
 "use client";
 
 // Herramientas de un curso en la franja izquierda: vistas (Analíticas, Cuaderno, Rutas, Avance del
-// temario y Lista de alumnos) y, tras un espacio, Nueva actividad, Proyecto y Duplicar actividad.
+// temario, Lista de alumnos y Asistencia) y, tras un espacio, Nueva actividad, Proyecto y Duplicar actividad.
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { CursoDirectorio } from "@/lib/copiar";
 import { DirectorioActividades } from "./copiar-elemento";
-import { IconoAlumnos, IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "./iconos";
+import { IconoAlumnos, IconoAsistencia, IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "./iconos";
 import { useTextos } from "./proveedor-textos";
 
 export function HerramientasCurso({
@@ -32,6 +32,7 @@ export function HerramientasCurso({
     { href: `${base}/rutas`, texto: t.ruta.profesor.boton, icono: <IconoRuta /> },
     { href: `${base}/avance`, texto: tc.avanceTemario, icono: <IconoMapa /> },
     { href: `${base}/alumnos`, texto: tm.alumnos, icono: <IconoAlumnos /> },
+    { href: `${base}/asistencia`, texto: t.asistencia.boton, icono: <IconoAsistencia /> },
   ];
   const enCurso = ruta === base;
   return (
