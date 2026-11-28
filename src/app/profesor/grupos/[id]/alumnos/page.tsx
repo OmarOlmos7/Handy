@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AdministrarAlumnos } from "@/components/administrar-alumnos";
+import { EnviarCodigoCurso } from "@/components/enviar-codigo";
 import { Encabezado } from "@/components/ui";
 import { grupoDe, leer } from "@/lib/almacen";
 import { filasAlumnos } from "@/lib/alumnos-grupo";
+import { correoConfigurado } from "@/lib/correo";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
 import { datosProfesor } from "@/lib/sesion";
@@ -36,6 +38,17 @@ export default async function AlumnosCurso({ params }: PageProps<"/profesor/grup
         titulo={`${ta.titulo} · ${grupo.materia} · ${grupo.nombre}`}
         subtitulo={`${formato(n === 1 ? tc.alumno1 : tc.alumnoN, { n })} · ${ta.subtitulo}`}
       />
+      {/* El código del curso vive aquí: se copia o se manda por correo a cada alumno para pagar su membresía. */}
+      {grupo.codigo && (
+        <EnviarCodigoCurso
+          grupoId={grupo.id}
+          codigo={grupo.codigo}
+          correoListo={correoConfigurado()}
+          alumnos={[...grupo.alumnos]
+            .sort((a, b) => a.nombre.localeCompare(b.nombre, locale))
+            .map((a) => ({ matricula: a.matricula, nombre: a.nombre, correo: a.correo ?? "", codigoEnviado: a.codigoEnviado }))}
+        />
+      )}
       <AdministrarAlumnos grupoId={grupo.id} alumnos={filasAlumnos(db, grupo, correosConCuenta, locale)} />
     </>
   );

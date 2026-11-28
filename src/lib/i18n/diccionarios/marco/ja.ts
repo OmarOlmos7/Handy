@@ -1,0 +1,55 @@
+import type es from "./es";
+
+const marco: typeof es = {
+  menu: {
+    abrir: "メニューを開く",
+    cerrar: "メニューを閉じる",
+    secciones: "セクション",
+    plegar: "左のパネルを隠す",
+    desplegar: "左のパネルを表示",
+  },
+  curso: {
+    titulo: "このクラス",
+    vistas: "クラスの表示",
+    crear: "作成",
+    alumnos: "生徒名簿",
+    volver: "クラスへ",
+  },
+  lineaTiempo: {
+    titulo: "クラスのタイムライン",
+    subtitulo: "シラバスの単元を {inicio} から {fin} まで配分。濃い色：すでに終えているはずの単元。薄い色：これからの単元。",
+    unidad: "単元 {n}",
+    cubierta: "終えているはず",
+    enCurso: "今日の単元",
+    pendiente: "これから",
+    transcurrido: "クラス期間の {p}% が経過",
+    avance: "グループの進捗：{p}%",
+    sinActividades: "関連する課題なし",
+    sinFechas: "歯車でクラスの開始日と終了日を設定すると、単元を期間に配分します。",
+    sinTemario: "このクラスにはまだシラバスがありません。単元のある科目を作成または関連付けるとタイムラインが表示されます。",
+    irAsignaturas: "科目へ",
+    verAvance: "シラバスの進捗を見る",
+  },
+  enviarCodigo: {
+    titulo: "クラスコードと会費の支払い",
+    texto: "会費（ライセンス）の支払いと登録に使うクラス ID コードを、生徒一人ひとりにメールで送ります。",
+    todos: "すべて選択",
+    seleccionados: "{total} 人中 {n} 人を選択",
+    enviar: "コードをメールで送る",
+    enviando: "送信中…",
+    elige: "メールのある生徒を少なくとも 1 人選んでください。",
+    sinCorreo: "メールなし",
+    enviado: "{fecha} に送信",
+    sinSmtp: "サーバーのメールが設定されていません。設定されるまでメールは送られません（SMTP）。",
+    resultado: "送信したメール：{e}。",
+    fallidos: "送信できなかったもの：{n}。",
+    sinCorreoN: "メール未登録：{n}。",
+    noConfigurado: "サーバーのメールが設定されていないため、何も送信されませんでした。",
+    error: "送信できませんでした。もう一度お試しください。",
+    asunto: "クラス {curso} のコード",
+    cuerpo:
+      "{nombre} さん\n\n{profesor} 先生があなたをクラス {curso} に登録しました。\n\nクラス ID コード：{codigo}\n\nこのコードで会費（ライセンス）を支払い、登録が完了します：\n1. {url} を開く\n2. このメールアドレスでアカウントを作成するかログインする\n3. コードを入力し、期間を選んで支払う\n\n質問があれば先生に聞いてください。\n\niEureka-Grader",
+  },
+};
+
+export default marco;

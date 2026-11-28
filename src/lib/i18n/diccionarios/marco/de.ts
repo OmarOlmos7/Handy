@@ -1,0 +1,55 @@
+import type es from "./es";
+
+const marco: typeof es = {
+  menu: {
+    abrir: "Menü öffnen",
+    cerrar: "Menü schließen",
+    secciones: "Bereiche",
+    plegar: "Linke Leiste ausblenden",
+    desplegar: "Linke Leiste einblenden",
+  },
+  curso: {
+    titulo: "Dieser Kurs",
+    vistas: "Kursansichten",
+    crear: "Erstellen",
+    alumnos: "Teilnehmerliste",
+    volver: "Zum Kurs",
+  },
+  lineaTiempo: {
+    titulo: "Zeitleiste des Kurses",
+    subtitulo: "Lehrplaneinheiten verteilt vom {inicio} bis {fin}. Dunkel: sollten schon behandelt sein. Hell: kommen noch.",
+    unidad: "Einheit {n}",
+    cubierta: "Sollte behandelt sein",
+    enCurso: "Heute dran",
+    pendiente: "Kommt noch",
+    transcurrido: "{p} % des Kurses vergangen",
+    avance: "Fortschritt der Gruppe: {p} %",
+    sinActividades: "Keine verknüpften Aktivitäten",
+    sinFechas: "Lege mit dem Zahnrad Beginn und Ende des Kurses fest, um die Einheiten zeitlich zu verteilen.",
+    sinTemario: "Dieser Kurs hat noch keinen Lehrplan. Erstelle oder verknüpfe ein Fach mit seinen Einheiten, um die Zeitleiste zu sehen.",
+    irAsignaturas: "Zu den Fächern",
+    verAvance: "Lehrplanfortschritt ansehen",
+  },
+  enviarCodigo: {
+    titulo: "Kurscode und Zahlung der Mitgliedschaft",
+    texto: "Sende jedem Lernenden einzeln per E-Mail den Kurs-ID-Code, mit dem er seine Mitgliedschaft (Lizenz) bezahlt und sich einschreibt.",
+    todos: "Alle auswählen",
+    seleccionados: "{n} von {total} ausgewählt",
+    enviar: "Code per E-Mail senden",
+    enviando: "Wird gesendet…",
+    elige: "Wähle mindestens einen Lernenden mit E-Mail.",
+    sinCorreo: "Keine E-Mail",
+    enviado: "Gesendet am {fecha}",
+    sinSmtp: "Die Server-E-Mail ist nicht eingerichtet: Es werden keine E-Mails verschickt, bis sie eingerichtet ist (SMTP).",
+    resultado: "Gesendete E-Mails: {e}.",
+    fallidos: "Nicht gesendet: {n}.",
+    sinCorreoN: "Ohne hinterlegte E-Mail: {n}.",
+    noConfigurado: "Es wurde nichts gesendet, weil die Server-E-Mail nicht eingerichtet ist.",
+    error: "Senden fehlgeschlagen. Versuche es erneut.",
+    asunto: "Dein Code für den Kurs {curso}",
+    cuerpo:
+      "Hallo {nombre},\n\ndeine Lehrkraft {profesor} hat dich in den Kurs {curso} eingeschrieben.\n\nKurs-ID-Code: {codigo}\n\nMit diesem Code bezahlst du deine Mitgliedschaft (Lizenz) und schreibst dich ein:\n1. Öffne {url}\n2. Erstelle dein Konto oder melde dich mit dieser E-Mail an.\n3. Gib den Code ein, wähle die Dauer und bezahle.\n\nBei Fragen wende dich an deine Lehrkraft.\n\niEureka-Grader",
+  },
+};
+
+export default marco;

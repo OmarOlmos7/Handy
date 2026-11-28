@@ -1,0 +1,55 @@
+import type es from "./es";
+
+const marco: typeof es = {
+  menu: {
+    abrir: "Abrir menu",
+    cerrar: "Fechar menu",
+    secciones: "Seções",
+    plegar: "Ocultar a faixa esquerda",
+    desplegar: "Mostrar a faixa esquerda",
+  },
+  curso: {
+    titulo: "Este curso",
+    vistas: "Vistas do curso",
+    crear: "Criar",
+    alumnos: "Lista de alunos",
+    volver: "Ir ao curso",
+  },
+  lineaTiempo: {
+    titulo: "Linha do tempo do curso",
+    subtitulo: "Unidades do programa distribuídas de {inicio} a {fin}. Escuras: já deveriam ter sido cobertas. Claras: ainda na fila.",
+    unidad: "Unidade {n}",
+    cubierta: "Já deveria ter sido coberta",
+    enCurso: "Em andamento hoje",
+    pendiente: "Na fila",
+    transcurrido: "{p}% do curso decorrido",
+    avance: "Progresso da turma: {p}%",
+    sinActividades: "Sem atividades ligadas",
+    sinFechas: "Defina as datas de início e término do curso com a engrenagem para distribuir as unidades no tempo.",
+    sinTemario: "Este curso ainda não tem programa. Crie ou ligue uma disciplina com suas unidades para ver a linha do tempo.",
+    irAsignaturas: "Ir para Disciplinas",
+    verAvance: "Ver progresso do programa",
+  },
+  enviarCodigo: {
+    titulo: "Código do curso e pagamento da assinatura",
+    texto: "Envie a cada aluno, por e-mail e individualmente, o código ID do curso com o qual ele paga a assinatura (licença) e se inscreve.",
+    todos: "Selecionar todos",
+    seleccionados: "{n} de {total} selecionados",
+    enviar: "Enviar código por e-mail",
+    enviando: "Enviando…",
+    elige: "Escolha pelo menos um aluno com e-mail.",
+    sinCorreo: "Sem e-mail",
+    enviado: "Enviado em {fecha}",
+    sinSmtp: "O e-mail do servidor não está configurado: nenhum e-mail sairá até que seja configurado (SMTP).",
+    resultado: "E-mails enviados: {e}.",
+    fallidos: "Não enviados: {n}.",
+    sinCorreoN: "Sem e-mail cadastrado: {n}.",
+    noConfigurado: "Nada foi enviado porque o e-mail do servidor não está configurado.",
+    error: "Não foi possível enviar. Tente de novo.",
+    asunto: "Seu código para o curso {curso}",
+    cuerpo:
+      "Olá, {nombre}:\n\nSeu professor(a) {profesor} inscreveu você no curso {curso}.\n\nCódigo ID do curso: {codigo}\n\nCom este código você paga sua assinatura (licença) e fica inscrito:\n1. Acesse {url}\n2. Crie sua conta ou entre com este e-mail.\n3. Digite o código, escolha a duração e pague.\n\nSe tiver dúvidas, pergunte ao seu professor(a).\n\niEureka-Grader",
+  },
+};
+
+export default marco;

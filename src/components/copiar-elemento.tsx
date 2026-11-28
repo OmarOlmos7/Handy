@@ -188,7 +188,7 @@ export function CopiarActividad({
  * "Copiar elemento" en la vista del curso: directorio de las actividades de todos los cursos del
  * profesor, por curso, para agregar copias a la lista de este curso.
  */
-export function DirectorioActividades({ grupoId, cursos }: { grupoId: string; cursos: CursoDirectorio[] }) {
+export function DirectorioActividades({ grupoId, cursos, className = "" }: { grupoId: string; cursos: CursoDirectorio[]; className?: string }) {
   const router = useRouter();
   const tc = useTextos().t.copiar;
   const td = tc.directorio;
@@ -237,7 +237,7 @@ export function DirectorioActividades({ grupoId, cursos }: { grupoId: string; cu
 
   return (
     <>
-      <button type="button" onClick={() => setAbierto(true)} className={`${botonSecundario} justify-start`} title={td.titulo}>
+      <button type="button" onClick={() => setAbierto(true)} className={`${botonSecundario} justify-start ${className}`} title={td.titulo}>
         <IconoCopiar /> {td.boton}
       </button>
       {abierto && (

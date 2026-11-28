@@ -13,8 +13,8 @@ export default async function LayoutAdmin({ children }: LayoutProps<"/admin">) {
       <IdiomaDocumento idioma={idioma} alSalir={await idiomaPublico()} />
       <BarraApp
         enlaces={[
-          { href: "/admin", texto: "Administración", exacto: true },
-          { href: "/profesor", texto: "Mi panel de profesor" },
+          { href: "/admin", texto: "Administración", exacto: true, icono: "admin" },
+          { href: "/profesor", texto: "Mi panel de profesor", icono: "profesor" },
         ]}
         usuario={{ nombre: admin.nombre, tipo: t.barra.tipos.administrador, rol: admin.correo }}
         extra={
@@ -24,8 +24,9 @@ export default async function LayoutAdmin({ children }: LayoutProps<"/admin">) {
             </button>
           </form>
         }
-      />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8">{children}</main>
+      >
+        {children}
+      </BarraApp>
     </ProveedorTextos>
   );
 }

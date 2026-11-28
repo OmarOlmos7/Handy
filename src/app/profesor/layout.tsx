@@ -25,14 +25,14 @@ export default async function LayoutProfesor({ children }: LayoutProps<"/profeso
       <IdiomaDocumento idioma={idioma} alSalir={await idiomaPublico()} />
       <BarraApp
         enlaces={[
-          { href: "/profesor", texto: t.barra.panel, exacto: true },
-          { href: "/profesor/agenda", texto: t.asesorias.calendario.titulo },
-          { href: "/profesor/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos },
-          { href: "/profesor/actividades/nueva", texto: t.barra.nuevaActividad },
-          { href: "/profesor/grupos/nuevo", texto: t.barra.nuevoCurso },
-          { href: "/profesor/asignaturas", texto: t.barra.asignaturas, destacado: true, icono: "📚" },
-          { href: "/profesor/creditos", texto: t.barra.creditos },
-          ...(esAdmin(profesor.correo) ? [{ href: "/admin", texto: t.barra.administracion }] : []),
+          { href: "/profesor", texto: t.barra.panel, exacto: true, icono: "panel" },
+          { href: "/profesor/agenda", texto: t.asesorias.calendario.titulo, icono: "calendario" },
+          { href: "/profesor/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos, icono: "avisos" },
+          { href: "/profesor/actividades/nueva", texto: t.barra.nuevaActividad, icono: "nueva" },
+          { href: "/profesor/grupos/nuevo", texto: t.barra.nuevoCurso, icono: "curso" },
+          { href: "/profesor/asignaturas", texto: t.barra.asignaturas, destacado: true, icono: "asignaturas" },
+          { href: "/profesor/creditos", texto: t.barra.creditos, icono: "creditos" },
+          ...(esAdmin(profesor.correo) ? [{ href: "/admin", texto: t.barra.administracion, icono: "admin" as const }] : []),
         ]}
         usuario={{ nombre: profesor.nombre, tipo: t.barra.tipos[profesor.tipo], rol: profesor.correo }}
         configuracion="/profesor/configuracion"
@@ -53,8 +53,9 @@ export default async function LayoutProfesor({ children }: LayoutProps<"/profeso
             </form>
           </>
         }
-      />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+      >
+        {children}
+      </BarraApp>
     </ProveedorTextos>
   );
 }

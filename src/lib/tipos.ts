@@ -94,6 +94,8 @@ export interface Alumno {
   matricula: string;
   nombre: string;
   correo: string;
+  /** Fecha (ISO) del último correo con el código del curso para pagar su membresía. */
+  codigoEnviado?: string;
 }
 
 export interface Grupo {

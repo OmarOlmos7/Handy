@@ -15,11 +15,11 @@ export default async function LayoutAlumno({ children }: LayoutProps<"/alumno">)
     <>
       <BarraApp
         enlaces={[
-          { href: "/alumno", texto: t.barra.misActividades, exacto: true },
+          { href: "/alumno", texto: t.barra.misActividades, exacto: true, icono: "actividades" },
           ...(alumno
             ? [
-                { href: "/alumno/calendario", texto: t.asesorias.calendario.titulo },
-                { href: "/alumno/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos },
+                { href: "/alumno/calendario", texto: t.asesorias.calendario.titulo, icono: "calendario" as const },
+                { href: "/alumno/avisos", texto: sinLeer ? `${t.barra.avisos} (${sinLeer})` : t.barra.avisos, icono: "avisos" as const },
               ]
             : []),
         ]}
@@ -36,8 +36,9 @@ export default async function LayoutAlumno({ children }: LayoutProps<"/alumno">)
             </form>
           )
         }
-      />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+      >
+        {children}
+      </BarraApp>
     </>
   );
 }
