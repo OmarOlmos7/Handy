@@ -13,6 +13,7 @@ import avisos from "./avisos/pt";
 import proyecto from "./proyecto/pt";
 import asesorias from "./asesorias/pt";
 import marco from "./marco/pt";
+import asistencia from "./asistencia/pt";
 
 const pt: Diccionario = {
   comun: {
@@ -471,6 +472,7 @@ const pt: Diccionario = {
   proyecto,
   asesorias,
   marco,
+  asistencia,
 };
 
 export default pt;

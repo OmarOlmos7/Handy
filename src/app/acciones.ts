@@ -196,6 +196,9 @@ export async function borrarGrupo(grupoId: string) {
     const avisos = (db.avisos ?? []).filter((a) => a.grupoId === grupoId).map((a) => a.id);
     db.avisos = (db.avisos ?? []).filter((a) => a.grupoId !== grupoId);
     db.asesorias = (db.asesorias ?? []).filter((a) => a.grupoId !== grupoId);
+    // Listas de asistencia y rostros (datos biométricos) del curso.
+    db.asistencias = (db.asistencias ?? []).filter((a) => a.grupoId !== grupoId);
+    db.rostros = (db.rostros ?? []).filter((r) => r.grupoId !== grupoId);
     return [...acts.map((id) => `actividades/${id}`), ...proyectos.map((id) => `proyectos/${id}`), ...avisos.map((id) => `avisos/${id}`)];
   });
   ids.forEach((carpeta) => borrarCarpeta(carpeta));
@@ -257,12 +260,17 @@ export async function colorGrupo(grupoId: string, color: string) {
   revalidatePath("/profesor", "layout");
 }
 
-/** Archiva o desarchiva un curso del profesor. No borra nada: solo lo saca del panel. */
+/**
+ * Archiva o desarchiva un curso del profesor. Solo lo saca del panel; lo único que se borra al
+ * archivar son los rostros para la asistencia (datos biométricos: no se guardan más de lo necesario).
+ */
 export async function archivarGrupo(grupoId: string, archivar: boolean) {
   await enGrupoPropio(grupoId, (db) => {
     const g = db.grupos.find((x) => x.id === grupoId)!;
-    if (archivar) g.archivado = new Date().toISOString();
-    else delete g.archivado;
+    if (archivar) {
+      g.archivado = new Date().toISOString();
+      if (db.rostros) db.rostros = db.rostros.filter((r) => r.grupoId !== grupoId);
+    } else delete g.archivado;
   });
   revalidatePath("/profesor", "layout");
 }

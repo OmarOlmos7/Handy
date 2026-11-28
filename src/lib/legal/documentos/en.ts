@@ -30,7 +30,8 @@ const en: TextosLegales = {
         id: "sensibles",
         titulo: "3. Sensitive data and minors",
         parrafos: [
-          "We do not ask for sensitive data (health, religion, ethnic origin, biometrics, etc.). Please do not write it on worksheets or comments. If a worksheet contains it by accident, it is used only to review that worksheet.",
+          "We do not ask for sensitive data (health, religion, ethnic origin, etc.). Please do not write it on worksheets or comments. If a worksheet contains it by accident, it is used only to review that worksheet.",
+          "The only exception is optional: if the teacher uses photo attendance, a numeric face template (biometric data) is stored only for students who give express written consent (signed by a parent or guardian for minors). The photo is analyzed on the teacher’s device and is not uploaded, stored or sent to artificial intelligence; the template is used only for that class’s attendance and is deleted when the class is archived or deleted, when the student is removed or when consent is withdrawn. Refusing does not affect the student: their attendance is taken by hand.",
           "Many students are minors. The school or teacher must therefore have authorization from a parent or guardian when the law requires it, and a minor student should create their account with their guardian’s knowledge. If a guardian asks us to delete their child’s data, we will.",
         ],
       },

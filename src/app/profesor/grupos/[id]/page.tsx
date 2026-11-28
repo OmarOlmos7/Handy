@@ -7,7 +7,7 @@ import { BarraUnidades, SeccionUnidad, SeleccionUnidades } from "@/components/un
 import { DirectorioActividades } from "@/components/copiar-elemento";
 import { directorioActividades, tituloCopia } from "@/lib/copiar";
 import { FilaActividad } from "@/components/fila-actividad";
-import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
+import { IconoAsistencia, IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
 import { ResumenCategoria } from "@/components/resumen-categoria";
 import { BotonLink, Encabezado, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
 import { entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
@@ -125,6 +125,10 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/avance`}>
             <IconoMapa /> {tc.avanceTemario}
           </BotonLink>
+          {/* En el teléfono se toma la lista (también con la foto del grupo). */}
+          <BotonLink variante="secundario" className="col-span-2 justify-start" href={`/profesor/grupos/${grupo.id}/asistencia`}>
+            <IconoAsistencia /> {t.asistencia.boton}
+          </BotonLink>
         </nav>
       </div>
       {/* Primero, la línea de tiempo de las unidades del temario; debajo, las actividades por tipo. */}
@@ -132,6 +136,8 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
         grupoId={grupo.id}
         inicio={grupo.inicio}
         fin={grupo.fin}
+        horario={grupo.horario}
+        cadaSemanas={grupo.cadaSemanas}
         unidades={
           linea?.map((u) => ({
             ...u,

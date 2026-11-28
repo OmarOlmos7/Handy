@@ -30,7 +30,8 @@ const de: TextosLegales = {
         id: "sensibles",
         titulo: "3. Besondere Daten und Minderjährige",
         parrafos: [
-          "Wir erfragen keine besonderen Kategorien von Daten (Gesundheit, Religion, ethnische Herkunft, Biometrie usw.). Bitte schreiben Sie sie nicht auf Arbeitsblätter oder in Kommentare. Enthält ein Blatt sie versehentlich, werden sie nur zur Korrektur verwendet.",
+          "Wir erfragen keine besonderen Kategorien von Daten (Gesundheit, Religion, ethnische Herkunft, usw.). Bitte schreiben Sie sie nicht auf Arbeitsblätter oder in Kommentare. Enthält ein Blatt sie versehentlich, werden sie nur zur Korrektur verwendet.",
+          "Die einzige Ausnahme ist freiwillig: Nutzt die Lehrkraft die Anwesenheit per Foto, wird ein numerisches Gesichtsmerkmal (biometrische Daten) nur für Schülerinnen und Schüler gespeichert, die ausdrücklich und schriftlich eingewilligt haben (bei Minderjährigen unterschrieben von einem Elternteil oder Vormund). Das Foto wird auf dem Gerät der Lehrkraft ausgewertet und weder hochgeladen noch gespeichert noch an eine künstliche Intelligenz gesendet; das Merkmal dient nur der Anwesenheit in diesem Kurs und wird gelöscht, wenn der Kurs archiviert oder gelöscht, die Person abgemeldet oder die Einwilligung widerrufen wird. Eine Ablehnung hat keine Nachteile: Die Anwesenheit wird dann von Hand erfasst.",
           "Viele Schülerinnen und Schüler sind minderjährig. Die Schule oder Lehrkraft muss daher, wo gesetzlich vorgeschrieben, die Einwilligung der Erziehungsberechtigten haben, und Minderjährige sollen ihr Konto mit Wissen ihrer Erziehungsberechtigten anlegen. Auf Wunsch der Erziehungsberechtigten löschen wir die Daten ihres Kindes.",
         ],
       },

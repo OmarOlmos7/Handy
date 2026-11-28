@@ -1,6 +1,7 @@
 // Línea de tiempo del curso: las unidades del temario repartidas entre el inicio y el término del
 // curso. Cada unidad es una tarjeta con su número en un bloque de color (oscuro si ya debió
 // cubrirse, claro si sigue en fila) y su ícono y nombre en blanco, unidas por flechas.
+import type { ClaseHorario } from "@/lib/tipos";
 import Link from "next/link";
 import type { Diccionario } from "@/lib/i18n/diccionario";
 import { formato } from "@/lib/i18n/idiomas";
@@ -165,6 +166,8 @@ export function LineaTiempoCurso({
   grupoId,
   inicio,
   fin,
+  horario,
+  cadaSemanas,
   unidades,
   transcurrido,
   hoy,
@@ -176,6 +179,9 @@ export function LineaTiempoCurso({
   grupoId: string;
   inicio?: string;
   fin?: string;
+  /** Horario de clase (se edita con el mismo engrane). */
+  horario?: ClaseHorario[];
+  cadaSemanas?: number;
   /** null si faltan las fechas del curso. */
   unidades: UnidadLinea[] | null;
   /** % del curso transcurrido. */
@@ -210,7 +216,7 @@ export function LineaTiempoCurso({
               {tl.verAvance} →
             </Link>
           )}
-          <AjustesCurso grupoId={grupoId} inicio={inicio} fin={fin} />
+          <AjustesCurso grupoId={grupoId} inicio={inicio} fin={fin} horario={horario} cadaSemanas={cadaSemanas} />
         </div>
       </div>
 

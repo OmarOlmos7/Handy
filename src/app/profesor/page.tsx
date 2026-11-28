@@ -151,6 +151,8 @@ export default async function PanelProfesor() {
                       avisosSinLeer={sinLeerProfesor(db.avisos ?? [], g.id)}
                       inicio={g.inicio}
                       fin={g.fin}
+                      horario={g.horario}
+                      cadaSemanas={g.cadaSemanas}
                       periodo={textoPeriodo(t.asesorias, g.inicio, g.fin, locale)}
                       asesorias={resumenAsesorias(db.asesorias ?? [], g)}
                       asignaturas={asignaturasOpciones}

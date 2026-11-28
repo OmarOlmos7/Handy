@@ -30,7 +30,8 @@ const pt: TextosLegales = {
         id: "sensibles",
         titulo: "3. Dados sensíveis e de menores",
         parrafos: [
-          "Não pedimos dados sensíveis (saúde, religião, origem étnica, biometria etc.). Pedimos que não sejam escritos nas folhas nem nos comentários. Se uma folha os contiver por acidente, serão usados só para corrigi-la.",
+          "Não pedimos dados sensíveis (saúde, religião, origem étnica, etc.). Pedimos que não sejam escritos nas folhas nem nos comentários. Se uma folha os contiver por acidente, serão usados só para corrigi-la.",
+          "A única exceção é opcional: se o professor usar a chamada por foto, guarda-se uma impressão numérica do rosto (dado biométrico) apenas dos alunos que derem consentimento expresso e por escrito (assinado pelo pai, mãe ou responsável, se menores). A foto é analisada no dispositivo do professor e não é enviada, guardada nem passada à inteligência artificial; a impressão serve só para a chamada daquela turma e é apagada quando a turma é arquivada ou excluída, quando o aluno sai ou quando o consentimento é retirado. Recusar não prejudica o aluno: a chamada é feita à mão.",
           "Muitos alunos são menores de idade. Por isso, a escola ou o professor deve ter a autorização dos pais ou responsáveis quando a lei exigir, e o aluno menor deve criar sua conta com o conhecimento do responsável. Se um responsável pedir a exclusão dos dados do filho, nós a fazemos.",
         ],
       },

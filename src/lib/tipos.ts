@@ -134,6 +134,22 @@ export interface Grupo {
    * deduce de las actividades o del nombre de la materia.
    */
   asignaturaId?: string;
+  /**
+   * Horario de clase del curso: días y horas de cada sesión. Con él y las fechas del curso se
+   * generan las sesiones de la lista de asistencia (ver lib/asistencia).
+   */
+  horario?: ClaseHorario[];
+  /** Frecuencia del horario: 1 = cada semana (por omisión), 2 = cada dos semanas. */
+  cadaSemanas?: 1 | 2;
+}
+
+/** Una clase del horario semanal del curso. */
+export interface ClaseHorario {
+  /** Día de la semana, 1 = lunes … 7 = domingo. */
+  dia: number;
+  /** Minutos desde las 0:00. `fin` no se incluye. */
+  inicio: number;
+  fin: number;
 }
 
 /** Peso de un tipo de actividad (etiqueta) en la nota final. "" es el de las actividades sin etiqueta. */
@@ -680,6 +696,51 @@ export interface BaseDeDatos {
   agendas?: AgendaProfesor[];
   /** Asesorías que los alumnos agendan con su profesor (ver lib/asesorias). */
   asesorias?: Asesoria[];
+  /** Listas de asistencia tomadas, una por sesión de clase (ver lib/asistencia). */
+  asistencias?: RegistroAsistencia[];
+  /**
+   * Datos biométricos para tomar asistencia con foto: consentimiento y huellas numéricas del rostro
+   * de cada alumno (nunca la foto). Ver lib/rostros.
+   */
+  rostros?: RostroAlumno[];
+}
+
+// ---------- Asistencia ----------
+
+/** Asistencia (verde), falta (rojo) o retardo (amarillo). */
+export type EstadoAsistencia = "asistencia" | "falta" | "retardo";
+
+export interface MarcaAsistencia {
+  matricula: string;
+  estado: EstadoAsistencia;
+}
+
+/** Lista de asistencia de una sesión de clase (fecha y hora de inicio). */
+export interface RegistroAsistencia {
+  grupoId: string;
+  /** AAAA-MM-DD. */
+  fecha: string;
+  /** Minutos desde las 0:00 en que empieza la sesión. */
+  inicio: number;
+  fin: number;
+  marcas: MarcaAsistencia[];
+  /** Cómo se tomó: a mano o con la foto del grupo (y luego revisada por el profesor). */
+  metodo: "manual" | "foto";
+  actualizadoEn: string;
+}
+
+/**
+ * Rostro de un alumno en un curso para reconocerlo en la foto de la clase. `descriptores` son
+ * vectores de 128 números que calcula el navegador del profesor; la foto nunca sale del teléfono.
+ * Solo se guardan con el consentimiento expreso y por escrito del alumno o de su tutor.
+ */
+export interface RostroAlumno {
+  grupoId: string;
+  matricula: string;
+  /** Fecha (ISO) en que el profesor registró que recibió el consentimiento firmado. */
+  consentimiento?: string;
+  descriptores: number[][];
+  actualizadoEn: string;
 }
 
 // ---------- Agenda del profesor y asesorías ----------
