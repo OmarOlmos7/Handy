@@ -674,6 +674,12 @@ export interface BaseDeDatos {
   agendas?: AgendaProfesor[];
   /** Asesorías que los alumnos agendan con su profesor (ver lib/asesorias). */
   asesorias?: Asesoria[];
+  /** Consentimientos informados para construir el perfil de aprendizaje (ver lib/perfil). */
+  consentimientosPerfil?: ConsentimientoPerfil[];
+  /** Aplicaciones de la prueba de Stroop: al inicio y al final de cada semestre (ver lib/perfil/stroop). */
+  stroop?: AplicacionStroop[];
+  /** Modelo CREAR adaptado por el profesor a la disciplina de cada curso. */
+  modelosCrear?: ModeloCrearCurso[];
 }
 
 // ---------- Agenda del profesor y asesorías ----------
@@ -1101,4 +1107,93 @@ export interface TiempoActividad {
   porDia: number[];
   primeraVez: string;
   ultimaVez: string;
+}
+
+// ---------- Perfil de aprendizaje y desempeño (Modelo CREAR) ----------
+
+/**
+ * Consentimiento informado del alumno para construir su perfil de aprendizaje. Sin uno vigente
+ * (versión actual y sin retirar) no se registra nada del perfil.
+ */
+export interface ConsentimientoPerfil {
+  alumnoId: string;
+  /** Versión del texto del consentimiento que aceptó (fecha de publicación). */
+  version: string;
+  fecha: string;
+  /** true si el alumno declaró ser menor de edad: entonces también acepta su madre, padre o tutor. */
+  menor: boolean;
+  tutor?: { nombre: string; parentesco: string };
+  /** Fecha (ISO) en que el alumno retiró el consentimiento. */
+  retiradoEn?: string;
+}
+
+/** Colores de la prueba de Stroop. */
+export type ColorStroop = "rojo" | "azul" | "verde" | "amarillo";
+
+/** Un ensayo: la palabra que se mostró, el color de su tinta, lo que eligió el alumno y cuánto tardó. */
+export interface EnsayoStroop {
+  palabra: ColorStroop;
+  tinta: ColorStroop;
+  respuesta: ColorStroop;
+  /** Milisegundos desde que apareció la palabra hasta la respuesta. */
+  ms: number;
+}
+
+/** Resumen calculado por código a partir de los ensayos. */
+export interface ResumenStroop {
+  ensayos: number;
+  /** Mediana del tiempo de los aciertos en ensayos congruentes (palabra y tinta iguales), en ms. */
+  msCongruente: number | null;
+  /** Mediana del tiempo de los aciertos en ensayos incongruentes, en ms. */
+  msIncongruente: number | null;
+  /** Efecto Stroop: incongruente menos congruente, en ms. */
+  efectoMs: number | null;
+  /** Porcentaje de errores en cada tipo de ensayo. */
+  erroresCongruente: number;
+  erroresIncongruente: number;
+}
+
+export type MomentoStroop = "inicio" | "fin";
+
+/** Una aplicación de la prueba de Stroop. Vale para todos los cursos del alumno en el semestre. */
+export interface AplicacionStroop {
+  alumnoId: string;
+  /** Semestre, por ejemplo "2026-2" (julio a diciembre de 2026). */
+  semestre: string;
+  momento: MomentoStroop;
+  fecha: string;
+  /** Curso desde el que la presentó (solo para volver a él). */
+  grupoId?: string;
+  /** true si el alumno pidió omitirla (por ejemplo, porque no distingue bien los colores). */
+  omitida?: boolean;
+  ensayos: EnsayoStroop[];
+  resumen?: ResumenStroop;
+}
+
+/** Etapas del Modelo CREAR, más la transferencia a casos nuevos (abstracto extendido). */
+export type EtapaCrear = "comprender" | "representar" | "estrategia" | "aplicar" | "resultado" | "transferencia";
+
+/** Lo que el profesor define de una etapa para su disciplina. */
+export interface DefinicionEtapaCrear {
+  /** Elementos característicos de la disciplina que el alumno debe identificar o usar. */
+  elementos: string;
+  /** Qué hace el alumno en esta etapa dentro de la disciplina. */
+  procesos: string;
+  /** Modelos, métodos o formatos de trabajo propios del área. */
+  modelos: string;
+  /** Qué debe aparecer en la hoja para considerar lograda la etapa. */
+  evidencias: string;
+}
+
+/** Modelo CREAR de un curso, adaptado por su profesor a la disciplina. */
+export interface ModeloCrearCurso {
+  grupoId: string;
+  /** Plantilla de disciplina de la que partió (clave de lib/perfil/crear). */
+  disciplina: string;
+  etapas: Record<EtapaCrear, DefinicionEtapaCrear>;
+  /** Sube en cada cambio: cada análisis guarda la versión con que se hizo. */
+  version: number;
+  actualizadoEn: string;
+  /** Versiones anteriores, la más reciente al final. */
+  anteriores?: { version: number; disciplina: string; etapas: Record<EtapaCrear, DefinicionEtapaCrear>; actualizadoEn: string }[];
 }

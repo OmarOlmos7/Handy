@@ -97,6 +97,7 @@ export function datosDeProfesor(db: BaseDeDatos, profesorId: string): BaseDeDato
     avisos: (db.avisos ?? []).filter((a) => idsGrupos.has(a.grupoId)),
     agendas: (db.agendas ?? []).filter((a) => a.profesorId === profesorId),
     asesorias: (db.asesorias ?? []).filter((a) => a.profesorId === profesorId),
+    modelosCrear: (db.modelosCrear ?? []).filter((m) => idsGrupos.has(m.grupoId)),
   };
 }
 
