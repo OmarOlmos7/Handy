@@ -1,0 +1,65 @@
+import type es from "./es";
+
+const alumnosGrupo: typeof es = {
+  boton: "生徒名簿",
+  enlaceEditar: "生徒の追加・変更・削除",
+  meta: "生徒名簿",
+  titulo: "生徒名簿",
+  subtitulo: "コースの生徒を追加し、情報を変更し、名簿から外します。",
+  alta: {
+    titulo: "生徒を追加",
+    matricula: "学籍番号",
+    nombre: "氏名",
+    correo: "メール（任意）",
+    agregar: "追加",
+    nota: "メールを登録すると、生徒は同じメールでアカウントを作成したときに結果を見られます。メールがない場合は学籍番号で結び付けます。",
+    hecha: "{nombre} を追加しました。",
+  },
+  lista: {
+    titulo: "リストを貼り付け",
+    ayuda: "1 行に 1 人：学籍番号、氏名、メール（任意）。Excel からそのまま貼り付けられます。",
+    agregar: "リストを追加",
+    hecha: "追加した生徒：{n} 人。",
+    fallidas: "追加できなかった行：{l}。",
+  },
+  tabla: {
+    alumno: "生徒",
+    matricula: "学籍番号",
+    correo: "メール",
+    cuenta: "アカウント",
+    conCuenta: "あり",
+    sinCuenta: "なし",
+    entregas: "提出",
+    acciones: "操作",
+    vacio: "まだ生徒がいません。ここで追加するか、最初の課題を提出すると自動で加わります。",
+    sinResultados: "検索に一致する生徒はいません。",
+    buscar: "氏名・学籍番号・メールで検索",
+  },
+  cambiar: "情報を変更",
+  guardar: "保存",
+  cancelar: "キャンセル",
+  guardado: "変更を保存しました。",
+  avisoMatricula: "学籍番号を変えると、提出物と成績は新しい番号に移ります。",
+  baja: "名簿から外す",
+  bajaHecha: "{nombre} を名簿から外しました。",
+  confirmarBaja:
+    "{nombre}（{m}）を名簿から外しますか？このコースでの提出 {e} 件と自主学習 {a} 件が成績ごと削除されます。アカウントと他のコースは変わりません。元に戻せません。",
+  confirmarBajaSinTrabajo: "{nombre}（{m}）を名簿から外しますか？アカウントと他のコースは変わりません。",
+  enActividad: {
+    boton: "生徒の追加・変更・削除",
+    ocultar: "生徒名簿を隠す",
+    ayuda: "変更はこの課題だけでなくコース全体に適用されます。",
+    verLista: "名簿全体を開く",
+  },
+  errores: {
+    matricula: "学籍番号は 3〜20 文字の英数字またはハイフンにしてください。",
+    nombre: "氏名を入力してください（3 文字以上）。",
+    correo: "メールが正しくありません。",
+    matriculaRepetida: "この学籍番号の生徒はすでにコースにいます。",
+    correoRepetido: "このメールの生徒はすでにコースにいます。",
+    noEncontrado: "生徒またはコースが見つかりません。",
+    general: "保存できませんでした。もう一度お試しください。",
+  },
+};
+
+export default alumnosGrupo;

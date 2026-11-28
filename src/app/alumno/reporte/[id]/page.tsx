@@ -1,37 +1,67 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { CronometroActividad } from "@/components/cronometro-actividad";
 import { BotonImprimir } from "@/components/boton-imprimir";
 import { ReporteAlumno } from "@/components/reporte-alumno";
-import { BotonLink, Encabezado } from "@/components/ui";
-import { actividadDe, grupoDe, leer } from "@/lib/almacen";
+import { IconoGrafica } from "@/components/iconos";
+import { calificada } from "@/lib/estadisticas";
+import { conPuntaje } from "@/lib/modalidad";
+import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
+import { actividadDe, leer } from "@/lib/almacen";
+import { textos } from "@/lib/i18n/servidor";
+import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
+import { alumnoActual } from "@/lib/sesion";
 
-const MATRICULA_DEMO = "A0231";
-
-export default async function ReporteDeAlumno({ params, searchParams }: PageProps<"/alumno/reporte/[id]">) {
+export default async function ReporteDeAlumno({ params }: PageProps<"/alumno/reporte/[id]">) {
   const { id } = await params;
-  const { m } = await searchParams;
-  const matricula = typeof m === "string" ? m : MATRICULA_DEMO;
+  const { t, locale } = await textos();
+  const tr = t.alumno.reporte;
+  const sesion = await alumnoActual();
+  if (!sesion) redirect("/alumno");
   const db = await leer();
   const actividad = actividadDe(db, id);
+  // Solo sus propias actividades: la del curso donde está inscrito con su correo.
+  const curso = actividad && sesion.cursos.find((c) => c.grupo.id === actividad.grupoId);
+  if (!actividad || !curso) notFound();
+  const { grupo, alumno } = curso;
+  const migas = [
+    { texto: t.alumno.panel.titulo, href: "/alumno" },
+    { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/alumno/cursos/${grupo.id}` },
+  ];
+  const matricula = alumno.matricula;
   const entrega = db.entregas.find((e) => e.actividadId === id && e.matricula === matricula);
-  if (!actividad || !entrega || entrega.estado !== "aprobada") notFound();
-  const grupo = grupoDe(db, actividad.grupoId)!;
-  const alumno = grupo.alumnos.find((a) => a.matricula === matricula);
-  if (!alumno) notFound();
-  const q = matricula === MATRICULA_DEMO ? "" : `?m=${encodeURIComponent(matricula)}`;
+  if (!entrega || entrega.estado !== "aprobada") notFound();
+  if (!resultadosDisponibles(actividad)) {
+    return (
+      <>
+        <Encabezado migas={migas} rutaEtiqueta={t.profesor.comun.ruta} titulo={tr.titulo} subtitulo={actividad.titulo} />
+        <Tarjeta className="text-sm text-slate-700">
+          {tr.noDisponibleAntes} <strong>{fechaHoraLarga(actividad.resultadosDesde!, locale)}</strong> {tr.noDisponibleDespues}
+        </Tarjeta>
+      </>
+    );
+  }
   return (
     <>
+      <CronometroActividad actividadId={id} />
       <Encabezado
-        migas={[{ texto: "Mis actividades", href: `/alumno${q}` }]}
-        titulo="Reporte de retroalimentación"
+        migas={migas}
+        titulo={tr.titulo}
         subtitulo={actividad.titulo}
         acciones={
-          entrega.imagenes?.length ? (
-            <BotonLink href={`/api/pdf/${id}/${encodeURIComponent(matricula)}`} target="_blank">
-              Descargar PDF
-            </BotonLink>
-          ) : (
-            <BotonImprimir texto="Descargar PDF" />
-          )
+          <>
+            {conPuntaje(actividad) && calificada(entrega) && (
+              <BotonLink variante="secundario" href={`/alumno/reporte/${id}/analiticas`}>
+                <IconoGrafica /> {t.alumno.analiticas.boton}
+              </BotonLink>
+            )}
+            {entrega.imagenes?.length || entrega.pdf ? (
+              <BotonLink href={`/api/pdf/${id}/${encodeURIComponent(matricula)}`} target="_blank">
+                {tr.descargarPdf}
+              </BotonLink>
+            ) : (
+              <BotonImprimir texto={tr.descargarPdf} />
+            )}
+          </>
         }
       />
       <ReporteAlumno actividad={actividad} alumno={alumno} entrega={entrega} grupo={grupo} />

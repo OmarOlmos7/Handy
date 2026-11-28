@@ -1,0 +1,51 @@
+// Prepara al compañero de estudio en el servidor: calcula su ánimo y traduce lo que dice.
+import type { Sugerencia } from "@/lib/autoestudio";
+import { datosCompanero } from "@/lib/companero";
+import { saldoDe } from "@/lib/cuentas";
+import type { Diccionario } from "@/lib/i18n/diccionario";
+import { formato } from "@/lib/i18n/idiomas";
+import { hayCreditosAutoestudio } from "@/lib/pascal";
+import { textos } from "@/lib/i18n/servidor";
+import type { AlumnoConSesion } from "@/lib/sesion";
+import type { BaseDeDatos, TipoAutoactividad } from "@/lib/tipos";
+import { CompaneroEstudio } from "./companero-estudio";
+
+function textoSugerencia(t: Diccionario, s: Sugerencia): string {
+  const m = t.autoestudio.companero.mensajes;
+  if (s.clave === "proxima" && Number(s.valores.horas) >= 48) return formato(m.proximaDias, s.valores);
+  return formato(m[s.clave], s.valores);
+}
+
+export async function CompaneroDelAlumno({
+  db,
+  alumno,
+  grupoId,
+  temaInicial,
+  tipoInicial,
+}: {
+  db: BaseDeDatos;
+  alumno: AlumnoConSesion;
+  grupoId?: string;
+  /** Desde la ruta de aprendizaje: el formulario abre con el tema y el tipo sugeridos. */
+  temaInicial?: string;
+  tipoInicial?: TipoAutoactividad;
+}) {
+  const { t } = await textos();
+  const cursos = grupoId ? alumno.cursos.filter((c) => c.grupo.id === grupoId) : alumno.cursos;
+  if (cursos.length === 0) return null;
+  const d = datosCompanero(db, alumno.id, cursos);
+  // Pascal sale si algún profesor de estos cursos tiene créditos para que el alumno cree actividades.
+  const conCreditos = cursos.some((c) => !!c.grupo.profesorId && hayCreditosAutoestudio(saldoDe(db, c.grupo.profesorId)));
+  return (
+    <CompaneroEstudio
+      animo={d.animo}
+      ideas={d.sugerencias.map((s) => ({ texto: textoSugerencia(t, s), clave: s.clave, tipo: s.tipo, tema: s.tema, grupoId: s.grupoId }))}
+      cursos={d.cursos}
+      grupoFijo={grupoId}
+      restantes={d.restantes}
+      conCreditos={conCreditos}
+      temaInicial={temaInicial}
+      tipoInicial={tipoInicial}
+    />
+  );
+}

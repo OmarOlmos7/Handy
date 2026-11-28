@@ -1,0 +1,46 @@
+# Retroalimenta en el VPS: la app (Next.js) detrás de Caddy, que pone HTTPS solo.
+# Uso: cp despliegue/env.ejemplo .env  →  edita .env  →  docker compose up -d --build
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      RETROALIMENTA_CLAUDE_KEY: ${RETROALIMENTA_CLAUDE_KEY}
+      APP_URL: https://${DOMINIO}
+      REGISTRO_CODIGO: ${REGISTRO_CODIGO:-}
+      CREDITOS_INICIALES: ${CREDITOS_INICIALES:-50}
+      ADMIN_CORREOS: ${ADMIN_CORREOS:-}
+      CONTACTO_CORREO: ${CONTACTO_CORREO:-}
+      PRIVACIDAD_CORREO: ${PRIVACIDAD_CORREO:-}
+      PRIVACIDAD_DOMICILIO: ${PRIVACIDAD_DOMICILIO:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PUERTO: ${SMTP_PUERTO:-465}
+      SMTP_USUARIO: ${SMTP_USUARIO:-}
+      SMTP_CONTRASENA: ${SMTP_CONTRASENA:-}
+      CORREO_REMITENTE: ${CORREO_REMITENTE:-}
+      BANDERAS: ${BANDERAS:-}
+    volumes:
+      - datos:/datos
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2.10
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./despliegue/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_datos:/data
+      - caddy_config:/config
+
+volumes:
+  datos:
+  caddy_datos:
+  caddy_config:

@@ -1,8 +1,13 @@
+import { estadoEnvio } from "@/lib/periodo";
+import { IconoGrafica } from "@/components/iconos";
+import { ConFlujo } from "@/components/flujo-actividad";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { AprobarTodo } from "@/components/aprobar-todo";
+import { AutoActualizar } from "@/components/auto-actualizar";
+import { BorrarEntrega } from "@/components/borrar-entrega";
 import { EvaluarTodo } from "@/components/evaluar-todo";
-import { PestanasActividad } from "@/components/pestanas-actividad";
+import { ReevaluarActividad } from "@/components/reevaluar-actividad";
+import { saldoDe } from "@/lib/cuentas";
 import {
   BotonLink,
   Encabezado,
@@ -14,44 +19,120 @@ import {
   fechaLarga,
 } from "@/components/ui";
 import { actividadDe, entregasDe, estadoActividad, grupoDe, leer } from "@/lib/almacen";
-import { calificacion } from "@/lib/estadisticas";
-import { qrDataUrl, urlBase } from "@/lib/qr";
+import { evaluandoAhora } from "@/lib/evaluacion";
+import { datosProfesor } from "@/lib/sesion";
+import { calificacion, calificada, escalaDe, formatoCal } from "@/lib/estadisticas";
+import { PRECISION_PREDETERMINADA, configuracionDe, esEsfuerzo, esMotor, porcentajeAltasBajas } from "@/lib/configuracion";
+import { fechaHoraLarga, resultadosDisponibles } from "@/lib/resultados";
+import { textos } from "@/lib/i18n/servidor";
+import { listaParaRubrica } from "@/lib/modalidad";
+import { conPuntaje } from "@/lib/modalidad";
+import { formato } from "@/lib/i18n/idiomas";
+import { leerFiltro, leerOrden, ordenarEntregas } from "@/lib/listas";
+import { OrdenLista } from "@/components/orden-lista";
+import { AlumnosEnActividad } from "@/components/administrar-alumnos";
+import { filasAlumnos } from "@/lib/alumnos-grupo";
+import { CopiarActividad } from "@/components/copiar-elemento";
+import { tituloCopia } from "@/lib/copiar";
 
-export default async function EntregasActividad({ params }: PageProps<"/profesor/actividades/[id]">) {
+export default async function EntregasActividad({ params, searchParams }: PageProps<"/profesor/actividades/[id]">) {
   const { id } = await params;
-  const db = await leer();
+  const { db, profesor } = await datosProfesor();
   const actividad = actividadDe(db, id);
   if (!actividad) notFound();
   const grupo = grupoDe(db, actividad.grupoId)!;
   const entregas = entregasDe(db, id);
   const recibidas = entregas.filter((e) => e.estado !== "sin_entregar");
-  const porAprobar = entregas.filter((e) => e.estado === "evaluada");
-  const porEvaluar = entregas.filter((e) => e.estado === "entregada" && e.imagenes?.length);
+  const liberadas = entregas.filter((e) => e.estado === "aprobada");
+  const evaluando = entregas.filter((e) => e.estado === "entregada" && evaluandoAhora(e.evaluandoDesde));
+  // Las entregas se evalúan solas; el botón queda para reintentar las que fallaron.
+  const porEvaluar = entregas.filter((e) => e.estado === "entregada" && e.imagenes?.length && !evaluandoAhora(e.evaluandoDesde));
   const bajaConfianza = entregas.reduce((s, e) => s + e.resultados.filter((r) => r.confianza === "baja").length, 0);
-  const enlace = `${await urlBase()}/entregar/${id}`;
-  const qr = await qrDataUrl(enlace);
+  // % de notas altas y bajas con los rangos del profesor (calificaciones llevadas a 100).
+  const rangos = configuracionDe(profesor.config).rangos;
+  const escala = escalaDe(actividad);
+  const desempeno = conPuntaje(actividad)
+    ? porcentajeAltasBajas(
+        recibidas.filter((e) => calificada(e)).map((e) => (calificacion(actividad, e) * 100) / escala),
+        rangos,
+      )
+    : undefined;
+  // Entregas que se pueden re-evaluar: ya evaluadas y con sus fotos (las archivadas solo tienen el PDF).
+  const reevaluables = entregas.filter((e) => e.estado !== "sin_entregar" && e.resultados.length > 0 && e.imagenes?.length && !evaluandoAhora(e.evaluandoDesde));
+  const conf = configuracionDe(profesor.config);
+  const { t, locale } = await textos();
+  const tc = t.profesor.comun;
+  const ta = t.profesor.actividad;
   const nombre = (m: string) => grupo.alumnos.find((a) => a.matricula === m)?.nombre ?? m;
+  const busqueda = await searchParams;
+  const orden = leerOrden(busqueda.orden);
+  const filtro = leerFiltro(busqueda.ver);
+  const lista = ordenarEntregas(entregas, nombre, orden, filtro);
+  const conteos = { todas: entregas.length, entregadas: recibidas.length, sin_entregar: entregas.length - recibidas.length };
+  // Altas, bajas y cambios de alumnos desde la evaluación (aplican a todo el curso).
+  const correosConCuenta = new Set((await leer()).cuentasAlumno.map((c) => c.correo));
+  const filas = filasAlumnos(db, grupo, correosConCuenta, locale);
 
   return (
     <>
       <Encabezado
         migas={[
-          { texto: "Panel", href: "/profesor" },
-          { texto: `${grupo.materia} · ${grupo.nombre}`, href: "/profesor" },
+          { texto: tc.panel, href: "/profesor" },
+          { texto: `${grupo.materia} · ${grupo.nombre}`, href: `/profesor/grupos/${grupo.id}` },
         ]}
         titulo={actividad.titulo}
         subtitulo={
           <span className="flex flex-wrap items-center gap-2">
-            Aplicada {fechaLarga(actividad.fechaAplicacion)}
+            {formato(tc.aplicada, { f: fechaLarga(actividad.fechaAplicacion, locale) })}
             <InsigniaActividad estado={estadoActividad(db, actividad)} />
+            {actividad.visibleDesde && (
+              <Insignia tono="azul">{formato(ta.altaDesde, { f: fechaHoraLarga(actividad.visibleDesde, locale) })}</Insignia>
+            )}
+            {(actividad.envioDesde || actividad.envioHasta) && (
+              <Insignia tono={estadoEnvio(actividad) === "cerrado" ? "rojo" : "azul"}>
+                {actividad.envioDesde && actividad.envioHasta
+                  ? formato(ta.recepcion, { desde: fechaHoraLarga(actividad.envioDesde, locale), hasta: fechaHoraLarga(actividad.envioHasta, locale) })
+                  : actividad.envioHasta
+                    ? formato(ta.recepcionHasta, { hasta: fechaHoraLarga(actividad.envioHasta, locale) })
+                    : formato(ta.recepcionDesde, { desde: fechaHoraLarga(actividad.envioDesde!, locale) })}
+              </Insignia>
+            )}
+            {actividad.resultadosDesde && (
+              <Insignia tono={resultadosDisponibles(actividad) ? "verde" : "ambar"}>
+                {formato(ta.resultadosVisibles, { f: fechaHoraLarga(actividad.resultadosDesde, locale) })}
+              </Insignia>
+            )}
+            {actividad.temario && (
+              <span className="basis-full text-xs text-slate-500" title={actividad.temario.temas.join(" · ")}>
+                📚 {actividad.temario.unidad}
+                {actividad.temario.temas.length > 0 && ` · ${actividad.temario.temas.slice(0, 4).join(" · ")}${actividad.temario.temas.length > 4 ? " …" : ""}`}
+              </span>
+            )}
           </span>
         }
         acciones={
           <>
-            <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
-              Hoja imprimible con QR
+            <BotonLink href={`/profesor/actividades/${id}/analiticas`} variante="secundario">
+              <IconoGrafica /> {ta.analiticas}
             </BotonLink>
-            {porAprobar.length > 0 && <AprobarTodo actividadId={id} pendientes={porAprobar.length} />}
+            <BotonLink href={`/profesor/actividades/${id}/hoja`} variante="secundario">
+              {tc.hojaQr}
+            </BotonLink>
+            <CopiarActividad
+              actividadId={id}
+              grupoId={grupo.id}
+              cursoActual={`${grupo.materia} · ${grupo.nombre}`}
+              tituloCopia={tituloCopia(actividad.titulo, db.actividades.filter((a) => a.grupoId === grupo.id).map((a) => a.titulo), t.copiar.sufijo)}
+              cursos={db.grupos.filter((g) => g.id !== grupo.id && !g.archivado).map((g) => ({ id: g.id, nombre: `${g.materia} · ${g.nombre}` }))}
+            />
+            {entregas.some((e) => e.resultados.length > 0 && (e.imagenes?.length || e.pdf)) && (
+              <a
+                href={`/api/pdf/${id}/grupo`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-800 ring-1 ring-slate-300 hover:bg-slate-50"
+              >
+                {tc.descargarPdfGrupo}
+              </a>
+            )}
             {actividad.rubricaConfirmada && (
               <EvaluarTodo
                 actividadId={id}
@@ -61,94 +142,168 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           </>
         }
       />
-      <PestanasActividad id={id} activa="entregas" />
+      <ConFlujo vista={5} db={db} actividad={actividad}>
+      <AutoActualizar activo={evaluando.length > 0} />
+
+      {actividad.rubricaConfirmada && (
+        <p className="mb-4 rounded-lg bg-tinta-50 px-4 py-2.5 text-sm text-tinta-900">
+          {evaluando.length > 0
+            ? evaluando.length > 1
+              ? formato(ta.evaluandoN, { n: evaluando.length })
+              : ta.evaluando1
+            : ta.automatica}
+        </p>
+      )}
+
+      {actividad.rubricaConfirmada && (
+        <ReevaluarActividad
+          actividadId={id}
+          motor={esMotor(actividad.precision?.motor) ? actividad.precision.motor : PRECISION_PREDETERMINADA.motor}
+          esfuerzos={conf.esfuerzos}
+          esfuerzoActual={esEsfuerzo(actividad.precision?.esfuerzo) ? actividad.precision.esfuerzo : undefined}
+          instrucciones={actividad.instrucciones ?? ""}
+          evaluadas={entregas.filter((e) => e.estado !== "sin_entregar" && e.resultados.length > 0).length}
+          entregas={reevaluables.map((e) => ({ matricula: e.matricula, nombre: nombre(e.matricula), paginas: e.imagenes?.length ?? 0 }))}
+          saldo={saldoDe(db, profesor.id)}
+          abiertoInicial={busqueda.reevaluar === "1"}
+          conRubricaAnterior={
+            actividad.rubricaEditadaEn
+              ? entregas.filter((e) => e.estado !== "sin_entregar" && e.resultados.length > 0 && (e.evaluadaEn ?? "") < actividad.rubricaEditadaEn!).length
+              : 0
+          }
+        />
+      )}
 
       {!actividad.rubricaConfirmada && (
         <Tarjeta className="mb-6 border-l-4 border-aviso">
-          <p className="font-medium">{actividad.reactivos.length ? "Confirma la rúbrica" : "Falta tu solución"}</p>
+          <p className="font-medium">{listaParaRubrica(actividad) ? ta.confirmaRubrica : ta.faltaSolucion}</p>
           <p className="mt-1 text-sm text-slate-600">
-            {actividad.reactivos.length
-              ? "La IA ya propuso la rúbrica. Revísala y confírmala para poder evaluar las entregas."
-              : "Sube la actividad resuelta por ti para que la IA prepare la rúbrica. Mientras tanto, los alumnos ya pueden entregar."}
+            {listaParaRubrica(actividad)
+              ? ta.confirmaTexto
+              : ta.faltaTexto}
           </p>
-          <BotonLink href={`/profesor/actividades/${id}/rubrica`} className="mt-3">
-            {actividad.reactivos.length ? "Revisar rúbrica" : "Subir solución"}
+          <BotonLink href={`/profesor/actividades/${id}/${listaParaRubrica(actividad) ? "rubrica" : "solucion"}`} className="mt-3">
+            {listaParaRubrica(actividad) ? ta.revisarRubrica : ta.prepararSolucion}
           </BotonLink>
         </Tarjeta>
       )}
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.6fr)]">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Tarjeta>
-          <p className="text-sm text-slate-500">Entregas recibidas</p>
+          <p className="text-sm text-slate-500">{ta.evaluadas}</p>
           <p className="mt-1 text-2xl font-semibold">
-            {recibidas.length} <span className="text-base font-normal text-slate-400">de {entregas.length}</span>
+            {recibidas.filter((e) => calificada(e)).length} <span className="text-base font-normal text-slate-400">{formato(ta.deRecibidas, { n: recibidas.length })}</span>
+          </p>
+          <p className="text-xs text-slate-500">{entregas.length - recibidas.length === 1 ? ta.sinEntregar1 : formato(ta.sinEntregar, { n: entregas.length - recibidas.length })}</p>
+        </Tarjeta>
+        <Tarjeta>
+          <p className="text-sm text-slate-500">{ta.liberados}</p>
+          <p className="mt-1 text-2xl font-semibold">{liberadas.length}</p>
+          <p className="text-xs text-slate-500">
+            {actividad.resultadosDesde && !resultadosDisponibles(actividad)
+              ? formato(ta.veranDesde, { f: fechaHoraLarga(actividad.resultadosDesde, locale) })
+              : ta.seLiberan}
           </p>
         </Tarjeta>
         <Tarjeta>
-          <p className="text-sm text-slate-500">Por revisar y aprobar</p>
-          <p className="mt-1 text-2xl font-semibold">{porAprobar.length}</p>
-        </Tarjeta>
-        <Tarjeta>
-          <p className="text-sm text-slate-500">Baja confianza</p>
+          <p className="text-sm text-slate-500">{ta.bajaConfianza}</p>
           <p className={`mt-1 text-2xl font-semibold ${bajaConfianza ? "text-aviso" : ""}`}>{bajaConfianza}</p>
-          {bajaConfianza > 0 && <p className="text-xs text-slate-500">Reactivos que la IA no leyó bien.</p>}
+          {bajaConfianza > 0 && <p className="text-xs text-slate-500">{ta.bajaTexto}</p>}
         </Tarjeta>
-        <Tarjeta className="flex items-center gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qr} alt="Código QR para entregar" className="h-24 w-24 shrink-0" />
-          <div className="min-w-0 text-sm">
-            <p className="font-medium">Entregas desde el celular</p>
-            <p className="text-slate-500">Los alumnos escanean este código o abren el enlace:</p>
-            <a href={enlace} target="_blank" className="block truncate text-tinta-700 hover:underline">
-              {enlace}
-            </a>
-          </div>
+        <Tarjeta className="ring-1 ring-tinta-200">
+          <p className="text-sm text-slate-500">{ta.notasAltas}</p>
+          <p className="mt-1 text-2xl font-semibold text-tinta-600">{desempeno ? `${desempeno.altas} %` : "—"}</p>
+          <p className="text-xs text-slate-500">
+            {desempeno
+              ? formato(ta.notasAltasTexto, { r: formatoCal((rangos.alto * escala) / 100, escala), e: escala })
+              : conPuntaje(actividad)
+                ? ta.sinCalificaciones
+                : ta.sinPuntajeDesempeno}
+          </p>
+        </Tarjeta>
+        <Tarjeta className="ring-1 ring-error/30">
+          <p className="text-sm text-slate-500">{ta.notasBajas}</p>
+          <p className="mt-1 text-2xl font-semibold text-error">{desempeno ? `${desempeno.bajas} %` : "—"}</p>
+          <p className="text-xs text-slate-500">
+            {desempeno ? formato(ta.notasBajasTexto, { r: formatoCal((rangos.medio * escala) / 100, escala), e: escala }) : conPuntaje(actividad) ? ta.sinCalificaciones : ta.sinPuntajeDesempeno}
+          </p>
         </Tarjeta>
       </div>
 
+      <AlumnosEnActividad grupoId={grupo.id} alumnos={filas} />
+      <OrdenLista orden={orden} filtro={filtro} conteos={conteos} />
       <div className="overflow-x-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
-              <th className="px-4 py-3 font-medium">Alumno</th>
-              <th className="px-4 py-3 font-medium">Matrícula</th>
-              <th className="px-4 py-3 font-medium">Estado</th>
-              <th className="px-4 py-3 font-medium">Páginas</th>
-              <th className="px-4 py-3 font-medium">Calificación</th>
-              <th className="px-4 py-3 font-medium">Revisar</th>
+              <th className="px-4 py-3 font-medium">{tc.alumno}</th>
+              <th className="px-4 py-3 font-medium">{tc.matricula}</th>
+              <th className="px-4 py-3 font-medium">{tc.estado}</th>
+              <th className="px-4 py-3 font-medium">{tc.paginas}</th>
+              <th className="px-4 py-3 font-medium">{tc.calificacion}</th>
+              <th className="px-4 py-3 font-medium">{ta.revisar}</th>
               <th className="px-4 py-3" />
+              <th className="w-12 px-2 py-3">
+                <span className="sr-only">{tc.borrarEntrega}</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {entregas.map((e) => {
+            {lista.length === 0 && (
+              <tr>
+                <td colSpan={20} className="px-4 py-6 text-center text-slate-500">
+                  {t.profesor.lista.vacio}
+                </td>
+              </tr>
+            )}
+            {lista.map((e) => {
               const cal = calificacion(actividad, e);
               const baja = e.resultados.filter((r) => r.confianza === "baja").length;
-              const evaluada = e.resultados.length > 0;
+              const evaluada = calificada(e);
               return (
                 <tr key={e.matricula} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium">{nombre(e.matricula)}</td>
                   <td className="px-4 py-3 font-mono text-xs text-slate-600">{e.matricula}</td>
                   <td className="px-4 py-3">
-                    <InsigniaEntrega estado={e.estado} />
+                    {e.estado === "entregada" && evaluandoAhora(e.evaluandoDesde) ? (
+                      <Insignia tono="azul">{ta.evaluandoIA}</Insignia>
+                    ) : (
+                      <InsigniaEntrega estado={e.estado} />
+                    )}
                     {e.error && <p className="mt-1 max-w-48 text-xs text-error">{e.error}</p>}
                   </td>
                   <td className="px-4 py-3 text-slate-600">{e.paginasRecibidas || "—"}</td>
-                  <td className={`px-4 py-3 font-semibold ${evaluada ? colorCalificacion(cal) : "text-slate-400"}`}>
-                    {evaluada ? cal.toFixed(1) : "—"}
+                  <td className={`px-4 py-3 font-semibold ${evaluada ? colorCalificacion(cal, escalaDe(actividad)) : "text-slate-400"}`}>
+                    {!evaluada ? "—" : conPuntaje(actividad) ? `${formatoCal(cal, escalaDe(actividad))} / ${escalaDe(actividad)}` : t.profesor.modalidad.sinPuntaje}
                   </td>
                   <td className="px-4 py-3">
-                    {baja > 0 ? <Insignia tono="ambar">{baja} con baja confianza</Insignia> : evaluada ? <span className="text-slate-400">—</span> : null}
+                    {baja > 0 ? <Insignia tono="ambar">{formato(ta.conBaja, { n: baja })}</Insignia> : evaluada ? <span className="text-slate-400">—</span> : null}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-right">
-                    {evaluada ? (
-                      <Link href={`/profesor/actividades/${id}/revision/${e.matricula}`} className="font-medium text-tinta-700 hover:underline">
-                        {e.estado === "aprobada" ? "Ver" : "Revisar"}
-                      </Link>
+                    {e.resultados.length > 0 ? (
+                      <span className="inline-flex items-center gap-3">
+                        <Link href={`/profesor/actividades/${id}/revision/${e.matricula}`} className="font-medium text-tinta-700 hover:underline">
+                          {ta.revisar}
+                        </Link>
+                        {(e.imagenes?.length || e.pdf) && (
+                          <a
+                            href={`/api/pdf/${id}/${encodeURIComponent(e.matricula)}`}
+                            target="_blank"
+                            className="text-xs text-tinta-700 hover:underline"
+                            title={formato(ta.pdfDe, { nombre: nombre(e.matricula) })}
+                          >
+                            PDF
+                          </a>
+                        )}
+                      </span>
                     ) : (
-                      <Link href={`/entregar/${id}?m=${e.matricula}`} className="text-xs text-tinta-700 hover:underline">
-                        {e.estado === "sin_entregar" ? "Subir sus hojas" : "Reemplazar hojas"}
+                      <Link href={`/entregar/${id}?m=${encodeURIComponent(e.matricula)}&n=${encodeURIComponent(nombre(e.matricula))}`} className="text-xs text-tinta-700 hover:underline">
+                        {e.estado === "sin_entregar" ? tc.subirHojas : tc.reemplazarHojas}
                       </Link>
                     )}
+                  </td>
+                  <td className="px-2 py-2 text-right">
+                    {e.estado !== "sin_entregar" && <BorrarEntrega actividadId={id} matricula={e.matricula} nombre={nombre(e.matricula)} />}
                   </td>
                 </tr>
               );
@@ -156,6 +311,7 @@ export default async function EntregasActividad({ params }: PageProps<"/profesor
           </tbody>
         </table>
       </div>
+      </ConFlujo>
     </>
   );
 }

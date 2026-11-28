@@ -1,0 +1,250 @@
+"use client";
+
+import type { ClaseHorario } from "@/lib/tipos";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition, type FormEvent } from "react";
+import { archivarGrupo, borrarGrupo, colorGrupo, renombrarGrupo } from "@/app/acciones";
+import { duplicarGrupo } from "@/app/acciones-copiar";
+import { colorDe } from "@/lib/colores";
+import { BotonIcono, IconoAlumnos, IconoArchivar, IconoBasura, IconoDuplicar, IconoLapiz } from "./iconos";
+import { SobreAvisos } from "./avisos";
+import { AjustesCurso, BotonCalendario, ResumenTarjeta } from "./asesorias";
+import { SelectorColor } from "./selector-color";
+import { SelectorAsignaturaCurso, type AsignaturaOpcion } from "./asignatura-curso";
+import { Boton } from "./ui";
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
+
+const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
+
+/**
+ * Tarjeta de un curso en el panel: abre la vista del curso; botón a la lista de alumnos; lápiz para
+ * renombrar (y entrar a altas, bajas y cambios de alumnos), sobre de avisos, duplicar (copia vacía),
+ * caja para archivar y bote para borrar.
+ */
+export function TarjetaCurso({
+  id,
+  materia,
+  nombre,
+  ciclo,
+  actividades,
+  alumnos,
+  porRevisar,
+  color,
+  avisosSinLeer = 0,
+  inicio,
+  fin,
+  horario,
+  cadaSemanas,
+  periodo,
+  asesorias,
+  asignaturas = [],
+  asignaturaId = "",
+}: {
+  id: string;
+  materia: string;
+  nombre: string;
+  ciclo: string;
+  actividades: number;
+  alumnos: number;
+  porRevisar: number;
+  color?: string;
+  /** Mensajes de alumnos del curso que el profesor aún no abre (número en el sobre). */
+  avisosSinLeer?: number;
+  /** Fechas del curso (engrane) y su texto ya formateado. */
+  inicio?: string;
+  fin?: string;
+  /** Horario de clase del curso (también en el engrane). */
+  horario?: ClaseHorario[];
+  cadaSemanas?: number;
+  periodo?: string;
+  /** Resumen de asesorías del curso: realizadas, minutos y próximas. */
+  asesorias?: { realizadas: number; minutos: number; proximas: number };
+  /** Asignaturas del profesor para enlazar el curso, y la que tiene ahora ("" si ninguna). */
+  asignaturas?: AsignaturaOpcion[];
+  asignaturaId?: string;
+}) {
+  const router = useRouter();
+  const { t } = useTextos();
+  const c = t.profesor.comun;
+  const tc = t.profesor.tarjetaCurso;
+  const tal = t.alumnosGrupo;
+  const ta = t.archivados;
+  const tas = t.asesorias;
+  const tdu = t.copiar.curso;
+  const [editando, setEditandoBase] = useState(false);
+  const [asignatura, setAsignatura] = useState(asignaturaId);
+  const setEditando = (si: boolean) => {
+    setAsignatura(asignaturaId);
+    setEditandoBase(si);
+  };
+  const [error, setError] = useState("");
+  const [pendiente, iniciar] = useTransition();
+
+  function guardar(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const datos = new FormData(e.currentTarget);
+    setError("");
+    iniciar(async () => {
+      try {
+        const r = await renombrarGrupo(id, String(datos.get("materia")), String(datos.get("nombre")), String(datos.get("asignatura") ?? ""));
+        // "Crear asignatura nueva": pasa al alta de asignatura, que la enlaza a este curso.
+        if (r.ir) return router.push(r.ir);
+        setEditando(false);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : c.noSeGuardo);
+      }
+    });
+  }
+
+  function pintar(clave: string) {
+    iniciar(async () => {
+      try {
+        await colorGrupo(id, clave);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : tc.noColor);
+      }
+    });
+  }
+
+  // Archivar no borra nada: el curso pasa a "Cursos archivados" en Configuración.
+  function archivar() {
+    iniciar(async () => {
+      try {
+        await archivarGrupo(id, true);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : ta.noSeArchivo);
+      }
+    });
+  }
+
+  // Duplicar: copia idéntica y vacía (sin alumnos, entregas ni calificaciones) con código nuevo.
+  function duplicar() {
+    const curso = `${materia} · ${nombre}`;
+    if (!window.confirm(actividades > 0 ? formato(tdu.confirmar, { curso, n: actividades }) : formato(tdu.confirmar0, { curso }))) return;
+    setError("");
+    iniciar(async () => {
+      const r = await duplicarGrupo(id);
+      if ("error" in r) setError(r.error);
+      else router.refresh();
+    });
+  }
+
+  function borrar() {
+    const aviso =
+      actividades > 0
+        ? formato(tc.confirmarConActividades, { curso: `${materia} · ${nombre}`, n: actividades })
+        : formato(tc.confirmar, { curso: `${materia} · ${nombre}` });
+    if (!window.confirm(aviso)) return;
+    iniciar(async () => {
+      try {
+        await borrarGrupo(id);
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : c.noSeBorro);
+      }
+    });
+  }
+
+  return (
+    <div
+      className={`relative flex min-w-0 flex-col overflow-visible rounded-2xl bg-white p-4 pt-5 shadow-sm ring-1 ring-slate-200 transition ${
+        editando ? "" : "hover:-translate-y-0.5 hover:shadow-md hover:ring-tinta-300"
+      } ${pendiente ? "opacity-60" : ""}`}
+    >
+      {colorDe(color) && <span className={`absolute inset-x-0 top-0 h-2 rounded-t-2xl ${colorDe(color)!.franja}`} aria-hidden />}
+      {editando ? (
+        <form onSubmit={guardar} className="space-y-2">
+          <label className="block text-xs font-medium text-slate-500">
+            {c.materia}
+            <input name="materia" defaultValue={materia} required autoFocus className={campoChico} />
+          </label>
+          <label className="block text-xs font-medium text-slate-500">
+            {c.grupo}
+            <input name="nombre" defaultValue={nombre} required className={campoChico} />
+          </label>
+          <SelectorAsignaturaCurso asignaturas={asignaturas} valor={asignatura} alCambiar={setAsignatura} chico />
+          <Link
+            href={`/profesor/grupos/${id}/alumnos`}
+            className="flex items-center gap-2 rounded-md bg-tinta-50 px-2 py-1.5 text-xs font-medium text-tinta-700 hover:bg-tinta-100"
+          >
+            <IconoAlumnos /> {tal.enlaceEditar} →
+          </Link>
+          <div className="flex gap-2 pt-1">
+            <Boton type="submit" disabled={pendiente} className="!px-3 !py-1.5">
+              {c.guardar}
+            </Boton>
+            <Boton type="button" variante="secundario" onClick={() => setEditando(false)} className="!px-3 !py-1.5">
+              {c.cancelar}
+            </Boton>
+          </div>
+        </form>
+      ) : (
+        <>
+          {/* El enlace cubre toda la tarjeta; los botones de abajo quedan encima. */}
+          <Link href={`/profesor/grupos/${id}`} className="min-w-0 pr-20 after:absolute after:inset-0 after:rounded-2xl" title={`${materia} · ${nombre}`}>
+            <span className="line-clamp-2 text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
+            <span className="mt-0.5 flex min-w-0 flex-wrap items-baseline gap-x-2">
+              <span className="min-w-0 max-w-full truncate text-lg font-semibold text-slate-900">{nombre}</span>
+              <span className="shrink-0 text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>
+            </span>
+          </Link>
+          <Link
+            href={`/profesor/grupos/${id}/alumnos`}
+            className="relative z-10 mt-2 inline-flex w-fit items-center gap-1.5 rounded-lg bg-white px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-slate-300 hover:bg-tinta-50 hover:text-tinta-700 hover:ring-tinta-300"
+          >
+            <IconoAlumnos /> {tal.boton}
+          </Link>
+          <ResumenTarjeta href={`/profesor/grupos/${id}/asesorias`} realizadas={asesorias?.realizadas ?? 0} minutos={asesorias?.minutos ?? 0} periodo={periodo} />
+          {/* Arriba a la derecha: agenda de asesorías y ajustes del curso (fechas de inicio y fin). */}
+          <div className="absolute top-3 right-3 z-30 flex gap-0.5">
+            <BotonCalendario href={`/profesor/agenda?curso=${id}`} etiqueta={tas.agendaBoton} pendientes={asesorias?.proximas ?? 0} />
+            <AjustesCurso grupoId={id} inicio={inicio} fin={fin} horario={horario} cadaSemanas={cadaSemanas} />
+          </div>
+        </>
+      )}
+      {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-2">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <div className="flex flex-row-reverse items-baseline justify-end gap-1">
+            <dt className="whitespace-nowrap text-xs text-slate-500">{c.actividades}</dt>
+            <dd className="text-xl font-semibold leading-none text-slate-900">{actividades}</dd>
+          </div>
+          <div className="flex flex-row-reverse items-baseline justify-end gap-1">
+            <dt className="whitespace-nowrap text-xs text-slate-500">{c.alumnos}</dt>
+            <dd className="text-xl font-semibold leading-none text-slate-900">{alumnos}</dd>
+          </div>
+          {porRevisar > 0 && (
+            <div className="flex flex-row-reverse items-baseline justify-end gap-1">
+              <dt className="whitespace-nowrap text-xs text-slate-500">{tc.porRevisar}</dt>
+              <dd className="text-xl font-semibold leading-none text-aviso">{porRevisar}</dd>
+            </div>
+          )}
+        </dl>
+        {!editando && (
+          // Fila propia a lo ancho de la tarjeta: los seis íconos caben en un renglón (sin espacio extra entre ellos).
+          <div className="relative z-10 -mx-1 flex w-full flex-wrap items-center justify-between gap-x-0 gap-y-1 border-t border-slate-100 pt-1.5">
+            <SobreAvisos href={`/profesor/grupos/${id}/avisos`} sinLeer={avisosSinLeer} />
+            <BotonIcono etiqueta={tc.editar} onClick={() => setEditando(true)} disabled={pendiente}>
+              <IconoLapiz />
+            </BotonIcono>
+            <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
+            <BotonIcono etiqueta={tdu.duplicar} onClick={duplicar} disabled={pendiente}>
+              <IconoDuplicar />
+            </BotonIcono>
+            <BotonIcono etiqueta={ta.archivar} onClick={archivar} disabled={pendiente}>
+              <IconoArchivar />
+            </BotonIcono>
+            <BotonIcono etiqueta={tc.borrar} peligro onClick={borrar} disabled={pendiente}>
+              <IconoBasura />
+            </BotonIcono>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

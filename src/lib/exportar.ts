@@ -1,5 +1,5 @@
 // Exportación de calificaciones para registrar en un LMS como Canvas.
-import type { FilaAlumno } from "./estadisticas";
+import { formatoCal, type FilaAlumno } from "./estadisticas";
 
 function csvCelda(valor: string | number) {
   const s = String(valor);
@@ -14,7 +14,7 @@ function csvCelda(valor: string | number) {
 export function csvCanvas(filas: FilaAlumno[], tituloActividad: string, seccion: string) {
   const encabezado = ["Student", "ID", "SIS User ID", "SIS Login ID", "Section", tituloActividad];
   const lineas = filas.map((f) =>
-    [f.alumno.nombre, "", f.alumno.matricula, f.alumno.correo, seccion, f.calificacion.toFixed(1)]
+    [f.alumno.nombre, "", f.alumno.matricula, f.alumno.correo, seccion, formatoCal(f.calificacion, f.escala)]
       .map(csvCelda)
       .join(","),
   );
@@ -38,7 +38,7 @@ export async function excelCalificaciones(
 ): Promise<Blob> {
   const ExcelJS = (await import("exceljs")).default;
   const libro = new ExcelJS.Workbook();
-  libro.creator = "Retroalimenta";
+  libro.creator = "iEureka-Grader";
   const hoja = libro.addWorksheet("Calificaciones");
   hoja.addRow([`${info.materia} · ${info.grupo}`]);
   hoja.addRow([`Actividad: ${info.actividad}`, "", `Fecha: ${info.fecha}`]);

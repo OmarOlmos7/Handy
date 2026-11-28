@@ -4,6 +4,7 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-mano: var(--font-caveat);
+  --font-hoja: var(--font-inter);
 
   /* Marca: azul tinta. Correcciones: rojo y verde como en la hoja del profesor. */
   --color-tinta-50: #eef4ff;
@@ -33,5 +34,123 @@ body {
   }
   body {
     background: white;
+  }
+  @page {
+    size: letter;
+    margin: 12mm;
+  }
+  .hoja-actividad {
+    box-shadow: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sin-cortar {
+    break-inside: avoid;
+  }
+}
+
+/* Compañero de estudio: parpadeo, lágrimas, flotación y tarjetas que se voltean. */
+.ojito-parpadeo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: ojito-parpadeo 4.8s infinite;
+}
+@keyframes ojito-parpadeo {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.08); }
+}
+.ojito-lagrima {
+  animation: ojito-lagrima 1.6s ease-in infinite;
+}
+.ojito-lagrima-2 {
+  animation-delay: 0.8s;
+}
+@keyframes ojito-lagrima {
+  0% { transform: translateY(0); opacity: 0; }
+  15% { opacity: 1; }
+  100% { transform: translateY(26px); opacity: 0; }
+}
+.ojitos {
+  animation: ojitos-flota 5s ease-in-out infinite;
+}
+@keyframes ojitos-flota {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.tarjeta-estudio {
+  perspective: 1200px;
+}
+.tarjeta-estudio-cara {
+  transition: transform 500ms;
+  transform-style: preserve-3d;
+}
+.tarjeta-estudio-volteada .tarjeta-estudio-cara {
+  transform: rotateY(180deg);
+}
+.tarjeta-estudio-frente,
+.tarjeta-estudio-reverso {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.tarjeta-estudio-reverso {
+  transform: rotateY(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ojito-parpadeo,
+  .ojito-lagrima,
+  .ojitos {
+    animation: none;
+  }
+  .tarjeta-estudio-cara {
+    transition: none;
+  }
+}
+
+/* Pascal, el compañero de estudio: se asoma al llegar, respira y ladra al hacerle clic. */
+.pascal {
+  animation: pascal-asoma 700ms cubic-bezier(.3,1.5,.6,1) both;
+}
+.pascal-cuerpo {
+  transform-origin: 50% 100%;
+  animation: pascal-respira 4s ease-in-out infinite;
+}
+.pascal:hover .pascal-cuerpo {
+  transform: translateY(-4px);
+}
+.pascal-ladra {
+  animation: pascal-ladra 260ms ease-in-out 4;
+}
+.pascal-guau {
+  animation: pascal-guau 1.3s ease-out both;
+}
+@keyframes pascal-asoma {
+  from { transform: translateY(34px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes pascal-respira {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.025); }
+}
+@keyframes pascal-ladra {
+  0%, 100% { transform: rotate(0) translateY(0); }
+  30% { transform: rotate(-3deg) translateY(-5px); }
+  70% { transform: rotate(2deg) translateY(-2px); }
+}
+@keyframes pascal-guau {
+  0% { transform: scale(.4) translateY(8px); opacity: 0; }
+  20% { transform: scale(1.15) translateY(0); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: scale(1) translateY(-10px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pascal,
+  .pascal-cuerpo,
+  .pascal-ladra {
+    animation: none;
+  }
+  .pascal-guau {
+    animation: none;
   }
 }

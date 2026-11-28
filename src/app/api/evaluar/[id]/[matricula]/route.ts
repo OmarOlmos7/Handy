@@ -1,43 +1,18 @@
-import { actividadDe, grupoDe, leer, modificar, saldo } from "@/lib/almacen";
-import { ErrorIA, evaluarEntrega } from "@/lib/ia";
-import { imagenesParaIA } from "@/lib/imagenes";
+import { leer } from "@/lib/almacen";
+import { esDelProfesor } from "@/lib/cuentas";
+import { evaluarYGuardar } from "@/lib/evaluacion";
+import { profesorActual } from "@/lib/sesion";
 
 export const maxDuration = 300;
 
-// Evalúa con IA la entrega de un alumno y descuenta 1 crédito por página.
-export async function POST(_req: Request, ctx: RouteContext<"/api/evaluar/[id]/[matricula]">) {
+// Reintento manual del profesor (normalmente la entrega se evalúa sola al recibir las fotos)
+// o re-evaluación de una entrega ya calificada con `?reevaluar=1`.
+export async function POST(req: Request, ctx: RouteContext<"/api/evaluar/[id]/[matricula]">) {
   const { id, matricula } = await ctx.params;
-  const db = await leer();
-  const actividad = actividadDe(db, id);
-  if (!actividad) return Response.json({ error: "Actividad no encontrada" }, { status: 404 });
-  if (!actividad.rubricaConfirmada || actividad.reactivos.length === 0) {
-    return Response.json({ error: "Primero confirma la rúbrica" }, { status: 409 });
-  }
-  const entrega = db.entregas.find((e) => e.actividadId === id && e.matricula === matricula);
-  if (!entrega?.imagenes?.length) return Response.json({ error: "Esta entrega no tiene fotos" }, { status: 400 });
-  const paginas = entrega.imagenes.length;
-  if (saldo(db) < paginas) return Response.json({ error: "No tienes créditos suficientes" }, { status: 402 });
-  const alumno = grupoDe(db, actividad.grupoId)?.alumnos.find((a) => a.matricula === matricula);
-
-  try {
-    const evaluacion = await evaluarEntrega(actividad, imagenesParaIA(entrega.imagenes));
-    modificar((d) => {
-      const e = d.entregas.find((x) => x.actividadId === id && x.matricula === matricula)!;
-      Object.assign(e, evaluacion, { estado: "evaluada", evaluadaEn: new Date().toISOString(), error: undefined });
-      d.movimientos.unshift({
-        fecha: new Date().toISOString().slice(0, 10),
-        concepto: `Evaluación · ${actividad.titulo} · ${alumno?.nombre ?? matricula}`,
-        cantidad: -paginas,
-      });
-    });
-    return Response.json({ ok: true });
-  } catch (e) {
-    const mensaje = e instanceof ErrorIA ? e.message : "No se pudo evaluar la entrega.";
-    console.error(e);
-    modificar((d) => {
-      const x = d.entregas.find((y) => y.actividadId === id && y.matricula === matricula);
-      if (x) x.error = mensaje;
-    });
-    return Response.json({ error: mensaje }, { status: 502 });
-  }
+  const profesor = await profesorActual();
+  if (!profesor) return Response.json({ error: "Inicia sesión" }, { status: 401 });
+  if (!esDelProfesor(await leer(), id, profesor.id)) return Response.json({ error: "Actividad no encontrada" }, { status: 404 });
+  const reevaluar = new URL(req.url).searchParams.get("reevaluar") === "1";
+  const r = await evaluarYGuardar(id, matricula, reevaluar);
+  return r.ok ? Response.json({ ok: true }) : Response.json({ error: r.error }, { status: r.status });
 }

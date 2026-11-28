@@ -1,0 +1,148 @@
+"use client";
+
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { archivarCursoAlumno, colorCursoAlumno, salirDelCursoAlumno } from "@/app/acciones-alumno";
+import { colorDe } from "@/lib/colores";
+import { formato } from "@/lib/i18n/idiomas";
+import { BotonIcono, IconoArchivar, IconoBasura, IconoDesarchivar } from "./iconos";
+import { SobreAvisos } from "./avisos";
+import { BotonCalendario, ResumenTarjeta } from "./asesorias";
+import { SelectorColor } from "./selector-color";
+import { useTextos } from "./proveedor-textos";
+
+/**
+ * Tarjeta de un curso en el portal del alumno: abre el curso; el círculo cambia el color de la tarjeta
+ * la caja la archiva (o, si ya está archivada, la restaura); ambos solo en su vista. El bote lo saca
+ * del curso por completo y borra su trabajo en él.
+ */
+export function TarjetaCursoAlumno({
+  id,
+  materia,
+  nombre,
+  ciclo,
+  color,
+  actividades,
+  porEntregar,
+  promedio,
+  colorPromedio,
+  archivado = false,
+  avisosSinLeer = 0,
+  periodo,
+  asesorias,
+}: {
+  id: string;
+  materia: string;
+  nombre: string;
+  ciclo: string;
+  color?: string;
+  actividades: number;
+  porEntregar: number;
+  /** Texto del promedio (ya formateado) o undefined si aún no hay evaluadas. */
+  promedio?: string;
+  colorPromedio?: string;
+  /** La tarjeta está en "Cursos archivados": muestra el botón para restaurarla. */
+  archivado?: boolean;
+  /** Avisos del curso que el alumno aún no abre (número en el sobre). */
+  avisosSinLeer?: number;
+  /** Fechas del curso ya formateadas. */
+  periodo?: string;
+  /** Resumen de sus asesorías en el curso: realizadas, minutos y próximas. */
+  asesorias?: { realizadas: number; minutos: number; proximas: number };
+}) {
+  const router = useRouter();
+  const { t } = useTextos();
+  const c = t.profesor.comun;
+  const tc = t.alumno.cursos;
+  const ta = t.archivados;
+  const [error, setError] = useState("");
+  const [pendiente, iniciar] = useTransition();
+
+  function pintar(clave: string) {
+    iniciar(async () => {
+      try {
+        await colorCursoAlumno(id, clave);
+        router.refresh();
+      } catch {
+        setError(tc.noColor);
+      }
+    });
+  }
+
+  function archivar() {
+    iniciar(async () => {
+      try {
+        await archivarCursoAlumno(id, !archivado);
+        router.refresh();
+      } catch {
+        setError(archivado ? ta.noSeRestauro : ta.noSeArchivo);
+      }
+    });
+  }
+
+  function quitar() {
+    if (!window.confirm(formato(ta.confirmarQuitar, { curso: `${materia} · ${nombre}` }))) return;
+    iniciar(async () => {
+      try {
+        await salirDelCursoAlumno(id);
+        router.refresh();
+      } catch {
+        setError(ta.noSeQuito);
+      }
+    });
+  }
+
+  return (
+    <div
+      className={`relative flex min-w-0 flex-col overflow-visible rounded-2xl bg-white p-4 pt-5 shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md hover:ring-tinta-300 ${
+        pendiente ? "opacity-60" : ""
+      }`}
+    >
+      {colorDe(color) && <span className={`absolute inset-x-0 top-0 h-2 rounded-t-2xl ${colorDe(color)!.franja}`} aria-hidden />}
+      {/* El enlace cubre toda la tarjeta; el selector de color queda encima. */}
+      <Link href={`/alumno/cursos/${id}`} className="min-w-0 pr-10 after:absolute after:inset-0 after:rounded-2xl" title={`${materia} · ${nombre}`}>
+        <span className="line-clamp-2 text-xs font-semibold uppercase tracking-wider text-tinta-600">{materia}</span>
+        <span className="mt-0.5 flex min-w-0 items-baseline gap-2">
+          <span className="truncate text-lg font-semibold text-slate-900">{nombre}</span>
+          {ciclo && <span className="shrink-0 text-xs text-slate-500">{formato(c.ciclo, { c: ciclo })}</span>}
+        </span>
+      </Link>
+      <ResumenTarjeta href={`/alumno/cursos/${id}/asesorias`} realizadas={asesorias?.realizadas ?? 0} minutos={asesorias?.minutos ?? 0} periodo={periodo} />
+      {/* Arriba a la derecha: agendar asesoría con el profesor. */}
+      <div className="absolute top-3 right-3">
+        <BotonCalendario href={`/alumno/cursos/${id}/asesorias`} etiqueta={t.asesorias.agendaAlumnoBoton} pendientes={asesorias?.proximas ?? 0} />
+      </div>
+      {error && <p className="relative z-10 mt-2 text-xs text-error">{error}</p>}
+      <div className="mt-auto flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-2">
+        <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          <div className="flex flex-row-reverse items-baseline justify-end gap-1">
+            <dt className="whitespace-nowrap text-xs text-slate-500">{tc.actividades}</dt>
+            <dd className="text-xl font-semibold leading-none text-slate-900">{actividades}</dd>
+          </div>
+          <div className="flex flex-row-reverse items-baseline justify-end gap-1">
+            <dt className="whitespace-nowrap text-xs text-slate-500">{tc.porEntregar}</dt>
+            <dd className={`text-xl font-semibold leading-none ${porEntregar > 0 ? "text-aviso" : "text-slate-900"}`}>{porEntregar}</dd>
+          </div>
+          {promedio && (
+            <div className="flex flex-row-reverse items-baseline justify-end gap-1">
+              <dt className="whitespace-nowrap text-xs text-slate-500">{tc.miPromedio}</dt>
+              <dd className={`text-xl font-semibold leading-none ${colorPromedio ?? "text-slate-900"}`}>{promedio}</dd>
+            </div>
+          )}
+        </dl>
+        {/* Fila propia a lo ancho: los íconos no se salen aunque la tarjeta sea angosta. */}
+        <div className="relative z-10 -mx-1 flex w-full flex-wrap items-center justify-between gap-1 border-t border-slate-100 pt-1.5">
+          <SobreAvisos href={`/alumno/cursos/${id}/avisos`} sinLeer={avisosSinLeer} />
+          <SelectorColor valor={color} etiqueta={tc.cambiarColor} onElegir={pintar} disabled={pendiente} />
+          <BotonIcono etiqueta={archivado ? ta.restaurar : ta.archivar} onClick={archivar} disabled={pendiente}>
+            {archivado ? <IconoDesarchivar /> : <IconoArchivar />}
+          </BotonIcono>
+          <BotonIcono etiqueta={ta.quitar} peligro onClick={quitar} disabled={pendiente}>
+            <IconoBasura />
+          </BotonIcono>
+        </div>
+      </div>
+    </div>
+  );
+}

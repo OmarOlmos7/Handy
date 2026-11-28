@@ -1,40 +1,43 @@
 import type { Metadata } from "next";
 import { crearGrupo } from "@/app/acciones";
-import { campo } from "@/components/nueva-actividad";
-import { Boton, Encabezado } from "@/components/ui";
+import { Boton, Encabezado, campo } from "@/components/ui";
+import { datosProfesor } from "@/lib/sesion";
+import { CamposNuevoCurso } from "@/components/asignatura-curso";
+import { textos } from "@/lib/i18n/servidor";
 
-export const metadata: Metadata = { title: "Nuevo grupo" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await textos();
+  return { title: t.profesor.nuevoCurso.titulo };
+}
 
-export default function NuevoGrupo() {
+export default async function NuevoGrupo() {
+  const { db } = await datosProfesor();
+  const { t } = await textos();
+  const c = t.profesor.comun;
+  const tn = t.profesor.nuevoCurso;
   return (
     <>
-      <Encabezado titulo="Nuevo grupo" subtitulo="Registra la materia y la lista de alumnos." migas={[{ texto: "Panel", href: "/profesor" }]} />
+      <Encabezado titulo={tn.titulo} subtitulo={tn.subtitulo} migas={[{ texto: c.panel, href: "/profesor" }]} rutaEtiqueta={c.ruta} />
       <form action={crearGrupo} className="mx-auto max-w-2xl space-y-4 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm font-medium text-slate-700">
-            Materia
-            <input name="materia" required className={campo} placeholder="Ej. Física" />
-          </label>
-          <label className="block text-sm font-medium text-slate-700">
-            Grupo
-            <input name="nombre" required className={campo} placeholder="Ej. 3° B" />
-          </label>
-        </div>
+        <CamposNuevoCurso
+          asignaturas={(db.asignaturas ?? []).map((a) => ({ id: a.id, nombre: a.nombre, nivel: a.nivel }))}
+          ejemploMateria={tn.ejemploMateria}
+          ejemploGrupo={tn.ejemploGrupo}
+        />
         <label className="block text-sm font-medium text-slate-700">
-          Alumnos
+          {tn.alumnosOpcional}
           <textarea
             name="alumnos"
-            required
             rows={10}
             className={`${campo} font-mono`}
             placeholder={"A0301, Ana López Ruiz, ana@escuela.mx\nA0302, Bruno Díaz Soto"}
           />
         </label>
         <p className="text-xs text-slate-500">
-          Una línea por alumno: matrícula, nombre completo y correo (opcional). Puedes pegar directo desde Excel.
+          {tn.ayuda}
         </p>
         <div className="flex justify-end">
-          <Boton type="submit">Guardar grupo</Boton>
+          <Boton type="submit">{tn.crear}</Boton>
         </div>
       </form>
     </>

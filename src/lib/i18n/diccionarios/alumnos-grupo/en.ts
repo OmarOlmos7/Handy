@@ -1,0 +1,65 @@
+import type es from "./es";
+
+const alumnosGrupo: typeof es = {
+  boton: "Student list",
+  enlaceEditar: "Add, edit or remove students",
+  meta: "Student list",
+  titulo: "Student list",
+  subtitulo: "Add students, edit their details or remove them from the class.",
+  alta: {
+    titulo: "Add a student",
+    matricula: "Student ID",
+    nombre: "Full name",
+    correo: "Email (optional)",
+    agregar: "Add student",
+    nota: "With an email, the student sees their results after creating an account with that same email. Without one, they are matched by student ID.",
+    hecha: "{nombre} was added.",
+  },
+  lista: {
+    titulo: "Paste a list",
+    ayuda: "One line per student: student ID, full name and email (optional). You can paste straight from Excel.",
+    agregar: "Add list",
+    hecha: "Students added: {n}.",
+    fallidas: "Lines not added: {l}.",
+  },
+  tabla: {
+    alumno: "Student",
+    matricula: "Student ID",
+    correo: "Email",
+    cuenta: "Account",
+    conCuenta: "Has account",
+    sinCuenta: "No account",
+    entregas: "Submissions",
+    acciones: "Actions",
+    vacio: "No students yet. Add them here, or they join on their own when they submit their first activity.",
+    sinResultados: "No student matches the search.",
+    buscar: "Search by name, student ID or email",
+  },
+  cambiar: "Edit details",
+  guardar: "Save",
+  cancelar: "Cancel",
+  guardado: "Changes saved.",
+  avisoMatricula: "If you change the student ID, their submissions and grades move to the new one.",
+  baja: "Remove",
+  bajaHecha: "{nombre} was removed.",
+  confirmarBaja:
+    "Remove {nombre} ({m})? They leave the class list and their {e} submissions and {a} self-study activities in this class are deleted, with their grades. Their account and other classes are unchanged. This cannot be undone.",
+  confirmarBajaSinTrabajo: "Remove {nombre} ({m})? They leave the class list. Their account and other classes are unchanged.",
+  enActividad: {
+    boton: "Add, edit or remove students",
+    ocultar: "Hide student list",
+    ayuda: "Changes apply to the whole class, not just this activity.",
+    verLista: "Open the full list",
+  },
+  errores: {
+    matricula: "The student ID must have 3 to 20 letters, numbers or hyphens.",
+    nombre: "Enter the full name (3 letters or more).",
+    correo: "The email is not valid.",
+    matriculaRepetida: "There is already a student with that ID in the class.",
+    correoRepetido: "There is already a student with that email in the class.",
+    noEncontrado: "The student or class was not found.",
+    general: "Could not save. Please try again.",
+  },
+};
+
+export default alumnosGrupo;

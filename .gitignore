@@ -43,3 +43,7 @@ next-env.d.ts
 # Datos de la demo (base de datos JSON y archivos subidos)
 /data
 .env*.local
+/geoip/
+
+# Modelos de face-api (los copia scripts/modelos-rostro.mjs)
+/public/modelos-rostro/

@@ -1,0 +1,65 @@
+import type es from "./es";
+
+const alumnosGrupo: typeof es = {
+  boton: "Schülerliste",
+  enlaceEditar: "Schüler hinzufügen, ändern oder entfernen",
+  meta: "Schülerliste",
+  titulo: "Schülerliste",
+  subtitulo: "Schüler hinzufügen, Daten ändern oder aus dem Kurs entfernen.",
+  alta: {
+    titulo: "Schüler hinzufügen",
+    matricula: "Schülernummer",
+    nombre: "Vollständiger Name",
+    correo: "E-Mail (optional)",
+    agregar: "Hinzufügen",
+    nota: "Mit E-Mail sieht der Schüler seine Ergebnisse, sobald er ein Konto mit derselben E-Mail anlegt. Ohne E-Mail wird er über die Schülernummer zugeordnet.",
+    hecha: "{nombre} wurde hinzugefügt.",
+  },
+  lista: {
+    titulo: "Liste einfügen",
+    ayuda: "Eine Zeile pro Schüler: Schülernummer, vollständiger Name und E-Mail (optional). Direkt aus Excel einfügbar.",
+    agregar: "Liste hinzufügen",
+    hecha: "Hinzugefügte Schüler: {n}.",
+    fallidas: "Nicht hinzugefügte Zeilen: {l}.",
+  },
+  tabla: {
+    alumno: "Schüler",
+    matricula: "Schülernummer",
+    correo: "E-Mail",
+    cuenta: "Konto",
+    conCuenta: "Mit Konto",
+    sinCuenta: "Ohne Konto",
+    entregas: "Abgaben",
+    acciones: "Aktionen",
+    vacio: "Noch keine Schüler. Füge sie hier hinzu, oder sie treten bei ihrer ersten Abgabe selbst bei.",
+    sinResultados: "Kein Schüler passt zur Suche.",
+    buscar: "Nach Name, Schülernummer oder E-Mail suchen",
+  },
+  cambiar: "Daten ändern",
+  guardar: "Speichern",
+  cancelar: "Abbrechen",
+  guardado: "Änderungen gespeichert.",
+  avisoMatricula: "Wenn du die Schülernummer änderst, gehen Abgaben und Noten auf die neue über.",
+  baja: "Entfernen",
+  bajaHecha: "{nombre} wurde entfernt.",
+  confirmarBaja:
+    "{nombre} ({m}) entfernen? Der Schüler verlässt die Kursliste, und seine {e} Abgaben und {a} Selbstlernaktivitäten in diesem Kurs werden samt Noten gelöscht. Konto und andere Kurse bleiben unverändert. Kann nicht rückgängig gemacht werden.",
+  confirmarBajaSinTrabajo: "{nombre} ({m}) entfernen? Der Schüler verlässt die Kursliste. Konto und andere Kurse bleiben unverändert.",
+  enActividad: {
+    boton: "Schüler hinzufügen, ändern oder entfernen",
+    ocultar: "Schülerliste ausblenden",
+    ayuda: "Änderungen gelten für den ganzen Kurs, nicht nur für diese Aktivität.",
+    verLista: "Ganze Liste öffnen",
+  },
+  errores: {
+    matricula: "Die Schülernummer muss 3 bis 20 Buchstaben, Ziffern oder Bindestriche haben.",
+    nombre: "Gib den vollständigen Namen ein (mindestens 3 Buchstaben).",
+    correo: "Die E-Mail ist ungültig.",
+    matriculaRepetida: "Im Kurs gibt es schon einen Schüler mit dieser Nummer.",
+    correoRepetido: "Im Kurs gibt es schon einen Schüler mit dieser E-Mail.",
+    noEncontrado: "Schüler oder Kurs nicht gefunden.",
+    general: "Konnte nicht gespeichert werden. Bitte erneut versuchen.",
+  },
+};
+
+export default alumnosGrupo;

@@ -3,10 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Boton } from "./ui";
+import { formato } from "@/lib/i18n/idiomas";
+import { useTextos } from "./proveedor-textos";
 
-/** Evalúa con IA, una por una, las entregas pendientes y muestra el avance. */
+/** Reintenta, una por una, las entregas que no se pudieron evaluar solas y muestra el avance. */
 export function EvaluarTodo({ actividadId, pendientes }: { actividadId: string; pendientes: { matricula: string; nombre: string }[] }) {
   const router = useRouter();
+  const te = useTextos().t.profesor.evaluarTodo;
   const [hechas, setHechas] = useState(0);
   const [actual, setActual] = useState<string | null>(null);
   const [errores, setErrores] = useState<string[]>([]);
@@ -24,7 +27,7 @@ export function EvaluarTodo({ actividadId, pendientes }: { actividadId: string; 
           if (r.status === 402 || r.status === 409) break;
         }
       } catch {
-        setErrores((e) => [...e, `${p.nombre}: sin conexión`]);
+        setErrores((e) => [...e, `${p.nombre}: ${te.sinConexion}`]);
       }
       setHechas((n) => n + 1);
       router.refresh();
@@ -36,9 +39,9 @@ export function EvaluarTodo({ actividadId, pendientes }: { actividadId: string; 
   return (
     <div className="flex flex-col items-end gap-1">
       <Boton onClick={evaluar} disabled={actual !== null}>
-        {actual ? `Evaluando ${hechas + 1} de ${pendientes.length + hechas}…` : `Evaluar con IA (${pendientes.length})`}
+        {actual ? formato(te.evaluando, { i: hechas + 1, n: pendientes.length + hechas }) : formato(te.reintentar, { n: pendientes.length })}
       </Boton>
-      {actual && <p className="text-xs text-slate-500">Leyendo la hoja de {actual}</p>}
+      {actual && <p className="text-xs text-slate-500">{formato(te.leyendo, { nombre: actual })}</p>}
       {errores.map((e) => (
         <p key={e} className="max-w-sm text-right text-xs text-error">{e}</p>
       ))}

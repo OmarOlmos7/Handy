@@ -1,0 +1,55 @@
+# Imagen de producción de Retroalimenta (Next.js en modo standalone).
+FROM node:22-bookworm-slim AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+
+FROM node:22-bookworm-slim AS build
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build
+
+# Bases libres de DB-IP Lite (CC BY 4.0): país por IP (idioma y divisa del visitante) y ciudad por IP
+# (clima del encabezado). Van en su propia etapa para que Docker las guarde en caché y no se
+# vuelvan a descargar (~130 MB) en cada actualización. Para renovarlas (una vez al mes basta):
+#   docker compose build --build-arg GEOIP_MES=$(date +%Y-%m) && docker compose up -d
+# Si no se pueden descargar, la app funciona igual (idioma del navegador; encabezado sin clima).
+FROM node:22-bookworm-slim AS geoip
+WORKDIR /app
+ARG GEOIP_MES=inicial
+COPY scripts/descargar-geoip.mjs ./
+RUN echo "Bases de IP: ${GEOIP_MES}" && node descargar-geoip.mjs geoip
+
+FROM node:22-bookworm-slim AS app
+WORKDIR /app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME=0.0.0.0 \
+    DATA_DIR=/datos
+# pdftoppm convierte en imágenes los PDF que entregan los alumnos desde una tableta.
+# Chromium (sin interfaz) imprime la página de recomendaciones con las fórmulas de KaTeX.
+# chromium-headless-shell es opcional: si la distribución no lo tiene, se usa chromium.
+# fonts-wqy-microhei: letras japonesas y chinas para los PDF en esos idiomas.
+# LibreOffice sin interfaz convierte a PDF los Word, Excel y PowerPoint para verlos con su formato
+# original. Carlito, Caladea y Liberation miden igual que Calibri, Cambria, Arial y Times New Roman,
+# así los documentos no se descuadran.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends poppler-utils chromium fonts-dejavu-core fonts-wqy-microhei \
+       libreoffice-writer-nogui libreoffice-calc-nogui libreoffice-impress-nogui \
+       fonts-liberation2 fonts-crosextra-carlito fonts-crosextra-caladea \
+    && (apt-get install -y --no-install-recommends chromium-headless-shell || true) \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /datos && chown node:node /datos
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
+COPY --from=build --chown=node:node /app/public ./public
+COPY --from=geoip --chown=node:node /app/geoip ./geoip
+# Hoja de estilos y fuentes de KaTeX para imprimir fórmulas en el PDF.
+COPY --from=build --chown=node:node /app/node_modules/katex/dist ./node_modules/katex/dist
+USER node
+EXPOSE 3000
+VOLUME ["/datos"]
+CMD ["node", "server.js"]
