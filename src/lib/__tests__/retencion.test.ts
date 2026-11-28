@@ -55,7 +55,7 @@ describe("conservación de actividades", () => {
 
 describe("fórmulas en el PDF", () => {
   it("convierte LaTeX sencillo a texto", () => {
-    expect(texAPlano("Calcula $\\alpha = \\frac{\\tau}{I}$ con $I = 0.09\\,\\text{kg m}^2$")).toBe("Calcula alfa = (tau)/(I) con I = 0.09 kg m^2");
+    expect(texAPlano("Calcula $\\alpha = \\frac{\\tau}{I}$ con $I = 0.09\\,\\text{kg m}^2$")).toBe("Calcula alfa = (tau)/(I) con I = 0.09 kg m²");
     expect(texAPlano("$v = \\omega \\cdot r$")).toBe("v = omega · r");
   });
 });
