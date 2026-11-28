@@ -1,6 +1,7 @@
 "use client";
 
-// El alumno sube (o reemplaza) la evidencia de una etapa del proyecto: documento, presentación,
+// El alumno sube (o reemplaza) la evidencia de una etapa del proyecto (o de uno de sus entregables)
+// con un comentario: documento, presentación,
 // hoja de cálculo, PDF, imagen, audio o video. En una etapa por equipo, la sube por todo el equipo.
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -10,8 +11,24 @@ import { useErrorArchivos } from "./alta-contenido";
 import { useTextos } from "./proveedor-textos";
 import { Boton } from "./ui";
 
-export function SubirEvidenciaProyecto({ proyectoId, etapaId, yaEntregada }: { proyectoId: string; etapaId: string; yaEntregada: boolean }) {
-  const ta = useTextos().t.proyecto.alumno;
+export function SubirEvidenciaProyecto({
+  proyectoId,
+  etapaId,
+  yaEntregada,
+  entregableId,
+  comentarioInicial = "",
+}: {
+  proyectoId: string;
+  etapaId: string;
+  yaEntregada: boolean;
+  /** Entregable de la etapa al que va la evidencia (si la etapa tiene entregables). */
+  entregableId?: string;
+  comentarioInicial?: string;
+}) {
+  const { t } = useTextos();
+  const ta = t.proyecto.alumno;
+  const tc = t.altaProyecto.alumno;
+  const [comentario, setComentario] = useState(comentarioInicial);
   const router = useRouter();
   const errorArchivos = useErrorArchivos();
   const [archivos, setArchivos] = useState<File[]>([]);
@@ -19,7 +36,7 @@ export function SubirEvidenciaProyecto({ proyectoId, etapaId, yaEntregada }: { p
   const [mensaje, setMensaje] = useState("");
 
   async function enviar() {
-    const problema = errorArchivos(archivos, MAX_EVIDENCIAS);
+    const problema = archivos.length ? errorArchivos(archivos, MAX_EVIDENCIAS) : undefined;
     if (problema) {
       setEstado("error");
       setMensaje(problema);
@@ -29,6 +46,8 @@ export function SubirEvidenciaProyecto({ proyectoId, etapaId, yaEntregada }: { p
     setMensaje("");
     const datos = new FormData();
     datos.set("etapa", etapaId);
+    if (entregableId) datos.set("entregable", entregableId);
+    datos.set("comentario", comentario);
     archivos.forEach((f) => datos.append("archivos", f));
     try {
       const r = await fetch(`/api/proyectos/${proyectoId}/entrega`, { method: "POST", body: datos });
@@ -50,10 +69,28 @@ export function SubirEvidenciaProyecto({ proyectoId, etapaId, yaEntregada }: { p
         <input type="file" multiple accept={ACEPTA_ARCHIVOS} className="sr-only" onChange={(e) => setArchivos(Array.from(e.target.files ?? []))} />
         <span className="mt-1 block text-xs text-slate-400">{formato(ta.formatos, { n: MAX_EVIDENCIAS, mb: Math.round(MAX_BYTES_ARCHIVO / 1024 / 1024) })}</span>
       </label>
+      <label className="block text-xs font-medium text-slate-600">
+        {tc.comentario}
+        <textarea
+          rows={2}
+          maxLength={1500}
+          value={comentario}
+          onChange={(e) => setComentario(e.target.value)}
+          placeholder={tc.ejemploComentario}
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+        />
+      </label>
       {estado === "error" && <p className="rounded-lg bg-error-suave p-2 text-sm text-error">{mensaje}</p>}
-      <Boton type="button" onClick={enviar} disabled={!archivos.length || estado === "enviando"}>
-        {estado === "enviando" ? ta.enviando : yaEntregada ? ta.reemplazar : ta.subir}
-      </Boton>
+      <div className="flex flex-wrap gap-2">
+        <Boton type="button" onClick={enviar} disabled={!archivos.length || estado === "enviando"}>
+          {estado === "enviando" ? ta.enviando : yaEntregada ? ta.reemplazar : ta.subir}
+        </Boton>
+        {yaEntregada && !archivos.length && comentario !== comentarioInicial && (
+          <Boton type="button" variante="secundario" onClick={enviar} disabled={estado === "enviando"}>
+            {tc.guardarComentario}
+          </Boton>
+        )}
+      </div>
     </div>
   );
 }

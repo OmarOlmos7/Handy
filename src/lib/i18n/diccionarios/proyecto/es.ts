@@ -42,8 +42,8 @@ const proyecto = {
   invitado: "Eres evaluador invitado: calificas con tu propia rúbrica; el profesor del curso cierra las etapas.",
   // Modelo del proyecto
   modelo: {
-    titulo: "Modelo de trabajo del proyecto",
-    ayuda: "Define las fases, la rúbrica de cada una, quién evalúa y cuánto pesa cada etapa en la calificación final del reto.",
+    titulo: "Información general del proyecto",
+    ayuda: "Define el contexto, el objetivo, las etapas con sus fechas y entregables, quién evalúa y cuánto pesa cada etapa en la calificación final. La rúbrica de cada etapa se arma en el paso B.",
     datos: "Datos del proyecto",
     tituloProyecto: "Título del proyecto",
     etapas: "Fases y avances a entregar",
@@ -244,7 +244,7 @@ const proyecto = {
     boton: "Proyecto",
     titulo: "Proyectos del grupo",
     subtitulo: "Actividades por etapas de los proyectos de este grupo.",
-    sinProyectos: "Este grupo aún no tiene proyectos. Créalo con «+ Nueva actividad» y el tipo Proyecto.",
+    sinProyectos: "Este grupo aún no tiene proyectos. Créalo con «+ Nuevo proyecto» (o con «+ Nueva actividad» y el tipo Proyecto).",
     abrir: "Ver evaluación",
   },
 };

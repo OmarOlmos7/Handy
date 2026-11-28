@@ -11,6 +11,7 @@ import ajustesAlumno from "./ajustes-alumno/zh";
 import contenido from "./contenido/zh";
 import avisos from "./avisos/zh";
 import proyecto from "./proyecto/zh";
+import altaProyecto from "./alta-proyecto/zh";
 import asesorias from "./asesorias/zh";
 import marco from "./marco/zh";
 
@@ -449,6 +450,7 @@ const zh: Diccionario = {
   contenido,
   avisos,
   proyecto,
+  altaProyecto,
   asesorias,
   marco,
 };

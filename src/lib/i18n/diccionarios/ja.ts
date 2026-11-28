@@ -11,6 +11,7 @@ import ajustesAlumno from "./ajustes-alumno/ja";
 import contenido from "./contenido/ja";
 import avisos from "./avisos/ja";
 import proyecto from "./proyecto/ja";
+import altaProyecto from "./alta-proyecto/ja";
 import asesorias from "./asesorias/ja";
 import marco from "./marco/ja";
 
@@ -468,6 +469,7 @@ const ja: Diccionario = {
   contenido,
   avisos,
   proyecto,
+  altaProyecto,
   asesorias,
   marco,
 };
