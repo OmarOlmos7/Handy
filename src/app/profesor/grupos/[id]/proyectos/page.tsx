@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PasosProyectoMini } from "@/components/flujo-proyecto";
 import { RutaProyecto } from "@/components/ruta-proyecto";
 import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
 import { grupoDe } from "@/lib/almacen";
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t.proyecto.grupo.titulo };
 }
 
-/** Proyectos del grupo (uno o varios): cada uno con su ruta de avance y sus etapas para evaluar. */
+/** Proyectos del grupo (uno o varios): cada uno con su ruta de creación (A, B, C), su ruta de avance y sus etapas para evaluar. */
 export default async function ProyectosGrupo({ params }: PageProps<"/profesor/grupos/[id]/proyectos">) {
   const { id } = await params;
   const { db } = await datosProfesor();
@@ -33,6 +34,7 @@ export default async function ProyectosGrupo({ params }: PageProps<"/profesor/gr
         rutaEtiqueta={c.ruta}
         titulo={`🏆 ${tp.grupo.titulo}`}
         subtitulo={tp.grupo.subtitulo}
+        acciones={<BotonLink href={`/profesor/grupos/${grupo.id}/proyectos/nuevo`}>+ {t.altaProyecto.nuevo.boton}</BotonLink>}
       />
       {proyectos.length === 0 && <Tarjeta className="text-sm text-slate-600">{tp.grupo.sinProyectos}</Tarjeta>}
       <div className="space-y-5">
@@ -46,6 +48,11 @@ export default async function ProyectosGrupo({ params }: PageProps<"/profesor/gr
                 <div className="min-w-0">
                   <h2 className="text-lg font-semibold text-slate-900">🛠️ {p.titulo}</h2>
                   {p.descripcion && <p className="mt-1 text-sm text-slate-600">{p.descripcion}</p>}
+                  {p.objetivo && (
+                    <p className="mt-1 text-sm text-slate-700">
+                      🎯 <span className="font-medium">{t.altaProyecto.alumno.objetivo}:</span> {p.objetivo}
+                    </p>
+                  )}
                   <p className="mt-1 text-xs text-slate-500">
                     {formato(p.etapas.length === 1 ? tp.etapas1 : tp.etapasN, { n: p.etapas.length })} ·{" "}
                     {formato(ev === 1 ? tp.evaluadores1 : tp.evaluadoresN, { n: ev })} · {formato(tp.cerradasDe, { c: cerradas, n: p.etapas.length })}
@@ -54,6 +61,11 @@ export default async function ProyectosGrupo({ params }: PageProps<"/profesor/gr
                 <BotonLink variante="secundario" className="shrink-0" href={`/profesor/proyectos/${p.id}`}>
                   {tp.grupo.abrir} →
                 </BotonLink>
+              </div>
+              {/* Ruta de creación del proyecto (A, B, C), cada paso con su vista. */}
+              <div className="mb-4 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200">
+                <p className="mb-2 text-xs font-bold tracking-[0.12em] text-slate-500 uppercase">{t.altaProyecto.flujo.titulo}</p>
+                <PasosProyectoMini proyecto={p} t={t} />
               </div>
               <RutaProyecto
                 pasos={pasos}

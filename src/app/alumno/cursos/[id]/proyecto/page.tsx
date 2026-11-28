@@ -10,7 +10,7 @@ import { leer } from "@/lib/almacen";
 import { claseDeArchivo } from "@/lib/contenido";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
-import { ICONO_ETAPA, equipoDe, resumenAlumno, rutaAlumno } from "@/lib/proyectos";
+import { ICONO_ETAPA, equipoDe, nivelesDe, resumenAlumno, rutaAlumno } from "@/lib/proyectos";
 import { alumnoActual } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,6 +37,13 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
   const proyectos = (db.proyectos ?? []).filter((p) => p.grupoId === grupo.id);
   const evaluaciones = db.evaluacionesProyecto ?? [];
   const entregas = db.entregasProyecto ?? [];
+  const tc = t.altaProyecto.alumno;
+  const nombresNivel = [tp.niveles.excelente, tp.niveles.bueno, tp.niveles.suficiente, tp.niveles.insuficiente];
+  const visor = (rutas: string[], nombres: string[]): ArchivoVisor[] =>
+    rutas.flatMap((ruta, i) => {
+      const clase = claseDeArchivo(ruta);
+      return clase ? [{ ruta, nombre: nombres[i] ?? ruta.split("/").at(-1)!, clase }] : [];
+    });
 
   return (
     <>
@@ -66,6 +73,23 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
                   {p.titulo}
                 </h2>
                 {p.descripcion && <p className="mt-1 text-sm text-slate-600">{p.descripcion}</p>}
+                {p.objetivo && (
+                  <p className="mt-2 text-sm text-slate-700">
+                    <span className="font-semibold">🎯 {tc.objetivo}:</span> {p.objetivo}
+                  </p>
+                )}
+                {(p.competencias ?? []).length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs font-semibold text-slate-600">{tc.competencias}</p>
+                    <ul className="mt-1 flex flex-wrap gap-1.5">
+                      {p.competencias!.map((c) => (
+                        <li key={c} className="rounded-full bg-tinta-50 px-2.5 py-0.5 text-xs font-medium text-tinta-800">
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {equipo && <p className="mt-1 text-sm text-slate-600">👥 {equipo.nombre}</p>}
                 <div className="mt-4 grid gap-4 sm:grid-cols-[auto_1fr_1fr_1fr] sm:items-center">
                   <div className="flex items-center gap-3">
@@ -101,10 +125,7 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
               </div>
 
               {r.etapas.map((e) => {
-                const archivos: ArchivoVisor[] = (e.entrega?.archivos ?? []).flatMap((ruta, i) => {
-                  const clase = claseDeArchivo(ruta);
-                  return clase ? [{ ruta, nombre: e.entrega!.nombres[i] ?? ruta.split("/").at(-1)!, clase }] : [];
-                });
+                const archivos = visor(e.entrega?.archivos ?? [], e.entrega?.nombres ?? []);
                 const res = e.resultado;
                 return (
                   <article key={e.etapa.id} id={`etapa-${e.etapa.id}`} className="scroll-mt-4 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
@@ -120,7 +141,11 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
                         <p className="text-xs text-slate-500">
                           {[
                             formato(ta.peso, { p: e.etapa.peso }),
-                            e.etapa.fecha ? formato(ta.fecha, { f: fechaLarga(e.etapa.fecha, locale) }) : undefined,
+                            e.etapa.fechaInicio && e.etapa.fecha
+                              ? formato(tc.periodo, { a: fechaLarga(e.etapa.fechaInicio, locale), b: fechaLarga(e.etapa.fecha, locale) })
+                              : e.etapa.fecha
+                                ? formato(ta.fecha, { f: fechaLarga(e.etapa.fecha, locale) })
+                                : undefined,
                             e.etapa.porEquipo && equipo ? formato(ta.porEquipo, { equipo: equipo.nombre }) : ta.individual,
                           ]
                             .filter(Boolean)
@@ -131,7 +156,48 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
                     </header>
                     <div className="space-y-4 p-5">
                       {e.etapa.instrucciones && <p className="whitespace-pre-line text-sm text-slate-700">{e.etapa.instrucciones}</p>}
-                      {e.etapa.conEvidencia ? (
+                      {e.etapa.conEvidencia && (e.etapa.entregables ?? []).length > 0 ? (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold text-slate-800">📎 {tc.entregables}</h4>
+                          <ul className="space-y-3">
+                            {e.etapa.entregables!.map((d) => {
+                              const slot = e.entrega?.porEntregable?.find((x) => x.entregableId === d.id);
+                              const suyos = visor(slot?.archivos ?? [], slot?.nombres ?? []);
+                              return (
+                                <li key={d.id} className="rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200">
+                                  <div className="flex flex-wrap items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-semibold text-slate-900">{d.nombre}</p>
+                                      {d.descripcion && <p className="text-xs text-slate-600">{d.descripcion}</p>}
+                                    </div>
+                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${slot?.archivos.length ? "bg-acierto-suave text-acierto" : "bg-white text-slate-500 ring-1 ring-slate-200"}`}>
+                                      {slot?.archivos.length ? formato(tc.entregado, { f: fechaLarga(slot.entregadaEn.slice(0, 10), locale) }) : tc.pendiente}
+                                    </span>
+                                  </div>
+                                  {suyos.length > 0 && (
+                                    <div className="mt-2">
+                                      <VisorArchivos archivos={suyos} />
+                                    </div>
+                                  )}
+                                  {e.etapa.cerradaEn ? (
+                                    slot?.comentario && <p className="mt-2 text-xs text-slate-600">{formato(tc.tuComentario, { c: slot.comentario })}</p>
+                                  ) : (
+                                    <div className="mt-2">
+                                      <SubirEvidenciaProyecto
+                                        proyectoId={p.id}
+                                        etapaId={e.etapa.id}
+                                        entregableId={d.id}
+                                        yaEntregada={Boolean(slot?.archivos.length)}
+                                        comentarioInicial={slot?.comentario ?? ""}
+                                      />
+                                    </div>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      ) : e.etapa.conEvidencia ? (
                         <div className="space-y-2">
                           <h4 className="text-sm font-semibold text-slate-800">{e.etapa.porEquipo && equipo ? ta.evidenciaEquipo : ta.tuEvidencia}</h4>
                           {e.entrega && <p className="text-xs text-acierto">✓ {formato(ta.enviada, { f: fechaLarga(e.entrega.entregadaEn.slice(0, 10), locale) })}</p>}
@@ -147,7 +213,9 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
                             ) : (
                               <VisorArchivos archivos={archivos} />
                             ))}
-                          {!e.etapa.cerradaEn && <SubirEvidenciaProyecto proyectoId={p.id} etapaId={e.etapa.id} yaEntregada={Boolean(e.entrega)} />}
+                          {e.etapa.cerradaEn
+                            ? e.entrega?.comentario && <p className="text-xs text-slate-600">{formato(tc.tuComentario, { c: e.entrega.comentario })}</p>
+                            : <SubirEvidenciaProyecto proyectoId={p.id} etapaId={e.etapa.id} yaEntregada={Boolean(e.entrega)} comentarioInicial={e.entrega?.comentario ?? ""} />}
                         </div>
                       ) : (
                         <p className="text-sm text-slate-500">🎙️ {ta.sinEvidencia}</p>
@@ -182,7 +250,7 @@ export default async function ProyectoAlumno({ params }: PageProps<"/alumno/curs
                                     {c.nombre} <span className="text-xs text-slate-400">· {c.porcentaje} %</span>
                                   </span>
                                   <span className="text-xs font-semibold text-slate-700">
-                                    {c.promedio ?? "—"} {c.nivel && `· ${tp.niveles[c.nivel]}`}
+                                    {c.promedio ?? "—"} {c.nivelIndice !== null && `· ${nivelesDe(e.etapa, nombresNivel)[c.nivelIndice]?.nombre ?? ""}`}
                                   </span>
                                   <span className="col-span-2">
                                     <Barra valor={c.promedio ?? 0} />

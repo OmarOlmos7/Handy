@@ -11,6 +11,7 @@ import ajustesAlumno from "./ajustes-alumno/de";
 import contenido from "./contenido/de";
 import avisos from "./avisos/de";
 import proyecto from "./proyecto/de";
+import altaProyecto from "./alta-proyecto/de";
 import asesorias from "./asesorias/de";
 import marco from "./marco/de";
 import asistencia from "./asistencia/de";
@@ -470,6 +471,7 @@ const de: Diccionario = {
   contenido,
   avisos,
   proyecto,
+  altaProyecto,
   asesorias,
   marco,
   asistencia,

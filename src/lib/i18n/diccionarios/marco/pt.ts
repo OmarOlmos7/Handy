@@ -29,6 +29,9 @@ const marco: typeof es = {
     sinTemario: "Este curso ainda não tem programa. Crie ou ligue uma disciplina com suas unidades para ver a linha do tempo.",
     irAsignaturas: "Ir para Disciplinas",
     verAvance: "Ver progresso do programa",
+    verMapa: "Ver mapa do programa",
+    avanceAlumno: "Seu progresso: {p} % concluído",
+    sinFechasAlumno: "Seu professor ainda não definiu as datas de início e término do curso; quando definir, você verá aqui as unidades no tempo.",
   },
   enviarCodigo: {
     titulo: "Código do curso e pagamento da assinatura",
@@ -60,6 +63,7 @@ const marco: typeof es = {
     actividades1: "1 atividade",
     actividadesN: "{n} atividades",
     vacia: "Ainda não há atividades nesta unidade. Ao criar uma atividade, escolha esta unidade no seletor do programa.",
+    vaciaAlumno: "Ainda não há atividades nesta unidade.",
     unidad: "Unidade {n}",
   },
 };

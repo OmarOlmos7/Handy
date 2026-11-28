@@ -175,6 +175,7 @@ export function LineaTiempoCurso({
   t,
   locale,
   conteos,
+  vista = "profesor",
 }: {
   grupoId: string;
   inicio?: string;
@@ -192,11 +193,15 @@ export function LineaTiempoCurso({
   locale: string;
   /** Actividades por unidad: con ellas cada tarjeta es un botón que muestra solo esa unidad. */
   conteos?: number[];
+  /** El alumno ve su propio avance, el mapa del temario y no tiene el engrane de fechas. */
+  vista?: "profesor" | "alumno";
 }) {
   const tl = t.marco.lineaTiempo;
   const tu = t.marco.unidades;
   const Envoltura = conteos ? BotonUnidad : SinBoton;
   const corta = (iso: string) => fechaLarga(iso, locale);
+  const alumno = vista === "alumno";
+  const textoAvance = alumno ? tl.avanceAlumno : tl.avance;
 
   return (
     <section aria-labelledby="linea-tiempo" className="mb-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
@@ -212,11 +217,14 @@ export function LineaTiempoCurso({
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">{formato(tl.transcurrido, { p: transcurrido })}</span>
           )}
           {hayTemario && (
-            <Link href={`/profesor/grupos/${grupoId}/avance`} className="text-xs font-medium text-tinta-700 hover:underline">
-              {tl.verAvance} →
+            <Link
+              href={alumno ? `/alumno/cursos/${grupoId}/mapa` : `/profesor/grupos/${grupoId}/avance`}
+              className="text-xs font-medium text-tinta-700 hover:underline"
+            >
+              {alumno ? tl.verMapa : tl.verAvance} →
             </Link>
           )}
-          <AjustesCurso grupoId={grupoId} inicio={inicio} fin={fin} horario={horario} cadaSemanas={cadaSemanas} />
+          {!alumno && <AjustesCurso grupoId={grupoId} inicio={inicio} fin={fin} horario={horario} cadaSemanas={cadaSemanas} />}
         </div>
       </div>
 
@@ -228,7 +236,7 @@ export function LineaTiempoCurso({
           </Link>
         </p>
       ) : !unidades ? (
-        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">⚙️ {tl.sinFechas}</p>
+        <p className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">{alumno ? `📅 ${tl.sinFechasAlumno}` : `⚙️ ${tl.sinFechas}`}</p>
       ) : (
         <>
           {/* Barra del periodo: un tramo por unidad y la marca de hoy. */}
@@ -299,11 +307,11 @@ export function LineaTiempoCurso({
                       {u.avance === null ? (
                         !conteos && <p className="text-[11px] text-slate-400">{tl.sinActividades}</p>
                       ) : (
-                        <div title={formato(tl.avance, { p: u.avance })}>
+                        <div title={formato(textoAvance, { p: u.avance })}>
                           <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
                             <div className="h-full rounded-full" style={{ width: `${u.avance}%`, background: colorProgreso(u.avance) }} />
                           </div>
-                          <p className="mt-0.5 text-[11px] text-slate-500">{formato(tl.avance, { p: u.avance })}</p>
+                          <p className="mt-0.5 text-[11px] text-slate-500">{formato(textoAvance, { p: u.avance })}</p>
                         </div>
                       )}
                     </div>

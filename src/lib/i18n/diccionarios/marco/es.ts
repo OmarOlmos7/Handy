@@ -31,6 +31,9 @@ const marco = {
     sinTemario: "Este curso aún no tiene temario. Crea o liga una asignatura con sus unidades para ver la línea de tiempo.",
     irAsignaturas: "Ir a Asignaturas",
     verAvance: "Ver avance del temario",
+    verMapa: "Ver mapa del temario",
+    avanceAlumno: "Tu avance: {p} % terminado",
+    sinFechasAlumno: "Tu profesor aún no pone las fechas de inicio y término del curso; cuando las ponga verás aquí las unidades en el tiempo.",
   },
   enviarCodigo: {
     titulo: "Código del curso y pago de membresía",
@@ -62,6 +65,7 @@ const marco = {
     actividades1: "1 actividad",
     actividadesN: "{n} actividades",
     vacia: "Aún no hay actividades en esta unidad. Al crear una actividad, elige esta unidad en el selector de temario.",
+    vaciaAlumno: "Aún no hay actividades en esta unidad.",
     unidad: "Unidad {n}",
   },
 };

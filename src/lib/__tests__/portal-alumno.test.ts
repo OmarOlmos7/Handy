@@ -8,6 +8,7 @@ import {
   cuadernoAlumno,
   resumenCursoAlumno,
   seccionesAlumno,
+  unidadesAlumno,
 } from "../portal-alumno";
 import type { Actividad, Entrega, Grupo } from "../tipos";
 
@@ -170,5 +171,27 @@ describe("analíticas del alumno en una actividad", () => {
     expect(muchos.grupo).toMatchObject({ promedio: 60, calificados: MINIMO_COMPARACION });
     expect(muchos.reactivos[0].grupo).toBe(20);
     expect(analiticasAlumnoActividad(actividad("a1"), [entrega("a1", "A0", 1, 1, { estado: "evaluada" })], "A0")).toBeUndefined();
+  });
+});
+
+describe("actividades del alumno por unidad", () => {
+  it("agrupa por unidad en orden del temario, con avance propio y las sin unidad al final", () => {
+    const asignatura = { id: "as", unidades: [{ nombre: "Vectores" }, { nombre: "Fuerzas" }, { nombre: "Energía" }] };
+    const tem = (unidad: string) => ({ temario: { asignaturaId: "as", unidad, temas: [] } }) as Partial<Actividad>;
+    const acts = [
+      actividad("v1", { ...tem("Vectores"), etiqueta: "Tarea" }),
+      actividad("v2", { ...tem("Vectores"), etiqueta: "Quiz" }),
+      actividad("f1", { ...tem("Fuerzas"), envioDesde: "2026-11-01T00:00:00Z", envioHasta: "2026-11-30T00:00:00Z" }),
+      actividad("suelta"),
+    ];
+    const ent: Record<string, Entrega> = { v1: entrega("v1", "A0", 5, 5) };
+    const u = unidadesAlumno(asignatura, acts.map((a) => ({ actividad: a, entrega: ent[a.id] })), ahora);
+    expect(u.map((x) => x.indice)).toEqual([0, 1, 2, null]);
+    expect(u[0].avance).toBe(50);
+    expect(u[0].categorias.map((c) => c.etiqueta)).toEqual(["Quiz", "Tarea"]); // primero la que falta entregar
+    expect(u[1].porEntregar).toBe(true);
+    expect(u[2].avance).toBeNull();
+    expect(u[2].resumen.total).toBe(0);
+    expect(u[3].categorias[0].items[0].actividad.id).toBe("suelta");
   });
 });

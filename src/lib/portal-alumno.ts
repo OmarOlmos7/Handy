@@ -7,6 +7,7 @@ import { calificacion, calificada, escalaDe } from "./estadisticas";
 import { conPuntaje } from "./modalidad";
 import { notaFinal, pesoDe } from "./plan-evaluacion";
 import { notaConAutoestudio } from "./autoestudio";
+import { agruparPorUnidad } from "./linea-tiempo";
 import { actividadVisible, estadoEnvio } from "./periodo";
 import { resultadosDisponibles } from "./resultados";
 import type { Actividad, Entrega, Escala, Grupo } from "./tipos";
@@ -402,4 +403,43 @@ export function categoriasAlumno(items: ActividadDelAlumno[], ahora: Date = new 
   }
   const lista = [...mapa.values()].map((c) => ({ ...c, resumen: resumenAvance(c.items.map((x) => x.avance)) }));
   return [...lista.filter((c) => c.etiqueta), ...lista.filter((c) => !c.etiqueta)];
+}
+
+export interface UnidadAlumno {
+  /** Índice de la unidad del temario; null para las actividades sin unidad. */
+  indice: number | null;
+  /** Actividades de la unidad agrupadas por tipo, como en la vista sin temario. */
+  categorias: CategoriaAlumno[];
+  resumen: ResumenAvance;
+  /** % de las actividades de la unidad que el alumno ya terminó; null si la unidad no tiene. */
+  avance: number | null;
+  /** Hay alguna que puede entregar ya y aún no empieza. */
+  porEntregar: boolean;
+}
+
+/**
+ * Actividades del alumno agrupadas por unidad del temario (todas las unidades, en orden, y al
+ * final las que no tienen unidad, solo si hay), con su resumen y su avance por unidad.
+ */
+export function unidadesAlumno(
+  asignatura: { id: string; unidades: { nombre: string }[] },
+  items: ActividadDelAlumno[],
+  ahora: Date = new Date(),
+): UnidadAlumno[] {
+  const porActividad = new Map(items.map((i) => [i.actividad, i]));
+  return agruparPorUnidad(
+    asignatura,
+    items.map((i) => i.actividad),
+  ).map(({ indice, items: acts }) => {
+    const deUnidad = acts.map((a) => porActividad.get(a)!);
+    const categorias = categoriasAlumno(deUnidad, ahora);
+    const resumen = resumenAvance(deUnidad.map((i) => avanceActividad(i.entrega)));
+    return {
+      indice,
+      categorias,
+      resumen,
+      avance: resumen.total ? Math.round((resumen.terminadas / resumen.total) * 100) : null,
+      porEntregar: categorias.some((c) => c.items.some((x) => x.avance === "sin_iniciar" && estadoEnvio(x.actividad, ahora) === "abierto")),
+    };
+  });
 }

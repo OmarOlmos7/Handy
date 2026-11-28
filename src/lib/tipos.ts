@@ -911,8 +911,25 @@ export interface CriterioProyecto {
   descripcion: string;
   /** Peso del elemento en la calificación de la etapa (los de una etapa suman 100). */
   porcentaje: number;
-  /** Qué se observa en cada nivel, del más alto al más bajo (ver NIVELES_RUBRICA en lib/proyectos). */
+  /** Qué se observa en cada nivel, del más alto al más bajo (en el orden de los niveles de la etapa). */
   niveles: string[];
+}
+
+/**
+ * Nivel de desempeño de la rúbrica de una etapa, con su rango de puntaje (porcentaje del elemento,
+ * de 0 a 100). Al evaluar se elige el nivel y luego los puntos dentro de su rango.
+ */
+export interface NivelProyecto {
+  nombre: string;
+  min: number;
+  max: number;
+}
+
+/** Entregable de una etapa: un espacio donde el alumno sube su evidencia y la comenta. */
+export interface EntregableProyecto {
+  id: string;
+  nombre: string;
+  descripcion: string;
 }
 
 /** Etapa (fase o avance) del proyecto, con su rúbrica y su peso en la calificación final. */
@@ -922,8 +939,14 @@ export interface EtapaProyecto {
   tipo: TipoEtapaProyecto;
   /** Qué debe hacer y entregar el alumno o el equipo. */
   instrucciones: string;
+  /** Fecha en que empieza la etapa (ISO yyyy-mm-dd). */
+  fechaInicio?: string;
   /** Fecha de entrega o de presentación (ISO yyyy-mm-dd). */
   fecha?: string;
+  /** Entregables de la etapa; sin ellos, la evidencia se sube en un solo espacio. */
+  entregables?: EntregableProyecto[];
+  /** Niveles de desempeño de la rúbrica, del más alto al más bajo; sin ellos, los de NIVELES_RUBRICA. */
+  niveles?: NivelProyecto[];
   /** Peso de la etapa en la calificación final del proyecto (las etapas suman 100). */
   peso: number;
   /** true si la etapa se evalúa por equipo (cada integrante recibe la calificación del equipo). */
@@ -947,7 +970,12 @@ export interface Proyecto {
   /** Profesor dueño (el del curso): arma el modelo del proyecto y cierra las etapas. */
   profesorId: string;
   titulo: string;
+  /** Contexto del proyecto (situación o problema que lo origina). */
   descripcion: string;
+  /** Objetivo del proyecto. */
+  objetivo?: string;
+  /** Habilidades y competencias que desarrolla el alumno, una por elemento. */
+  competencias?: string[];
   /** Idioma del proyecto (rúbricas y textos de la IA). */
   idioma?: string;
   creadoEn: string;
@@ -969,6 +997,23 @@ export interface EntregaProyecto {
   matricula: string;
   entregadaEn: string;
   /** Páginas que leería la IA (un PDF sus páginas; Word, Excel, PowerPoint o imagen, una; audio y video, ninguna). */
+  paginasIA?: number;
+  /** Comentario del alumno sobre su evidencia (etapa sin entregables). */
+  comentario?: string;
+  /**
+   * Evidencia por entregable (si la etapa tiene entregables): archivos y comentario del alumno de cada
+   * uno. `archivos` y `nombres` juntan los de todos para el visor y la IA.
+   */
+  porEntregable?: EvidenciaEntregable[];
+}
+
+export interface EvidenciaEntregable {
+  entregableId: string;
+  archivos: string[];
+  nombres: string[];
+  /** Comentario del alumno sobre su evidencia. */
+  comentario: string;
+  entregadaEn: string;
   paginasIA?: number;
 }
 
