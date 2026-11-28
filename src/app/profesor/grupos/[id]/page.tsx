@@ -3,6 +3,8 @@ import Link from "next/link";
 import { conPuntaje } from "@/lib/modalidad";
 import { notFound } from "next/navigation";
 import { CodigoCurso } from "@/components/codigo-curso";
+import { DirectorioActividades } from "@/components/copiar-elemento";
+import { directorioActividades } from "@/lib/copiar";
 import { FilaActividad } from "@/components/fila-actividad";
 import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
 import { ResumenCategoria } from "@/components/resumen-categoria";
@@ -25,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 /** Vista de un curso: sus actividades, con editar, borrar y nueva actividad. */
 export default async function VistaCurso({ params }: PageProps<"/profesor/grupos/[id]">) {
   const { id } = await params;
-  const { db } = await datosProfesor();
+  const { db, profesor } = await datosProfesor();
   const { t } = await textos();
   const c = t.profesor.comun;
   const tc = t.profesor.curso;
@@ -63,13 +65,14 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
                 <IconoMapa /> {tc.avanceTemario}
               </BotonLink>
             </div>
-            {/* Proyecto arriba de Nueva actividad. */}
+            {/* Proyecto y Copiar elemento (traer actividades de otros cursos) arriba de Nueva actividad. */}
             <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
               <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/proyectos`}>
                 <span aria-hidden>🏆</span> {tpr.grupo.boton}
                 {proyectos.length > 0 && <span className="rounded-full bg-slate-100 px-1.5 text-xs text-slate-600">{proyectos.length}</span>}
               </BotonLink>
-              <BotonLink href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>{tc.nuevaActividad}</BotonLink>
+              <DirectorioActividades grupoId={grupo.id} cursos={directorioActividades(db, profesor.id)} />
+              <BotonLink className="col-span-2 sm:col-span-1" href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>{tc.nuevaActividad}</BotonLink>
             </div>
           </>
         }
