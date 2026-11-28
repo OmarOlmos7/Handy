@@ -96,6 +96,37 @@ Colecciones nuevas, opcionales: `intentosPerfil`, `movimientosAlumno` y `compras
 nuevos opcionales: `etapaCrear` en reactivos, pasos y criterios; `calificacionCaso` en la entrega;
 `casoDe` y `pagadoPor` en la autoactividad.
 
+## Reporte en tablero (etapa 3)
+
+Todo lo calcula `src/lib/perfil/tablero.ts` con los intentos registrados en la etapa 2:
+
+- **Tablero del alumno** (`/alumno/cursos/[id]/perfil/tablero`): promedio (último intento de cada
+  actividad), nivel SOLO, intentos, casos, tiempo y mejora con casos; perfil por etapa; fortalezas
+  (≥ 85 %) y áreas a desarrollar (< 70 %); recomendaciones por etapa con las evidencias del Modelo
+  CREAR del curso; evolución de calificaciones (SVG); horario de trabajo (7 días × 4 franjas); avance
+  por unidad contra el autodiagnóstico (esperado: Avanzado 90, Bueno 75, Básico 60, Requiero apoyo 40,
+  No tengo idea 20; ± 10 puntos cuenta como "como esperabas"); Stroop de inicio contra fin.
+- **Tablero de un alumno para el profesor** (`/profesor/grupos/[id]/perfil/alumnos/[matricula]`): el
+  mismo tablero, solo con el consentimiento vigente del alumno. Se llega desde la tabla "Seguimiento
+  por etapa".
+- **Reporte del grupo** (en `/profesor/grupos/[id]/perfil`): logro promedio por etapa, niveles SOLO,
+  áreas más comunes, horario del grupo y las reflexiones del profesor.
+- **Reflexiones** (`/profesor/grupos/[id]/perfil/reflexiones`): una por unidad del temario y una de
+  cierre del curso (hasta 3000 caracteres; vacía la borra), con el logro del grupo en la unidad a un
+  lado. Se guardan en `reflexionesPerfil`.
+- **Ruta de mejora con IA** (`POST /api/perfil/ruta`): la pide el alumno (se paga de su bolsa) o su
+  profesor (de sus créditos, con `como: "profesor"` y la matrícula). Cuesta lo mismo que una hoja en
+  precisión media. A la IA solo viajan los números de `datosRutaMejora` (logro por etapa, nivel,
+  promedio, horario, efecto Stroop) y el modelo CREAR del curso: nunca nombre, matrícula ni correo.
+  Se guarda una por alumno y curso en `rutasMejora`, con la versión del prompt.
+
+### Prompts versionados
+
+Los prompts viven en `src/lib/perfil/prompts/`. Hoy solo existe `ruta_mejora_v1`; cada ruta guarda
+la versión con que se redactó (`RutaMejora.prompt`). Para cambiarlo, crea `ruta_mejora_v2` en vez de
+editar el anterior. No hay `diagnostico_v1` porque el diagnóstico (logro por etapa, nivel SOLO,
+fortalezas y áreas) lo calcula el código, no la IA.
+
 ## Cómo agregar una disciplina
 
 Las plantillas viven en `PLANTILLAS` de `src/lib/perfil/crear.ts`. Para una disciplina nueva:

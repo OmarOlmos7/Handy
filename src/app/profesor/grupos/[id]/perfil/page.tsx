@@ -12,6 +12,11 @@ import { datosProfesor } from "@/lib/sesion";
 import type { AplicacionStroop } from "@/lib/tipos";
 import { ETAPAS_CREAR } from "@/lib/perfil/crear";
 import { perfilEtapasCurso } from "@/lib/perfil/intentos";
+import { EtapasLogro } from "@/components/etapas-logro";
+import { MapaHorario } from "@/components/tablero-perfil";
+import Link from "next/link";
+import type { NivelSolo } from "@/lib/perfil/crear";
+import { reflexionesDelCurso, reporteGrupo } from "@/lib/perfil/tablero";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
@@ -46,6 +51,12 @@ export default async function PerfilGrupo({ params }: PageProps<"/profesor/grupo
     .filter((f) => f.alumnoId && f.diagnostico?.consentimiento)
     .map((f) => ({ f, p: perfilEtapasCurso(intentos, f.alumnoId!, grupo.id), casos: casos.filter((c) => c.alumnoId === f.alumnoId).length }));
   const tsg = t.perfil.seguimientoGrupo;
+  const tt = t.perfil.tablero;
+  const grupoR = reporteGrupo(intentos, seguimiento.map((x) => x.f.alumnoId!), grupo.id);
+  const reflexiones = [...reflexionesDelCurso(completa.reflexionesPerfil, grupo.id).values()].sort((a, b) => (a.alcance === b.alcance ? 0 : a.alcance === "cierre" ? 1 : -1));
+  // En el orden de la taxonomía SOLO, del nivel más alto al más bajo.
+  const nivelesOrden = (Object.keys(t.perfil.crear.solo) as NivelSolo[]).reverse().flatMap((n) => (grupoR.niveles[n] ? [[n, grupoR.niveles[n]] as [NivelSolo, number]] : []));
+  const areasOrden = (Object.entries(grupoR.areas) as [keyof typeof t.perfil.crear.etapas, number][]).sort((a, b) => b[1] - a[1]);
   const r = resumenGrupo(filas);
   const modelo = modeloDelCurso(db.modelosCrear, grupo);
   const fecha = (iso: string) => fechaLarga(iso.slice(0, 10), locale);
@@ -124,7 +135,15 @@ export default async function PerfilGrupo({ params }: PageProps<"/profesor/grupo
               <tbody className="divide-y divide-slate-100">
                 {seguimiento.map(({ f, p, casos: nc }) => (
                   <tr key={f.matricula}>
-                    <td className="py-2 pr-3 font-medium text-slate-900">{f.nombre}</td>
+                    <td className="py-2 pr-3 font-medium">
+                      {p.intentos > 0 ? (
+                        <Link className="text-tinta-700 underline-offset-2 hover:underline" href={`/profesor/grupos/${grupo.id}/perfil/alumnos/${encodeURIComponent(f.matricula)}`}>
+                          {f.nombre}
+                        </Link>
+                      ) : (
+                        <span className="text-slate-900">{f.nombre}</span>
+                      )}
+                    </td>
                     {ETAPAS_CREAR.map((e) => {
                       const v = p.porEtapa[e];
                       return (
@@ -140,6 +159,83 @@ export default async function PerfilGrupo({ params }: PageProps<"/profesor/grupo
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </section>
+
+      <section className={tarjeta}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">{tt.grupo.titulo}</h2>
+            <p className="mt-1 text-sm text-slate-600">{tt.grupo.subtitulo}</p>
+          </div>
+          <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/perfil/reflexiones`}>
+            {tt.reflexiones.boton}
+          </BotonLink>
+        </div>
+        {grupoR.alumnos === 0 ? (
+          <p className="mt-3 text-sm text-slate-500">{tsg.sinDatos}</p>
+        ) : (
+          <div className="mt-4 space-y-5">
+            <p className="text-sm font-medium text-slate-800">
+              {formato(tt.grupo.alumnos, { n: grupoR.alumnos })}
+              {grupoR.calificacion !== null && ` · ${tt.resumen.calificacion}: ${grupoR.calificacion}`}
+            </p>
+            <EtapasLogro porEtapa={grupoR.porEtapa} nombres={t.perfil.crear.etapas} sinDatos={t.perfil.seguimiento.sinDatosEtapa} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-slate-900">{tt.grupo.niveles}</h3>
+                <ul className="space-y-1 text-sm">
+                  {nivelesOrden.map(([n, c]) => (
+                    <li key={n} className="grid grid-cols-[1fr_6rem_2rem] items-center gap-2">
+                      <span className="text-slate-700 first-letter:uppercase">{t.perfil.crear.solo[n]}</span>
+                      <span className="h-2 rounded-full bg-slate-100">
+                        <span className="block h-2 rounded-full bg-tinta-500" style={{ width: `${(c / grupoR.alumnos) * 100}%` }} />
+                      </span>
+                      <span className="text-right font-semibold tabular-nums">{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="mb-2 text-sm font-semibold text-slate-900">{tt.grupo.areasComunes}</h3>
+                {areasOrden.length === 0 ? (
+                  <p className="text-sm text-slate-600">{tt.grupo.sinAreas}</p>
+                ) : (
+                  <ul className="space-y-1 text-sm">
+                    {areasOrden.map(([e, c]) => (
+                      <li key={e} className="flex justify-between gap-2">
+                        <span className="text-slate-700">▲ {t.perfil.crear.etapas[e].nombre}</span>
+                        <span className="font-semibold tabular-nums">{formato(tt.grupo.nAlumnos, { n: c })}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-2 text-sm font-semibold text-slate-900">{tt.grupo.horario}</h3>
+              <MapaHorario
+                celdas={grupoR.horario.celdas}
+                maximo={grupoR.horario.maximo}
+                dias={tt.diasCortos}
+                franjas={tt.franjas}
+                texto={(dia, franja, n) => formato(tt.celda, { dia, franja, n })}
+              />
+            </div>
+          </div>
+        )}
+        {reflexiones.length > 0 && (
+          <div className="mt-5 border-t border-slate-100 pt-4">
+            <h3 className="mb-2 text-sm font-semibold text-slate-900">{tt.reflexiones.titulo}</h3>
+            <ul className="space-y-2 text-sm">
+              {reflexiones.map((x) => (
+                <li key={`${x.alcance}-${x.unidad ?? ""}`}>
+                  <p className="font-medium text-slate-800">{x.alcance === "cierre" ? tt.reflexiones.cierre : x.unidad}</p>
+                  <p className="line-clamp-3 whitespace-pre-line text-slate-600">{x.texto}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </section>
