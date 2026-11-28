@@ -62,7 +62,8 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
         acciones={
           // Tres columnas de botones por tipo: datos (Analíticas, Cuaderno), avance (Ruta, Mapa del
           // temario) y retos (Proyecto, Autoasignadas). En el teléfono cada par queda en un renglón.
-          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:grid-flow-col sm:grid-cols-3 sm:grid-rows-2">
+          // En la computadora van en la franja izquierda.
+          <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:grid-flow-col sm:grid-cols-3 sm:grid-rows-2 lg:hidden">
             <BotonLink variante="secundario" className="justify-start" href={`/alumno/cursos/${grupo.id}/analiticas`}>
               <IconoGrafica /> {tc.analiticas}
             </BotonLink>

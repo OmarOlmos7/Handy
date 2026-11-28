@@ -13,6 +13,7 @@ import contenido from "./contenido/es";
 import avisos from "./avisos/es";
 import proyecto from "./proyecto/es";
 import asesorias from "./asesorias/es";
+import marco from "./marco/es";
 
 const es = {
   comun: {
@@ -471,6 +472,7 @@ const es = {
   avisos,
   proyecto,
   asesorias,
+  marco,
 };
 
 export default es;

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { conPuntaje } from "@/lib/modalidad";
 import { notFound } from "next/navigation";
-import { CodigoCurso } from "@/components/codigo-curso";
+import { LineaTiempoCurso } from "@/components/linea-tiempo-curso";
 import { DirectorioActividades } from "@/components/copiar-elemento";
 import { directorioActividades, tituloCopia } from "@/lib/copiar";
 import { FilaActividad } from "@/components/fila-actividad";
@@ -12,6 +12,10 @@ import { BotonLink, Encabezado, Tarjeta, colorCalificacion } from "@/components/
 import { entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
 import { avanceActividadGrupo, resumenActividadesGrupo } from "@/lib/avance-actividades-grupo";
 import { agruparPorEtiqueta } from "@/lib/colores";
+import { ahoraEnMexico } from "@/lib/asesorias";
+import { asignaturaDelCurso } from "@/lib/asignaturas";
+import { avanceGrupo } from "@/lib/avance-grupo";
+import { avanceDelPeriodo, iconoUnidad, lineaTiempoCurso } from "@/lib/linea-tiempo";
 import { iconoTipoActividad } from "@/lib/iconos-tipo";
 import { reporteGrupo } from "@/lib/estadisticas";
 import { datosProfesor } from "@/lib/sesion";
@@ -28,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function VistaCurso({ params }: PageProps<"/profesor/grupos/[id]">) {
   const { id } = await params;
   const { db, profesor } = await datosProfesor();
-  const { t } = await textos();
+  const { t, locale } = await textos();
   const c = t.profesor.comun;
   const tc = t.profesor.curso;
   const grupo = grupoDe(db, id);
@@ -43,31 +47,32 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
   const otrosCursos = db.grupos.filter((g) => g.id !== id && !g.archivado).map((g) => ({ id: g.id, nombre: `${g.materia} · ${g.nombre}` }));
   // Etiquetas propias del profesor en todos sus cursos, para sugerirlas.
   const etiquetasCurso = [...new Set(db.actividades.map((a) => a.etiqueta?.trim()).filter((e): e is string => !!e))];
+  // Línea de tiempo: unidades del temario del curso repartidas entre su inicio y su término.
+  const hoy = ahoraEnMexico(ahora).fecha;
+  const asignatura = asignaturaDelCurso(db, grupo);
+  const linea = asignatura ? lineaTiempoCurso(asignatura.unidades.map((u) => u.nombre), grupo.inicio, grupo.fin, hoy) : null;
+  const avanceTemario = asignatura && linea ? avanceGrupo(asignatura, grupo, db.actividades, db.entregas, db.tiempos ?? []) : null;
 
   return (
     <>
-      {/* Izquierda: datos del curso y, debajo, Duplicar actividad · Proyecto · Nueva actividad (al extremo derecho).
-          Derecha: columna con Analíticas, Cuaderno, Rutas y Avance del temario. */}
-      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
-        <div className="flex min-w-0 flex-col justify-between gap-4 [&>div:first-child]:mb-0">
-          <Encabezado
-            migas={[{ texto: c.panel, href: "/profesor" }]}
-            rutaEtiqueta={c.ruta}
-            titulo={`${grupo.materia} · ${grupo.nombre}`}
-            subtitulo={`${formato(c.ciclo, { c: grupo.ciclo })} · ${formato(actividades.length === 1 ? c.actividad1 : c.actividadN, { n: actividades.length })} · ${formato(alumnos === 1 ? c.alumno1 : c.alumnoN, { n: alumnos })}`}
-          />
-          <div className="no-imprimir flex flex-wrap items-center gap-2">
-            <DirectorioActividades grupoId={grupo.id} cursos={directorioActividades(db, profesor.id)} />
-            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/proyectos`}>
-              <span aria-hidden>🏆</span> {tpr.grupo.boton}
-              {proyectos.length > 0 && <span className="rounded-full bg-slate-100 px-1.5 text-xs text-slate-600">{proyectos.length}</span>}
-            </BotonLink>
-            <BotonLink className="w-full sm:ml-auto sm:w-auto" href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>
-              {tc.nuevaActividad}
-            </BotonLink>
-          </div>
+      <Encabezado
+        migas={[{ texto: c.panel, href: "/profesor" }]}
+        rutaEtiqueta={c.ruta}
+        titulo={`${grupo.materia} · ${grupo.nombre}`}
+        subtitulo={`${formato(c.ciclo, { c: grupo.ciclo })} · ${formato(actividades.length === 1 ? c.actividad1 : c.actividadN, { n: actividades.length })} · ${formato(alumnos === 1 ? c.alumno1 : c.alumnoN, { n: alumnos })}`}
+      />
+      {/* En el teléfono la franja izquierda va en el menú: aquí quedan a la mano las herramientas del curso. */}
+      <div className="no-imprimir mb-6 space-y-2 lg:hidden">
+        <div className="grid grid-cols-2 gap-2">
+          <BotonLink className="col-span-2" href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>
+            {tc.nuevaActividad}
+          </BotonLink>
+          <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/proyectos`}>
+            <span aria-hidden>🏆</span> {tpr.grupo.boton}
+          </BotonLink>
+          <DirectorioActividades grupoId={grupo.id} cursos={directorioActividades(db, profesor.id)} />
         </div>
-        <nav className="no-imprimir grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
+        <nav className="grid grid-cols-2 gap-2 text-left">
           <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/analiticas`}>
             <IconoGrafica /> {tc.analiticas}
           </BotonLink>
@@ -82,15 +87,24 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           </BotonLink>
         </nav>
       </div>
-      {grupo.codigo && (
-        <CodigoCurso
-          codigo={grupo.codigo}
-          titulo={t.licencias.profesor.codigoCurso}
-          ayuda={t.licencias.profesor.codigoAyuda}
-          copiar={t.licencias.profesor.copiar}
-          copiado={t.licencias.profesor.copiado}
-        />
-      )}
+      {/* Primero, la línea de tiempo de las unidades del temario; debajo, las actividades por tipo. */}
+      <LineaTiempoCurso
+        grupoId={grupo.id}
+        inicio={grupo.inicio}
+        fin={grupo.fin}
+        unidades={
+          linea?.map((u) => ({
+            ...u,
+            icono: iconoUnidad(u.nombre, u.indice),
+            avance: avanceTemario?.unidades[u.indice]?.avance ?? null,
+          })) ?? null
+        }
+        transcurrido={avanceDelPeriodo(grupo.inicio, grupo.fin, hoy)}
+        hoy={hoy}
+        hayTemario={Boolean(asignatura?.unidades.length)}
+        t={t}
+        locale={locale}
+      />
       {proyectos.length > 0 && (
         <section className="mb-6" aria-labelledby="seccion-proyectos">
           <h2 id="seccion-proyectos" className="mb-2 flex items-baseline gap-2 text-base font-semibold text-slate-800">

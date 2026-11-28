@@ -12,6 +12,7 @@ import contenido from "./contenido/ja";
 import avisos from "./avisos/ja";
 import proyecto from "./proyecto/ja";
 import asesorias from "./asesorias/ja";
+import marco from "./marco/ja";
 
 const ja: Diccionario = {
   comun: {
@@ -468,6 +469,7 @@ const ja: Diccionario = {
   avisos,
   proyecto,
   asesorias,
+  marco,
 };
 
 export default ja;

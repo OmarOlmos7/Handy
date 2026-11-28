@@ -197,8 +197,8 @@ export function MapaTemario({
     p === null || p === undefined ? tm.sinActividades : progreso ? tm.avance : p >= 80 ? tm.dominado : p >= 60 ? tm.enProceso : tm.porReforzar;
 
   return (
-    // A todo el ancho de la ventana (fuera del ancho máximo de la página), centrado.
-    <div className="relative left-1/2 w-[calc(100vw-2.5rem)] max-w-[1900px] -translate-x-1/2 space-y-3">
+    // A todo el ancho del contenido central (la página ya no tiene ancho máximo).
+    <div className="w-full space-y-3">
       {/* Barra: capa actual, leyenda y acciones */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <nav className="flex flex-wrap items-center gap-1 text-sm" aria-label={tm.capas}>

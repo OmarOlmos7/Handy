@@ -1,6 +1,7 @@
 import { ConFlujo } from "@/components/flujo-actividad";
 import type { Metadata } from "next";
 import { NuevaActividad } from "@/components/nueva-actividad";
+import { LateralCurso } from "@/components/lateral-curso";
 import { Encabezado } from "@/components/ui";
 import { configuracionDe } from "@/lib/configuracion";
 import { etiquetasPorGrupo } from "@/lib/etiquetas";
@@ -20,6 +21,8 @@ export default async function Nueva({ searchParams }: PageProps<"/profesor/activ
   const tn = t.profesor.nueva;
   return (
     <>
+      {/* Si viene de un curso, sus herramientas siguen en la franja izquierda. */}
+      <LateralCurso grupoId={typeof grupo === "string" ? grupo : undefined} />
       <Encabezado titulo={tn.titulo} subtitulo={tn.subtitulo} migas={[{ texto: t.profesor.comun.panel, href: "/profesor" }]} />
       <ConFlujo vista={1}>
       <NuevaActividad

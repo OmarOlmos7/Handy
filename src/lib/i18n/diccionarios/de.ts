@@ -12,6 +12,7 @@ import contenido from "./contenido/de";
 import avisos from "./avisos/de";
 import proyecto from "./proyecto/de";
 import asesorias from "./asesorias/de";
+import marco from "./marco/de";
 
 const de: Diccionario = {
   comun: {
@@ -469,6 +470,7 @@ const de: Diccionario = {
   avisos,
   proyecto,
   asesorias,
+  marco,
 };
 
 export default de;
