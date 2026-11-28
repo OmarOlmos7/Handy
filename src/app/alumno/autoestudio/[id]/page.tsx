@@ -13,6 +13,7 @@ import { textos } from "@/lib/i18n/servidor";
 import { letraDeOpcion, sinLetra } from "@/lib/plataforma";
 import { alumnoActual } from "@/lib/sesion";
 import type { Autoactividad, EjercicioAuto, ResultadoAuto } from "@/lib/tipos";
+import { respuestaMat } from "@/lib/notacion";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
@@ -35,7 +36,7 @@ function claveLegible(ej: EjercicioAuto, t: Diccionario): string {
     case "completar":
       return ej.respuesta.split("|").map((x) => x.trim()).join(" · ");
     default:
-      return ej.respuesta;
+      return respuestaMat(ej.respuesta);
   }
 }
 

@@ -16,6 +16,7 @@ import { formato } from "./i18n/idiomas";
 import { recursosParaTemas } from "./recursos";
 import type { Actividad, Entrega } from "./tipos";
 import { enlaceVideo } from "./videos";
+import { respuestaMat } from "./notacion";
 
 const ejecutar = promisify(execFile);
 
@@ -88,7 +89,7 @@ ${lecturas.length ? `<h2>${escapar(tx.lecturas)}</h2><ul>${lecturas.map((l) => `
 ${e.ejercicios
   .map(
     (x, i) =>
-      `<div class="ej"><div class="tema">${escapar(formato(tx.ejercicio, { n: i + 1 }))} · ${htmlConFormulas(x.tema)}</div><div>${htmlConFormulas(x.enunciado)}</div><div class="resp">${escapar(tx.respuesta)} ${htmlConFormulas(x.respuesta)}</div></div>`,
+      `<div class="ej"><div class="tema">${escapar(formato(tx.ejercicio, { n: i + 1 }))} · ${htmlConFormulas(x.tema)}</div><div>${htmlConFormulas(x.enunciado)}</div><div class="resp">${escapar(tx.respuesta)} ${htmlConFormulas(respuestaMat(x.respuesta))}</div></div>`,
   )
   .join("")}
 </body></html>`;
