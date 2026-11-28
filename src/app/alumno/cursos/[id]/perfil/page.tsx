@@ -144,6 +144,16 @@ export default async function PerfilCurso({ params }: PageProps<"/alumno/cursos/
             </div>
           )}
         </Paso>
+
+        <section className={`${tarjeta} flex flex-wrap items-center justify-between gap-3`}>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-slate-900">{tp.seguimiento.titulo}</h2>
+            <p className="mt-1 text-sm text-slate-600">{tp.seguimiento.subtitulo}</p>
+          </div>
+          <BotonLink variante={dx.consentimiento ? "primario" : "secundario"} href={`${base}/perfil/seguimiento`}>
+            {tp.seguimiento.titulo}
+          </BotonLink>
+        </section>
       </div>
     </>
   );

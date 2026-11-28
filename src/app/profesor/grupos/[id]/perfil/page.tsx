@@ -10,6 +10,8 @@ import { modeloDelCurso } from "@/lib/perfil/crear";
 import { datosPerfilGrupo, filasDiagnostico, resumenGrupo } from "@/lib/perfil/diagnostico-inicial";
 import { datosProfesor } from "@/lib/sesion";
 import type { AplicacionStroop } from "@/lib/tipos";
+import { ETAPAS_CREAR } from "@/lib/perfil/crear";
+import { perfilEtapasCurso } from "@/lib/perfil/intentos";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
@@ -35,7 +37,15 @@ export default async function PerfilGrupo({ params }: PageProps<"/profesor/grupo
   const conTemario = asignatura && asignatura.unidades.length > 0 ? asignatura.id : undefined;
   // Las cuentas y el perfil de los alumnos no vienen en los datos del profesor: se toman de la base
   // completa, pero solo de los alumnos de este curso.
-  const filas = filasDiagnostico(datosPerfilGrupo(await leer(), grupo), grupo, conTemario, new Date());
+  const completa = await leer();
+  const filas = filasDiagnostico(datosPerfilGrupo(completa, grupo), grupo, conTemario, new Date());
+  // Seguimiento por etapa (etapa 2): solo de quien mantiene su consentimiento.
+  const intentos = (completa.intentosPerfil ?? []).filter((x) => x.grupoId === grupo.id);
+  const casos = (completa.autoactividades ?? []).filter((a) => a.grupoId === grupo.id && a.casoDe);
+  const seguimiento = filas
+    .filter((f) => f.alumnoId && f.diagnostico?.consentimiento)
+    .map((f) => ({ f, p: perfilEtapasCurso(intentos, f.alumnoId!, grupo.id), casos: casos.filter((c) => c.alumnoId === f.alumnoId).length }));
+  const tsg = t.perfil.seguimientoGrupo;
   const r = resumenGrupo(filas);
   const modelo = modeloDelCurso(db.modelosCrear, grupo);
   const fecha = (iso: string) => fechaLarga(iso.slice(0, 10), locale);
@@ -76,6 +86,62 @@ export default async function PerfilGrupo({ params }: PageProps<"/profesor/grupo
           </div>
           <BotonLink href={`/profesor/grupos/${grupo.id}/perfil/modelo`}>{tp.modeloBoton}</BotonLink>
         </div>
+      </section>
+
+      <section className={tarjeta}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xs font-bold tracking-[0.12em] text-emerald-800 uppercase">{t.perfil.etapasActividad.titulo}</h2>
+            <p className="mt-1 text-sm text-slate-700">{t.perfil.etapasActividad.subtitulo}</p>
+          </div>
+          <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/perfil/actividades`}>
+            {t.perfil.etapasActividad.revisar}
+          </BotonLink>
+        </div>
+      </section>
+
+      <section className={tarjeta}>
+        <h2 className="text-base font-semibold text-slate-900">{tsg.titulo}</h2>
+        <p className="mt-1 text-sm text-slate-600">{tsg.subtitulo}</p>
+        {seguimiento.every((x) => x.p.intentos === 0) ? (
+          <p className="mt-3 text-sm text-slate-500">{tsg.sinDatos}</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[46rem] text-left text-sm">
+              <thead className="text-xs text-slate-500">
+                <tr className="border-b border-slate-200">
+                  <th className="py-2 pr-3 font-medium">{tp.columnas.alumno}</th>
+                  {ETAPAS_CREAR.map((e) => (
+                    <th key={e} className="py-2 pr-2 text-right font-medium">
+                      {t.perfil.crear.etapas[e].nombre}
+                    </th>
+                  ))}
+                  <th className="py-2 pr-2 text-right font-medium">{tsg.actividades}</th>
+                  <th className="py-2 pr-2 text-right font-medium">{tsg.intentos}</th>
+                  <th className="py-2 text-right font-medium">{t.perfil.seguimiento.caso}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {seguimiento.map(({ f, p, casos: nc }) => (
+                  <tr key={f.matricula}>
+                    <td className="py-2 pr-3 font-medium text-slate-900">{f.nombre}</td>
+                    {ETAPAS_CREAR.map((e) => {
+                      const v = p.porEtapa[e];
+                      return (
+                        <td key={e} className={`py-2 pr-2 text-right tabular-nums ${v === undefined ? "text-slate-400" : v >= 70 ? "font-semibold text-emerald-700" : "font-semibold text-red-700"}`}>
+                          {v === undefined ? "—" : `${v}%`}
+                        </td>
+                      );
+                    })}
+                    <td className="py-2 pr-2 text-right tabular-nums">{p.actividades}</td>
+                    <td className="py-2 pr-2 text-right tabular-nums">{p.intentos}</td>
+                    <td className="py-2 text-right tabular-nums">{nc}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className={tarjeta}>
