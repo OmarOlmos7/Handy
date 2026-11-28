@@ -32,7 +32,7 @@ export function NuevaActividad({
   etiquetasCurso = {},
   asignaturas = [],
 }: {
-  grupos: Pick<Grupo, "id" | "materia" | "nombre">[];
+  grupos: Pick<Grupo, "id" | "materia" | "nombre" | "asignaturaId">[];
   hoy: string;
   grupoInicial?: string;
   /** Nivel de precisión con el que arranca el deslizador (el de la configuración; Medio si no hay). */
@@ -280,7 +280,7 @@ export function NuevaActividad({
           />
         ) : (
         <>
-        <SelectorTemario asignaturas={asignaturas} materia={grupos.find((g) => g.id === grupoSel)?.materia} />
+        <SelectorTemario asignaturas={asignaturas} materia={grupos.find((g) => g.id === grupoSel)?.materia} asignaturaCurso={grupos.find((g) => g.id === grupoSel)?.asignaturaId} />
 
         {esContenido ? (
           <AltaContenido

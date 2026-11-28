@@ -10,6 +10,7 @@ import { BotonIcono, IconoAlumnos, IconoArchivar, IconoBasura, IconoDuplicar, Ic
 import { SobreAvisos } from "./avisos";
 import { AjustesCurso, BotonCalendario, ResumenTarjeta } from "./asesorias";
 import { SelectorColor } from "./selector-color";
+import { SelectorAsignaturaCurso, type AsignaturaOpcion } from "./asignatura-curso";
 import { Boton } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
@@ -35,6 +36,8 @@ export function TarjetaCurso({
   fin,
   periodo,
   asesorias,
+  asignaturas = [],
+  asignaturaId = "",
 }: {
   id: string;
   materia: string;
@@ -52,6 +55,9 @@ export function TarjetaCurso({
   periodo?: string;
   /** Resumen de asesorías del curso: realizadas, minutos y próximas. */
   asesorias?: { realizadas: number; minutos: number; proximas: number };
+  /** Asignaturas del profesor para enlazar el curso, y la que tiene ahora ("" si ninguna). */
+  asignaturas?: AsignaturaOpcion[];
+  asignaturaId?: string;
 }) {
   const router = useRouter();
   const { t } = useTextos();
@@ -61,7 +67,12 @@ export function TarjetaCurso({
   const ta = t.archivados;
   const tas = t.asesorias;
   const tdu = t.copiar.curso;
-  const [editando, setEditando] = useState(false);
+  const [editando, setEditandoBase] = useState(false);
+  const [asignatura, setAsignatura] = useState(asignaturaId);
+  const setEditando = (si: boolean) => {
+    setAsignatura(asignaturaId);
+    setEditandoBase(si);
+  };
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
 
@@ -71,7 +82,9 @@ export function TarjetaCurso({
     setError("");
     iniciar(async () => {
       try {
-        await renombrarGrupo(id, String(datos.get("materia")), String(datos.get("nombre")));
+        const r = await renombrarGrupo(id, String(datos.get("materia")), String(datos.get("nombre")), String(datos.get("asignatura") ?? ""));
+        // "Crear asignatura nueva": pasa al alta de asignatura, que la enlaza a este curso.
+        if (r.ir) return router.push(r.ir);
         setEditando(false);
         router.refresh();
       } catch (err) {
@@ -148,6 +161,7 @@ export function TarjetaCurso({
             {c.grupo}
             <input name="nombre" defaultValue={nombre} required className={campoChico} />
           </label>
+          <SelectorAsignaturaCurso asignaturas={asignaturas} valor={asignatura} alCambiar={setAsignatura} chico />
           <Link
             href={`/profesor/grupos/${id}/alumnos`}
             className="flex items-center gap-2 rounded-md bg-tinta-50 px-2 py-1.5 text-xs font-medium text-tinta-700 hover:bg-tinta-100"

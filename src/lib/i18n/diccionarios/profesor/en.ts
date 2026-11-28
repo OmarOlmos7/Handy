@@ -100,6 +100,14 @@ const profesor: Diccionario["profesor"] = {
     ayuda:
       "One line per student: student ID, full name and email (optional). You can paste straight from Excel. If you leave it empty, each student signs up when submitting their first activity. If you include their email, the student sees their results after creating an account with that same email.",
     crear: "Create course",
+    asignatura: "Subject syllabus",
+    sinAsignatura: "No syllabus for now",
+    misAsignaturas: "My syllabi",
+    crearAsignatura: "+ Create a new syllabus",
+    ayudaAsignatura: "Its syllabus gives the course its units: map, syllabus progress, learning paths and timeline. You can also link it later with the pencil on the course card.",
+    ayudaTarjeta: "Its syllabus gives the course its units (map, progress, paths and timeline).",
+    ayudaCrear: "When you save, you'll go on to add the syllabus (file, pasted text or AI) and it will be linked to this course.",
+    seEnlazara: "When saved, this syllabus will be linked to the course {curso}.",
   },
   curso: {
     meta: "Course",

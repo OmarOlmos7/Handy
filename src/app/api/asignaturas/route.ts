@@ -23,6 +23,7 @@ export async function POST(req: Request) {
   if (!profesor) return Response.json({ error: te.sinSesion }, { status: 401 });
   const form = await req.formData();
   const modo = String(form.get("modo") ?? "");
+  const cursoId = String(form.get("curso") ?? "");
   let nombre = String(form.get("nombre") ?? "").trim().slice(0, 120);
   let nivel = String(form.get("nivel") ?? "").trim().slice(0, 120);
   const idioma = profesor.config?.idioma;
@@ -93,6 +94,9 @@ export async function POST(req: Request) {
       creadaEn: ahora,
       actualizadaEn: ahora,
     });
+    // Alta pedida desde "Nuevo curso" o el lápiz de la tarjeta: queda enlazada a ese curso.
+    const curso = db.grupos.find((g) => g.id === cursoId && g.profesorId === profesor.id);
+    if (curso) curso.asignaturaId = id;
   });
   return Response.json({ id });
 }

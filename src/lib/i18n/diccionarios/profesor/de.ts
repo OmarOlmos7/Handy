@@ -100,6 +100,14 @@ const profesor: Diccionario["profesor"] = {
     ayuda:
       "Eine Zeile pro Person: Schülernummer, vollständiger Name und E-Mail (optional). Du kannst direkt aus Excel einfügen. Bleibt das Feld leer, meldet sich jede/r bei der ersten Abgabe an. Mit E-Mail sieht die Person ihre Ergebnisse, sobald sie ein Konto mit derselben E-Mail anlegt.",
     crear: "Kurs anlegen",
+    asignatura: "Fach (Lehrplan)",
+    sinAsignatura: "Vorerst kein Fach",
+    misAsignaturas: "Meine Fächer",
+    crearAsignatura: "+ Neues Fach anlegen",
+    ayudaAsignatura: "Sein Lehrplan liefert die Einheiten des Kurses: Karte, Lehrplanfortschritt, Lernpfade und Zeitleiste. Du kannst es auch später mit dem Stift auf der Kurskarte verknüpfen.",
+    ayudaTarjeta: "Sein Lehrplan liefert die Einheiten des Kurses (Karte, Fortschritt, Pfade und Zeitleiste).",
+    ayudaCrear: "Beim Speichern legst du anschließend das Fach an (Datei, eingefügter Text oder KI); es wird mit diesem Kurs verknüpft.",
+    seEnlazara: "Nach dem Speichern wird dieses Fach mit dem Kurs {curso} verknüpft.",
   },
   curso: {
     meta: "Kurs",

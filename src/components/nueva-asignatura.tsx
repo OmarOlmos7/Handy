@@ -9,7 +9,7 @@ import { Boton, campo } from "./ui";
 
 type Modo = "archivo" | "texto" | "ia";
 
-export function NuevaAsignatura({ nombreInicial = "" }: { nombreInicial?: string }) {
+export function NuevaAsignatura({ nombreInicial = "", cursoId }: { nombreInicial?: string; /** Curso al que se enlaza al guardarla. */ cursoId?: string }) {
   const router = useRouter();
   const { t } = useTextos();
   const ta = t.profesor.asignaturas;
@@ -22,6 +22,7 @@ export function NuevaAsignatura({ nombreInicial = "" }: { nombreInicial?: string
     e.preventDefault();
     const datos = new FormData(e.currentTarget);
     datos.set("modo", modo);
+    if (cursoId) datos.set("curso", cursoId);
     datos.delete("archivo");
     if (modo === "archivo" && archivo) datos.set("archivo", archivo);
     setEstado("enviando");

@@ -32,6 +32,7 @@ export function EditarActividad({
   tiposSugeridos = [],
   asignaturas = [],
   materia,
+  asignaturaCurso,
   esfuerzos,
   noCambia,
   inicial,
@@ -46,6 +47,8 @@ export function EditarActividad({
   /** Asignaturas del profesor, para cambiar la unidad y los temas. */
   asignaturas?: AsignaturaParaAlta[];
   materia?: string;
+  /** Asignatura enlazada al curso ("" = ninguna). */
+  asignaturaCurso?: string;
   esfuerzos: Record<MotorIA, EsfuerzoIA>;
   /** Lo que no se cambia al reeditar (formato, cómo se creó y curso), ya escrito. */
   noCambia: string;
@@ -185,7 +188,7 @@ export function EditarActividad({
           </datalist>
           <ChipsTipo tipos={tiposSugeridos} valor={etiqueta} onCambiar={setEtiqueta} />
         </div>
-        <SelectorTemario asignaturas={asignaturas} materia={materia} inicial={inicial.temario} />
+        <SelectorTemario asignaturas={asignaturas} materia={materia} asignaturaCurso={asignaturaCurso} inicial={inicial.temario} />
         <FechasActividad inicial={inicial} />
         <fieldset>
           <legend className="text-sm font-medium text-slate-700">{tn.calificarSobre}</legend>
