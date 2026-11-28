@@ -29,6 +29,9 @@ const marco: typeof es = {
     sinTemario: "本课程还没有教学大纲。创建或关联一个带单元的科目即可看到时间线。",
     irAsignaturas: "前往科目",
     verAvance: "查看大纲进度",
+    verMapa: "查看大纲地图",
+    avanceAlumno: "你的进度：已完成 {p} %",
+    sinFechasAlumno: "老师还没有设置课程的开始和结束日期；设置后你会在这里看到各单元的时间安排。",
   },
   enviarCodigo: {
     titulo: "课程代码与会员付款",
@@ -49,6 +52,19 @@ const marco: typeof es = {
     asunto: "你的课程 {curso} 代码",
     cuerpo:
       "{nombre} 你好：\n\n{profesor} 老师已将你加入课程 {curso}。\n\n课程 ID 代码：{codigo}\n\n用此代码支付会员（许可证）并完成注册：\n1. 打开 {url}\n2. 用此邮箱创建账号或登录。\n3. 输入代码，选择时长并付款。\n\n如有疑问，请询问你的老师。\n\niEureka-Grader",
+  },
+  unidades: {
+    titulo: "按单元查看活动",
+    pista: "点击时间线上的某个单元，只查看该单元的活动。",
+    verTodas: "查看所有单元",
+    verUnidad: "查看“{nombre}”的活动",
+    mostrando: "单元 {n}：{nombre}",
+    sinUnidad: "无大纲单元",
+    actividades1: "1 个活动",
+    actividadesN: "{n} 个活动",
+    vacia: "此单元还没有活动。创建活动时，在大纲选择器中选择此单元。",
+    vaciaAlumno: "此单元还没有活动。",
+    unidad: "单元 {n}",
   },
 };
 

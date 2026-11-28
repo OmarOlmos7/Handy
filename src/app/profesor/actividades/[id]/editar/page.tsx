@@ -1,3 +1,4 @@
+import { asignaturaDelCurso } from "@/lib/asignaturas";
 import { idiomaDeActividad } from "@/lib/i18n/detectar";
 import { notFound } from "next/navigation";
 import { EditarActividad } from "@/components/editar-actividad";
@@ -51,6 +52,7 @@ export default async function Editar({ params }: PageProps<"/profesor/actividade
         tiposSugeridos={tiposSugeridos}
         asignaturas={(db.asignaturas ?? []).map((a) => ({ id: a.id, nombre: a.nombre, unidades: a.unidades }))}
         materia={grupo.materia}
+        asignaturaCurso={asignaturaDelCurso(db, grupo)?.id ?? ""}
         esfuerzos={configuracionDe(profesor.config).esfuerzos}
         noCambia={noCambia}
         inicial={{

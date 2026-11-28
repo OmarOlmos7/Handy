@@ -12,6 +12,7 @@ import { TextoMat } from "@/components/texto-mat";
 import { textos } from "@/lib/i18n/servidor";
 import { formato } from "@/lib/i18n/idiomas";
 import { versionesCompletas } from "@/lib/versiones";
+import { respuestaMat } from "@/lib/notacion";
 
 /** Paso 2 del flujo: preparar la solución (escaneada o con IA) y verla escrita sobre la hoja. */
 export default async function Solucion({ params }: PageProps<"/profesor/actividades/[id]/solucion">) {
@@ -186,7 +187,9 @@ function SolucionTexto({ reactivos }: { reactivos: Reactivo[] }) {
                 ))}
               </ol>
             ) : null}
-            <p className="mt-1 font-semibold text-acierto">{r.respuesta}</p>
+            <p className="mt-1 font-semibold text-acierto">
+              <TextoMat texto={respuestaMat(r.respuesta)} negritas="font-semibold" />
+            </p>
           </li>
         ))}
       </ol>

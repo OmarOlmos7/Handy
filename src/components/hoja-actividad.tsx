@@ -15,6 +15,7 @@ import { fechaLarga } from "./ui";
 import { textos } from "@/lib/i18n/servidor";
 import { formato } from "@/lib/i18n/idiomas";
 import type { Diccionario } from "@/lib/i18n/diccionario";
+import { respuestaMat } from "@/lib/notacion";
 
 type TextosHoja = Diccionario["profesor"]["hojaImpresa"];
 
@@ -160,7 +161,7 @@ function DesarrolloResuelto({ r, letras, alto, th }: { r: Reactivo; letras: stri
   const recuadro = (clave: string, letra: string, texto: string) => (
     <div key={clave} className="flex min-h-[64px] flex-col justify-between rounded-lg border-[1.5px] border-slate-800 bg-white px-2.5 pb-1.5 pt-2">
       <span className={`text-[14px] leading-snug ${TINTA}`}>
-        <TextoMat texto={texto} negritas="font-semibold" />
+        <TextoMat texto={respuestaMat(texto)} negritas="font-semibold" />
       </span>
       <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
         {th.respuesta}{letra && <span className="ml-1 text-[12px] normal-case tracking-normal text-tinta-600">{letra}</span>}
@@ -186,7 +187,7 @@ function DesarrolloResuelto({ r, letras, alto, th }: { r: Reactivo; letras: stri
             {respuesta.letras.map((letra, i) => recuadro(letra, letra, respuesta.textos[i]))}
           </div>
         ) : (
-          <div className={letras.length > 1 ? "" : "ml-auto w-[45%]"}>
+          <div className={letras.length > 1 ? "" : "ml-auto w-fit min-w-[45%] max-w-full"}>
             {recuadro("unica", "", respuesta.completa)}
           </div>
         )}

@@ -14,7 +14,7 @@ import type { BaseDeDatos, EstiloCorreccion, Reactivo, ResultadoReactivo } from 
 import { aCampoFechaHora, deCampoFechaHora } from "@/lib/resultados";
 import { leerFechas } from "@/lib/periodo";
 import { limpiarEtiqueta } from "@/lib/etiquetas";
-import { leerTemarioActividad } from "@/lib/asignaturas";
+import { NUEVA_ASIGNATURA, leerAsignaturaCurso, leerTemarioActividad } from "@/lib/asignaturas";
 import { cambioEstructura, limpiarCriterios, limpiarRecomendaciones, reacomodarValores, type CambiosRubrica } from "@/lib/rubrica";
 
 /** Corre el cambio solo si la actividad es de un curso del profesor con sesión. */
@@ -39,19 +39,30 @@ export async function crearGrupo(form: FormData) {
     .filter(([m, n]) => m && n)
     .map(([matricula, nombreAl, correo]) => ({ matricula: normalizarMatricula(matricula), nombre: nombreAl, correo: correo || "" }));
   if (!materia || !nombre) throw new Error("Faltan datos del grupo");
-  modificar((db) => {
+  const id = slug(`${materia}-${nombre}`);
+  // Asignatura (temario) del curso: una existente, ninguna o una nueva que se da de alta enseguida.
+  const asignatura = modificar((db) => {
+    const elegida = leerAsignaturaCurso(form.get("asignatura"), db.asignaturas ?? [], profesor.id);
     db.grupos.push({
-      id: slug(`${materia}-${nombre}`),
+      id,
       profesorId: profesor.id,
       codigo: nuevoCodigoCurso(materia, db.grupos.map((g) => g.codigo ?? "")),
       materia,
       nombre,
       ciclo: "2026-2027",
       alumnos,
+      ...(elegida !== undefined && elegida !== NUEVA_ASIGNATURA ? { asignaturaId: elegida } : {}),
     });
+    return elegida;
   });
   revalidatePath("/profesor");
+  if (asignatura === NUEVA_ASIGNATURA) redirect(rutaNuevaAsignatura(id, materia));
   redirect("/profesor");
+}
+
+/** Alta de asignatura que queda enlazada al curso al guardarla. */
+function rutaNuevaAsignatura(grupoId: string, materia: string) {
+  return `/profesor/asignaturas/nueva?${new URLSearchParams({ nombre: materia, curso: grupoId })}`;
 }
 
 /**
@@ -148,16 +159,25 @@ async function enGrupoPropio<T>(grupoId: string, cambio: (db: BaseDeDatos) => T)
   });
 }
 
-export async function renombrarGrupo(grupoId: string, materia: string, nombre: string) {
+/**
+ * Guarda materia, grupo y, si viene, la asignatura del curso. Con "crear asignatura nueva" devuelve
+ * la ruta del alta de asignatura, que la enlaza al curso al guardarla.
+ */
+export async function renombrarGrupo(grupoId: string, materia: string, nombre: string, asignatura?: string): Promise<{ ir?: string }> {
   const m = materia.trim().slice(0, 80);
   const n = nombre.trim().slice(0, 80);
   if (!m || !n) throw new Error("Escribe la materia y el grupo");
-  await enGrupoPropio(grupoId, (db) => {
+  const profesor = await requerirProfesor();
+  const elegida = await enGrupoPropio(grupoId, (db) => {
     const g = db.grupos.find((x) => x.id === grupoId)!;
     g.materia = m;
     g.nombre = n;
+    const elegida = leerAsignaturaCurso(asignatura, db.asignaturas ?? [], profesor.id);
+    if (elegida !== undefined && elegida !== NUEVA_ASIGNATURA) g.asignaturaId = elegida;
+    return elegida;
   });
   revalidatePath("/profesor", "layout");
+  return elegida === NUEVA_ASIGNATURA ? { ir: rutaNuevaAsignatura(grupoId, m) } : {};
 }
 
 /** Borra el curso con todas sus actividades, entregas y archivos. No se puede deshacer. */
@@ -176,6 +196,9 @@ export async function borrarGrupo(grupoId: string) {
     const avisos = (db.avisos ?? []).filter((a) => a.grupoId === grupoId).map((a) => a.id);
     db.avisos = (db.avisos ?? []).filter((a) => a.grupoId !== grupoId);
     db.asesorias = (db.asesorias ?? []).filter((a) => a.grupoId !== grupoId);
+    // Listas de asistencia y rostros (datos biométricos) del curso.
+    db.asistencias = (db.asistencias ?? []).filter((a) => a.grupoId !== grupoId);
+    db.rostros = (db.rostros ?? []).filter((r) => r.grupoId !== grupoId);
     return [...acts.map((id) => `actividades/${id}`), ...proyectos.map((id) => `proyectos/${id}`), ...avisos.map((id) => `avisos/${id}`)];
   });
   ids.forEach((carpeta) => borrarCarpeta(carpeta));
@@ -237,12 +260,17 @@ export async function colorGrupo(grupoId: string, color: string) {
   revalidatePath("/profesor", "layout");
 }
 
-/** Archiva o desarchiva un curso del profesor. No borra nada: solo lo saca del panel. */
+/**
+ * Archiva o desarchiva un curso del profesor. Solo lo saca del panel; lo único que se borra al
+ * archivar son los rostros para la asistencia (datos biométricos: no se guardan más de lo necesario).
+ */
 export async function archivarGrupo(grupoId: string, archivar: boolean) {
   await enGrupoPropio(grupoId, (db) => {
     const g = db.grupos.find((x) => x.id === grupoId)!;
-    if (archivar) g.archivado = new Date().toISOString();
-    else delete g.archivado;
+    if (archivar) {
+      g.archivado = new Date().toISOString();
+      if (db.rostros) db.rostros = db.rostros.filter((r) => r.grupoId !== grupoId);
+    } else delete g.archivado;
   });
   revalidatePath("/profesor", "layout");
 }

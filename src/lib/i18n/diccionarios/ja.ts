@@ -11,9 +11,11 @@ import ajustesAlumno from "./ajustes-alumno/ja";
 import contenido from "./contenido/ja";
 import avisos from "./avisos/ja";
 import proyecto from "./proyecto/ja";
+import altaProyecto from "./alta-proyecto/ja";
 import asesorias from "./asesorias/ja";
 import perfil from "./perfil/ja";
 import marco from "./marco/ja";
+import asistencia from "./asistencia/ja";
 
 const ja: Diccionario = {
   comun: {
@@ -469,9 +471,11 @@ const ja: Diccionario = {
   contenido,
   avisos,
   proyecto,
+  altaProyecto,
   asesorias,
   perfil,
   marco,
+  asistencia,
 };
 
 export default ja;

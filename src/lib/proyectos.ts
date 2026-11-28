@@ -8,10 +8,12 @@ import type {
   Alumno,
   Entrega,
   CriterioProyecto,
+  EntregableProyecto,
   EntregaProyecto,
   EquipoProyecto,
   EtapaProyecto,
   EvaluacionProyecto,
+  NivelProyecto,
   Proyecto,
   TipoEtapaProyecto,
 } from "./tipos";
@@ -34,6 +36,145 @@ export const NIVELES_RUBRICA = [
 ] as const;
 
 export type ClaveNivel = (typeof NIVELES_RUBRICA)[number]["clave"];
+
+/** Rangos (porcentaje del elemento) de los niveles base, en el orden de NIVELES_RUBRICA. */
+export const RANGOS_BASE: readonly { min: number; max: number }[] = [
+  { min: 90, max: 100 },
+  { min: 80, max: 89 },
+  { min: 70, max: 79 },
+  { min: 0, max: 69 },
+];
+
+/** Mínimo y máximo de niveles de desempeño en la rúbrica de una etapa. */
+export const MIN_NIVELES = 2;
+export const MAX_NIVELES = 6;
+export const MAX_ENTREGABLES = 6;
+
+/**
+ * Niveles de desempeño de la rúbrica de una etapa (del más alto al más bajo). Sin niveles propios,
+ * los cuatro base con los nombres del idioma de la interfaz.
+ */
+export function nivelesDe(etapa: Pick<EtapaProyecto, "niveles">, nombresBase: readonly string[] = []): NivelProyecto[] {
+  if (etapa.niveles && etapa.niveles.length >= MIN_NIVELES) return etapa.niveles;
+  return RANGOS_BASE.map((r, i) => ({ nombre: nombresBase[i] ?? NIVELES_RUBRICA[i].clave, ...r }));
+}
+
+/** Nivel (índice) al que pertenece un puntaje: el primero, de arriba hacia abajo, cuyo mínimo alcanza. */
+export function indiceNivel(niveles: readonly Pick<NivelProyecto, "min">[], puntaje: number): number {
+  const i = niveles.findIndex((n) => puntaje >= n.min);
+  return i === -1 ? niveles.length - 1 : i;
+}
+
+/** Puntos de un elemento: su puntaje (0 a 100) aplicado a su porcentaje en la rúbrica. */
+export function puntosElemento(puntaje: number, porcentaje: number): number {
+  return r1((Math.max(0, Math.min(100, puntaje)) * Math.max(0, porcentaje)) / 100);
+}
+
+/** Puntaje (0 a 100) que corresponde a unos puntos del elemento, dentro del rango del nivel. */
+export function puntajeDePuntos(puntos: number, porcentaje: number, nivel: Pick<NivelProyecto, "min" | "max">): number {
+  const bruto = porcentaje > 0 ? (puntos / porcentaje) * 100 : nivel.max;
+  return r1(Math.max(nivel.min, Math.min(nivel.max, bruto)));
+}
+
+/** Limpia los niveles que llegan del formulario: de 2 a 6, con nombre y rango de 0 a 100, de mayor a menor. */
+export function limpiarNiveles(xs: unknown): NivelProyecto[] | undefined {
+  if (!Array.isArray(xs) || xs.length < MIN_NIVELES) return undefined;
+  const niveles = xs.slice(0, MAX_NIVELES).map((n: Partial<NivelProyecto>, i) => {
+    const a = Number.isFinite(Number(n?.min)) ? Math.max(0, Math.min(100, Math.round(Number(n.min)))) : 0;
+    const b = Number.isFinite(Number(n?.max)) ? Math.max(0, Math.min(100, Math.round(Number(n.max)))) : 100;
+    return { nombre: String(n?.nombre ?? "").trim().slice(0, 40) || `#${i + 1}`, min: Math.min(a, b), max: Math.max(a, b) };
+  });
+  return niveles;
+}
+
+/**
+ * Revisa que los rangos de los niveles no se encimen y cubran de 0 a 100 (del más alto al más bajo).
+ * Devuelve la clave del problema, o undefined.
+ */
+export function revisarNiveles(niveles: readonly NivelProyecto[]): "nivelesRango" | undefined {
+  if (niveles.length < MIN_NIVELES) return "nivelesRango";
+  if (niveles[0].max !== 100 || niveles.at(-1)!.min !== 0) return "nivelesRango";
+  for (let i = 0; i < niveles.length; i++) {
+    if (niveles[i].min > niveles[i].max) return "nivelesRango";
+    if (i > 0 && niveles[i].max >= niveles[i - 1].min) return "nivelesRango";
+  }
+  return undefined;
+}
+
+/**
+ * Reparte 0-100 en n niveles de igual tamaño (del más alto al más bajo), dejando el más bajo con
+ * todo lo que queda por debajo del aprobatorio (70) cuando hay 3 niveles o más.
+ */
+export function rangosParejos(n: number): { min: number; max: number }[] {
+  const k = Math.max(MIN_NIVELES, Math.min(MAX_NIVELES, Math.round(n)));
+  if (k === 4) return RANGOS_BASE.map((r) => ({ ...r }));
+  const base = k >= 3 ? 70 : 0;
+  const arriba = k >= 3 ? k - 1 : k;
+  const paso = (100 - base) / arriba;
+  const rangos = Array.from({ length: arriba }, (_, i) => {
+    const max = i === 0 ? 100 : Math.round(100 - paso * i) - 1;
+    const min = i === arriba - 1 ? base : Math.round(100 - paso * (i + 1));
+    return { min, max };
+  });
+  if (k >= 3) rangos.push({ min: 0, max: base - 1 });
+  return rangos;
+}
+
+/** Limpia los entregables de una etapa (nombre obligatorio). */
+export function limpiarEntregables(xs: unknown): EntregableProyecto[] {
+  if (!Array.isArray(xs)) return [];
+  const vistos = new Set<string>();
+  return xs
+    .slice(0, MAX_ENTREGABLES)
+    .map((x: Partial<EntregableProyecto>) => ({
+      id: String(x?.id || nuevoIdCorto("d")).slice(0, 40),
+      nombre: String(x?.nombre ?? "").trim().slice(0, 120),
+      descripcion: String(x?.descripcion ?? "").trim().slice(0, 600),
+    }))
+    .filter((x) => x.nombre)
+    .map((x) => {
+      if (vistos.has(x.id)) x.id = nuevoIdCorto("d");
+      vistos.add(x.id);
+      return x;
+    });
+}
+
+/** Limpia la lista de habilidades y competencias (de un arreglo o de un texto con una por renglón). */
+export function limpiarCompetencias(xs: unknown): string[] {
+  const lista = Array.isArray(xs) ? xs.map(String) : String(xs ?? "").split(/\r?\n/);
+  return [...new Set(lista.map((x) => x.trim().replace(/^([-•*]|\d+[.)])\s+/, "")).filter(Boolean))].slice(0, 15).map((x) => x.slice(0, 200));
+}
+
+export interface PasosAltaProyecto {
+  /** A. Información general completa: título, objetivo, etapas con fechas y pesos que suman 100. */
+  informacion: boolean;
+  /** B. Cada etapa con su rúbrica completa (elementos que suman 100 y niveles válidos). */
+  rubrica: boolean;
+  /** C. Todas las etapas cerradas (evaluadas y publicadas). */
+  evaluacion: boolean;
+}
+
+/** Qué pasos de la ruta de alta del proyecto ya están completos. */
+export function pasosAltaProyecto(p: Pick<Proyecto, "titulo" | "objetivo" | "etapas">): PasosAltaProyecto {
+  const informacion =
+    Boolean(p.titulo.trim()) &&
+    Boolean(p.objetivo?.trim()) &&
+    p.etapas.length > 0 &&
+    p.etapas.every((e) => e.nombre.trim() && e.fecha) &&
+    Math.abs(sumaPesos(p.etapas) - 100) <= 0.05;
+  return {
+    informacion,
+    rubrica: p.etapas.length > 0 && p.etapas.every((e) => revisarRubricaEtapa(e) === undefined),
+    evaluacion: p.etapas.length > 0 && p.etapas.every((e) => e.cerradaEn),
+  };
+}
+
+/** Revisa la rúbrica de una etapa. Devuelve la clave del problema, o undefined. */
+export function revisarRubricaEtapa(e: Pick<EtapaProyecto, "criterios" | "niveles">): "sinCriterios" | "porcentajes" | "nivelesRango" | undefined {
+  if (e.criterios.length === 0) return "sinCriterios";
+  if (Math.abs(e.criterios.reduce((s, c) => s + (c.porcentaje > 0 ? c.porcentaje : 0), 0) - 100) > 0.05) return "porcentajes";
+  return revisarNiveles(nivelesDe(e));
+}
 
 /** Máximo de etapas, elementos por rúbrica, evaluadores y equipos (para que la página no crezca sin fin). */
 export const MAX_ETAPAS = 10;
@@ -184,6 +325,8 @@ export interface ResultadoCriterio {
   /** Promedio de los evaluadores que lo calificaron (0 a 100). */
   promedio: number | null;
   nivel: ClaveNivel | null;
+  /** Nivel de la rúbrica de la etapa en que cae el promedio (índice en nivelesDe). */
+  nivelIndice: number | null;
 }
 
 export interface ResultadoEtapa {
@@ -214,7 +357,14 @@ export function resultadoEtapa(p: Proyecto, etapa: EtapaProyecto, evaluaciones: 
   const porCriterio = etapa.criterios.map((c) => {
     const ps = validas.map((e) => e.criterios.find((x) => x.criterioId === c.id)?.puntaje).filter((x): x is number => x !== undefined);
     const promedio = ps.length ? r1(ps.reduce((s, x) => s + x, 0) / ps.length) : null;
-    return { criterioId: c.id, nombre: c.nombre, porcentaje: c.porcentaje, promedio, nivel: promedio === null ? null : nivelDePuntaje(promedio) };
+    return {
+      criterioId: c.id,
+      nombre: c.nombre,
+      porcentaje: c.porcentaje,
+      promedio,
+      nivel: promedio === null ? null : nivelDePuntaje(promedio),
+      nivelIndice: promedio === null ? null : indiceNivel(nivelesDe(etapa), promedio),
+    };
   });
   const comentarios: ComentarioEvaluador[] = [];
   for (const e of validas) {
@@ -410,14 +560,14 @@ export function revisarModelo(p: Pick<Proyecto, "titulo" | "etapas" | "equipos">
 }
 
 /** Limpia un criterio que llega del formulario o de la IA. */
-export function limpiarCriterio(c: Partial<CriterioProyecto>, i: number): CriterioProyecto {
+export function limpiarCriterio(c: Partial<CriterioProyecto>, i: number, nNiveles: number = NIVELES_RUBRICA.length): CriterioProyecto {
   const niveles = Array.isArray(c.niveles) ? c.niveles.map((n) => String(n ?? "").slice(0, 400)) : [];
   return {
     id: String(c.id || `c${i + 1}`).slice(0, 40),
     nombre: String(c.nombre ?? "").trim().slice(0, 120),
     descripcion: String(c.descripcion ?? "").trim().slice(0, 600),
     porcentaje: Number.isFinite(Number(c.porcentaje)) ? Math.max(0, Math.min(100, Number(c.porcentaje))) : 0,
-    niveles: NIVELES_RUBRICA.map((_, k) => niveles[k] ?? ""),
+    niveles: Array.from({ length: nNiveles }, (_, k) => niveles[k] ?? ""),
   };
 }
 
@@ -431,7 +581,7 @@ export function limpiarEvaluacion(
     const n = d?.puntaje === null || d?.puntaje === undefined ? undefined : Number(d.puntaje);
     return {
       criterioId: c.id,
-      puntaje: n === undefined || !Number.isFinite(n) ? undefined : Math.round(Math.max(0, Math.min(100, n))),
+      puntaje: n === undefined || !Number.isFinite(n) ? undefined : r1(Math.max(0, Math.min(100, n))),
       comentario: String(d?.comentario ?? "").trim().slice(0, 1500),
     };
   });

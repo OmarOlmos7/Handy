@@ -100,6 +100,14 @@ const profesor: Diccionario["profesor"] = {
     ayuda:
       "Une ligne par élève : matricule, nom complet et e-mail (facultatif). Vous pouvez coller directement depuis Excel. Si vous la laissez vide, chaque élève s'inscrit en rendant sa première activité. Si vous indiquez son e-mail, l'élève voit ses résultats en créant son compte avec ce même e-mail.",
     crear: "Créer le cours",
+    asignatura: "Matière (programme)",
+    sinAsignatura: "Pas de matière pour l’instant",
+    misAsignaturas: "Mes matières",
+    crearAsignatura: "+ Créer une nouvelle matière",
+    ayudaAsignatura: "Son programme donne les unités du cours : carte, avancement du programme, parcours d’apprentissage et frise. Vous pouvez aussi la lier plus tard avec le crayon de la carte.",
+    ayudaTarjeta: "Son programme donne les unités du cours (carte, avancement, parcours et frise).",
+    ayudaCrear: "En enregistrant, vous passerez à l’ajout de la matière (fichier, texte collé ou IA) et elle sera liée à ce cours.",
+    seEnlazara: "Une fois enregistrée, cette matière sera liée au cours {curso}.",
   },
   curso: {
     meta: "Cours",

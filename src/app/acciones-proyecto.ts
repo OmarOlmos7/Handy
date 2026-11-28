@@ -11,8 +11,11 @@ import {
   MAX_ETAPAS,
   MAX_EVALUADORES,
   TIPOS_ETAPA,
+  limpiarCompetencias,
   limpiarCriterio,
+  limpiarEntregables,
   limpiarEvaluacion,
+  limpiarNiveles,
   nuevoIdCorto,
   puedeEvaluar,
   repartirCien,
@@ -21,7 +24,7 @@ import {
 } from "@/lib/proyectos";
 import { accesoProyecto } from "@/lib/proyectos-servidor";
 import { requerirProfesor } from "@/lib/sesion";
-import type { EquipoProyecto, EtapaProyecto, EvaluacionProyecto, Proyecto, TipoEtapaProyecto } from "@/lib/tipos";
+import type { CriterioProyecto, EquipoProyecto, EtapaProyecto, EvaluacionProyecto, Proyecto, TipoEtapaProyecto } from "@/lib/tipos";
 
 type ErrorProyecto =
   | "titulo"
@@ -72,8 +75,18 @@ function etapaNueva(tipo: TipoEtapaProyecto, nombre: string, peso: number): Etap
   return { id: nuevoIdCorto("e"), nombre, tipo, instrucciones: "", peso, ...valoresTipoEtapa(tipo), criterios: [] };
 }
 
+const fechaValida = (f: unknown) => (/^\d{4}-\d{2}-\d{2}$/.test(String(f ?? "")) ? String(f) : undefined);
+
 /** Alta del proyecto en un curso del profesor, con una etapa por cada tipo elegido. */
-export async function crearProyecto(datos: { grupoId: string; titulo: string; descripcion: string; tipos: string[]; idioma?: string }): Promise<Respuesta<{ id: string }>> {
+export async function crearProyecto(datos: {
+  grupoId: string;
+  titulo: string;
+  descripcion: string;
+  objetivo?: string;
+  competencias?: string[] | string;
+  tipos: string[];
+  idioma?: string;
+}): Promise<Respuesta<{ id: string }>> {
   const profesor = await requerirProfesor();
   const titulo = String(datos.titulo ?? "").trim().slice(0, 140);
   if (!titulo) return { error: "titulo" };
@@ -92,6 +105,8 @@ export async function crearProyecto(datos: { grupoId: string; titulo: string; de
         profesorId: profesor.id,
         titulo,
         descripcion: String(datos.descripcion ?? "").trim().slice(0, 3000),
+        objetivo: String(datos.objetivo ?? "").trim().slice(0, 1500) || undefined,
+        competencias: limpiarCompetencias(datos.competencias),
         idioma,
         creadoEn: new Date().toISOString(),
         etapas: tipos.map((t, i) => etapaNueva(t, nombres[t], pesos[i])),
@@ -113,11 +128,17 @@ export async function crearProyecto(datos: { grupoId: string; titulo: string; de
 export interface DatosModelo {
   titulo: string;
   descripcion: string;
+  objetivo?: string;
+  competencias?: string[];
   etapas: EtapaProyecto[];
   equipos: EquipoProyecto[];
 }
 
-/** Guarda el modelo del proyecto (etapas, rúbricas, pesos y equipos). Solo el profesor del curso. */
+/**
+ * Paso A de la ruta del proyecto: guarda la información general (contexto, título, objetivo,
+ * competencias), las etapas con sus fechas, pesos y entregables, y los equipos. La rúbrica de cada
+ * etapa (paso B) se conserva tal como está. Solo el profesor del curso.
+ */
 export async function guardarModelo(proyectoId: string, datos: DatosModelo): Promise<Respuesta> {
   return conProyecto(proyectoId, true, (p, db) => {
     const grupo = db.grupos.find((g) => g.id === p.grupoId)!;
@@ -130,23 +151,19 @@ export async function guardarModelo(proyectoId: string, datos: DatosModelo): Pro
         nombre: String(e.nombre ?? "").trim().slice(0, 120),
         tipo,
         instrucciones: String(e.instrucciones ?? "").trim().slice(0, 4000),
-        fecha: /^\d{4}-\d{2}-\d{2}$/.test(String(e.fecha ?? "")) ? e.fecha : undefined,
+        fechaInicio: fechaValida(e.fechaInicio),
+        fecha: fechaValida(e.fecha),
+        entregables: limpiarEntregables(e.entregables),
         peso: Number.isFinite(Number(e.peso)) ? Math.max(0, Math.min(100, Math.round(Number(e.peso) * 10) / 10)) : 0,
         porEquipo: Boolean(e.porEquipo),
         conEvidencia: Boolean(e.conEvidencia),
-        criterios: (Array.isArray(e.criterios) ? e.criterios : []).slice(0, MAX_CRITERIOS).map((c, i) => limpiarCriterio(c, i)),
+        // La rúbrica se edita en su propio paso.
+        niveles: previa?.niveles,
+        criterios: previa?.criterios ?? [],
         // El cierre solo cambia con su botón.
         cerradaEn: previa?.cerradaEn,
       };
     });
-    // Ids de elementos únicos dentro de cada etapa.
-    for (const e of etapas) {
-      const vistos = new Set<string>();
-      e.criterios.forEach((c, i) => {
-        if (vistos.has(c.id)) c.id = `c${i + 1}-${nuevoIdCorto("x").slice(2, 6)}`;
-        vistos.add(c.id);
-      });
-    }
     const equipos: EquipoProyecto[] = (Array.isArray(datos.equipos) ? datos.equipos : []).slice(0, MAX_EQUIPOS).map((q, i) => ({
       id: String(q.id || nuevoIdCorto("q")).slice(0, 40),
       nombre: String(q.nombre ?? "").trim().slice(0, 80) || `#${i + 1}`,
@@ -154,17 +171,47 @@ export async function guardarModelo(proyectoId: string, datos: DatosModelo): Pro
     }));
     const titulo = String(datos.titulo ?? "").trim().slice(0, 140);
     const problema = revisarModelo({ titulo, etapas, equipos });
-    // Pesos y porcentajes incompletos se avisan en pantalla pero no impiden guardar el borrador.
+    // Pesos incompletos se avisan en pantalla pero no impiden guardar el borrador.
     if (problema === "titulo" || problema === "nombreEtapa" || problema === "equipoRepetido" || problema === "sinEtapas") throw new FalloProyecto(problema);
     const quitadas = p.etapas.filter((e) => !etapas.some((x) => x.id === e.id)).map((e) => e.id);
     p.titulo = titulo;
     p.descripcion = String(datos.descripcion ?? "").trim().slice(0, 3000);
+    p.objetivo = String(datos.objetivo ?? "").trim().slice(0, 1500) || undefined;
+    p.competencias = limpiarCompetencias(datos.competencias);
     p.etapas = etapas;
     p.equipos = equipos;
     if (quitadas.length) {
       db.evaluacionesProyecto = (db.evaluacionesProyecto ?? []).filter((e) => !(e.proyectoId === p.id && quitadas.includes(e.etapaId)));
       db.entregasProyecto = (db.entregasProyecto ?? []).filter((e) => !(e.proyectoId === p.id && quitadas.includes(e.etapaId)));
       for (const id of quitadas) borrarCarpeta(`proyectos/${p.id}/${id}`);
+    }
+    return {};
+  });
+}
+
+/**
+ * Paso B de la ruta del proyecto: guarda la rúbrica de cada etapa (niveles de desempeño con su
+ * rango de puntos y elementos con su porcentaje y la descripción de cada nivel). Solo el profesor
+ * del curso. Las evaluaciones hechas conservan sus puntajes y se recalculan con los porcentajes nuevos.
+ */
+export async function guardarRubricas(
+  proyectoId: string,
+  datos: { etapas: { id: string; niveles?: { nombre: string; min: number; max: number }[]; criterios: CriterioProyecto[] }[] },
+): Promise<Respuesta> {
+  return conProyecto(proyectoId, true, (p) => {
+    for (const d of Array.isArray(datos.etapas) ? datos.etapas : []) {
+      const etapa = p.etapas.find((e) => e.id === d.id);
+      if (!etapa) continue;
+      const niveles = limpiarNiveles(d.niveles);
+      const n = niveles?.length ?? 4;
+      etapa.niveles = niveles;
+      etapa.criterios = (Array.isArray(d.criterios) ? d.criterios : []).slice(0, MAX_CRITERIOS).map((c, i) => limpiarCriterio(c, i, n));
+      // Ids de elementos únicos dentro de la etapa.
+      const vistos = new Set<string>();
+      etapa.criterios.forEach((c, i) => {
+        if (vistos.has(c.id)) c.id = `c${i + 1}-${nuevoIdCorto("x").slice(2, 6)}`;
+        vistos.add(c.id);
+      });
     }
     return {};
   });

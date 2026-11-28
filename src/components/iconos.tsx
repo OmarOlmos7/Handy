@@ -32,6 +32,19 @@ export function IconoAlumnos() {
   );
 }
 
+/** Tabla con palomas (lista de asistencia). */
+export function IconoAsistencia() {
+  return (
+    <svg {...base}>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="m7.5 8.5 1.5 1.5 2.5-3" />
+      <path d="M14 9h3" />
+      <path d="m7.5 15 1.5 1.5 2.5-3" />
+      <path d="M14 15.5h3" />
+    </svg>
+  );
+}
+
 /** Espina con ramas (ruta de aprendizaje). */
 export function IconoRuta() {
   return (

@@ -221,7 +221,7 @@ Para cada reactivo, en el orden en que aparece:
 - numero: el número del reactivo tal como está en la hoja.
 - tipo: verdadero_falso, opcion_multiple, relacion_columnas, parentesis, desarrollo (problemas matemáticos, algoritmos o procedimientos) o abierto (ensayo, explicación, dibujo o boceto).
 - enunciado: el texto impreso del reactivo, breve.
-- respuesta: la respuesta del profesor. Opción múltiple: la letra y el texto, como "c) m/s²". Verdadero o falso: "V" o "F". Relación de columnas: pares como "1-c, 2-a, 3-b". Paréntesis: las letras en orden, como "(b) (a) (c)". Elegir la palabra correcta de un conjunto en cada renglón: "1) palabra, 2) palabra", solo la correcta, sin marcas ni alternativas. Desarrollo: el resultado final con unidades. Abierto: los criterios que debe cumplir la respuesta.
+- respuesta: la respuesta del profesor. Opción múltiple: la letra y el texto, como "c) m/s²". Verdadero o falso: "V" o "F". Relación de columnas: pares como "1-c, 2-a, 3-b". Paréntesis: las letras en orden, como "(b) (a) (c)". Elegir la palabra correcta de un conjunto en cada renglón: "1) palabra, 2) palabra", solo la correcta, sin marcas ni alternativas. Desarrollo: el resultado final con unidades, en LaTeX entre $…$ (por ejemplo "$x^{2} + \\dfrac{1}{2}$", "$v = 12\\ \\text{m/s}$"). Abierto: los criterios que debe cumplir la respuesta.
 - puntos: el valor del reactivo si está escrito en la hoja; si no, 1 para cerrados, 2 para abiertos y 3 para desarrollos.
 - tema y habilidad: etiquetas cortas en español (tema de la materia; habilidad como "Comprensión de conceptos", "Resolución de problemas", "Interpretación de gráficas", "Comunicación escrita").
 - pagina (desde 1) e y: posición vertical aproximada del inicio del reactivo en esa página, de 0 (arriba) a 1 (abajo).
@@ -658,7 +658,7 @@ const NOTA_VALORES = `- valores: los resultados numéricos finales de la respues
 
 const SISTEMA_RESOLVER_VERSION = `Eres un profesor experto de secundaria y bachillerato en México. Recibes la solución de la versión A de una actividad y la versión nueva, que solo cambia los valores numéricos. Resuelve la versión nueva siguiendo exactamente el mismo método, los mismos pasos y el mismo formato que la solución de la versión A, con los valores nuevos.
 - Haz cada cálculo con cuidado y verifícalo. La respuesta debe ser correcta para los valores de la versión nueva.
-- respuesta: con el mismo formato que en la versión A (opción múltiple: letra y texto de la opción correcta de la versión nueva; verdadero o falso: "V" o "F"; relación: pares como "1-c, 2-a"; desarrollo: resultado final con unidades, en texto simple sin LaTeX; abierto: los mismos criterios que la versión A, ajustados a los datos nuevos).
+- respuesta: con el mismo formato que en la versión A (opción múltiple: letra y texto de la opción correcta de la versión nueva; verdadero o falso: "V" o "F"; relación: pares como "1-c, 2-a"; desarrollo: resultado final con unidades, en LaTeX entre $…$ como en la versión A (exponentes con ^{…}, fracciones con \\dfrac); abierto: los mismos criterios que la versión A, ajustados a los datos nuevos).
 - solucionPasos: solo para desarrollo, una línea por paso como en la versión A, con LaTeX entre $…$; para los demás, lista vacía.
 ${RESPUESTAS_PLATAFORMA}
 ${NOTA_VALORES}`;
@@ -755,7 +755,7 @@ ${SISTEMA_RUBRICA.split("\n").slice(2).join("\n")}
 Además:
 - Resuelve cada reactivo con cuidado y verifica tus cálculos. La respuesta debe ser correcta.
 - Para desarrollo, escribe en solucionPasos el procedimiento completo, una línea por paso, con unidades.
-- En solucionPasos escribe las expresiones en LaTeX entre $…$ (por ejemplo "$u = x^2,\\ du = 2x\\,dx$"). En respuesta usa texto simple sin LaTeX (por ejemplo "1/2 (e - 1) ≈ 0.86"), porque se copia a campos de texto y al PDF corregido.
+- En solucionPasos escribe las expresiones en LaTeX entre $…$ (por ejemplo "$u = x^2,\\ du = 2x\\,dx$"). En respuesta de desarrollo escribe el resultado final también en LaTeX entre $…$, con notación de libro: exponentes con ^{…}, fracciones con \\dfrac, funciones como \\sen, \\cos o \\ln, raíces con \\sqrt y unidades con \\text (por ejemplo "$q'(x) = x(3x - 1)^{4}(21x - 2)$", "$\\dfrac{1}{2}(e - 1) \\approx 0.86$", "$a = 9.8\\ \\text{m/s}^{2}$"). Nunca escribas ^ ni / sueltos fuera de LaTeX. Si hay incisos, "a) $…$ b) $…$" con las letras fuera de LaTeX.
 - Para abiertos, en respuesta pon los criterios que debe cumplir una buena respuesta y un ejemplo breve.
 - Respeta el número, el tipo y los puntos de cada reactivo tal como vienen. Si la actividad viene en imágenes, léela de ahí.
 - pagina e y: si la actividad viene como texto, usa pagina 1 e y 0.

@@ -1,5 +1,6 @@
 // Encabezado de las vistas de un proyecto para el profesor: título, curso y pestañas
-// (Evaluación, Modelo del proyecto y Calificaciones; las dos últimas solo para el profesor del curso).
+// en el orden de la ruta del proyecto: A. Información general, B. Rúbrica, C. Evaluación y Calificaciones
+// (todas menos la evaluación, solo para el profesor del curso).
 import Link from "next/link";
 import { Encabezado } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
@@ -7,7 +8,7 @@ import type { Diccionario } from "@/lib/i18n/diccionario";
 import { evaluadoresDe } from "@/lib/proyectos";
 import type { Grupo, Proyecto } from "@/lib/tipos";
 
-export type PestanaProyecto = "evaluacion" | "modelo" | "concentrado";
+export type PestanaProyecto = "evaluacion" | "modelo" | "rubrica" | "concentrado";
 
 export function EncabezadoProyecto({
   t,
@@ -26,14 +27,17 @@ export function EncabezadoProyecto({
   const n = proyecto.etapas.length;
   const ev = evaluadoresDe(proyecto).length;
   const cerradas = proyecto.etapas.filter((e) => e.cerradaEn).length;
-  const pestanas: { clave: PestanaProyecto; href: string }[] = [
-    { clave: "evaluacion", href: `/profesor/proyectos/${proyecto.id}` },
+  const pasos = t.altaProyecto.flujo.pasos;
+  // Mismo orden que la ruta del proyecto (A, B, C) y al final las calificaciones.
+  const pestanas: { clave: PestanaProyecto; href: string; texto: string }[] = [
     ...(esDueno
       ? [
-          { clave: "modelo" as const, href: `/profesor/proyectos/${proyecto.id}/modelo` },
-          { clave: "concentrado" as const, href: `/profesor/proyectos/${proyecto.id}/calificaciones` },
+          { clave: "modelo" as const, href: `/profesor/proyectos/${proyecto.id}/modelo`, texto: `A. ${pasos.informacion[0]}` },
+          { clave: "rubrica" as const, href: `/profesor/proyectos/${proyecto.id}/rubrica`, texto: `B. ${pasos.rubrica[0]}` },
         ]
       : []),
+    { clave: "evaluacion", href: `/profesor/proyectos/${proyecto.id}`, texto: esDueno ? `C. ${pasos.evaluacion[0]}` : tp.pestanas.evaluacion },
+    ...(esDueno ? [{ clave: "concentrado" as const, href: `/profesor/proyectos/${proyecto.id}/calificaciones`, texto: tp.pestanas.concentrado }] : []),
   ];
   return (
     <>
@@ -63,7 +67,7 @@ export function EncabezadoProyecto({
               p.clave === activa ? "border-tinta-600 text-tinta-700" : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
-            {tp.pestanas[p.clave]}
+            {p.texto}
           </Link>
         ))}
       </nav>

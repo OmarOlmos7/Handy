@@ -30,7 +30,8 @@ const fr: TextosLegales = {
         id: "sensibles",
         titulo: "3. Données sensibles et mineurs",
         parrafos: [
-          "Nous ne demandons pas de données sensibles (santé, religion, origine ethnique, biométrie, etc.). Merci de ne pas les écrire sur les feuilles ni dans les commentaires. Si une feuille en contient par erreur, elles ne servent qu’à la corriger.",
+          "Nous ne demandons pas de données sensibles (santé, religion, origine ethnique, etc.). Merci de ne pas les écrire sur les feuilles ni dans les commentaires. Si une feuille en contient par erreur, elles ne servent qu’à la corriger.",
+          "La seule exception est facultative : si l’enseignant utilise l’appel par photo, une empreinte numérique du visage (donnée biométrique) est conservée uniquement pour les élèves qui donnent leur consentement exprès et écrit (signé par un parent ou tuteur pour les mineurs). La photo est analysée sur l’appareil de l’enseignant et n’est ni envoyée, ni conservée, ni transmise à l’intelligence artificielle ; l’empreinte sert uniquement à l’appel de ce cours et est supprimée lorsque le cours est archivé ou supprimé, lorsque l’élève est retiré ou lorsque le consentement est retiré. Refuser n’a aucune conséquence pour l’élève : l’appel se fait à la main.",
           "De nombreux élèves sont mineurs. L’établissement ou l’enseignant doit donc disposer de l’autorisation des parents ou du tuteur lorsque la loi l’exige, et l’élève mineur doit créer son compte avec l’accord de son tuteur. Si un tuteur nous demande d’effacer les données de son enfant, nous le faisons.",
         ],
       },

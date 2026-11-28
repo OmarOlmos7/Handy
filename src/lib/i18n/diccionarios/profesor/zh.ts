@@ -99,6 +99,14 @@ const profesor: Diccionario["profesor"] = {
     ayuda:
       "每行一名学生：学号、全名和邮箱（可选）。可以直接从 Excel 粘贴。如果留空，每名学生会在提交第一项作业时注册。填写邮箱后，学生用同一邮箱创建账户即可看到结果。",
     crear: "创建课程",
+    asignatura: "科目（教学大纲）",
+    sinAsignatura: "暂不关联科目",
+    misAsignaturas: "我的科目",
+    crearAsignatura: "+ 新建科目",
+    ayudaAsignatura: "大纲为课程提供单元：地图、大纲进度、学习路径和时间线。之后也可以用课程卡片上的铅笔关联。",
+    ayudaTarjeta: "大纲为课程提供单元（地图、进度、路径和时间线）。",
+    ayudaCrear: "保存后将进入科目创建（文件、粘贴文本或 AI），并关联到此课程。",
+    seEnlazara: "保存后，此科目将关联到课程 {curso}。",
   },
   curso: {
     meta: "课程",

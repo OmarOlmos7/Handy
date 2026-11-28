@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { avanceDelPeriodo, iconoUnidad, lineaTiempoCurso } from "../linea-tiempo";
+import { agruparPorUnidad, avanceDelPeriodo, iconoUnidad, lineaTiempoCurso, unidadDeActividad } from "../linea-tiempo";
 
 describe("lineaTiempoCurso", () => {
   it("reparte las unidades en tramos iguales dentro del curso", () => {
@@ -57,5 +57,29 @@ describe("iconoUnidad", () => {
   it("sin pista usa uno por número", () => {
     expect(iconoUnidad("Unidad sin pistas", 0)).toBe("libro");
     expect(iconoUnidad("Unidad sin pistas", 1)).toBe("grafica");
+  });
+});
+
+describe("agruparPorUnidad", () => {
+  const asignatura = { id: "as1", unidades: [{ nombre: "U1" }, { nombre: "U2" }, { nombre: "U3" }] };
+  const act = (id: string, unidad?: string, asignaturaId = "as1") => ({ id, temario: unidad ? { asignaturaId, unidad } : undefined });
+
+  it("agrupa en el orden del temario, con todas las unidades y al final las sin unidad", () => {
+    const g = agruparPorUnidad(asignatura, [act("a", "U3"), act("b"), act("c", "U1"), act("d", "U3"), act("e", "U2", "otra")]);
+    expect(g.map((x) => [x.indice, x.items.map((i) => i.id)])).toEqual([
+      [0, ["c"]],
+      [1, []],
+      [2, ["a", "d"]],
+      [null, ["b", "e"]],
+    ]);
+  });
+
+  it("no agrega la sección sin unidad si todas están ligadas", () => {
+    expect(agruparPorUnidad(asignatura, [act("a", "U2")]).map((x) => x.indice)).toEqual([0, 1, 2]);
+  });
+
+  it("unidadDeActividad ignora unidades que ya no existen", () => {
+    expect(unidadDeActividad(asignatura, act("a", "U9"))).toBeNull();
+    expect(unidadDeActividad(asignatura, act("a", "U2"))).toBe(1);
   });
 });

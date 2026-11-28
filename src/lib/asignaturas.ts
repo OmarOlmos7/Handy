@@ -133,7 +133,7 @@ const normal = (s: string) =>
     .trim();
 
 /** Asignatura que corresponde al curso (misma materia), si hay. */
-export function asignaturaDeGrupo(asignaturas: Asignatura[], grupo: Pick<Grupo, "materia"> | undefined): Asignatura | undefined {
+export function asignaturaDeGrupo<A extends Pick<Asignatura, "nombre">>(asignaturas: A[], grupo: Pick<Grupo, "materia"> | undefined): A | undefined {
   if (!grupo) return undefined;
   return asignaturas.find((a) => normal(a.nombre) === normal(grupo.materia));
 }
@@ -176,15 +176,32 @@ export function temarioComoTexto(t: TemarioActividad | undefined) {
 }
 
 /**
- * Asignatura del curso para el mapa del alumno: la que usan sus actividades; si ninguna tiene
- * temas, la del profesor con el mismo nombre que la materia.
+ * Asignatura del curso: la que el profesor enlazó al crear o editar el curso. Si no eligió ninguna
+ * (cursos anteriores), la que usan sus actividades; si ninguna tiene temas, la del profesor con el
+ * mismo nombre que la materia. "Sin asignatura" ("") no enlaza ninguna.
  */
 export function asignaturaDelCurso(
   db: { asignaturas?: Asignatura[]; actividades: { grupoId: string; temario?: TemarioActividad }[] },
-  grupo: Pick<Grupo, "id" | "materia" | "profesorId">,
+  grupo: Pick<Grupo, "id" | "materia" | "profesorId" | "asignaturaId">,
 ): Asignatura | undefined {
+  if (grupo.asignaturaId === "") return undefined;
   const delProfesor = (db.asignaturas ?? []).filter((a) => a.profesorId === grupo.profesorId);
+  const enlazada = delProfesor.find((a) => a.id === grupo.asignaturaId);
+  if (enlazada) return enlazada;
   const usadas = db.actividades.filter((a) => a.grupoId === grupo.id && a.temario).map((a) => a.temario!.asignaturaId);
   const masUsada = [...new Set(usadas)].sort((x, y) => usadas.filter((u) => u === y).length - usadas.filter((u) => u === x).length)[0];
   return delProfesor.find((a) => a.id === masUsada) ?? asignaturaDeGrupo(delProfesor, grupo);
+}
+
+/** Valor del selector de asignatura del curso que pide crear una asignatura nueva. */
+export const NUEVA_ASIGNATURA = "__nueva";
+
+/**
+ * Lee la asignatura elegida para un curso: el id de una asignatura del profesor, "" (sin asignatura)
+ * o NUEVA_ASIGNATURA. Cualquier otro valor se ignora (undefined: no cambia nada).
+ */
+export function leerAsignaturaCurso(crudo: unknown, asignaturas: Pick<Asignatura, "id" | "profesorId">[], profesorId: string): string | undefined {
+  if (typeof crudo !== "string") return undefined;
+  if (crudo === "" || crudo === NUEVA_ASIGNATURA) return crudo;
+  return asignaturas.some((a) => a.id === crudo && a.profesorId === profesorId) ? crudo : undefined;
 }

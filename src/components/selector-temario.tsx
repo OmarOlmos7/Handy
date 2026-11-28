@@ -37,20 +37,26 @@ function Casilla({ activa, parcial, onClick, children, fuerte }: { activa: boole
 export function SelectorTemario({
   asignaturas,
   materia,
+  asignaturaCurso,
   inicial,
 }: {
   asignaturas: AsignaturaParaAlta[];
   materia?: string;
+  /** Asignatura enlazada al curso ("" = sin asignatura); manda sobre el nombre de la materia. */
+  asignaturaCurso?: string;
   /** Unidad y temas ya elegidos (al reeditar una actividad). */
   inicial?: TemarioActividad;
 }) {
   const { t } = useTextos();
   const ta = t.profesor.asignaturas;
-  // La asignatura sigue la materia del curso hasta que el profesor elige otra.
+  // La asignatura sigue la del curso (o su materia) hasta que el profesor elige otra.
   const asignaturaInicial = asignaturas.find((a) => a.id === inicial?.asignaturaId);
   const unidadInicial = asignaturaInicial?.unidades.findIndex((u) => u.nombre === inicial?.unidad) ?? -1;
   const [elegida, setElegida] = useState<string | null>(asignaturaInicial?.id ?? null);
-  const porMateria = asignaturas.find((a) => materia && normal(a.nombre) === normal(materia))?.id ?? "";
+  const porMateria =
+    asignaturaCurso !== undefined
+      ? (asignaturas.find((a) => a.id === asignaturaCurso)?.id ?? "")
+      : (asignaturas.find((a) => materia && normal(a.nombre) === normal(materia))?.id ?? "");
   const asignaturaId = elegida ?? porMateria;
   const asignatura = asignaturas.find((a) => a.id === asignaturaId);
   const [unidadSel, setUnidadSel] = useState<{ asignatura: string; unidad: number } | null>(

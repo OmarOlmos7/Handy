@@ -18,6 +18,7 @@ import { colorCalificacion, fechaLarga } from "./ui";
 import { textos } from "@/lib/i18n/servidor";
 import { formato } from "@/lib/i18n/idiomas";
 import { conPuntaje } from "@/lib/modalidad";
+import { respuestaMat } from "@/lib/notacion";
 
 const titulo = "text-xs font-semibold uppercase tracking-wide text-slate-500";
 const tarjeta = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200";
@@ -282,7 +283,7 @@ export async function ReporteAlumno({
                       <details className="mt-2">
                         <summary className="cursor-pointer text-xs font-medium text-tinta-700">{tr.verRespuesta}</summary>
                         <p className="mt-1 font-medium text-acierto">
-                          <TextoMat texto={e.respuesta} negritas="font-semibold" />
+                          <TextoMat texto={respuestaMat(e.respuesta)} negritas="font-semibold" />
                         </p>
                       </details>
                     </li>
@@ -332,7 +333,7 @@ export async function ReporteAlumno({
                 )}
                 {r.respuesta.trim() && (
                   <p className="mt-3 font-medium text-acierto">
-                    {tr.respuesta} <TextoMat texto={r.respuesta} negritas="font-semibold" />
+                    {tr.respuesta} <TextoMat texto={respuestaMat(r.respuesta)} negritas="font-semibold" />
                   </p>
                 )}
               </li>

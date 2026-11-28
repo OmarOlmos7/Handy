@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/modelos-rostro.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/modelos-rostro.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -13,6 +15,7 @@
     "@anthropic-ai/sdk": "^1.7.0",
     "@pdf-lib/fontkit": "^1.1.1",
     "@types/qrcode": "^1.5.6",
+    "@vladmandic/face-api": "^1.7.15",
     "exceljs": "^4.4.0",
     "katex": "^0.19.1",
     "maxmind": "^4.3.29",

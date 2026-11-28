@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EncabezadoProyecto } from "@/components/encabezado-proyecto";
+import { ConFlujoProyecto } from "@/components/flujo-proyecto";
 import { ModeloProyecto } from "@/components/modelo-proyecto";
 import { leer } from "@/lib/almacen";
 import { textos } from "@/lib/i18n/servidor";
@@ -9,10 +10,10 @@ import { requerirProfesor } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
-  return { title: t.proyecto.pestanas.modelo };
+  return { title: t.altaProyecto.flujo.pasos.informacion[0] };
 }
 
-/** Modelo de trabajo del proyecto: etapas, rúbricas, evaluadores, equipos y ponderación. Solo el profesor del curso. */
+/** Paso A de la ruta del proyecto: información general, etapas con fechas y entregables, ponderación, evaluadores y equipos. Solo el profesor del curso. */
 export default async function ModeloDelProyecto({ params }: PageProps<"/profesor/proyectos/[id]/modelo">) {
   const { id } = await params;
   const profesor = await requerirProfesor();
@@ -24,17 +25,23 @@ export default async function ModeloDelProyecto({ params }: PageProps<"/profesor
   return (
     <>
       <EncabezadoProyecto t={t} proyecto={proyecto} grupo={grupo} esDueno activa="modelo" />
+      <ConFlujoProyecto vista="informacion" proyecto={proyecto} t={t}>
       <ModeloProyecto
         key={proyecto.etapas.map((e) => e.id).join()}
         proyectoId={proyecto.id}
         grupoId={grupo.id}
-        inicial={{ titulo: proyecto.titulo, descripcion: proyecto.descripcion, etapas: proyecto.etapas, equipos: proyecto.equipos }}
+        inicial={{
+          titulo: proyecto.titulo,
+          descripcion: proyecto.descripcion,
+          objetivo: proyecto.objetivo,
+          competencias: proyecto.competencias,
+          etapas: proyecto.etapas,
+          equipos: proyecto.equipos,
+        }}
         alumnos={grupo.alumnos.filter((a, i) => grupo.alumnos.findIndex((x) => x.matricula === a.matricula) === i).map((a) => ({ matricula: a.matricula, nombre: a.nombre }))}
         evaluadoresIniciales={evaluadoresConNombre(db, proyecto)}
-        evaluadasPorEtapa={Object.fromEntries(
-          proyecto.etapas.map((e) => [e.id, (db.evaluacionesProyecto ?? []).filter((x) => x.proyectoId === proyecto.id && x.etapaId === e.id && x.terminada).length]),
-        )}
       />
+      </ConFlujoProyecto>
     </>
   );
 }

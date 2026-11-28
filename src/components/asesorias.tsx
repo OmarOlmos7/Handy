@@ -13,7 +13,9 @@ import {
 import { DURACIONES, FRANJAS, MAX_COMENTARIOS, MAX_NOTAS, MAX_TEMA, MINUTOS_FRANJA, MOTIVOS, duracionTexto, hora, type FranjaAlumno } from "@/lib/asesorias";
 import type { AsesoriaVista, EstadoVista } from "@/lib/asesorias-vista";
 import type { EntregaCalendario } from "@/lib/agenda-hoy";
+import { horaCampo } from "@/lib/asistencia";
 import { formato } from "@/lib/i18n/idiomas";
+import type { ClaseHorario } from "@/lib/tipos";
 import { BotonIcono, IconoCalendario, IconoEngrane } from "./iconos";
 import { useTextos } from "./proveedor-textos";
 import { Boton, Insignia, campo, type Tono } from "./ui";
@@ -67,22 +69,58 @@ export function ResumenTarjeta({ href, realizadas, minutos, periodo }: { href: s
 }
 
 /**
- * Engrane de la tarjeta del curso: fechas de inicio y fin del curso. Abre un panelito sobre la
- * tarjeta para no cambiar su tamaño.
+ * Engrane de la tarjeta del curso: fechas de inicio y fin del curso y su horario de clase (días,
+ * horas y frecuencia), con el que se arma la lista de asistencia. Abre un panelito sobre la tarjeta
+ * para no cambiar su tamaño.
  */
-export function AjustesCurso({ grupoId, inicio, fin }: { grupoId: string; inicio?: string; fin?: string }) {
+export function AjustesCurso({
+  grupoId,
+  inicio,
+  fin,
+  horario,
+  cadaSemanas,
+}: {
+  grupoId: string;
+  inicio?: string;
+  fin?: string;
+  horario?: ClaseHorario[];
+  cadaSemanas?: number;
+}) {
   const router = useRouter();
-  const ta = useTextos().t.asesorias.ajustes;
+  const { t } = useTextos();
+  const ta = t.asesorias.ajustes;
+  const th = t.asistencia.horario;
   const [abierto, setAbierto] = useState(false);
   const [error, setError] = useState("");
   const [pendiente, iniciar] = useTransition();
+  const inicial = () => (horario ?? []).map((c) => ({ dia: c.dia, inicio: horaCampo(c.inicio), fin: horaCampo(c.fin) }));
+  const [clases, setClases] = useState(inicial);
+
+  function abrir() {
+    if (!abierto) setClases(inicial());
+    setAbierto((x) => !x);
+  }
+
+  function cambiar(i: number, clave: "dia" | "inicio" | "fin", valor: string) {
+    setClases((cs) => cs.map((c, j) => (j === i ? { ...c, [clave]: clave === "dia" ? Number(valor) : valor } : c)));
+  }
+
+  function agregar() {
+    setClases((cs) => {
+      const ultima = cs.at(-1);
+      return [...cs, ultima ? { ...ultima, dia: (ultima.dia % 7) + 1 } : { dia: 1, inicio: "08:00", fin: "09:00" }];
+    });
+  }
 
   function guardar(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const d = new FormData(e.currentTarget);
     setError("");
     iniciar(async () => {
-      const r = await fechasCurso(grupoId, String(d.get("inicio") ?? ""), String(d.get("fin") ?? ""));
+      const r = await fechasCurso(grupoId, String(d.get("inicio") ?? ""), String(d.get("fin") ?? ""), {
+        clases,
+        cadaSemanas: d.get("cadaSemanas"),
+      });
       if ("error" in r) setError(r.error);
       else {
         setAbierto(false);
@@ -93,13 +131,13 @@ export function AjustesCurso({ grupoId, inicio, fin }: { grupoId: string; inicio
 
   return (
     <span className="relative inline-flex">
-      <BotonIcono etiqueta={ta.titulo} onClick={() => setAbierto((x) => !x)} aria-expanded={abierto}>
+      <BotonIcono etiqueta={ta.titulo} onClick={abrir} aria-expanded={abierto}>
         <IconoEngrane />
       </BotonIcono>
       {abierto && (
         <form
           onSubmit={guardar}
-          className="absolute top-10 right-0 z-30 w-[min(18rem,calc(100vw-3rem))] space-y-2 rounded-xl bg-white p-4 text-left shadow-lg ring-1 ring-slate-200"
+          className="absolute top-10 right-0 z-30 max-h-[75vh] w-[min(24rem,calc(100vw-2rem))] space-y-2 overflow-x-hidden overflow-y-auto rounded-xl bg-white p-4 text-left shadow-lg ring-1 ring-slate-200"
           onKeyDown={(e) => e.key === "Escape" && setAbierto(false)}
         >
           <p className="font-semibold text-slate-900">⚙️ {ta.titulo}</p>
@@ -114,6 +152,65 @@ export function AjustesCurso({ grupoId, inicio, fin }: { grupoId: string; inicio
             </label>
           </div>
           <p className="text-xs text-slate-500">{ta.ayuda}</p>
+          <fieldset className="space-y-2 border-t border-slate-200 pt-3">
+            <legend className="sr-only">{th.titulo}</legend>
+            <p className="text-sm font-semibold text-slate-900">🕘 {th.titulo}</p>
+            {clases.map((c, i) => (
+              <div key={i} className="grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto] items-center gap-1 text-sm">
+                <select
+                  aria-label={th.dia}
+                  value={c.dia}
+                  onChange={(e) => cambiar(i, "dia", e.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-1 py-1 text-sm"
+                >
+                  {t.asistencia.dias.map((n, d) => (
+                    <option key={n} value={d + 1}>
+                      {t.asistencia.diasCortos[d]}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="time"
+                  aria-label={th.de}
+                  value={c.inicio}
+                  step={300}
+                  onChange={(e) => cambiar(i, "inicio", e.target.value)}
+                  className="min-w-0 rounded-lg border border-slate-300 bg-white px-1 py-1 text-sm"
+                  required
+                />
+                <span className="text-slate-400">{th.a}</span>
+                <input
+                  type="time"
+                  aria-label={th.a}
+                  value={c.fin}
+                  step={300}
+                  onChange={(e) => cambiar(i, "fin", e.target.value)}
+                  className="min-w-0 rounded-lg border border-slate-300 bg-white px-1 py-1 text-sm"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setClases((cs) => cs.filter((_, j) => j !== i))}
+                  className="rounded-md px-1 py-1 text-slate-400 hover:bg-slate-100 hover:text-error"
+                  aria-label={th.quitar}
+                  title={th.quitar}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={agregar} className="text-sm font-medium text-tinta-700 hover:underline">
+              {th.agregar}
+            </button>
+            <label className="block text-xs font-medium text-slate-500">
+              {th.frecuencia}
+              <select name="cadaSemanas" defaultValue={cadaSemanas === 2 ? "2" : "1"} className={`${campo} !px-2 !py-1.5`}>
+                <option value="1">{th.cada1}</option>
+                <option value="2">{th.cada2}</option>
+              </select>
+            </label>
+            <p className="text-xs text-slate-500">{th.ayuda}</p>
+          </fieldset>
           {error && <p className="text-xs text-error">{error}</p>}
           <div className="flex gap-2">
             <Boton type="submit" disabled={pendiente} className="!px-3 !py-1.5">

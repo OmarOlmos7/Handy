@@ -31,6 +31,9 @@ const marco = {
     sinTemario: "Este curso aún no tiene temario. Crea o liga una asignatura con sus unidades para ver la línea de tiempo.",
     irAsignaturas: "Ir a Asignaturas",
     verAvance: "Ver avance del temario",
+    verMapa: "Ver mapa del temario",
+    avanceAlumno: "Tu avance: {p} % terminado",
+    sinFechasAlumno: "Tu profesor aún no pone las fechas de inicio y término del curso; cuando las ponga verás aquí las unidades en el tiempo.",
   },
   enviarCodigo: {
     titulo: "Código del curso y pago de membresía",
@@ -51,6 +54,19 @@ const marco = {
     asunto: "Tu código para el curso {curso}",
     cuerpo:
       "Hola, {nombre}:\n\nTu profesor(a) {profesor} te inscribió en el curso {curso}.\n\nCódigo ID del curso: {codigo}\n\nCon este código pagas tu membresía (licencia) y quedas inscrito:\n1. Entra a {url}\n2. Crea tu cuenta o inicia sesión con este correo.\n3. Escribe el código, elige la duración y paga.\n\nSi tienes dudas, pregúntale a tu profesor(a).\n\niEureka-Grader",
+  },
+  unidades: {
+    titulo: "Actividades por unidad",
+    pista: "Da clic en una unidad de la línea de tiempo para ver solo sus actividades.",
+    verTodas: "Ver todas las unidades",
+    verUnidad: "Ver las actividades de «{nombre}»",
+    mostrando: "Unidad {n}: {nombre}",
+    sinUnidad: "Sin unidad del temario",
+    actividades1: "1 actividad",
+    actividadesN: "{n} actividades",
+    vacia: "Aún no hay actividades en esta unidad. Al crear una actividad, elige esta unidad en el selector de temario.",
+    vaciaAlumno: "Aún no hay actividades en esta unidad.",
+    unidad: "Unidad {n}",
   },
 };
 

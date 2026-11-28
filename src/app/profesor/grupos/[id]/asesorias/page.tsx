@@ -57,7 +57,7 @@ export default async function AsesoriasCursoProfesor({ params, searchParams }: P
           </div>
           <div className="flex items-center gap-1 text-sm text-tinta-700">
             {!periodo && <span>{tc.definirFechas}</span>}
-            <AjustesCurso grupoId={grupo.id} inicio={grupo.inicio} fin={grupo.fin} />
+            <AjustesCurso grupoId={grupo.id} inicio={grupo.inicio} fin={grupo.fin} horario={grupo.horario} cadaSemanas={grupo.cadaSemanas} />
           </div>
         </div>
       </Tarjeta>

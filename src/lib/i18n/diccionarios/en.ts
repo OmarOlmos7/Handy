@@ -11,9 +11,11 @@ import ajustesAlumno from "./ajustes-alumno/en";
 import contenido from "./contenido/en";
 import avisos from "./avisos/en";
 import proyecto from "./proyecto/en";
+import altaProyecto from "./alta-proyecto/en";
 import asesorias from "./asesorias/en";
 import perfil from "./perfil/en";
 import marco from "./marco/en";
+import asistencia from "./asistencia/en";
 
 const en: Diccionario = {
   comun: {
@@ -470,9 +472,11 @@ const en: Diccionario = {
   contenido,
   avisos,
   proyecto,
+  altaProyecto,
   asesorias,
   perfil,
   marco,
+  asistencia,
 };
 
 export default en;

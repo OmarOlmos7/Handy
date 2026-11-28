@@ -44,3 +44,6 @@ next-env.d.ts
 /data
 .env*.local
 /geoip/
+
+# Modelos de face-api (los copia scripts/modelos-rostro.mjs)
+/public/modelos-rostro/

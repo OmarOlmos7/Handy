@@ -2,6 +2,7 @@
 // Funciones puras sobre la base de datos: las acciones del servidor las envuelven.
 import { correoValido, normalizarCorreo, normalizarMatricula } from "./cuentas";
 import { quitarAlumnoDeAsesorias, renombrarMatriculaAsesorias } from "./asesorias";
+import { quitarAlumnoDeAsistencia, renombrarMatriculaAsistencia } from "./asistencia";
 import { quitarAlumnoDeAvisos, renombrarMatriculaAvisos } from "./avisos";
 import type { Alumno, BaseDeDatos, Grupo } from "./tipos";
 
@@ -92,6 +93,7 @@ export function cambiarAlumno(db: BaseDeDatos, grupo: Grupo, matriculaAnterior: 
     for (const v of db.valoraciones ?? []) if (v.grupoId === grupo.id && v.matricula === antes) v.matricula = nuevo.matricula;
     renombrarMatriculaAvisos(db.avisos, grupo.id, antes, nuevo.matricula);
     renombrarMatriculaAsesorias(db.asesorias, grupo.id, antes, nuevo.matricula);
+    renombrarMatriculaAsistencia(db, grupo.id, antes, nuevo.matricula);
   }
   Object.assign(alumno, nuevo);
   return alumno;
@@ -137,6 +139,7 @@ export function bajaAlumno(db: BaseDeDatos, grupo: Grupo, matricula: string): { 
     archivos.push(...avisos.carpetas);
   }
   if (db.asesorias) db.asesorias = quitarAlumnoDeAsesorias(db.asesorias, grupo.id, m);
+  quitarAlumnoDeAsistencia(db, grupo.id, m);
   grupo.alumnos = grupo.alumnos.filter((a) => a !== alumno);
   // Solo rutas dentro de la carpeta de datos, sin "..".
   return { alumno, archivos: [...new Set(archivos)].filter((r) => r && !r.split(/[\\/]/).includes("..") && !/^[\\/]/.test(r)) };
