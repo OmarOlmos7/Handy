@@ -18,12 +18,9 @@ export interface TipoLicencia {
   destacado?: boolean;
 }
 
-/**
- * Precio del semestre: Omar aún no lo fija. Marcador entre el de 10 semanas y el de un año;
- * se cambia aquí y todo (precios, cobro, pruebas) lo toma de esta constante.
- */
+/** Precio del semestre (confirmado por Omar el 28-nov-2026). */
 export const PRECIO_SEMESTRE = 700;
-export const SEMESTRE_PROVISIONAL = true;
+export const SEMESTRE_PROVISIONAL = false;
 
 export const LICENCIAS: TipoLicencia[] = [
   { id: "semanas5", semanas: 5, precio: 350 },
