@@ -29,6 +29,9 @@ const marco: typeof es = {
     sinTemario: "Dieser Kurs hat noch keinen Lehrplan. Erstelle oder verknüpfe ein Fach mit seinen Einheiten, um die Zeitleiste zu sehen.",
     irAsignaturas: "Zu den Fächern",
     verAvance: "Lehrplanfortschritt ansehen",
+    verMapa: "Lehrplankarte ansehen",
+    avanceAlumno: "Dein Fortschritt: {p} % erledigt",
+    sinFechasAlumno: "Deine Lehrkraft hat Beginn und Ende des Kurses noch nicht festgelegt; danach siehst du hier die Einheiten im Zeitverlauf.",
   },
   enviarCodigo: {
     titulo: "Kurscode und Zahlung der Mitgliedschaft",
@@ -60,6 +63,7 @@ const marco: typeof es = {
     actividades1: "1 Aktivität",
     actividadesN: "{n} Aktivitäten",
     vacia: "In dieser Einheit gibt es noch keine Aktivitäten. Wähle beim Erstellen einer Aktivität diese Einheit in der Lehrplanauswahl.",
+    vaciaAlumno: "In dieser Einheit gibt es noch keine Aktivitäten.",
     unidad: "Einheit {n}",
   },
 };

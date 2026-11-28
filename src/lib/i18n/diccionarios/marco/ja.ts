@@ -29,6 +29,9 @@ const marco: typeof es = {
     sinTemario: "このクラスにはまだシラバスがありません。単元のある科目を作成または関連付けるとタイムラインが表示されます。",
     irAsignaturas: "科目へ",
     verAvance: "シラバスの進捗を見る",
+    verMapa: "シラバスマップを見る",
+    avanceAlumno: "あなたの進捗: {p} % 完了",
+    sinFechasAlumno: "先生がまだ授業の開始日と終了日を設定していません。設定されると、ここに単元の日程が表示されます。",
   },
   enviarCodigo: {
     titulo: "クラスコードと会費の支払い",
@@ -60,6 +63,7 @@ const marco: typeof es = {
     actividades1: "課題 1 件",
     actividadesN: "課題 {n} 件",
     vacia: "この単元にはまだ課題がありません。課題を作成するときにシラバスの選択でこの単元を選んでください。",
+    vaciaAlumno: "この単元にはまだ課題がありません。",
     unidad: "単元 {n}",
   },
 };

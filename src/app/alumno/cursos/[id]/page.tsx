@@ -1,18 +1,23 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { CompaneroDelAlumno } from "@/components/companero-servidor";
+import { LineaTiempoCurso } from "@/components/linea-tiempo-curso";
+import { BarraUnidades, SeccionUnidad, SeleccionUnidades } from "@/components/unidades-curso";
 import { FilaActividadAlumno } from "@/components/fila-actividad-alumno";
 import { TablaAutoestudio } from "@/components/tabla-autoestudio";
 import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
 import { ResumenCategoria } from "@/components/resumen-categoria";
-import { BotonLink, Encabezado, Tarjeta } from "@/components/ui";
+import { BotonLink, Encabezado, Tarjeta, fechaLarga } from "@/components/ui";
 import { leer } from "@/lib/almacen";
+import { ahoraEnMexico } from "@/lib/asesorias";
 import { asignaturaDelCurso } from "@/lib/asignaturas";
+import { avanceDelPeriodo, iconoUnidad, lineaTiempoCurso } from "@/lib/linea-tiempo";
+import { colorUnidad } from "@/lib/mapa-temario";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
 import { iconoTipoActividad } from "@/lib/iconos-tipo";
 import { estadoEnvio } from "@/lib/periodo";
-import { actividadesVisibles, categoriasAlumno, resumenAvance, seccionesAlumno } from "@/lib/portal-alumno";
+import { actividadesVisibles, categoriasAlumno, resumenAvance, seccionesAlumno, unidadesAlumno, type CategoriaAlumno } from "@/lib/portal-alumno";
 import { alumnoActual } from "@/lib/sesion";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -47,10 +52,16 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
   const sinValoracion =
     conTemario && !(db.valoraciones ?? []).some((v) => v.alumnoId === alumno.id && v.grupoId === grupo.id && v.asignaturaId === asignatura!.id);
   const evaluadas = secciones.entregadas.filter((x) => x.entrega?.estado === "aprobada").length;
+  // Línea de tiempo del curso: las unidades del temario repartidas entre el inicio y el término,
+  // con el avance propio del alumno en cada una; debajo, sus actividades agrupadas por unidad.
+  const hoy = ahoraEnMexico(ahora).fecha;
+  const linea = conTemario ? lineaTiempoCurso(asignatura!.unidades.map((u) => u.nombre), grupo.inicio, grupo.fin, hoy) : null;
+  const porUnidad = conTemario ? unidadesAlumno(asignatura!, items, ahora) : null;
+  const tu = t.marco.unidades;
   const resumenPropias = resumenAvance(propias.map((a) => (a.estado === "completada" ? "terminada" : a.estado === "evaluando" ? "en_proceso" : "sin_iniciar")));
 
   return (
-    <>
+    <SeleccionUnidades>
       <Encabezado
         migas={[{ texto: t.alumno.panel.titulo, href: "/alumno" }]}
         rutaEtiqueta={t.profesor.comun.ruta}
@@ -95,10 +106,83 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
         </div>
       )}
       <CompaneroDelAlumno db={db} alumno={alumno} grupoId={grupo.id} />
+      {conTemario && (
+        <LineaTiempoCurso
+          grupoId={grupo.id}
+          inicio={grupo.inicio}
+          fin={grupo.fin}
+          unidades={linea?.map((u) => ({ ...u, icono: iconoUnidad(u.nombre, u.indice), avance: porUnidad?.[u.indice]?.avance ?? null })) ?? null}
+          transcurrido={avanceDelPeriodo(grupo.inicio, grupo.fin, hoy)}
+          hoy={hoy}
+          hayTemario
+          t={t}
+          locale={locale}
+          conteos={porUnidad && actividades.length > 0 ? asignatura!.unidades.map((_, i) => porUnidad[i]?.resumen.total ?? 0) : undefined}
+          vista="alumno"
+        />
+      )}
       {actividades.length === 0 ? (
         <Tarjeta className="text-sm text-slate-600">{tc.sinActividadesCurso}</Tarjeta>
+      ) : porUnidad ? (
+        <div className="space-y-3">
+          <BarraUnidades nombres={asignatura!.unidades.map((u) => u.nombre)} />
+          {/* Una sección plegable por unidad, en el orden del temario; dentro, las actividades por tipo. */}
+          {porUnidad.map(({ indice, categorias: deUnidad, resumen, porEntregar }) => {
+            const color = indice === null ? null : colorUnidad(indice);
+            const tramo = indice === null ? undefined : linea?.[indice];
+            return (
+              <SeccionUnidad
+                key={indice ?? "sin-unidad"}
+                indice={indice}
+                abierta={tramo?.estado === "en_curso" || porEntregar}
+                encabezado={
+                  <>
+                    <span
+                      aria-hidden
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold"
+                      style={color ? { background: tramo?.estado === "pendiente" ? color.fondo : color.nodo, color: tramo?.estado === "pendiente" ? color.nodo : "#fff" } : { background: "#e2e8f0", color: "#475569" }}
+                    >
+                      {indice === null ? "–" : indice + 1}
+                    </span>
+                    <span className="min-w-0">
+                      <h2 className="text-base font-semibold leading-snug text-slate-900">{indice === null ? tu.sinUnidad : asignatura!.unidades[indice].nombre}</h2>
+                      {tramo && (
+                        <span className="block text-xs text-slate-500">
+                          {fechaLarga(tramo.desde, locale)} – {fechaLarga(tramo.hasta, locale)}
+                        </span>
+                      )}
+                    </span>
+                    {resumen.total > 0 ? (
+                      <ResumenCategoria resumen={resumen} t={t} />
+                    ) : (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{formato(tu.actividadesN, { n: 0 })}</span>
+                    )}
+                  </>
+                }
+              >
+                {deUnidad.length === 0 ? (
+                  <p className="px-5 py-4 text-sm text-slate-500">{tu.vaciaAlumno}</p>
+                ) : (
+                  deUnidad.map((c) => (
+                    <div key={c.etiqueta || "-"}>
+                      <p className="flex items-center gap-2 bg-slate-50 px-5 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <span aria-hidden className="text-sm normal-case">
+                          {c.etiqueta ? iconoTipoActividad(c.etiqueta) : "🏷️"}
+                        </span>
+                        {c.etiqueta || tc.categoriaSinTipo}
+                        <span className="font-normal normal-case text-slate-400">· {c.items.length}</span>
+                      </p>
+                      <Filas categoria={c} ahora={ahora} />
+                    </div>
+                  ))
+                )}
+              </SeccionUnidad>
+            );
+          })}
+        </div>
       ) : (
         <div className="space-y-3">
+          {/* Sin temario: una sección plegable por tipo de actividad. */}
           {categorias.map((c) => {
             // Abierta si tiene algo que puede entregar ya; si no, plegada con su resumen.
             const abierta = c.items.some((x) => x.avance === "sin_iniciar" && estadoEnvio(x.actividad, ahora) === "abierto");
@@ -113,11 +197,9 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
                   <h2 className="text-base font-semibold text-slate-900">{titulo}</h2>
                   <ResumenCategoria resumen={c.resumen} t={t} />
                 </summary>
-                <ul className="divide-y divide-slate-100 border-t border-slate-100">
-                  {c.items.map(({ actividad, entrega }) => (
-                    <FilaActividadAlumno key={actividad.id} actividad={actividad} entrega={entrega} ahora={ahora} />
-                  ))}
-                </ul>
+                <div className="border-t border-slate-100">
+                  <Filas categoria={c} ahora={ahora} />
+                </div>
               </details>
             );
           })}
@@ -137,6 +219,17 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
           <TablaAutoestudio lista={propias.slice(0, 5)} t={t} locale={locale} enlaces />
         </div>
       </details>
-    </>
+    </SeleccionUnidades>
+  );
+}
+
+/** Renglones de las actividades de una categoría. */
+function Filas({ categoria, ahora }: { categoria: CategoriaAlumno; ahora: Date }) {
+  return (
+    <ul className="divide-y divide-slate-100">
+      {categoria.items.map(({ actividad, entrega }) => (
+        <FilaActividadAlumno key={actividad.id} actividad={actividad} entrega={entrega} ahora={ahora} />
+      ))}
+    </ul>
   );
 }

@@ -29,6 +29,9 @@ const marco: typeof es = {
     sinTemario: "Ce cours n’a pas encore de programme. Crée ou associe une matière avec ses unités pour voir la chronologie.",
     irAsignaturas: "Aller aux Matières",
     verAvance: "Voir la progression du programme",
+    verMapa: "Voir la carte du programme",
+    avanceAlumno: "Ta progression : {p} % terminé",
+    sinFechasAlumno: "Ton professeur n’a pas encore fixé les dates de début et de fin du cours ; ensuite, tu verras ici les unités dans le temps.",
   },
   enviarCodigo: {
     titulo: "Code du cours et paiement de l’abonnement",
@@ -60,6 +63,7 @@ const marco: typeof es = {
     actividades1: "1 activité",
     actividadesN: "{n} activités",
     vacia: "Aucune activité dans cette unité pour l’instant. En créant une activité, choisis cette unité dans le sélecteur du programme.",
+    vaciaAlumno: "Aucune activité dans cette unité pour l’instant.",
     unidad: "Unité {n}",
   },
 };
