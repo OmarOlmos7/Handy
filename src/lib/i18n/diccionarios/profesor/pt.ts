@@ -100,6 +100,14 @@ const profesor: Diccionario["profesor"] = {
     ayuda:
       "Uma linha por aluno: matrícula, nome completo e e-mail (opcional). Você pode colar direto do Excel. Se deixar vazio, cada aluno se cadastra ao entregar a primeira atividade. Se informar o e-mail, o aluno vê seus resultados ao criar a conta com esse mesmo e-mail.",
     crear: "Criar curso",
+    asignatura: "Disciplina (programa)",
+    sinAsignatura: "Sem disciplina por enquanto",
+    misAsignaturas: "Minhas disciplinas",
+    crearAsignatura: "+ Criar nova disciplina",
+    ayudaAsignatura: "O programa dá as unidades do curso: mapa, avanço do programa, trilhas de aprendizagem e linha do tempo. Você também pode vinculá-la depois com o lápis do cartão.",
+    ayudaTarjeta: "O programa dá as unidades do curso (mapa, avanço, trilhas e linha do tempo).",
+    ayudaCrear: "Ao salvar, você passará a cadastrar a disciplina (arquivo, texto colado ou IA) e ela ficará vinculada a este curso.",
+    seEnlazara: "Ao salvar, esta disciplina ficará vinculada ao curso {curso}.",
   },
   curso: {
     meta: "Curso",

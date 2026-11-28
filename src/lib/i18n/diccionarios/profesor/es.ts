@@ -98,6 +98,14 @@ const profesor = {
     ayuda:
       "Una línea por alumno: matrícula, nombre completo y correo (opcional). Puedes pegar directo desde Excel. Si la dejas vacía, cada alumno se registra solo al entregar su primera actividad. Si pones su correo, el alumno ve sus resultados al crear su cuenta con ese mismo correo.",
     crear: "Crear curso",
+    asignatura: "Asignatura (temario)",
+    sinAsignatura: "Sin asignatura por ahora",
+    misAsignaturas: "Mis asignaturas",
+    crearAsignatura: "+ Crear asignatura nueva",
+    ayudaAsignatura: "Su temario da las unidades del curso: mapa, avance del temario, rutas de aprendizaje y línea de tiempo. También puedes enlazarla después con el lápiz de la tarjeta.",
+    ayudaTarjeta: "Su temario da las unidades del curso (mapa, avance, rutas y línea de tiempo).",
+    ayudaCrear: "Al guardar pasarás a dar de alta la asignatura (archivo, texto pegado o IA) y quedará enlazada a este curso.",
+    seEnlazara: "Al guardarla, esta asignatura quedará enlazada al curso {curso}.",
   },
   curso: {
     meta: "Curso",

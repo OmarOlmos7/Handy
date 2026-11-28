@@ -128,6 +128,12 @@ export interface Grupo {
    */
   inicio?: string;
   fin?: string;
+  /**
+   * Asignatura (temario) enlazada al curso, elegida al crearlo o con el lápiz de la tarjeta.
+   * "" = el profesor eligió "Sin asignatura". Sin valor (cursos anteriores), la asignatura se
+   * deduce de las actividades o del nombre de la materia.
+   */
+  asignaturaId?: string;
 }
 
 /** Peso de un tipo de actividad (etiqueta) en la nota final. "" es el de las actividades sin etiqueta. */

@@ -9,6 +9,7 @@ import { sinLeerProfesor } from "@/lib/avisos";
 import { resumenAsesorias } from "@/lib/asesorias";
 import { textoPeriodo } from "@/lib/asesorias-vista";
 import { agruparPorColor } from "@/lib/colores";
+import { asignaturaDelCurso } from "@/lib/asignaturas";
 import { datosProfesor } from "@/lib/sesion";
 import { formato } from "@/lib/i18n/idiomas";
 import { ipDeCabeceras, textos } from "@/lib/i18n/servidor";
@@ -37,6 +38,7 @@ export default async function PanelProfesor() {
   // Proyectos de otros profesores donde me invitaron a evaluar.
   const comoEvaluador = proyectosComoEvaluador(await leer(), profesor.id);
   const tpr = t.proyecto;
+  const asignaturasOpciones = (db.asignaturas ?? []).map((a) => ({ id: a.id, nombre: a.nombre, nivel: a.nivel }));
   // "Actividades de hoy": agenda, asesorías y cierres de entrega de los cursos activos.
   const agenda = (db.agendas ?? [])[0];
   const pais = agenda?.pais ?? (await paisDeIp(ipDeCabeceras(await headers())));
@@ -151,6 +153,8 @@ export default async function PanelProfesor() {
                       fin={g.fin}
                       periodo={textoPeriodo(t.asesorias, g.inicio, g.fin, locale)}
                       asesorias={resumenAsesorias(db.asesorias ?? [], g)}
+                      asignaturas={asignaturasOpciones}
+                      asignaturaId={asignaturaDelCurso(db, g)?.id ?? ""}
                     />
                   ))}
                 </div>
