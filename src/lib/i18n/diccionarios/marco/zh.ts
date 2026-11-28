@@ -29,6 +29,9 @@ const marco: typeof es = {
     sinTemario: "本课程还没有教学大纲。创建或关联一个带单元的科目即可看到时间线。",
     irAsignaturas: "前往科目",
     verAvance: "查看大纲进度",
+    verMapa: "查看大纲地图",
+    avanceAlumno: "你的进度：已完成 {p} %",
+    sinFechasAlumno: "老师还没有设置课程的开始和结束日期；设置后你会在这里看到各单元的时间安排。",
   },
   enviarCodigo: {
     titulo: "课程代码与会员付款",
@@ -60,6 +63,7 @@ const marco: typeof es = {
     actividades1: "1 个活动",
     actividadesN: "{n} 个活动",
     vacia: "此单元还没有活动。创建活动时，在大纲选择器中选择此单元。",
+    vaciaAlumno: "此单元还没有活动。",
     unidad: "单元 {n}",
   },
 };
