@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { EncabezadoProyecto } from "@/components/encabezado-proyecto";
+import { ConFlujoProyecto } from "@/components/flujo-proyecto";
 import { EvaluarProyecto } from "@/components/evaluar-proyecto";
 import { Tarjeta, colorCalificacion } from "@/components/ui";
 import { VisorArchivos, type ArchivoVisor } from "@/components/visor-archivos";
@@ -36,10 +37,13 @@ export default async function EvaluarEtapa({ params }: PageProps<"/profesor/proy
   const evaluaciones = (db.evaluacionesProyecto ?? []).filter((e) => e.proyectoId === id && e.etapaId === etapa.id && e.sujeto === sujeto);
   const mia = evaluaciones.find((e) => e.evaluadorId === profesor.id);
   const entrega = (db.entregasProyecto ?? []).find((e) => e.proyectoId === id && e.etapaId === etapa.id && e.sujeto === sujeto);
-  const archivos: ArchivoVisor[] = (entrega?.archivos ?? []).flatMap((ruta, i) => {
-    const clase = claseDeArchivo(ruta);
-    return clase ? [{ ruta, nombre: entrega!.nombres[i] ?? ruta.split("/").at(-1)!, clase }] : [];
-  });
+  const visor = (rutas: string[], nombres: string[]): ArchivoVisor[] =>
+    rutas.flatMap((ruta, i) => {
+      const clase = claseDeArchivo(ruta);
+      return clase ? [{ ruta, nombre: nombres[i] ?? ruta.split("/").at(-1)!, clase }] : [];
+    });
+  const archivos = visor(entrega?.archivos ?? [], entrega?.nombres ?? []);
+  const ta = t.altaProyecto.evaluar;
   const sugerible = archivos.some((a) => laIALee(a.clase));
   const costo = sumarCreditos(Math.max(1, entrega?.paginasIA ?? archivos.length) * creditosPorPagina(precisionPara(undefined, profesor.config)));
   const volver = `/profesor/proyectos/${id}?etapa=${etapa.id}`;
@@ -52,6 +56,7 @@ export default async function EvaluarEtapa({ params }: PageProps<"/profesor/proy
   return (
     <>
       <EncabezadoProyecto t={t} proyecto={proyecto} grupo={grupo} esDueno={esDueno} activa="evaluacion" />
+      <ConFlujoProyecto vista="evaluacion" proyecto={proyecto} t={t} sinRuta={!esDueno}>
       <div className="mb-4">
         <p className="text-xs font-bold tracking-[0.12em] text-tinta-700 uppercase">
           {ICONO_ETAPA[etapa.tipo]} {tp.tipos[etapa.tipo]}
@@ -59,8 +64,11 @@ export default async function EvaluarEtapa({ params }: PageProps<"/profesor/proy
         <h2 className="text-xl font-semibold text-slate-900">{formato(tf.de, { etapa: etapa.nombre, sujeto: quien.esEquipo ? `👥 ${quien.nombre}` : quien.nombre })}</h2>
         {quien.esEquipo && <p className="text-sm text-slate-600">{formato(tp.evaluacion.integrantes, { lista: quien.matriculas.map(nombreAlumno).join(", ") })}</p>}
       </div>
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start">
-        <div className="space-y-4 lg:sticky lg:top-4">
+      {/* Con la ruta del proyecto a la izquierda, la rúbrica gráfica necesita todo el ancho: la evidencia va arriba salvo en pantallas muy anchas. */}
+      <div
+        className={`grid grid-cols-[minmax(0,1fr)] gap-5 ${esDueno ? "2xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] 2xl:items-start" : "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start"}`}
+      >
+        <div className={`space-y-4 ${esDueno ? "2xl:sticky 2xl:top-4" : "lg:sticky lg:top-4"}`}>
           {etapa.instrucciones && (
             <Tarjeta>
               <h3 className="text-sm font-semibold text-slate-900">{tf.instrucciones}</h3>
@@ -70,7 +78,33 @@ export default async function EvaluarEtapa({ params }: PageProps<"/profesor/proy
           {etapa.conEvidencia && (
             <section>
               <h3 className="mb-2 text-sm font-semibold text-slate-900">{tf.evidencia}</h3>
-              {archivos.length ? <VisorArchivos archivos={archivos} /> : <Tarjeta className="text-sm text-slate-500">{tf.sinEvidencia}</Tarjeta>}
+              {(etapa.entregables ?? []).length > 0 ? (
+                <ul className="space-y-3">
+                  {etapa.entregables!.map((d) => {
+                    const ev = entrega?.porEntregable?.find((x) => x.entregableId === d.id);
+                    const suyos = visor(ev?.archivos ?? [], ev?.nombres ?? []);
+                    return (
+                      <li key={d.id} className="rounded-xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+                        <p className="text-sm font-semibold text-slate-900">📎 {d.nombre}</p>
+                        {d.descripcion && <p className="text-xs text-slate-500">{d.descripcion}</p>}
+                        <p className="mt-2 text-xs font-semibold text-slate-600">{ta.comentarioAlumno}</p>
+                        <p className="text-sm whitespace-pre-line text-slate-700">{ev?.comentario || <span className="text-slate-400">{ta.sinComentario}</span>}</p>
+                        <div className="mt-2">{suyos.length ? <VisorArchivos archivos={suyos} /> : <p className="text-sm text-slate-500">{tf.sinEvidencia}</p>}</div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <>
+                  {entrega?.comentario && (
+                    <Tarjeta className="mb-2">
+                      <p className="text-xs font-semibold text-slate-600">{ta.comentarioAlumno}</p>
+                      <p className="text-sm whitespace-pre-line text-slate-700">{entrega.comentario}</p>
+                    </Tarjeta>
+                  )}
+                  {archivos.length ? <VisorArchivos archivos={archivos} /> : <Tarjeta className="text-sm text-slate-500">{tf.sinEvidencia}</Tarjeta>}
+                </>
+              )}
             </section>
           )}
           {esDueno && orden.length > 1 && (
@@ -122,6 +156,7 @@ export default async function EvaluarEtapa({ params }: PageProps<"/profesor/proy
           )}
         </div>
       </div>
+      </ConFlujoProyecto>
     </>
   );
 }

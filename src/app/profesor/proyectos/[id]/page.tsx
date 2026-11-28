@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CerrarEtapa } from "@/components/cerrar-etapa";
 import { EncabezadoProyecto } from "@/components/encabezado-proyecto";
+import { ConFlujoProyecto } from "@/components/flujo-proyecto";
 import { RutaProyecto } from "@/components/ruta-proyecto";
 import { BotonLink, Insignia, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
 import { leer } from "@/lib/almacen";
@@ -39,6 +40,7 @@ export default async function EvaluacionProyecto({ params, searchParams }: PageP
   return (
     <>
       <EncabezadoProyecto t={t} proyecto={proyecto} grupo={grupo} esDueno={esDueno} activa="evaluacion" />
+      <ConFlujoProyecto vista="evaluacion" proyecto={proyecto} t={t} sinRuta={!esDueno}>
       {/* Ruta de avance del grupo: cada etapa es un vínculo a su evaluación. */}
       <Tarjeta className="mb-4">
         <RutaProyecto
@@ -73,8 +75,8 @@ export default async function EvaluacionProyecto({ params, searchParams }: PageP
                 <p className="mt-2 rounded-lg bg-aviso-suave px-3 py-2 text-sm text-aviso">
                   {tp.errores.sinCriterios}{" "}
                   {esDueno && (
-                    <Link href={`/profesor/proyectos/${id}/modelo`} className="font-semibold underline">
-                      {tp.pestanas.modelo}
+                    <Link href={`/profesor/proyectos/${id}/rubrica?etapa=${etapa.id}`} className="font-semibold underline">
+                      B. {t.altaProyecto.flujo.pasos.rubrica[0]}
                     </Link>
                   )}
                 </p>
@@ -153,6 +155,7 @@ export default async function EvaluacionProyecto({ params, searchParams }: PageP
           </table>
         </div>
       )}
+      </ConFlujoProyecto>
     </>
   );
 }

@@ -1,26 +1,27 @@
 "use client";
 
-// Modelo de trabajo del proyecto (pestaña del profesor del curso): fases y avances a entregar, la
-// rúbrica de cada etapa (editable o generada con IA), los profesores evaluadores, los equipos y la
-// ponderación de cada etapa para la calificación final del reto.
+// Paso A de la ruta del proyecto (profesor del curso): información general (contexto, título,
+// objetivo, competencias), las etapas con sus fechas, instrucciones y entregables, la ponderación
+// de cada etapa, los profesores evaluadores y los equipos. La rúbrica de cada etapa va en el paso B.
 import { TextoAjustable } from "./texto-ajustable";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { borrarProyecto, guardarModelo, invitarEvaluador, quitarEvaluador } from "@/app/acciones-proyecto";
 import { formato } from "@/lib/i18n/idiomas";
 import {
   ICONO_ETAPA,
-  MAX_CRITERIOS,
+  MAX_ENTREGABLES,
   MAX_ETAPAS,
-  NIVELES_RUBRICA,
   TIPOS_ETAPA,
   nuevoIdCorto,
   repartirCien,
   revisarModelo,
+  revisarRubricaEtapa,
   sumaPesos,
   valoresTipoEtapa,
 } from "@/lib/proyectos";
-import type { CriterioProyecto, EquipoProyecto, EtapaProyecto, TipoEtapaProyecto } from "@/lib/tipos";
+import type { EntregableProyecto, EquipoProyecto, EtapaProyecto, TipoEtapaProyecto } from "@/lib/tipos";
 import { useTextos } from "./proveedor-textos";
 import { Boton, campo } from "./ui";
 
@@ -34,23 +35,23 @@ export function ModeloProyecto({
   alumnos,
   evaluadoresIniciales,
   grupoId,
-  evaluadasPorEtapa = {},
 }: {
   proyectoId: string;
-  inicial: { titulo: string; descripcion: string; etapas: EtapaProyecto[]; equipos: EquipoProyecto[] };
+  inicial: { titulo: string; descripcion: string; objetivo?: string; competencias?: string[]; etapas: EtapaProyecto[]; equipos: EquipoProyecto[] };
   alumnos: { matricula: string; nombre: string }[];
   /** El dueño primero. */
   evaluadoresIniciales: Evaluador[];
   grupoId: string;
-  /** Evaluaciones terminadas por etapa: al reeditar su rúbrica se avisa qué pasa con ellas. */
-  evaluadasPorEtapa?: Record<string, number>;
 }) {
   const { t } = useTextos();
   const tp = t.proyecto;
   const tm = tp.modelo;
+  const ti = t.altaProyecto.info;
   const router = useRouter();
   const [titulo, setTitulo] = useState(inicial.titulo);
   const [descripcion, setDescripcion] = useState(inicial.descripcion);
+  const [objetivo, setObjetivo] = useState(inicial.objetivo ?? "");
+  const [competencias, setCompetencias] = useState((inicial.competencias ?? []).join("\n"));
   const [etapas, setEtapas] = useState<EtapaProyecto[]>(inicial.etapas);
   const [equipos, setEquipos] = useState<EquipoProyecto[]>(inicial.equipos);
   const [evaluadores, setEvaluadores] = useState<Evaluador[]>(evaluadoresIniciales);
@@ -58,9 +59,6 @@ export function ModeloProyecto({
   const [errorEvaluador, setErrorEvaluador] = useState("");
   const [estado, setEstado] = useState<"listo" | "guardando" | "guardado" | "error">("listo");
   const [mensaje, setMensaje] = useState("");
-  const [generando, setGenerando] = useState<string | null>(null);
-  const [indicaciones, setIndicaciones] = useState<Record<string, string>>({});
-  const [errorIA, setErrorIA] = useState<Record<string, string>>({});
   const [tamanoEquipo, setTamanoEquipo] = useState(4);
   const [pendiente, iniciar] = useTransition();
 
@@ -69,8 +67,8 @@ export function ModeloProyecto({
     setEtapas((xs) => xs.map((e) => (e.id === id ? { ...e, ...cambio } : e)));
     cambiado();
   };
-  const cambiarCriterio = (etapaId: string, i: number, cambio: Partial<CriterioProyecto>) => {
-    setEtapas((xs) => xs.map((e) => (e.id === etapaId ? { ...e, criterios: e.criterios.map((c, k) => (k === i ? { ...c, ...cambio } : c)) } : e)));
+  const cambiarEntregable = (etapaId: string, i: number, cambio: Partial<EntregableProyecto>) => {
+    setEtapas((xs) => xs.map((e) => (e.id === etapaId ? { ...e, entregables: (e.entregables ?? []).map((d, k) => (k === i ? { ...d, ...cambio } : d)) } : e)));
     cambiado();
   };
   const mover = (i: number, d: -1 | 1) => {
@@ -94,31 +92,11 @@ export function ModeloProyecto({
     cambiado();
   };
 
-  async function generarRubrica(e: EtapaProyecto) {
-    if (e.criterios.length && !confirm(tm.confirmarReemplazo)) return;
-    setGenerando(e.id);
-    setErrorIA((x) => ({ ...x, [e.id]: "" }));
-    try {
-      const r = await fetch(`/api/proyectos/${proyectoId}/rubrica`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ titulo, descripcion, indicaciones: indicaciones[e.id] ?? "", etapa: e }),
-      });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || !Array.isArray(j.criterios)) throw new Error(j.error || tm.noSeGenero);
-      cambiarEtapa(e.id, { criterios: j.criterios });
-    } catch (err) {
-      setErrorIA((x) => ({ ...x, [e.id]: err instanceof Error ? err.message : tm.noSeGenero }));
-    } finally {
-      setGenerando(null);
-    }
-  }
-
   function guardar() {
     setEstado("guardando");
     setMensaje("");
     iniciar(async () => {
-      const r = await guardarModelo(proyectoId, { titulo, descripcion, etapas, equipos }).catch(() => ({ error: "general" as const }));
+      const r = await guardarModelo(proyectoId, { titulo, descripcion, objetivo, competencias: competencias.split("\n"), etapas, equipos }).catch(() => ({ error: "general" as const }));
       if ("ok" in r) {
         setEstado("guardado");
         router.refresh();
@@ -152,7 +130,16 @@ export function ModeloProyecto({
   };
 
   const suma = sumaPesos(etapas);
-  const problema = revisarModelo({ titulo, etapas, equipos });
+  // La rúbrica se revisa en su propio paso (B); aquí, lo de la información general.
+  const revision = revisarModelo({ titulo, etapas, equipos });
+  const problema = revision === "sinCriterios" || revision === "porcentajes" ? undefined : revision;
+  const aviso = problema
+    ? tp.errores[problema]
+    : !objetivo.trim()
+      ? ti.faltaObjetivo
+      : etapas.some((e) => !e.fecha)
+        ? ti.faltanFechas
+        : undefined;
 
   return (
     <div className="space-y-6 pb-24">
@@ -165,8 +152,18 @@ export function ModeloProyecto({
             <input value={titulo} onChange={(e) => (setTitulo(e.target.value), cambiado())} maxLength={140} className={campo} />
           </label>
           <label className="block text-sm font-medium text-slate-700">
-            {tp.descripcion}
-            <TextoAjustable minFilas={3} value={descripcion} onChange={(e) => (setDescripcion(e.target.value), cambiado())} className={campo} placeholder={tp.ejemploDescripcion} />
+            {ti.contexto}
+            <TextoAjustable minFilas={3} value={descripcion} onChange={(e) => (setDescripcion(e.target.value), cambiado())} className={campo} placeholder={ti.ejemploContexto} />
+            <span className="mt-1 block text-xs font-normal text-slate-500">{ti.contextoAyuda}</span>
+          </label>
+          <label className="block text-sm font-medium text-slate-700">
+            {ti.objetivo}
+            <TextoAjustable minFilas={2} value={objetivo} onChange={(e) => (setObjetivo(e.target.value), cambiado())} className={campo} placeholder={ti.ejemploObjetivo} />
+          </label>
+          <label className="block text-sm font-medium text-slate-700">
+            {ti.competencias}
+            <TextoAjustable minFilas={3} value={competencias} onChange={(e) => (setCompetencias(e.target.value), cambiado())} className={campo} placeholder={ti.ejemploCompetencias} />
+            <span className="mt-1 block text-xs font-normal text-slate-500">{ti.competenciasAyuda}</span>
           </label>
         </div>
       </section>
@@ -214,7 +211,7 @@ export function ModeloProyecto({
           <p className="text-sm text-slate-600">{tm.etapasAyuda}</p>
         </div>
         {etapas.map((e, i) => {
-          const sumaC = e.criterios.reduce((s, c) => s + (c.porcentaje > 0 ? c.porcentaje : 0), 0);
+          const rubricaLista = revisarRubricaEtapa(e) === undefined;
           return (
             <article key={e.id} className="rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
               <header className="flex flex-wrap items-center gap-2 border-b border-slate-100 px-5 py-3">
@@ -224,6 +221,12 @@ export function ModeloProyecto({
                 </span>
                 <span className="font-semibold text-slate-900">{formato(tm.etapa, { n: i + 1 })}</span>
                 {e.cerradaEn && <span className="rounded-full bg-acierto-suave px-2 py-0.5 text-xs font-medium text-acierto">✓ {tp.alumno.estados.cerrada}</span>}
+                <Link
+                  href={`/profesor/proyectos/${proyectoId}/rubrica?etapa=${e.id}`}
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${rubricaLista ? "bg-acierto-suave text-acierto" : "bg-aviso-suave text-aviso"}`}
+                >
+                  📋 {rubricaLista ? t.altaProyecto.rubrica.lista : `${t.altaProyecto.flujo.pasos.rubrica[0]}: ${t.altaProyecto.rubrica.pendiente}`}
+                </Link>
                 <span className="ml-auto flex gap-1">
                   <Boton type="button" variante="fantasma" className="px-2 py-1" onClick={() => mover(i, -1)} disabled={i === 0} aria-label={tm.subir}>
                     ↑
@@ -268,10 +271,16 @@ export function ModeloProyecto({
                       ))}
                     </select>
                   </label>
-                  <label className="block text-sm font-medium text-slate-700">
-                    {tm.fecha}
-                    <input type="date" value={e.fecha ?? ""} onChange={(ev) => cambiarEtapa(e.id, { fecha: ev.target.value || undefined })} className={campo} />
-                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="block text-sm font-medium text-slate-700">
+                      {ti.fechaInicio}
+                      <input type="date" value={e.fechaInicio ?? ""} max={e.fecha} onChange={(ev) => cambiarEtapa(e.id, { fechaInicio: ev.target.value || undefined })} className={campo} />
+                    </label>
+                    <label className="block text-sm font-medium text-slate-700">
+                      {ti.fechaFin}
+                      <input type="date" value={e.fecha ?? ""} min={e.fechaInicio} onChange={(ev) => cambiarEtapa(e.id, { fecha: ev.target.value || undefined })} className={campo} />
+                    </label>
+                  </div>
                   <label className="block text-sm font-medium text-slate-700">
                     {tm.peso}
                     <input type="number" min={0} max={100} step={1} value={e.peso} onChange={(ev) => cambiarEtapa(e.id, { peso: Number(ev.target.value) })} className={campo} />
@@ -298,106 +307,53 @@ export function ModeloProyecto({
                   <TextoAjustable minFilas={3} value={e.instrucciones} onChange={(ev) => cambiarEtapa(e.id, { instrucciones: ev.target.value })} className={campo} placeholder={tm.ejemploInstrucciones} />
                 </label>
 
-                {/* Rúbrica de la etapa */}
-                <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-900">📋 {tm.rubrica}</h3>
-                      <p className="text-xs text-slate-500">{tm.rubricaAyuda}</p>
-                    </div>
-                    <span className={`text-xs font-semibold ${Math.abs(sumaC - 100) < 0.05 ? "text-acierto" : "text-aviso"}`}>{formato(tm.sumaElementos, { s: Math.round(sumaC * 10) / 10 })}</span>
-                  </div>
-                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-                    <label className="block min-w-0 flex-1 text-xs font-medium text-slate-600">
-                      {tm.indicacionesIA}
-                      <input
-                        value={indicaciones[e.id] ?? ""}
-                        onChange={(ev) => setIndicaciones((x) => ({ ...x, [e.id]: ev.target.value }))}
-                        className={campo}
-                        placeholder={tm.ejemploIndicacionesIA}
-                      />
-                    </label>
-                    <Boton type="button" variante="secundario" onClick={() => generarRubrica(e)} disabled={generando !== null}>
-                      {generando === e.id ? tm.generando : tm.generar}
-                    </Boton>
-                  </div>
-                  {(evaluadasPorEtapa[e.id] ?? 0) > 0 && (
-                    <p className="mt-2 rounded-lg bg-aviso-suave p-2 text-xs text-aviso">{formato(tm.avisoEvaluadas, { n: evaluadasPorEtapa[e.id] })}</p>
-                  )}
-                  {errorIA[e.id] && <p className="mt-2 rounded-lg bg-error-suave p-2 text-sm text-error">{errorIA[e.id]}</p>}
-                  {e.criterios.length > 0 && (
-                    <ol className="mt-3 space-y-3">
-                      {e.criterios.map((c, k) => (
-                        <li key={c.id} className="rounded-lg bg-white p-3 ring-1 ring-slate-200">
-                          <div className="grid gap-2 sm:grid-cols-[1fr_2fr_5rem_auto] sm:items-start">
-                            <label className="block text-xs font-medium text-slate-600">
-                              {tm.elemento} {k + 1}
-                              <TextoAjustable unaLinea value={c.nombre} onChange={(ev) => cambiarCriterio(e.id, k, { nombre: ev.target.value })} className={campo} />
-                            </label>
-                            <label className="block text-xs font-medium text-slate-600">
-                              {tm.que}
-                              <TextoAjustable value={c.descripcion} onChange={(ev) => cambiarCriterio(e.id, k, { descripcion: ev.target.value })} className={campo} />
-                            </label>
-                            <label className="block text-xs font-medium text-slate-600">
-                              {tm.porcentaje}
-                              <input type="number" min={0} max={100} value={c.porcentaje} onChange={(ev) => cambiarCriterio(e.id, k, { porcentaje: Number(ev.target.value) })} className={campo} />
-                            </label>
-                            <Boton
-                              type="button"
-                              variante="fantasma"
-                              className="px-2 py-2 text-error hover:bg-error-suave sm:mt-5"
-                              aria-label={tm.quitarElemento}
-                              onClick={() => cambiarEtapa(e.id, { criterios: e.criterios.filter((_, x) => x !== k) })}
-                            >
-                              ✕
-                            </Boton>
-                          </div>
-                          <div className="mt-2 grid gap-2 sm:grid-cols-4">
-                            {NIVELES_RUBRICA.map((n, x) => (
-                              <label key={n.clave} className="block text-[11px] font-semibold text-slate-500">
-                                {tp.niveles[n.clave]} · {n.valor}
-                                <TextoAjustable
-                                  minFilas={3}
-                                  value={c.niveles[x] ?? ""}
-                                  onChange={(ev) => cambiarCriterio(e.id, k, { niveles: c.niveles.map((v, y) => (y === x ? ev.target.value : v)) })}
-                                  className={`${campo} text-xs font-normal`}
-                                />
-                              </label>
-                            ))}
-                          </div>
+                {/* Entregables: espacios donde el alumno sube su evidencia y la comenta. */}
+                {e.conEvidencia && (
+                  <div className="rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                    <h3 className="text-sm font-semibold text-slate-900">📎 {ti.entregables}</h3>
+                    <p className="text-xs text-slate-500">{ti.entregablesAyuda}</p>
+                    {(e.entregables ?? []).length === 0 && <p className="mt-2 text-xs text-slate-500 italic">{ti.sinEntregables}</p>}
+                    <ol className="mt-2 space-y-2">
+                      {(e.entregables ?? []).map((d, k) => (
+                        <li key={d.id} className="grid gap-2 rounded-lg bg-white p-3 ring-1 ring-slate-200 sm:grid-cols-[1fr_2fr_auto] sm:items-start">
+                          <label className="block text-xs font-medium text-slate-600">
+                            {formato(ti.entregable, { n: k + 1 })}
+                            <input
+                              value={d.nombre}
+                              maxLength={120}
+                              placeholder={ti.ejemploEntregable}
+                              onChange={(ev) => cambiarEntregable(e.id, k, { nombre: ev.target.value })}
+                              className={campo}
+                            />
+                          </label>
+                          <label className="block text-xs font-medium text-slate-600">
+                            {ti.descripcionEntregable}
+                            <TextoAjustable value={d.descripcion} onChange={(ev) => cambiarEntregable(e.id, k, { descripcion: ev.target.value })} className={campo} />
+                          </label>
+                          <Boton
+                            type="button"
+                            variante="fantasma"
+                            className="px-2 py-2 text-error hover:bg-error-suave sm:mt-5"
+                            aria-label={ti.quitarEntregable}
+                            onClick={() => cambiarEtapa(e.id, { entregables: (e.entregables ?? []).filter((_, x) => x !== k) })}
+                          >
+                            ✕
+                          </Boton>
                         </li>
                       ))}
                     </ol>
-                  )}
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Boton
-                      type="button"
-                      variante="secundario"
-                      className="px-3 py-1.5"
-                      disabled={e.criterios.length >= MAX_CRITERIOS}
-                      onClick={() =>
-                        cambiarEtapa(e.id, {
-                          criterios: [...e.criterios, { id: nuevoIdCorto("c"), nombre: "", descripcion: "", porcentaje: 0, niveles: NIVELES_RUBRICA.map(() => "") }],
-                        })
-                      }
-                    >
-                      + {tm.agregarElemento}
-                    </Boton>
-                    {e.criterios.length > 0 && (
+                    {(e.entregables ?? []).length < MAX_ENTREGABLES && (
                       <Boton
                         type="button"
-                        variante="fantasma"
-                        className="px-3 py-1.5"
-                        onClick={() => {
-                          const p = repartirCien(e.criterios.map((c) => (sumaC > 0 ? c.porcentaje : 1)));
-                          cambiarEtapa(e.id, { criterios: e.criterios.map((c, k) => ({ ...c, porcentaje: p[k] })) });
-                        }}
+                        variante="secundario"
+                        className="mt-2 px-3 py-1.5"
+                        onClick={() => cambiarEtapa(e.id, { entregables: [...(e.entregables ?? []), { id: nuevoIdCorto("d"), nombre: "", descripcion: "" }] })}
                       >
-                        {tm.repartir}
+                        + {ti.agregarEntregable}
                       </Boton>
                     )}
                   </div>
-                </div>
+                )}
               </div>
             </article>
           );
@@ -561,13 +517,18 @@ export function ModeloProyecto({
               <span className="text-error">{mensaje}</span>
             ) : estado === "guardado" ? (
               <span className="text-acierto">✓ {tm.guardado}</span>
-            ) : problema ? (
-              <span className="text-aviso">⚠ {tp.errores[problema]}</span>
+            ) : aviso ? (
+              <span className="text-aviso">⚠ {aviso}</span>
             ) : null}
           </p>
           <Boton type="button" onClick={guardar} disabled={pendiente || estado === "guardando"}>
             {estado === "guardando" ? tm.guardando : tm.guardar}
           </Boton>
+          {estado === "guardado" && (
+            <Link href={`/profesor/proyectos/${proyectoId}/rubrica`} className="rounded-lg bg-tinta-50 px-3 py-2 text-sm font-semibold text-tinta-700 hover:bg-tinta-100">
+              {formato(t.altaProyecto.flujo.siguiente, { paso: `B. ${t.altaProyecto.flujo.pasos.rubrica[0]}` })}
+            </Link>
+          )}
         </div>
       </div>
     </div>

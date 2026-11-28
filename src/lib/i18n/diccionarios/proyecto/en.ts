@@ -38,8 +38,8 @@ const proyecto: typeof es = {
   pestanas: { evaluacion: "Assessment", modelo: "Project model", concentrado: "Grades" },
   invitado: "You are an invited assessor: you grade with your own rubric; the course teacher closes the stages.",
   modelo: {
-    titulo: "Project work model",
-    ayuda: "Define the phases, the rubric for each, who assesses, and how much each stage weighs in the final challenge grade.",
+    titulo: "Project general information",
+    ayuda: "Define the context, objective, stages with their dates and deliverables, who assesses and how much each stage weighs in the final grade. Each stage\'s rubric is built in step B.",
     datos: "Project details",
     tituloProyecto: "Project title",
     etapas: "Phases and checkpoints to submit",
