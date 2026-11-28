@@ -30,6 +30,7 @@ Variables opcionales en `.env.local`:
 | `REGISTRO_CODIGO` | Si tiene valor, el registro de profesores pide este código de invitación |
 | `CREDITOS_INICIALES` | Créditos de regalo para cada profesor nuevo (por omisión 50) |
 | `PRIVACIDAD_CORREO` | Correo para ejercer derechos ARCO que aparece en los avisos (por omisión `privacidad@ieureka-grader.com`) |
+| `BANDERAS` | Funciones nuevas que se prenden poco a poco, separadas por comas. `perfil_cognitivo` activa el perfil de aprendizaje con el Modelo CREAR (ver `docs/perfil-cognitivo.md`) |
 | `PRIVACIDAD_DOMICILIO` | Domicilio fiscal de la razón social que aparece en el Aviso de privacidad |
 
 Para probar con celulares, arranca con `npm start -- -H 0.0.0.0` y pon en `APP_URL`

@@ -18,6 +18,7 @@ services:
       SMTP_USUARIO: ${SMTP_USUARIO:-}
       SMTP_CONTRASENA: ${SMTP_CONTRASENA:-}
       CORREO_REMITENTE: ${CORREO_REMITENTE:-}
+      BANDERAS: ${BANDERAS:-}
     volumes:
       - datos:/datos
     expose:
