@@ -9,6 +9,7 @@ const copiar: typeof es = {
   cerrar: "Fechar",
   cancelar: "Cancelar",
   actividad: {
+    icono: "Duplicar ou enviar para outro curso",
     titulo: "Copiar item",
     texto: "A cópia leva a folha, a rubrica, a solução, os anexos e as datas. Não leva entregas nem notas.",
     mismo: "Duplicar neste curso",
@@ -22,6 +23,7 @@ const copiar: typeof es = {
     abrir: "Abrir a cópia",
   },
   directorio: {
+    boton: "Duplicar atividade",
     titulo: "Copiar atividades para este curso",
     texto: "Escolha atividades dos seus cursos (também dos arquivados) e adicione-as a este curso. São copiadas sem entregas nem notas.",
     buscar: "Buscar atividade",

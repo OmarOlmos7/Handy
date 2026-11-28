@@ -9,6 +9,7 @@ const copiar = {
   cancelar: "Cancelar",
   // Resumen de la actividad: duplicarla aquí o mandar una copia a otro curso.
   actividad: {
+    icono: "Duplicar o enviar a otro curso",
     titulo: "Copiar elemento",
     texto: "La copia lleva la hoja, la rúbrica, la solución, los anexos y las fechas. No lleva entregas ni calificaciones.",
     mismo: "Duplicar en este curso",
@@ -23,6 +24,7 @@ const copiar = {
   },
   // Vista del curso: directorio de actividades de los demás cursos para traerlas aquí.
   directorio: {
+    boton: "Duplicar actividad",
     titulo: "Copiar actividades a este curso",
     texto: "Elige actividades de tus cursos (también de los archivados) y agrégalas a la lista de este curso. Se copian sin entregas ni calificaciones.",
     buscar: "Buscar actividad",

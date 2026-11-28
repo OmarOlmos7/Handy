@@ -14,10 +14,11 @@ import { SelectorEtiqueta } from "./selector-etiqueta";
 import { Boton, BotonLink, InsigniaActividad, fechaLarga } from "./ui";
 import { formato } from "@/lib/i18n/idiomas";
 import { useTextos } from "./proveedor-textos";
+import { CopiarActividad } from "./copiar-elemento";
 
 const campoChico = "w-full rounded-md border border-slate-300 px-2 py-1 text-sm outline-none focus:border-tinta-500 focus:ring-2 focus:ring-tinta-100";
 
-/** Renglón de una actividad en la vista del curso, con lápiz para editar y bote para borrar. */
+/** Renglón de una actividad en la vista del curso, con lápiz para editar, duplicar y bote para borrar. */
 export function FilaActividad({
   id,
   titulo,
@@ -34,7 +35,10 @@ export function FilaActividad({
   color,
   etiqueta,
   etiquetasCurso,
+  copiar,
 }: {
+  /** Datos para el ícono de duplicar (en este curso o en otro). */
+  copiar?: { grupoId: string; cursoActual: string; tituloCopia: string; cursos: { id: string; nombre: string }[] };
   id: string;
   titulo: string;
   fecha: string;
@@ -187,6 +191,7 @@ export function FilaActividad({
           <BotonIcono etiqueta={tf.editar} onClick={() => setEditando(true)} disabled={pendiente}>
             <IconoLapiz />
           </BotonIcono>
+          {copiar && <CopiarActividad icono actividadId={id} {...copiar} />}
           <SelectorColor valor={color} etiqueta={tf.cambiarColor} onElegir={(c) => cambiar(() => colorActividad(id, c))} disabled={pendiente} />
           <BotonIcono etiqueta={tf.borrar} peligro onClick={borrar} disabled={pendiente}>
             <IconoBasura />

@@ -9,6 +9,7 @@ const copiar: typeof es = {
   cerrar: "閉じる",
   cancelar: "キャンセル",
   actividad: {
+    icono: "複製または別のコースに送る",
     titulo: "項目をコピー",
     texto: "シート、ルーブリック、解答、添付ファイル、日付をコピーします。提出物と成績はコピーされません。",
     mismo: "このコースで複製",
@@ -22,6 +23,7 @@ const copiar: typeof es = {
     abrir: "コピーを開く",
   },
   directorio: {
+    boton: "アクティビティを複製",
     titulo: "このコースにアクティビティをコピー",
     texto: "自分のコース（アーカイブ済みも含む）からアクティビティを選び、このコースに追加します。提出物と成績なしでコピーされます。",
     buscar: "アクティビティを検索",

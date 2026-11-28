@@ -9,6 +9,7 @@ const copiar: typeof es = {
   cerrar: "Schließen",
   cancelar: "Abbrechen",
   actividad: {
+    icono: "Duplizieren oder an einen anderen Kurs senden",
     titulo: "Element kopieren",
     texto: "Die Kopie übernimmt Blatt, Bewertungsraster, Lösung, Anhänge und Termine. Abgaben und Noten werden nicht kopiert.",
     mismo: "In diesem Kurs duplizieren",
@@ -22,6 +23,7 @@ const copiar: typeof es = {
     abrir: "Kopie öffnen",
   },
   directorio: {
+    boton: "Aktivität duplizieren",
     titulo: "Aktivitäten in diesen Kurs kopieren",
     texto: "Wähle Aktivitäten aus deinen Kursen (auch archivierten) und füge sie diesem Kurs hinzu. Sie werden ohne Abgaben und Noten kopiert.",
     buscar: "Aktivität suchen",

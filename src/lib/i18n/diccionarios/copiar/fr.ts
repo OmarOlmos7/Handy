@@ -9,6 +9,7 @@ const copiar: typeof es = {
   cerrar: "Fermer",
   cancelar: "Annuler",
   actividad: {
+    icono: "Dupliquer ou envoyer à un autre cours",
     titulo: "Copier l’élément",
     texto: "La copie garde la feuille, la grille, la solution, les pièces jointes et les dates. Ni les remises ni les notes ne sont copiées.",
     mismo: "Dupliquer dans ce cours",
@@ -22,6 +23,7 @@ const copiar: typeof es = {
     abrir: "Ouvrir la copie",
   },
   directorio: {
+    boton: "Dupliquer une activité",
     titulo: "Copier des activités dans ce cours",
     texto: "Choisissez des activités de vos cours (archivés compris) et ajoutez-les à ce cours. Elles sont copiées sans remises ni notes.",
     buscar: "Rechercher une activité",

@@ -9,6 +9,7 @@ const copiar: typeof es = {
   cerrar: "关闭",
   cancelar: "取消",
   actividad: {
+    icono: "复制或发送到其他课程",
     titulo: "复制项目",
     texto: "副本包含作业单、评分规则、答案、附件和日期，不包含提交和成绩。",
     mismo: "在本课程中复制",
@@ -22,6 +23,7 @@ const copiar: typeof es = {
     abrir: "打开副本",
   },
   directorio: {
+    boton: "复制活动",
     titulo: "将活动复制到本课程",
     texto: "从你的课程（包括已归档课程）中选择活动并添加到本课程。复制时不包含提交和成绩。",
     buscar: "搜索活动",

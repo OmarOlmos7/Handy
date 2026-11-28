@@ -4,7 +4,7 @@ import { conPuntaje } from "@/lib/modalidad";
 import { notFound } from "next/navigation";
 import { CodigoCurso } from "@/components/codigo-curso";
 import { DirectorioActividades } from "@/components/copiar-elemento";
-import { directorioActividades } from "@/lib/copiar";
+import { directorioActividades, tituloCopia } from "@/lib/copiar";
 import { FilaActividad } from "@/components/fila-actividad";
 import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
 import { ResumenCategoria } from "@/components/resumen-categoria";
@@ -38,45 +38,50 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
   const tpr = t.proyecto;
   const alumnos = new Set(grupo.alumnos.map((a) => a.matricula)).size;
   const ahora = new Date();
+  // Para el ícono de duplicar de cada actividad: títulos de este curso y los demás cursos activos.
+  const titulos = actividades.map((a) => a.titulo);
+  const otrosCursos = db.grupos.filter((g) => g.id !== id && !g.archivado).map((g) => ({ id: g.id, nombre: `${g.materia} · ${g.nombre}` }));
   // Etiquetas propias del profesor en todos sus cursos, para sugerirlas.
   const etiquetasCurso = [...new Set(db.actividades.map((a) => a.etiqueta?.trim()).filter((e): e is string => !!e))];
 
   return (
     <>
-      <Encabezado
-        migas={[{ texto: c.panel, href: "/profesor" }]}
-        rutaEtiqueta={c.ruta}
-        titulo={`${grupo.materia} · ${grupo.nombre}`}
-        subtitulo={`${formato(c.ciclo, { c: grupo.ciclo })} · ${formato(actividades.length === 1 ? c.actividad1 : c.actividadN, { n: actividades.length })} · ${formato(alumnos === 1 ? c.alumno1 : c.alumnoN, { n: alumnos })}`}
-        acciones={
-          <>
-            {/* Dos columnas: Analíticas y Cuaderno a la izquierda; Rutas y Avance del temario a la derecha. */}
-            <div className="grid w-full grid-flow-col grid-cols-2 grid-rows-2 gap-2 sm:w-auto">
-              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/analiticas`}>
-                <IconoGrafica /> {tc.analiticas}
-              </BotonLink>
-              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/cuaderno`}>
-                <IconoCuaderno /> {tc.cuaderno}
-              </BotonLink>
-              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/rutas`}>
-                <IconoRuta /> {t.ruta.profesor.boton}
-              </BotonLink>
-              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/avance`}>
-                <IconoMapa /> {tc.avanceTemario}
-              </BotonLink>
-            </div>
-            {/* Proyecto y Copiar elemento (traer actividades de otros cursos) arriba de Nueva actividad. */}
-            <div className="grid w-full grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
-              <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/proyectos`}>
-                <span aria-hidden>🏆</span> {tpr.grupo.boton}
-                {proyectos.length > 0 && <span className="rounded-full bg-slate-100 px-1.5 text-xs text-slate-600">{proyectos.length}</span>}
-              </BotonLink>
-              <DirectorioActividades grupoId={grupo.id} cursos={directorioActividades(db, profesor.id)} />
-              <BotonLink className="col-span-2 sm:col-span-1" href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>{tc.nuevaActividad}</BotonLink>
-            </div>
-          </>
-        }
-      />
+      {/* Izquierda: datos del curso y, debajo, Duplicar actividad · Proyecto · Nueva actividad (al extremo derecho).
+          Derecha: columna con Analíticas, Cuaderno, Rutas y Avance del temario. */}
+      <div className="mb-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_17rem]">
+        <div className="flex min-w-0 flex-col justify-between gap-4 [&>div:first-child]:mb-0">
+          <Encabezado
+            migas={[{ texto: c.panel, href: "/profesor" }]}
+            rutaEtiqueta={c.ruta}
+            titulo={`${grupo.materia} · ${grupo.nombre}`}
+            subtitulo={`${formato(c.ciclo, { c: grupo.ciclo })} · ${formato(actividades.length === 1 ? c.actividad1 : c.actividadN, { n: actividades.length })} · ${formato(alumnos === 1 ? c.alumno1 : c.alumnoN, { n: alumnos })}`}
+          />
+          <div className="no-imprimir flex flex-wrap items-center gap-2">
+            <DirectorioActividades grupoId={grupo.id} cursos={directorioActividades(db, profesor.id)} />
+            <BotonLink variante="secundario" href={`/profesor/grupos/${grupo.id}/proyectos`}>
+              <span aria-hidden>🏆</span> {tpr.grupo.boton}
+              {proyectos.length > 0 && <span className="rounded-full bg-slate-100 px-1.5 text-xs text-slate-600">{proyectos.length}</span>}
+            </BotonLink>
+            <BotonLink className="w-full sm:ml-auto sm:w-auto" href={`/profesor/actividades/nueva?grupo=${grupo.id}`}>
+              {tc.nuevaActividad}
+            </BotonLink>
+          </div>
+        </div>
+        <nav className="no-imprimir grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-1">
+          <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/analiticas`}>
+            <IconoGrafica /> {tc.analiticas}
+          </BotonLink>
+          <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/cuaderno`}>
+            <IconoCuaderno /> {tc.cuaderno}
+          </BotonLink>
+          <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/rutas`}>
+            <IconoRuta /> {t.ruta.profesor.boton}
+          </BotonLink>
+          <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/avance`}>
+            <IconoMapa /> {tc.avanceTemario}
+          </BotonLink>
+        </nav>
+      </div>
       {grupo.codigo && (
         <CodigoCurso
           codigo={grupo.codigo}
@@ -172,6 +177,12 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
                           color={a.color}
                           etiqueta={a.etiqueta}
                           etiquetasCurso={etiquetasCurso}
+                          copiar={{
+                            grupoId: grupo.id,
+                            cursoActual: `${grupo.materia} · ${grupo.nombre}`,
+                            tituloCopia: tituloCopia(a.titulo, titulos, t.copiar.sufijo),
+                            cursos: otrosCursos,
+                          }}
                         />
                       );
                     })}
