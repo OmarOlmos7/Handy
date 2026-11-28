@@ -12,6 +12,7 @@ import contenido from "./contenido/de";
 import avisos from "./avisos/de";
 import proyecto from "./proyecto/de";
 import asesorias from "./asesorias/de";
+import perfil from "./perfil/de";
 import marco from "./marco/de";
 
 const de: Diccionario = {
@@ -470,6 +471,7 @@ const de: Diccionario = {
   avisos,
   proyecto,
   asesorias,
+  perfil,
   marco,
 };
 

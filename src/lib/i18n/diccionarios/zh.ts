@@ -12,6 +12,7 @@ import contenido from "./contenido/zh";
 import avisos from "./avisos/zh";
 import proyecto from "./proyecto/zh";
 import asesorias from "./asesorias/zh";
+import perfil from "./perfil/zh";
 import marco from "./marco/zh";
 
 const zh: Diccionario = {
@@ -450,6 +451,7 @@ const zh: Diccionario = {
   avisos,
   proyecto,
   asesorias,
+  perfil,
   marco,
 };
 

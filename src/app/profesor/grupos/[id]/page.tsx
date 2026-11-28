@@ -19,6 +19,7 @@ import { avanceDelPeriodo, iconoUnidad, lineaTiempoCurso } from "@/lib/linea-tie
 import { iconoTipoActividad } from "@/lib/iconos-tipo";
 import { reporteGrupo } from "@/lib/estadisticas";
 import { datosProfesor } from "@/lib/sesion";
+import { perfilActivo } from "@/lib/banderas";
 import { formato } from "@/lib/i18n/idiomas";
 import { textos } from "@/lib/i18n/servidor";
 import { evaluadoresDe } from "@/lib/proyectos";
@@ -85,6 +86,11 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           <BotonLink variante="secundario" className="justify-start" href={`/profesor/grupos/${grupo.id}/avance`}>
             <IconoMapa /> {tc.avanceTemario}
           </BotonLink>
+          {perfilActivo() && (
+            <BotonLink variante="secundario" className="col-span-2 justify-start" href={`/profesor/grupos/${grupo.id}/perfil`}>
+              <span aria-hidden>🧠</span> {t.perfil.profesor.boton}
+            </BotonLink>
+          )}
         </nav>
       </div>
       {/* Primero, la línea de tiempo de las unidades del temario; debajo, las actividades por tipo. */}

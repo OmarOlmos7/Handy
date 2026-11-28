@@ -14,12 +14,15 @@ export function HerramientasCurso({
   nombre,
   proyectos,
   directorio,
+  perfil = false,
 }: {
   grupoId: string;
   /** Materia y grupo, por ejemplo "Física · 3° B". */
   nombre: string;
   proyectos: number;
   directorio: CursoDirectorio[];
+  /** true con la bandera perfil_cognitivo: muestra el Perfil CREAR del grupo. */
+  perfil?: boolean;
 }) {
   const ruta = usePathname();
   const { t } = useTextos();
@@ -32,6 +35,7 @@ export function HerramientasCurso({
     { href: `${base}/rutas`, texto: t.ruta.profesor.boton, icono: <IconoRuta /> },
     { href: `${base}/avance`, texto: tc.avanceTemario, icono: <IconoMapa /> },
     { href: `${base}/alumnos`, texto: tm.alumnos, icono: <IconoAlumnos /> },
+    ...(perfil ? [{ href: `${base}/perfil`, texto: t.perfil.profesor.boton, icono: <span aria-hidden>🧠</span> }] : []),
   ];
   const enCurso = ruta === base;
   return (
@@ -89,7 +93,7 @@ export function HerramientasCurso({
 }
 
 /** Herramientas del curso del alumno en la franja izquierda (sus vistas del curso). */
-export function HerramientasCursoAlumno({ grupoId, nombre }: { grupoId: string; nombre: string }) {
+export function HerramientasCursoAlumno({ grupoId, nombre, perfil = false }: { grupoId: string; nombre: string; perfil?: boolean }) {
   const ruta = usePathname();
   const { t } = useTextos();
   const tm = t.marco.curso;
@@ -102,6 +106,7 @@ export function HerramientasCursoAlumno({ grupoId, nombre }: { grupoId: string; 
     { href: `${base}/cuaderno`, texto: tc.cuaderno, icono: <IconoCuaderno /> },
     { href: `${base}/proyecto`, texto: t.proyecto.alumno.boton, icono: <span aria-hidden>🏆</span> },
     { href: `${base}/autoestudio`, texto: t.autoestudio.tabla.ver, icono: <span aria-hidden>✨</span> },
+    ...(perfil ? [{ href: `${base}/perfil`, texto: t.perfil.boton, icono: <span aria-hidden>🧠</span> }] : []),
   ];
   const enCurso = ruta === base;
   return (

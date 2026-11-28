@@ -12,6 +12,7 @@ import contenido from "./contenido/ja";
 import avisos from "./avisos/ja";
 import proyecto from "./proyecto/ja";
 import asesorias from "./asesorias/ja";
+import perfil from "./perfil/ja";
 import marco from "./marco/ja";
 
 const ja: Diccionario = {
@@ -469,6 +470,7 @@ const ja: Diccionario = {
   avisos,
   proyecto,
   asesorias,
+  perfil,
   marco,
 };
 

@@ -14,6 +14,9 @@ import { iconoTipoActividad } from "@/lib/iconos-tipo";
 import { estadoEnvio } from "@/lib/periodo";
 import { actividadesVisibles, categoriasAlumno, resumenAvance, seccionesAlumno } from "@/lib/portal-alumno";
 import { alumnoActual } from "@/lib/sesion";
+import { perfilActivo } from "@/lib/banderas";
+import { alumnoEnGrupo } from "@/lib/cuentas";
+import { diagnosticoInicial, finesDeCursos } from "@/lib/perfil/diagnostico-inicial";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await textos();
@@ -46,6 +49,13 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
   const conTemario = Boolean(asignatura && asignatura.unidades.length > 0);
   const sinValoracion =
     conTemario && !(db.valoraciones ?? []).some((v) => v.alumnoId === alumno.id && v.grupoId === grupo.id && v.asignaturaId === asignatura!.id);
+  // Con el perfil de aprendizaje activo, aviso mientras falte algo del diagnóstico inicial.
+  const perfil = perfilActivo();
+  const cuenta = perfil ? db.cuentasAlumno.find((c) => c.id === alumno.id) : undefined;
+  const diagnostico =
+    perfil && cuenta
+      ? diagnosticoInicial(db, alumno.id, grupo.id, conTemario ? asignatura!.id : undefined, ahora, finesDeCursos(db.grupos.filter((g) => alumnoEnGrupo(g, cuenta))))
+      : undefined;
   const evaluadas = secciones.entregadas.filter((x) => x.entrega?.estado === "aprobada").length;
   const resumenPropias = resumenAvance(propias.map((a) => (a.estado === "completada" ? "terminada" : a.estado === "evaluando" ? "en_proceso" : "sin_iniciar")));
 
@@ -82,10 +92,23 @@ export default async function CursoAlumno({ params }: PageProps<"/alumno/cursos/
             <BotonLink variante="secundario" className="justify-start" href={`/alumno/cursos/${grupo.id}/autoestudio`}>
               <span aria-hidden>✨</span> {ta.tabla.ver}
             </BotonLink>
+            {perfil && (
+              <BotonLink variante="secundario" className="justify-start" href={`/alumno/cursos/${grupo.id}/perfil`}>
+                <span aria-hidden>🧠</span> {t.perfil.boton}
+              </BotonLink>
+            )}
           </div>
         }
       />
-      {sinValoracion && (
+      {diagnostico && !diagnostico.completo ? (
+        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_6px_16px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-bold tracking-[0.12em] text-emerald-800 uppercase">{t.perfil.aviso}</p>
+            <p className="mt-1 text-[15px] font-semibold text-slate-900">{t.perfil.avisoTexto}</p>
+          </div>
+          <BotonLink href={`/alumno/cursos/${grupo.id}/perfil`}>{t.perfil.avisoBoton} →</BotonLink>
+        </div>
+      ) : sinValoracion && (
         <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_6px_16px_rgba(15,23,42,0.06)] sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-bold tracking-[0.12em] text-emerald-800 uppercase">{t.ruta.valoracion.titulo}</p>

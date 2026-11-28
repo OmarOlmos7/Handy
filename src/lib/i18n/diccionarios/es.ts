@@ -13,6 +13,7 @@ import contenido from "./contenido/es";
 import avisos from "./avisos/es";
 import proyecto from "./proyecto/es";
 import asesorias from "./asesorias/es";
+import perfil from "./perfil/es";
 import marco from "./marco/es";
 
 const es = {
@@ -472,6 +473,7 @@ const es = {
   avisos,
   proyecto,
   asesorias,
+  perfil,
   marco,
 };
 

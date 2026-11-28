@@ -12,6 +12,7 @@ import contenido from "./contenido/pt";
 import avisos from "./avisos/pt";
 import proyecto from "./proyecto/pt";
 import asesorias from "./asesorias/pt";
+import perfil from "./perfil/pt";
 import marco from "./marco/pt";
 
 const pt: Diccionario = {
@@ -470,6 +471,7 @@ const pt: Diccionario = {
   avisos,
   proyecto,
   asesorias,
+  perfil,
   marco,
 };
 
