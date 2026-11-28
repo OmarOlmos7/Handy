@@ -4,7 +4,6 @@ import {
   CREDITOS_POR_SEMANA,
   ErrorDeLicencia,
   LICENCIAS,
-  PRECIO_SEMESTRE,
   confirmarPago,
   crearLicencia,
   creditosLicencia,
@@ -43,10 +42,10 @@ describe("catálogo de licencias", () => {
     expect(LICENCIAS.map((l) => [l.id, l.semanas, l.precio])).toEqual([
       ["semanas5", 5, 350],
       ["semanas10", 10, 550],
-      ["semestre", 26, PRECIO_SEMESTRE],
+      ["semestre", 26, 700],
       ["anual", 52, 850],
     ]);
-    expect(tipoLicencia("semestre").provisional).toBe(true);
+    expect(tipoLicencia("semestre").provisional).toBe(false);
   });
 
   it("abona 10 créditos de IA al profesor por semana de licencia", () => {
