@@ -8,6 +8,7 @@ import { textos } from "@/lib/i18n/servidor";
 import { crearPreferenciaCompra, mercadoPagoConfigurado, pagosDemo } from "@/lib/mercadopago";
 import { confirmarCompra, esPaquete, nuevaCompra } from "@/lib/perfil/bolsa";
 import { aplicarEtapas, limpiarEtapasActividad } from "@/lib/perfil/etapas";
+import { guardarReflexion } from "@/lib/perfil/tablero";
 import { urlBase } from "@/lib/qr";
 import { leer, modificar } from "@/lib/almacen";
 import { alumnoEnGrupo } from "@/lib/cuentas";
@@ -127,6 +128,21 @@ export async function guardarEtapasActividad(actividadId: string, etapas: unknow
     if (a) aplicarEtapas(a, limpias);
   });
   revalidatePath(`/profesor/grupos/${grupo.id}`, "layout");
+  return { ok: true };
+}
+
+/** El profesor guarda (o borra, si la deja vacía) su reflexión de una unidad o del cierre del curso. */
+export async function guardarReflexionPerfil(grupoId: string, alcance: "unidad" | "cierre", unidad: string, texto: string): Promise<Resultado> {
+  if (!perfilActivo()) return { error: "noDisponible" };
+  const profesor = await requerirProfesor();
+  const db = await leer();
+  const grupo = db.grupos.find((g) => g.id === grupoId);
+  if (!grupo || grupo.profesorId !== profesor.id) return { error: "noEncontrado" };
+  if (alcance !== "unidad" && alcance !== "cierre") return { error: "general" };
+  modificar((d) => {
+    d.reflexionesPerfil = guardarReflexion(d.reflexionesPerfil, { grupoId, alcance, unidad: String(unidad ?? ""), texto: String(texto ?? "") });
+  });
+  revalidatePath(`/profesor/grupos/${grupoId}/perfil`, "layout");
   return { ok: true };
 }
 

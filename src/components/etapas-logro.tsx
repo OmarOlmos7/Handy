@@ -8,14 +8,17 @@ export function EtapasLogro({
   nombres,
   sinDatos,
   compacto = false,
+  unaColumna = false,
 }: {
   porEtapa: Partial<Record<EtapaCrear, number>>;
   nombres: Record<EtapaCrear, { nombre: string }>;
   sinDatos: string;
   compacto?: boolean;
+  /** Siempre en una columna (para espacios angostos). */
+  unaColumna?: boolean;
 }) {
   return (
-    <dl className={`grid gap-x-4 ${compacto ? "gap-y-1 sm:grid-cols-2" : "gap-y-2 sm:grid-cols-2"}`}>
+    <dl className={`grid gap-x-4 ${compacto ? "gap-y-1" : "gap-y-2"} ${unaColumna ? "" : "sm:grid-cols-2"}`}>
       {ETAPAS_CREAR.map((e) => {
         const v = porEtapa[e];
         return (

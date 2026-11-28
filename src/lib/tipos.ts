@@ -581,7 +581,8 @@ export type TipoConsumoIA =
   | "autoestudio_evaluar"
   | "instrucciones"
   | "proyecto_rubrica"
-  | "proyecto_evaluar";
+  | "proyecto_evaluar"
+  | "perfil_ruta";
 
 /** Tokens que gastó una llamada a la IA. No guarda textos ni datos del alumno. */
 export interface ConsumoIA {
@@ -719,6 +720,10 @@ export interface BaseDeDatos {
   movimientosAlumno?: MovimientoAlumno[];
   /** Compras de paquetes de créditos del alumno en la tienda. */
   comprasCreditos?: CompraCreditos[];
+  /** Reflexiones del profesor por unidad y al cierre del curso (perfil CREAR, etapa 3). */
+  reflexionesPerfil?: ReflexionPerfil[];
+  /** Rutas de mejora redactadas con IA para cada alumno y curso. */
+  rutasMejora?: RutaMejora[];
   /** Listas de asistencia tomadas, una por sesión de clase (ver lib/asistencia). */
   asistencias?: RegistroAsistencia[];
   /**
@@ -1389,4 +1394,30 @@ export interface CompraCreditos {
   pagadaEn?: string;
   proveedor?: "mercadopago" | "demo";
   pagoId?: string;
+}
+
+/** Reflexión del profesor sobre el desempeño del grupo en una unidad o al cierre del curso. */
+export interface ReflexionPerfil {
+  grupoId: string;
+  alcance: "unidad" | "cierre";
+  /** Nombre de la unidad del temario (solo en las de unidad). */
+  unidad?: string;
+  texto: string;
+  actualizadoEn: string;
+}
+
+/** Ruta de mejora del alumno en un curso, redactada por la IA a partir de los números del perfil. */
+export interface RutaMejora {
+  alumnoId: string;
+  grupoId: string;
+  /** Versión del prompt con que se redactó (por ejemplo "ruta_mejora_v1"). */
+  prompt: string;
+  generadaEn: string;
+  /** Quién la pidió y pagó: el alumno (de su bolsa) o el profesor (de sus créditos). */
+  pedidaPor: "alumno" | "profesor";
+  resumen: string;
+  fortalezas: string[];
+  areas: string[];
+  recomendaciones: string[];
+  creditos: number;
 }
