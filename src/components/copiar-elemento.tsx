@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { copiarActividades } from "@/app/acciones-copiar";
 import type { CursoDirectorio } from "@/lib/copiar";
 import { formato } from "@/lib/i18n/idiomas";
-import { IconoCopiar } from "./iconos";
+import { BotonIcono, IconoCopiar } from "./iconos";
 import { useTextos } from "./proveedor-textos";
 import { Boton } from "./ui";
 
@@ -57,7 +57,10 @@ export function CopiarActividad({
   cursoActual,
   tituloCopia,
   cursos,
+  icono = false,
 }: {
+  /** true: solo el ícono (renglón de la actividad en la vista del curso). */
+  icono?: boolean;
   actividadId: string;
   grupoId: string;
   /** Nombre del curso de la actividad (para el aviso de copia creada). */
@@ -100,9 +103,15 @@ export function CopiarActividad({
   const opcion = "flex cursor-pointer items-start gap-3 rounded-xl p-3 ring-1 ring-slate-200 has-[:checked]:bg-tinta-50 has-[:checked]:ring-tinta-300";
   return (
     <>
-      <button type="button" onClick={abrir} className={botonSecundario} title={ta.titulo}>
-        <IconoCopiar /> {tc.boton}
-      </button>
+      {icono ? (
+        <BotonIcono etiqueta={ta.icono} onClick={abrir}>
+          <IconoCopiar />
+        </BotonIcono>
+      ) : (
+        <button type="button" onClick={abrir} className={botonSecundario} title={ta.titulo}>
+          <IconoCopiar /> {tc.boton}
+        </button>
+      )}
       {abierto && (
         <Ventana titulo={ta.titulo} onCerrar={() => setAbierto(false)}>
           <div className="space-y-3 overflow-y-auto px-5 py-4 text-sm">
@@ -229,7 +238,7 @@ export function DirectorioActividades({ grupoId, cursos }: { grupoId: string; cu
   return (
     <>
       <button type="button" onClick={() => setAbierto(true)} className={`${botonSecundario} justify-start`} title={td.titulo}>
-        <IconoCopiar /> {tc.boton}
+        <IconoCopiar /> {td.boton}
       </button>
       {abierto && (
         <Ventana titulo={td.titulo} onCerrar={() => setAbierto(false)}>

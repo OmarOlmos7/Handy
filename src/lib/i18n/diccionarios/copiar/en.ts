@@ -9,6 +9,7 @@ const copiar: typeof es = {
   cerrar: "Close",
   cancelar: "Cancel",
   actividad: {
+    icono: "Duplicate or send to another class",
     titulo: "Copy item",
     texto: "The copy keeps the sheet, rubric, solution, attachments and dates. Submissions and grades are not copied.",
     mismo: "Duplicate in this class",
@@ -22,6 +23,7 @@ const copiar: typeof es = {
     abrir: "Open the copy",
   },
   directorio: {
+    boton: "Duplicate activity",
     titulo: "Copy activities to this class",
     texto: "Choose activities from your classes (archived ones too) and add them to this class. They are copied without submissions or grades.",
     buscar: "Search activity",
