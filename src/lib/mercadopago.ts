@@ -4,7 +4,7 @@
 // Variables: MP_ACCESS_TOKEN (obligatoria para cobrar) y MP_WEBHOOK_SECRET (firma del webhook).
 import "server-only";
 import crypto from "node:crypto";
-import type { Licencia } from "./tipos";
+import type { Licencia, CompraCreditos } from "./tipos";
 
 const API = "https://api.mercadopago.com";
 
@@ -48,6 +48,25 @@ export async function crearPreferencia(licencia: Licencia, titulo: string, urlBa
       auto_return: "approved",
       statement_descriptor: "IEUREKA GRADER",
       // Una referencia de OXXO vence en 3 días; después se genera otra desde la plataforma.
+      date_of_expiration: new Date(Date.now() + 3 * 864e5).toISOString(),
+    }),
+  });
+  return r.init_point;
+}
+
+/** Preferencia de pago de un paquete de créditos del alumno (perfil CREAR). */
+export async function crearPreferenciaCompra(compra: CompraCreditos, titulo: string, urlBase: string): Promise<string> {
+  const volver = `${urlBase}/alumno/creditos/${encodeURIComponent(compra.llave)}`;
+  const r = await llamar<{ init_point: string }>("/checkout/preferences", {
+    method: "POST",
+    headers: { "X-Idempotency-Key": `pref-${compra.llave}` },
+    body: JSON.stringify({
+      items: [{ id: `creditos-${compra.creditos}`, title: titulo, quantity: 1, currency_id: "MXN", unit_price: compra.precio }],
+      external_reference: compra.llave,
+      notification_url: `${urlBase}/api/pagos/mercadopago`,
+      back_urls: { success: volver, pending: volver, failure: volver },
+      auto_return: "approved",
+      statement_descriptor: "IEUREKA GRADER",
       date_of_expiration: new Date(Date.now() + 3 * 864e5).toISOString(),
     }),
   });

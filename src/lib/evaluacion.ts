@@ -13,6 +13,8 @@ import { idiomaDeActividad } from "./i18n/detectar";
 import { calificarSinIA, creditosPlataforma, esPlataforma } from "./plataforma";
 import type { Actividad, Entrega, Grupo, Reactivo } from "./tipos";
 import { esEvidenciaDigital } from "./contenido";
+import { perfilActivo } from "./banderas";
+import { registrarIntentoEntrega } from "./perfil/intentos";
 import { hayQueLeer, materialParaIA, type MaterialParaIA } from "./material-ia";
 
 export type ResultadoEvaluacion = { ok: true } | { ok: false; error: string; status: number };
@@ -78,6 +80,11 @@ async function evaluarAhora(actividadId: string, matricula: string, reevaluar = 
       Object.assign(e, evaluacion, { estado: "aprobada", evaluadaEn: new Date().toISOString(), error: undefined, evaluandoDesde: undefined });
       // Al re-evaluar, la calificación escrita a mano deja paso a la nueva evaluación.
       if (reevaluar) e.calificacionManual = undefined;
+      // Una entrega nueva es el intento más reciente: deja de contar el caso equivalente anterior.
+      else e.calificacionCaso = undefined;
+      // Perfil CREAR: cada evaluación queda como intento (con su logro por etapa, tiempo y hora).
+      const actual = d.actividades.find((x) => x.id === actividadId);
+      if (perfilActivo() && actual) registrarIntentoEntrega(d, actual, e);
       d.movimientos.unshift({
         profesorId: grupo.profesorId,
         fecha: new Date().toISOString().slice(0, 10),
@@ -174,6 +181,9 @@ async function evaluarPlataforma(actividad: Actividad, grupo: Grupo, entrega: En
     // Con audio o video por calificar, la entrega espera la revisión del profesor antes de liberarse.
     Object.assign(e, { resultados, positivos, mejoras, estado: manuales ? "evaluada" : "aprobada", evaluadaEn: new Date().toISOString(), error: undefined, evaluandoDesde: undefined });
     if (reevaluar) e.calificacionManual = undefined;
+    else e.calificacionCaso = undefined;
+    const actual = d.actividades.find((x) => x.id === actividadId);
+    if (perfilActivo() && actual) registrarIntentoEntrega(d, actual, e);
     if (paraIA.length && costo > 0) {
       d.movimientos.unshift({
         profesorId: grupo.profesorId,

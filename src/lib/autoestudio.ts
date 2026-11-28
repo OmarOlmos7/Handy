@@ -206,9 +206,9 @@ export function costoEvaluar(textos: number, fotos: number): number {
 }
 
 /** Cuántas actividades más puede crear el alumno en las próximas 24 horas. */
-export function restantesHoy(lista: Pick<Autoactividad, "alumnoId" | "creadaEn">[], alumnoId: string, ahora: Date = new Date()): number {
+export function restantesHoy(lista: Pick<Autoactividad, "alumnoId" | "creadaEn" | "casoDe">[], alumnoId: string, ahora: Date = new Date()): number {
   const desde = ahora.getTime() - 24 * 3600_000;
-  const hechas = lista.filter((a) => a.alumnoId === alumnoId && Date.parse(a.creadaEn) > desde).length;
+  const hechas = lista.filter((a) => a.alumnoId === alumnoId && !a.casoDe && Date.parse(a.creadaEn) > desde).length;
   return Math.max(0, LIMITE_DIARIO - hechas);
 }
 
@@ -360,7 +360,8 @@ export interface ResumenAutoestudio {
 const r1 = (n: number) => Math.round(n * 10) / 10;
 
 export function resumenAutoestudio(lista: Autoactividad[], grupoId: string, matricula: string): ResumenAutoestudio {
-  const suyas = lista.filter((a) => a.grupoId === grupoId && a.matricula === matricula);
+  // Los casos equivalentes (perfil CREAR) ya cuentan en su actividad: no entran al autoestudio.
+  const suyas = lista.filter((a) => a.grupoId === grupoId && a.matricula === matricula && !a.casoDe);
   const hechas = suyas.filter((a) => a.estado === "completada" && a.calificacion !== undefined);
   const fechas = suyas.map((a) => a.completadaEn ?? a.creadaEn).sort();
   return {
@@ -386,7 +387,7 @@ const promedioTipo = (hechas: Pick<Autoactividad, "calificacion">[]): PromedioTi
 
 /** Promedio y número de autoasignadas terminadas de un alumno, por cada uno de los 5 tipos. */
 export function autoestudioPorTipo(lista: Autoactividad[], grupoId: string, matricula: string): Record<TipoAutoactividad, PromedioTipoAuto> {
-  const hechas = lista.filter((a) => a.grupoId === grupoId && a.matricula === matricula && a.estado === "completada" && a.calificacion !== undefined);
+  const hechas = lista.filter((a) => a.grupoId === grupoId && a.matricula === matricula && !a.casoDe && a.estado === "completada" && a.calificacion !== undefined);
   return Object.fromEntries(TIPOS_AUTOACTIVIDAD.map((t) => [t, promedioTipo(hechas.filter((a) => a.tipo === t))])) as Record<TipoAutoactividad, PromedioTipoAuto>;
 }
 

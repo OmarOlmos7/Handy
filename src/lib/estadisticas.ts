@@ -36,6 +36,8 @@ export function calificacionCalculada(actividad: Actividad, entrega: Entrega) {
 /** Calificación en la escala de la actividad: sobre 100 en enteros, sobre 10 con un decimal. */
 export function calificacion(actividad: Actividad, entrega: Entrega) {
   if (entrega.calificacionManual !== undefined) return entrega.calificacionManual;
+  // Perfil CREAR: cuenta el último caso equivalente que resolvió el alumno.
+  if (entrega.calificacionCaso !== undefined) return entrega.calificacionCaso;
   return calificacionCalculada(actividad, entrega);
 }
 
