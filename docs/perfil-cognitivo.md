@@ -7,11 +7,14 @@ nuevos), alineado con la taxonomía SOLO y con Bloom revisada. Se desarrolla en 
 1. **Diagnóstico inicial** (lo que ya está): consentimiento informado, autodiagnóstico de las
    unidades (la valoración inicial que ya existía) y prueba de Stroop de lectura de colores al inicio
    y al final del semestre. El profesor adapta el Modelo CREAR a la disciplina de su curso.
-2. **Seguimiento en actividades** (pendiente): errores y procedimientos por etapa CREAR en cada
-   entrega, intentos, tiempos y horarios; casos equivalentes para practicar si no llega a 70 %.
+2. **Seguimiento en actividades** (lo que ya está): logro por etapa CREAR en cada entrega, historial
+   de intentos con tiempo, día y hora; casos equivalentes (máximo 5) si no llega a 70; bolsa de
+   créditos del alumno y tienda de paquetes. Ver la sección "Seguimiento en actividades".
 3. **Reporte en tablero** (pendiente): perfil por alumno para el profesor y resumen para el alumno.
 
-La calificación actual no cambia: el módulo va encima del flujo existente.
+La evaluación con IA no cambia: el módulo va encima del flujo existente. Con la bandera encendida,
+la única diferencia en la calificación es que, si el alumno resuelve casos equivalentes, cuenta el
+último (la calificación escrita a mano por el profesor sigue teniendo prioridad).
 
 ## Cómo activarlo
 
@@ -61,6 +64,37 @@ Los números (medianas, efecto Stroop, errores, ventanas de la prueba) los calcu
 La prueba de cierre se abre 21 días antes del primer fin de curso del alumno en el semestre (o del
 fin del semestre si sus cursos no tienen fecha de fin). Si la de inicio se presentó ya dentro de esa
 ventana, vale por el semestre.
+
+## Seguimiento en actividades (etapa 2)
+
+- **Etapa de cada elemento de la rúbrica.** Cada reactivo, paso de desarrollo y criterio tiene una
+  etapa CREAR. El profesor la fija en `/profesor/grupos/[id]/perfil/actividades`; si no, la sugiere
+  el código por las palabras del paso o del reactivo (`src/lib/perfil/etapas.ts`, `PISTAS_ETAPA`).
+- **Logro por etapa.** Al evaluar una entrega, los puntos de cada paso o criterio se suman en su
+  etapa (`logroPorEtapa`). Una etapa está lograda con 70 % o más; el nivel SOLO es el de la última
+  etapa lograda en orden (`nivelAlcanzado`).
+- **Intentos.** Cada entrega evaluada y cada caso equivalente terminado queda en `intentosPerfil`
+  con calificación sobre 100, logro por etapa, nivel, tiempo activo, fecha, día de la semana y hora
+  del centro de México. Re-evaluar la misma entrega actualiza su intento; no lo duplica. Solo se
+  registra con consentimiento vigente.
+- **Casos equivalentes.** Si la calificación que cuenta queda abajo de 70, el alumno pide un caso en
+  `/alumno/cursos/[id]/perfil/seguimiento` (`POST /api/perfil/casos`). La IA lo genera con la
+  rúbrica de la actividad (sin datos del alumno) y se resuelve como una actividad de autoestudio.
+  Al terminarlo, su calificación queda en `Entrega.calificacionCaso` y cuenta en el cuaderno. Máximo
+  5 por actividad; si el quinto no llega a 70, el profesor recibe un aviso automático y el alumno ve
+  el botón para agendar asesoría. Los casos no cuentan en el promedio de autoestudio ni en su límite
+  diario.
+- **Bolsa de créditos del alumno.** Con membresía vigente (o si las licencias no son obligatorias),
+  el alumno tiene 500 créditos por semestre (`src/lib/perfil/bolsa.ts`). Con la bandera encendida,
+  el autoestudio y los casos equivalentes se pagan de su bolsa, no de los créditos del profesor. La
+  bolsa del semestre no se acumula; lo que exceda sale de los créditos comprados, que no vencen.
+- **Tienda.** `/alumno/creditos`: paquetes de 100 a 500 créditos a $100 MXN por cada 100, con Mercado
+  Pago (llave `CRE-XXXX-XXXX-XXXX`, el mismo webhook de las licencias). Con `PAGOS_DEMO=1` el pago
+  se simula.
+
+Colecciones nuevas, opcionales: `intentosPerfil`, `movimientosAlumno` y `comprasCreditos`. Campos
+nuevos opcionales: `etapaCrear` en reactivos, pasos y criterios; `calificacionCaso` en la entrega;
+`casoDe` y `pagadoPor` en la autoactividad.
 
 ## Cómo agregar una disciplina
 
