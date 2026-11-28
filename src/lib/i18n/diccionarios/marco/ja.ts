@@ -50,6 +50,18 @@ const marco: typeof es = {
     cuerpo:
       "{nombre} さん\n\n{profesor} 先生があなたをクラス {curso} に登録しました。\n\nクラス ID コード：{codigo}\n\nこのコードで会費（ライセンス）を支払い、登録が完了します：\n1. {url} を開く\n2. このメールアドレスでアカウントを作成するかログインする\n3. コードを入力し、期間を選んで支払う\n\n質問があれば先生に聞いてください。\n\niEureka-Grader",
   },
+  unidades: {
+    titulo: "単元ごとの課題",
+    pista: "タイムラインの単元をクリックすると、その単元の課題だけが表示されます。",
+    verTodas: "すべての単元を表示",
+    verUnidad: "「{nombre}」の課題を表示",
+    mostrando: "単元 {n}：{nombre}",
+    sinUnidad: "シラバスの単元なし",
+    actividades1: "課題 1 件",
+    actividadesN: "課題 {n} 件",
+    vacia: "この単元にはまだ課題がありません。課題を作成するときにシラバスの選択でこの単元を選んでください。",
+    unidad: "単元 {n}",
+  },
 };
 
 export default marco;

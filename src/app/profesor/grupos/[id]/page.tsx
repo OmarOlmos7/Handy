@@ -3,19 +3,21 @@ import Link from "next/link";
 import { conPuntaje } from "@/lib/modalidad";
 import { notFound } from "next/navigation";
 import { LineaTiempoCurso } from "@/components/linea-tiempo-curso";
+import { BarraUnidades, SeccionUnidad, SeleccionUnidades } from "@/components/unidades-curso";
 import { DirectorioActividades } from "@/components/copiar-elemento";
 import { directorioActividades, tituloCopia } from "@/lib/copiar";
 import { FilaActividad } from "@/components/fila-actividad";
 import { IconoCuaderno, IconoGrafica, IconoMapa, IconoRuta } from "@/components/iconos";
 import { ResumenCategoria } from "@/components/resumen-categoria";
-import { BotonLink, Encabezado, Tarjeta, colorCalificacion } from "@/components/ui";
+import { BotonLink, Encabezado, Tarjeta, colorCalificacion, fechaLarga } from "@/components/ui";
 import { entregasDe, estadoActividad, grupoDe } from "@/lib/almacen";
 import { avanceActividadGrupo, resumenActividadesGrupo } from "@/lib/avance-actividades-grupo";
 import { agruparPorEtiqueta } from "@/lib/colores";
 import { ahoraEnMexico } from "@/lib/asesorias";
 import { asignaturaDelCurso } from "@/lib/asignaturas";
 import { avanceGrupo } from "@/lib/avance-grupo";
-import { avanceDelPeriodo, iconoUnidad, lineaTiempoCurso } from "@/lib/linea-tiempo";
+import { agruparPorUnidad, avanceDelPeriodo, iconoUnidad, lineaTiempoCurso } from "@/lib/linea-tiempo";
+import { colorUnidad } from "@/lib/mapa-temario";
 import { iconoTipoActividad } from "@/lib/iconos-tipo";
 import { reporteGrupo } from "@/lib/estadisticas";
 import { datosProfesor } from "@/lib/sesion";
@@ -53,8 +55,46 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
   const linea = asignatura ? lineaTiempoCurso(asignatura.unidades.map((u) => u.nombre), grupo.inicio, grupo.fin, hoy) : null;
   const avanceTemario = asignatura && linea ? avanceGrupo(asignatura, grupo, db.actividades, db.entregas, db.tiempos ?? []) : null;
 
+  // Renglón de una actividad (se usa en las secciones por unidad y por tipo).
+  const fila = (a: (typeof actividades)[number]) => {
+    const entregas = entregasDe(db, a.id);
+    const rep = reporteGrupo(a, entregas, grupo.alumnos);
+    return (
+      <FilaActividad
+        key={a.id}
+        id={a.id}
+        titulo={a.titulo}
+        fecha={a.fechaAplicacion}
+        resultadosDesde={a.resultadosDesde}
+        envioDesde={a.envioDesde}
+        envioHasta={a.envioHasta}
+        paginas={a.paginas}
+        entregas={formato(tc.entregas, {
+          n: rep.entregadas,
+          total: grupo.alumnos.length,
+        })}
+        promedio={rep.entregadas > 0 && conPuntaje(a) ? `${rep.promedio} / ${rep.escala}` : undefined}
+        colorPromedio={colorCalificacion(rep.promedio, rep.escala)}
+        estado={estadoActividad(db, a)}
+        recibidas={entregas.filter((e) => e.estado !== "sin_entregar").length}
+        color={a.color}
+        etiqueta={a.etiqueta}
+        etiquetasCurso={etiquetasCurso}
+        copiar={{
+          grupoId: grupo.id,
+          cursoActual: `${grupo.materia} · ${grupo.nombre}`,
+          tituloCopia: tituloCopia(a.titulo, titulos, t.copiar.sufijo),
+          cursos: otrosCursos,
+        }}
+      />
+    );
+  };
+  // Con temario: actividades agrupadas por unidad (en orden) y las tarjetas de la línea son botones.
+  const porUnidad = asignatura && asignatura.unidades.length > 0 && actividades.length > 0 ? agruparPorUnidad(asignatura, actividades) : null;
+  const tu = t.marco.unidades;
+
   return (
-    <>
+    <SeleccionUnidades>
       <Encabezado
         migas={[{ texto: c.panel, href: "/profesor" }]}
         rutaEtiqueta={c.ruta}
@@ -104,6 +144,7 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
         hayTemario={Boolean(asignatura?.unidades.length)}
         t={t}
         locale={locale}
+        conteos={porUnidad ? asignatura!.unidades.map((_, i) => porUnidad[i]?.items.length ?? 0) : undefined}
       />
       {proyectos.length > 0 && (
         <section className="mb-6" aria-labelledby="seccion-proyectos">
@@ -146,9 +187,72 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           <strong>{tc.sinActividadesBoton}</strong>
           {tc.sinActividadesDespues}
         </Tarjeta>
+      ) : porUnidad ? (
+        <div className="space-y-3">
+          <BarraUnidades nombres={asignatura!.unidades.map((u) => u.nombre)} />
+          {/* Una sección plegable por unidad, en el orden del temario; dentro, las actividades por tipo. */}
+          {porUnidad.map(({ indice, items }) => {
+            const color = indice === null ? null : colorUnidad(indice);
+            const tramo = indice === null ? undefined : linea?.[indice];
+            const resumen = resumenActividadesGrupo(items, db.entregas, alumnos, ahora);
+            const abierta = tramo?.estado === "en_curso" || items.some((a) => avanceActividadGrupo(a, db.entregas, alumnos, ahora) === "en_proceso");
+            const tipos = agruparPorEtiqueta(items);
+            return (
+              <SeccionUnidad
+                key={indice ?? "sin-unidad"}
+                indice={indice}
+                abierta={abierta}
+                encabezado={
+                  <>
+                    <span
+                      aria-hidden
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold"
+                      style={color ? { background: tramo?.estado === "pendiente" ? color.fondo : color.nodo, color: tramo?.estado === "pendiente" ? color.nodo : "#fff" } : { background: "#e2e8f0", color: "#475569" }}
+                    >
+                      {indice === null ? "–" : indice + 1}
+                    </span>
+                    <span className="min-w-0">
+                      <h2 className="text-base font-semibold leading-snug text-slate-900">
+                        {indice === null ? tu.sinUnidad : asignatura!.unidades[indice].nombre}
+                      </h2>
+                      {tramo && (
+                        <span className="block text-xs text-slate-500">
+                          {fechaLarga(tramo.desde, locale)} – {fechaLarga(tramo.hasta, locale)}
+                        </span>
+                      )}
+                    </span>
+                    {/* El resumen ya dice cuántas actividades hay; sin actividades basta el "0". */}
+                    {items.length > 0 ? (
+                      <ResumenCategoria resumen={resumen} t={t} />
+                    ) : (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{formato(tu.actividadesN, { n: 0 })}</span>
+                    )}
+                  </>
+                }
+              >
+                {items.length === 0 ? (
+                  <p className="px-5 py-4 text-sm text-slate-500">{tu.vacia}</p>
+                ) : (
+                  tipos.map(({ etiqueta, items: deTipo }) => (
+                    <div key={etiqueta ?? "sin-etiqueta"}>
+                      <p className="flex items-center gap-2 bg-slate-50 px-5 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <span aria-hidden className="text-sm normal-case">
+                          {etiqueta ? iconoTipoActividad(etiqueta) : "🏷️"}
+                        </span>
+                        {etiqueta ?? tc.sinEtiqueta}
+                        <span className="font-normal normal-case text-slate-400">· {deTipo.length}</span>
+                      </p>
+                      <ul className="divide-y divide-slate-100">{deTipo.map(fila)}</ul>
+                    </div>
+                  ))
+                )}
+              </SeccionUnidad>
+            );
+          })}
+        </div>
       ) : (
         <div className="space-y-3">
-          {/* Una sección plegable por tipo de actividad, con su resumen de avance del grupo. */}
+          {/* Sin temario: una sección plegable por tipo de actividad, con su resumen de avance del grupo. */}
           {agruparPorEtiqueta(actividades).map(({ etiqueta, items }) => {
             const resumen = resumenActividadesGrupo(items, db.entregas, alumnos, ahora);
             // Abierta si tiene actividades en proceso (recibiendo entregas o por revisar).
@@ -167,39 +271,7 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
                 </summary>
                 <div className="border-t border-slate-100">
                   <ul className="divide-y divide-slate-100">
-                    {items.map((a) => {
-                      const entregas = entregasDe(db, a.id);
-                      const rep = reporteGrupo(a, entregas, grupo.alumnos);
-                      return (
-                        <FilaActividad
-                          key={a.id}
-                          id={a.id}
-                          titulo={a.titulo}
-                          fecha={a.fechaAplicacion}
-                          resultadosDesde={a.resultadosDesde}
-                          envioDesde={a.envioDesde}
-                          envioHasta={a.envioHasta}
-                          paginas={a.paginas}
-                          entregas={formato(tc.entregas, {
-                            n: rep.entregadas,
-                            total: grupo.alumnos.length,
-                          })}
-                          promedio={rep.entregadas > 0 && conPuntaje(a) ? `${rep.promedio} / ${rep.escala}` : undefined}
-                          colorPromedio={colorCalificacion(rep.promedio, rep.escala)}
-                          estado={estadoActividad(db, a)}
-                          recibidas={entregas.filter((e) => e.estado !== "sin_entregar").length}
-                          color={a.color}
-                          etiqueta={a.etiqueta}
-                          etiquetasCurso={etiquetasCurso}
-                          copiar={{
-                            grupoId: grupo.id,
-                            cursoActual: `${grupo.materia} · ${grupo.nombre}`,
-                            tituloCopia: tituloCopia(a.titulo, titulos, t.copiar.sufijo),
-                            cursos: otrosCursos,
-                          }}
-                        />
-                      );
-                    })}
+                    {items.map(fila)}
                   </ul>
                 </div>
               </details>
@@ -207,6 +279,6 @@ export default async function VistaCurso({ params }: PageProps<"/profesor/grupos
           })}
         </div>
       )}
-    </>
+    </SeleccionUnidades>
   );
 }

@@ -50,6 +50,18 @@ const marco: typeof es = {
     cuerpo:
       "Hi {nombre},\n\nYour teacher {profesor} enrolled you in the class {curso}.\n\nClass ID code: {codigo}\n\nUse this code to pay your membership (license) and enroll:\n1. Go to {url}\n2. Create your account or sign in with this email.\n3. Enter the code, choose the length and pay.\n\nIf you have questions, ask your teacher.\n\niEureka-Grader",
   },
+  unidades: {
+    titulo: "Activities by unit",
+    pista: "Click a unit on the timeline to see only its activities.",
+    verTodas: "See all units",
+    verUnidad: "See the activities of “{nombre}”",
+    mostrando: "Unit {n}: {nombre}",
+    sinUnidad: "No syllabus unit",
+    actividades1: "1 activity",
+    actividadesN: "{n} activities",
+    vacia: "No activities in this unit yet. When you create an activity, choose this unit in the syllabus picker.",
+    unidad: "Unit {n}",
+  },
 };
 
 export default marco;

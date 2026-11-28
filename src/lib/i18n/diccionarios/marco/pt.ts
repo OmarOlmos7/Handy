@@ -50,6 +50,18 @@ const marco: typeof es = {
     cuerpo:
       "Olá, {nombre}:\n\nSeu professor(a) {profesor} inscreveu você no curso {curso}.\n\nCódigo ID do curso: {codigo}\n\nCom este código você paga sua assinatura (licença) e fica inscrito:\n1. Acesse {url}\n2. Crie sua conta ou entre com este e-mail.\n3. Digite o código, escolha a duração e pague.\n\nSe tiver dúvidas, pergunte ao seu professor(a).\n\niEureka-Grader",
   },
+  unidades: {
+    titulo: "Atividades por unidade",
+    pista: "Clique em uma unidade da linha do tempo para ver só as atividades dela.",
+    verTodas: "Ver todas as unidades",
+    verUnidad: "Ver as atividades de “{nombre}”",
+    mostrando: "Unidade {n}: {nombre}",
+    sinUnidad: "Sem unidade do programa",
+    actividades1: "1 atividade",
+    actividadesN: "{n} atividades",
+    vacia: "Ainda não há atividades nesta unidade. Ao criar uma atividade, escolha esta unidade no seletor do programa.",
+    unidad: "Unidade {n}",
+  },
 };
 
 export default marco;

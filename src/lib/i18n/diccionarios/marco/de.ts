@@ -50,6 +50,18 @@ const marco: typeof es = {
     cuerpo:
       "Hallo {nombre},\n\ndeine Lehrkraft {profesor} hat dich in den Kurs {curso} eingeschrieben.\n\nKurs-ID-Code: {codigo}\n\nMit diesem Code bezahlst du deine Mitgliedschaft (Lizenz) und schreibst dich ein:\n1. Öffne {url}\n2. Erstelle dein Konto oder melde dich mit dieser E-Mail an.\n3. Gib den Code ein, wähle die Dauer und bezahle.\n\nBei Fragen wende dich an deine Lehrkraft.\n\niEureka-Grader",
   },
+  unidades: {
+    titulo: "Aktivitäten nach Einheit",
+    pista: "Klicke auf eine Einheit der Zeitleiste, um nur ihre Aktivitäten zu sehen.",
+    verTodas: "Alle Einheiten anzeigen",
+    verUnidad: "Aktivitäten von „{nombre}“ anzeigen",
+    mostrando: "Einheit {n}: {nombre}",
+    sinUnidad: "Ohne Lehrplaneinheit",
+    actividades1: "1 Aktivität",
+    actividadesN: "{n} Aktivitäten",
+    vacia: "In dieser Einheit gibt es noch keine Aktivitäten. Wähle beim Erstellen einer Aktivität diese Einheit in der Lehrplanauswahl.",
+    unidad: "Einheit {n}",
+  },
 };
 
 export default marco;
